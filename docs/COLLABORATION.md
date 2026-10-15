@@ -54,4 +54,4 @@ Use the two developer sandbox scenes described in [Game/README.md](../Game/READM
 
 Developers should record editor version, scene, reproduction steps, and observed results. Artists should include previews and export settings. Design changes should explain the intended solution, failure recovery, and affected GDD rules. Record untested behavior clearly.
 
-The PR template and issue templates are ready for use. There is no CI pipeline, Unity runtime validation, or automatic merge gate configured at this stage.
+The PR template and issue templates are ready for use. The player prototype has manually run Unity Play Mode tests, described in [Game/README.md](../Game/README.md). There is no CI pipeline or automatic merge gate configured at this stage.

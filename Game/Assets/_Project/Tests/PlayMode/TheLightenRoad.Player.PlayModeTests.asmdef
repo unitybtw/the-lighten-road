@@ -1,0 +1,5 @@
+{
+  "name": "TheLightenRoad.Player.PlayModeTests",
+  "references": ["TheLightenRoad.Player", "Unity.InputSystem"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

@@ -49,14 +49,17 @@ The MVP focuses on **two Office stages** with movement and jumping, the lantern 
 
 ## Current status
 
-The shared Unity project is initialized in `Game/` with the **Universal 2D** template using Unity **6000.3.2f1**. This is a clean project foundation; **gameplay, a playable build, and verified controls are not implemented yet.** All gameplay systems described here remain planned.
+The shared Unity project uses **Unity 6000.3.2f1 / Universal 2D**. Siraç's sandbox now combines horizontal movement, one grounded jump, camera follow, an early lantern fuel / Dim-Flare prototype, and a reusable ember pickup. The movement Play Mode suite has four passing tests; the lantern and pickup have been compiled and inspected in Play Mode, but do not yet have automated coverage. Ember Veins, Office stages, and a standalone playable build remain planned.
 
 - [x] Latest supplied GDD archived
 - [x] Editable GDD and project overview
 - [x] Create the Unity 2D project and record the editor version
 - [ ] Review the proposed developer task split
-- [ ] Verify package setup and agree on input bindings and shared system interfaces
-- [ ] Prototype movement, lantern, fuel, and Ember Veins
+- [ ] Agree on final input bindings, fuel tuning, and shared system interfaces
+- [x] Prototype movement, single jump, and camera follow in Siraç's sandbox
+- [x] Add a first lantern fuel API and Dim / Flare sandbox prototype
+- [x] Add a reusable lantern fuel pickup to Siraç's sandbox
+- [ ] Integrate Ember Veins with the shared lantern API
 - [ ] Build and playtest the two Office stages
 - [ ] Polish art, sound, puzzle readability, and recovery after failure
 - [ ] Evaluate the laboratory zone after the MVP is stable
@@ -70,7 +73,7 @@ git clone https://github.com/unitybtw/the-lighten-road.git
 cd the-lighten-road
 ```
 
-Open `Game/` in Unity Hub with editor **6000.3.2f1**. The project was created from the Universal 2D template. Start with [Game/README.md](Game/README.md) for setup notes and [docs/GDD.md](docs/GDD.md) for the design. Package versions, input bindings, target platforms, and build instructions still need review. There is no playable gameplay yet.
+Open `Game/` in Unity Hub with editor **6000.3.2f1**, then open `Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity` and press Play. Use **A/D or Left/Right** to move, **Space** to jump, and the current temporary **F** binding to toggle the lantern between Dim and Flare. The Game view shows the fuel meter. Start with [Game/README.md](Game/README.md) for setup and tests, and [docs/GDD.md](docs/GDD.md) for the design. Final input bindings, fuel balance, target platforms, and build instructions still need team review.
 
 ## Working as a team
 
