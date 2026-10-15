@@ -78,13 +78,13 @@ Start with [docs/GDD.md](docs/GDD.md). The intended technology is Unity 2D, C#, 
 
 ## Team
 
-Original GDD team:
-
-- Furkan Aydın
-- Siraç Göktuğ Şimşek — [@unitybtw](https://github.com/unitybtw)
-- Can Mutluşahinoğlu
-- Maksim Martynenko
-- Kemal Berke Aşık — [@kemal-berke](https://github.com/kemal-berke)
+| Team member | Role | GitHub |
+| --- | --- | --- |
+| Siraç Göktuğ Şimşek | Game Developer | [@unitybtw](https://github.com/unitybtw) |
+| Kemal Berke Aşık | Game Developer | [@kemal-berke](https://github.com/kemal-berke) |
+| Can Mutluşahinoğlu | Artist | — |
+| Maksim Martynenko | Artist | — |
+| Furkan Aydın | Game Designer | — |
 
 Team credit describes authorship of the design; GitHub access and commit-based contributor listings are managed separately.
 

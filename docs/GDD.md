@@ -24,9 +24,13 @@ Timing is an estimate from the source design and has not been validated through 
 
 ## 2. Team
 
-Furkan Aydın, Siraç Göktuğ Şimşek, Can Mutluşahinoğlu, Maksim Martynenko, and Kemal Berke Aşık.
-
-Individual production responsibilities have not yet been assigned in this document.
+| Team member | Role | GitHub |
+| --- | --- | --- |
+| Siraç Göktuğ Şimşek | Game Developer | [@unitybtw](https://github.com/unitybtw) |
+| Kemal Berke Aşık | Game Developer | [@kemal-berke](https://github.com/kemal-berke) |
+| Can Mutluşahinoğlu | Artist | — |
+| Maksim Martynenko | Artist | — |
+| Furkan Aydın | Game Designer | — |
 
 ## 3. Target player and experience
 
@@ -148,7 +152,7 @@ If time runs short, cut the entire laboratory zone and its advanced science-fict
 - Exact room / stage boundaries, checkpoint behavior, resource-loss rules, and guaranteed retry fuel.
 - Chamber count, puzzle ordering, optional-route rewards, and pacing.
 - Accessibility options for darkness, flicker, audio cues, and input remapping.
-- Team responsibilities, schedule, and asset licensing.
+- Detailed task assignments, schedule, and asset licensing.
 
 ## 12. Source and change policy
 
