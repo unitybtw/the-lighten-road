@@ -29,7 +29,7 @@ Timing is an estimate from the source design and has not been validated through 
 | Siraç Göktuğ Şimşek | Game Developer | [@unitybtw](https://github.com/unitybtw) |
 | Kemal Berke Aşık | Game Developer | [@kemal-berke](https://github.com/kemal-berke) |
 | Can Mutluşahinoğlu | Artist | [@benesas](https://github.com/benesas) |
-| Maksim Martynenko | Artist | — |
+| Maksim Martynenko | Artist | [@Ichnolith](https://github.com/Ichnolith) |
 | Furkan Aydın | Game Designer | — |
 
 ## 3. Target player and experience
