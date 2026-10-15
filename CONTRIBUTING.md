@@ -4,15 +4,15 @@
 
 Read [the GDD](docs/GDD.md) and its open decisions before implementing a system. Discuss changes to mechanics or scope in an issue or pull request so the working design stays consistent with the game.
 
-Read [the collaboration guide](docs/COLLABORATION.md) for personal workspaces, task branches, shared scene ownership, and integration into `Game/`. CODEOWNERS and PR / issue templates are included to support review; branch protection and required approvals are not configured.
+Read [the collaboration guide](docs/COLLABORATION.md) for personal workspaces, shared scene ownership, and integration into `Game/`. The team uses a direct-to-`main` trunk-based workflow to keep development fast.
 
 ## Working together
 
-1. Pull the latest `main` and create a focused branch, such as `feature/lantern-fuel`, `art/archive-tiles`, or `docs/puzzle-rules`.
-2. Keep each change small enough to review. Coordinate before editing the same Unity scene, prefab, or binary asset.
-3. Update the GDD and README when behavior, setup, or project status changes.
-4. Open a pull request describing what changed and how it was checked. For gameplay changes, include a short capture or clear reproduction steps when possible.
-5. Merge after review and relevant checks. Never force-push shared history.
+1. Pull the latest `main` before starting work (`git pull --ff-only origin main`).
+2. Keep work isolated within your assigned sandbox scene and folder ownership (e.g. `Sandbox/Sirac/` vs `Sandbox/Kemal/`) to prevent scene merge conflicts.
+3. Keep each change small and verified in Unity (clean console, passing tests).
+4. Update the GDD and workspace notes when behavior, setup, or project status changes.
+5. Commit and push directly to `main` with descriptive messages. Never force-push shared history.
 
 ## Unity project conventions
 

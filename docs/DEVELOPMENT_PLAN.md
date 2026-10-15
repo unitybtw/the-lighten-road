@@ -8,17 +8,17 @@ The shared project is `Game/`, created with Unity **6000.3.2f1** and the **Unive
 
 ## Siraç — player and lantern foundation
 
-Suggested branch: `feature/sirac/player-lantern`
+Workflow: Developing directly on `main` within `Game/Assets/_Project/Scenes/Sandbox/Sirac/` and `Game/Assets/_Project/Scripts/Player/`, `Lantern/`.
 
 1. Build the player movement prototype: left / right movement, jump, grounded checks, collision behavior, and a basic camera follow. Keep to the GDD limits: no sprint, double-jump, or attack.
-2. Own the lantern's fuel state and its shared API. **First pass implemented:** `LanternFuel` provides `TrySpendFuel`, `AddFuel`, `CurrentFuel`, `Capacity`, and change / depletion events; `LanternController` handles Dim / Flare, low-fuel light pulsing, and the visible meter; `EmberPickup` restores fuel on contact and stays available while the lantern is full. All numbers and the F binding are temporary because the GDD leaves tuning and controls open.
+2. Own the lantern's fuel state and its shared API. **Implemented & verified with 22 tests:** `LanternFuel` provides `TrySpendFuel`, `CanSpendFuel`, `AddFuel`, `Initialize`, `CurrentFuel`, `Capacity`, and change / depletion events; `LanternController` handles Dim / Flare, low-fuel light pulsing, and the visible meter; `EmberPickup` restores fuel on contact and stays available while the lantern is full. Isolated in `TheLightenRoad.Lantern.asmdef`. All numbers and the F binding are provisional because the GDD leaves tuning and controls open.
 3. Keep the player and lantern together in `Game/Assets/_Project/Scenes/Sandbox/Sirac/` so movement and fuel can be explored without editing the shared integration scene.
 
 Suggested review outcome: a controllable player can move and jump on a simple greybox floor; the lantern can switch modes, show its fuel state, and accept fuel changes through `LanternFuel`. Review the prototype's F binding and default tuning with the team before treating them as shared decisions.
 
 ## Kemal — Ember Veins and machinery
 
-Suggested branch: `feature/kemal/ember-veins`
+Workflow: Developing directly on `main` within `Game/Assets/_Project/Scenes/Sandbox/Kemal/` and `Game/Assets/_Project/Scripts/Interaction/`, `Mechanisms/`.
 
 1. Prototype the Ember Vein interaction and the Power / Drain state flow. Power requests fuel from Siraç's lantern API before activating a device. Drain returns the agreed amount of energy and turns its linked device off.
 2. Implement small, separate mechanism prototypes for rolling archive shelves, one lift, and electrified water. Keep mechanism behavior configurable and test one device at a time.
@@ -52,4 +52,4 @@ Game/Assets/_Project/Scripts/Mechanisms/   Kemal: lift, shelves, and electrified
 3. Verify the full loop in Unity: movement, Power fuel check, mechanism activation, Drain recovery, and mechanism shutdown.
 4. Only after that loop is stable, expand the device set and begin the two Office stages with Furkan's level plans and reviewed art exports.
 
-Keep the tasks on individual branches and merge reviewed work through pull requests as described in [the collaboration guide](COLLABORATION.md). Record what is implemented and tested in each pull request. Features outside the checkpoint recorded above remain planned.
+Work directly on `main` using the agreed sandbox scenes and folder ownership as described in [the collaboration guide](COLLABORATION.md). Record what is implemented and tested in workspace notes. Features outside the checkpoint recorded above remain planned.

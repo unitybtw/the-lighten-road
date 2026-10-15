@@ -49,16 +49,17 @@ The MVP focuses on **two Office stages** with movement and jumping, the lantern 
 
 ## Current status
 
-The shared Unity project uses **Unity 6000.3.2f1 / Universal 2D**. Siraç's sandbox now combines horizontal movement, one grounded jump, camera follow, an early lantern fuel / Dim-Flare prototype, and a reusable ember pickup. The movement Play Mode suite has four passing tests; the lantern and pickup have been compiled and inspected in Play Mode, but do not yet have automated coverage. Ember Veins, Office stages, and a standalone playable build remain planned.
+The shared Unity project uses **Unity 6000.3.2f1 / Universal 2D**. Siraç's sandbox combines horizontal movement, one grounded jump, camera follow, lantern fuel / Dim-Flare prototype, and an ember pickup. All **22 automated Play Mode tests pass** (movement, camera, lantern fuel API, controller mode switching, and pickup prefab integration). Ember Veins, Office stages, and a standalone playable build remain planned.
 
 - [x] Latest supplied GDD archived
 - [x] Editable GDD and project overview
 - [x] Create the Unity 2D project and record the editor version
-- [ ] Review the proposed developer task split
+- [x] Establish streamlined direct-to-`main` development workflow
 - [ ] Agree on final input bindings, fuel tuning, and shared system interfaces
 - [x] Prototype movement, single jump, and camera follow in Siraç's sandbox
-- [x] Add a first lantern fuel API and Dim / Flare sandbox prototype
+- [x] Add lantern fuel API and Dim / Flare sandbox prototype (with `TheLightenRoad.Lantern.asmdef`)
 - [x] Add a reusable lantern fuel pickup to Siraç's sandbox
+- [x] 22 automated Play Mode tests passing in Unity Test Runner
 - [ ] Integrate Ember Veins with the shared lantern API
 - [ ] Build and playtest the two Office stages
 - [ ] Polish art, sound, puzzle readability, and recovery after failure
@@ -77,14 +78,14 @@ Open `Game/` in Unity Hub with editor **6000.3.2f1**, then open `Assets/_Project
 
 ## Working as a team
 
-Each teammate has a dedicated workspace for prototypes, art sources, or puzzle design. Start with the [collaboration guide](docs/COLLABORATION.md) for folder ownership, task branches, PRs, and Unity scene coordination. Review the [proposed developer task split](docs/DEVELOPMENT_PLAN.md) before implementation; assignments and interfaces there are a draft for the team to review.
+Each teammate has a dedicated workspace for prototypes, art sources, or puzzle design. Start with the [collaboration guide](docs/COLLABORATION.md) for scene isolation, folder ownership, and direct-to-`main` workflow. Review the [proposed developer task split](docs/DEVELOPMENT_PLAN.md) before implementation; assignments and interfaces there are a draft for the team to review.
 
 ## Repository guide
 
 | Path | Contents |
 | --- | --- |
 | [docs/GDD.md](docs/GDD.md) | Editable design, MVP boundaries, and open decisions |
-| [docs/COLLABORATION.md](docs/COLLABORATION.md) | Team workspaces and branch / review workflow |
+| [docs/COLLABORATION.md](docs/COLLABORATION.md) | Team workspaces and direct-to-`main` workflow rules |
 | [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) | Draft ownership split for Siraç and Kemal to review |
 | [development/](development/) | Separate Siraç and Kemal prototype workspaces |
 | [art/](art/) | Separate Can and Maksim art sources and exports |

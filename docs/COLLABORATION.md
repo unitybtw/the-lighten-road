@@ -1,57 +1,56 @@
 # Team collaboration
 
-## Work areas
+## Work areas and ownership
 
-| Member | Role | Starting area | Example branch |
+The team uses a **streamlined direct-to-`main` (trunk-based) workflow** to keep development fast, transparent, and free of branching/pull-request overhead. To avoid merge conflicts (especially with Unity scenes and prefabs), development is isolated by scene and folder boundaries:
+
+| Member | Role | Starting area | Primary code domain |
 | --- | --- | --- | --- |
-| Siraç — @unitybtw | Game Developer | [development/sirac/](../development/sirac/) | `feature/sirac/player-controller` |
-| Kemal — @kemal-berke | Game Developer | [development/kemal/](../development/kemal/) | `feature/kemal/ember-veins` |
-| Can — @benesas | Artist | [art/can/](../art/can/) | `art/can/archive-tiles` |
-| Maksim — @Ichnolith | Artist | [art/maksim/](../art/maksim/) | `art/maksim/lantern-animation` |
-| Furkan — @aeshmacodex | Game Designer | [design/](../design/) | `design/furkan/office-01` |
+| Siraç — @unitybtw | Game Developer | [development/sirac/](../development/sirac/) | `Scripts/Player/`, `Scripts/Lantern/`, `Sandbox/Sirac/` |
+| Kemal — @kemal-berke | Game Developer | [development/kemal/](../development/kemal/) | `Scripts/Interaction/`, `Scripts/Mechanisms/`, `Sandbox/Kemal/` |
+| Can — @benesas | Artist | [art/can/](../art/can/) | `art/can/` sources and exports |
+| Maksim — @Ichnolith | Artist | [art/maksim/](../art/maksim/) | `art/maksim/` concepts and exports |
+| Furkan — @aeshmacodex | Game Designer | [design/](../design/) | `design/` level and balancing specs |
 
-Branch names are examples, not permanent personal branches. The proposed feature split is in [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) and needs both developers' review before implementation. Personal folders help organize work; they do not impose access restrictions. The shared Unity project is under [Game/](../Game/) and uses Unity 6000.3.2f1 with the Universal 2D template.
+The shared Unity project is under [Game/](../Game/) and uses Unity **6000.3.2f1** with the **Universal 2D** template.
 
-## Start a task
+## Direct-to-`main` workflow
 
-Accept the repository invitation, clone the repository, then run the following example with your own branch name:
+All core team members commit directly to `main` following these rules:
 
-```sh
-git switch main
-git pull --ff-only origin main
-git switch -c feature/sirac/player-controller
-```
+1. **Pull before you begin:**
+   Always ensure your local repository is up to date before making changes:
+   ```sh
+   git pull --ff-only origin main
+   ```
+2. **Work in your own sandbox scene:**
+   Never edit another developer's active sandbox scene at the same time. Unity scenes (`.unity`) and prefabs (`.prefab`) are serialized YAML; keeping separate scenes prevents merge conflicts entirely.
+   - Siraç: `Game/Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity`
+   - Kemal: `Game/Assets/_Project/Scenes/Sandbox/Kemal/`
+3. **Respect script boundaries:**
+   Keep runtime code within your designated folders (`Scripts/Player/` and `Scripts/Lantern/` for Siraç; `Scripts/Interaction/` and `Scripts/Mechanisms/` for Kemal). Use shared assemblies (`TheLightenRoad.Lantern`) to connect systems rather than editing shared files directly.
+4. **Commit and push small, verified increments:**
+   Verify changes in Unity (zero console errors, passing tests) before committing. Stage only your task's files, write descriptive commit messages, and push directly to `main`:
+   ```sh
+   git status
+   git add <your-files>
+   git commit -m "feat: description of change"
+   git push origin main
+   ```
+5. **Never force-push (`git push --force` is forbidden).**
 
-Create one branch per task. State the owner, affected files, expected outcome, and dependencies in an issue or PR. Before two developers work on adjacent systems, agree the interface: inputs, outputs, events, and who edits shared files. Do not duplicate shared controllers or fuel systems in personal folders.
-
-## Submit work
-
-Stage only the files belonging to your task, review the staged diff, commit, and push your branch. This example applies to a personal prototype:
-
-```sh
-git add development/sirac/
-git diff --cached
-git commit -m "feat: prototype player movement"
-git push -u origin HEAD
-```
-
-Open a pull request targeting `main` and use the provided template. Request a relevant teammate's review, resolve feedback, then merge. After merging, start the next task from updated `main`. Do not force-push shared history. Keep `main` for reviewed integrated work.
-
-This is the agreed workflow; protected-branch enforcement and required approvals have not been configured. CODEOWNERS suggests reviewers when eligible; it does not prevent edits or grant access. Pending invitees become eligible after accepting access.
+*(Note: Feature branches remain available as an optional tool for high-risk, experimental refactors if needed, but day-to-day progress is committed directly to `main`.)*
 
 ## Shared files and Unity scenes
 
 - Agree one active editor for each scene, prefab, binary art source, `Packages/manifest.json`, and project settings file.
-- Work in separate sandbox scenes; coordinate integration into the shared stage. Prefabs reduce the need to edit the same scene.
 - Move and rename Unity assets inside the Unity editor so references and `.meta` GUIDs stay intact. Never regenerate a teammate's `.meta` file to resolve a conflict.
-- If Git reports a scene or prefab conflict, coordinate with the other editor and inspect the result in Unity before merging. Do not guess at serialized scene changes.
-- Keep original art and exports in the artist's folder until review. Developers import approved exports into the shared project.
-- Designers describe puzzles in `design/levels/`; developers integrate the agreed behavior and artists supply its assets.
-
-Use the two developer sandbox scenes described in [Game/README.md](../Game/README.md). Agree on the player / lantern interface and interaction input before implementing systems that depend on one another. Keep the first integration scene coordinated so only one person edits it at a time.
+- If Git reports a scene or prefab conflict, coordinate with the other editor and inspect the result in Unity before resolving. Do not guess at serialized scene changes.
+- Keep original art and concept studies in the artist's folder until reviewed. Developers import approved exports into `Game/Assets/_Project/Art/`.
+- Designers describe puzzles in `design/levels/`; developers implement the agreed behavior and artists supply assets.
 
 ## Review and verification
 
-Developers should record editor version, scene, reproduction steps, and observed results. Artists should include previews and export settings. Design changes should explain the intended solution, failure recovery, and affected GDD rules. Record untested behavior clearly.
-
-The PR template and issue templates are ready for use. The player prototype has manually run Unity Play Mode tests, described in [Game/README.md](../Game/README.md). There is no CI pipeline or automatic merge gate configured at this stage.
+- Record editor version, scene, reproduction steps, and observed results in your workspace notes.
+- Verify tests pass using Unity Test Runner before pushing gameplay changes.
+- Record untested behavior and provisional balance values clearly.
