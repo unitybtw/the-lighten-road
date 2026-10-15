@@ -8,10 +8,14 @@
 [Uu]ser[Ss]ettings/
 [Mm]emoryCaptures/
 [Rr]ecordings/
+[Ss]creenshots/
 .vs/
 .idea/
+.fleet/
 *.csproj
+*.unityproj
 *.sln
+*.slnx
 *.suo
 *.user
 *.userprefs
@@ -22,7 +26,9 @@
 *.mdb
 *.opendb
 *.VC.db
+*.unitypackage
 sysinfo.txt
+
 # Local files and credentials
 .DS_Store
 .env
