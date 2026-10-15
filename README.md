@@ -8,7 +8,7 @@ An atmospheric 2D puzzle-platformer about light, isolation, and the cost of surv
 
 **Pre-production** · **Unity 2D / C#** · **Pixel art**
 
-[Game Design Document](docs/GDD.md) · [Original GDD (PDF)](docs/The-Lighten-Road-GDD.pdf) · [Contributing](CONTRIBUTING.md)
+[Game Design Document](docs/GDD.md) · [Latest GDD (PDF)](docs/The-Lighten-Road-GDD.pdf) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -25,7 +25,7 @@ The Lighten Road pairs deliberate platforming with environmental puzzles. Light 
 | System | The decision |
 | --- | --- |
 | **Dim / Flare** | Preserve ember fuel with a passive glow, or spend it for a wider view of paths, hazards, and hidden items. |
-| **Power / Drain** | Change the state of machinery through Ember Veins: move a platform, shift archive shelves, or stop a hazard. |
+| **Power / Drain** | Spend lantern fuel to power machinery, or drain an active device to recover energy into the lantern while shutting it down. |
 | **Connected chambers** | Fuel carries forward between rooms. The doorway seals behind you, making earlier choices matter. |
 | **Exploration** | Take a direct route to safety or risk a detour for lore and additional embers. |
 
@@ -39,6 +39,8 @@ flowchart LR
     E -->|Advance with remaining fuel| A
 ```
 
+Movement consists of left/right movement and jumping, with no sprint, double-jump, or attack. Fuel depletion creates a **positive feedback loop (death spiral)**: less fuel limits visibility, making traversal harder and increasing survival pressure.
+
 ## Planned scope
 
 The full design targets **4–5 puzzle chambers** across an **Abandoned Corporate Archive** and a **Subterranean Covert Lab**, with an estimated **15–20 minute** run. These are design targets, not measured playtest results.
@@ -49,7 +51,7 @@ The MVP focuses on **two Office stages** with movement and jumping, the lantern 
 
 This repository currently contains the design documents and collaboration setup. **No Unity project, gameplay implementation, playable build, or verified controls are included yet.** All gameplay systems described here are planned.
 
-- [x] Original GDD archived
+- [x] Latest supplied GDD archived
 - [x] Editable GDD and project overview
 - [ ] Create the Unity 2D project and record the editor/package versions
 - [ ] Prototype movement, lantern, fuel, and Ember Veins
@@ -73,7 +75,7 @@ Start with [docs/GDD.md](docs/GDD.md). The intended technology is Unity 2D, C#, 
 | Path | Contents |
 | --- | --- |
 | [docs/GDD.md](docs/GDD.md) | Editable design, MVP boundaries, and open decisions |
-| [docs/The-Lighten-Road-GDD.pdf](docs/The-Lighten-Road-GDD.pdf) | Original three-page team design document |
+| [docs/The-Lighten-Road-GDD.pdf](docs/The-Lighten-Road-GDD.pdf) | Latest three-page team design document |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branch, review, and Unity asset workflow |
 
 ## Team
