@@ -30,7 +30,7 @@ Timing is an estimate from the source design and has not been validated through 
 | Kemal Berke Aşık | Game Developer | [@kemal-berke](https://github.com/kemal-berke) |
 | Can Mutluşahinoğlu | Artist | [@benesas](https://github.com/benesas) |
 | Maksim Martynenko | Artist | [@Ichnolith](https://github.com/Ichnolith) |
-| Furkan Aydın | Game Designer | — |
+| Furkan Aydın | Game Designer | [@aeshmacodex](https://github.com/aeshmacodex) |
 
 ## 3. Target player and experience
 
