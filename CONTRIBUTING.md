@@ -16,9 +16,9 @@ Read [the collaboration guide](docs/COLLABORATION.md) for personal workspaces, t
 
 ## Unity project conventions
 
-The Unity project has not been added yet. Follow [Game/README.md](Game/README.md) to initialize it under `Game/`. When it is created:
+The shared Unity project is under `Game/` and uses Unity **6000.3.2f1** with the **Universal 2D** template. Follow [Game/README.md](Game/README.md) for opening and collaboration notes:
 
-- Record the exact editor version and package dependencies.
+- Keep the exact editor version and package dependencies recorded.
 - Use visible `.meta` files and Force Text asset serialization.
 - Commit `Assets/`, `Packages/`, `ProjectSettings/`, and associated `.meta` files together.
 - Keep `Library/`, `Temp/`, logs, local settings, builds, and credentials out of Git.

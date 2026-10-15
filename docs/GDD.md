@@ -148,7 +148,7 @@ If time runs short, cut the entire laboratory zone and its advanced science-fict
 
 ## 11. Open decisions
 
-- Unity editor version, URP package versions, target platforms, and input bindings.
+- URP and other package versions, target platforms, and input bindings. The project editor version is Unity 6000.3.2f1.
 - Fuel capacity, Dim / Flare costs, pickup values, and light radii.
 - Exact Power fuel costs, Drain recovery amounts, interaction range, activation time, and whether machine states persist.
 - Exact room / stage boundaries, checkpoint behavior, resource-loss rules, and guaranteed retry fuel.

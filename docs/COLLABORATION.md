@@ -5,12 +5,12 @@
 | Member | Role | Starting area | Example branch |
 | --- | --- | --- | --- |
 | Siraç — @unitybtw | Game Developer | [development/sirac/](../development/sirac/) | `feature/sirac/player-controller` |
-| Kemal — @kemal-berke | Game Developer | [development/kemal/](../development/kemal/) | `feature/kemal/lantern-fuel` |
+| Kemal — @kemal-berke | Game Developer | [development/kemal/](../development/kemal/) | `feature/kemal/ember-veins` |
 | Can — @benesas | Artist | [art/can/](../art/can/) | `art/can/archive-tiles` |
 | Maksim — @Ichnolith | Artist | [art/maksim/](../art/maksim/) | `art/maksim/lantern-animation` |
 | Furkan — @aeshmacodex | Game Designer | [design/](../design/) | `design/furkan/office-01` |
 
-Branch names are examples, not permanent personal branches or fixed feature assignments. Agree actual tasks before starting. Personal folders help organize work; they do not impose access restrictions. The team uses one shared Unity project under [Game/](../Game/), once initialized.
+Branch names are examples, not permanent personal branches. The proposed feature split is in [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) and needs both developers' review before implementation. Personal folders help organize work; they do not impose access restrictions. The shared Unity project is under [Game/](../Game/) and uses Unity 6000.3.2f1 with the Universal 2D template.
 
 ## Start a task
 
@@ -47,6 +47,8 @@ This is the agreed workflow; protected-branch enforcement and required approvals
 - If Git reports a scene or prefab conflict, coordinate with the other editor and inspect the result in Unity before merging. Do not guess at serialized scene changes.
 - Keep original art and exports in the artist's folder until review. Developers import approved exports into the shared project.
 - Designers describe puzzles in `design/levels/`; developers integrate the agreed behavior and artists supply its assets.
+
+Use the two developer sandbox scenes described in [Game/README.md](../Game/README.md). Agree on the player / lantern interface and interaction input before implementing systems that depend on one another. Keep the first integration scene coordinated so only one person edits it at a time.
 
 ## Review and verification
 

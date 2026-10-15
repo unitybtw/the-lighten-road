@@ -1,16 +1,12 @@
-# Shared Unity project location
+# The Lighten Road — Unity project
 
-This directory reserves the location of the future shared Unity project. **There is no Unity project or playable build here yet.**
+The shared Unity project was created with the **Universal 2D** template in Unity **6000.3.2f1**. The project lives in this directory. It is an empty 2D URP starting point; no gameplay, scenes, or playable build have been implemented yet.
 
-One developer should initialize it so the team does not commit competing project settings:
+## Open the project
 
-1. Agree the Unity editor version and 2D URP template with the team.
-2. In Unity Hub, create the project in a separate temporary directory. Copy its generated `Assets/`, `Packages/`, and `ProjectSettings/` into this directory, keeping this README. Do not copy `Library/`, `Temp/`, or logs.
-3. Open `Game/` through Unity Hub. Set Asset Serialization to Force Text and Version Control to Visible Meta Files.
-4. Inside Unity, create the shared folders below, letting Unity generate `.meta` files. Commit the project and matching `.meta` files together.
-5. Record the editor version, opening steps, entry scene, and checks in this README before merging.
+Open this repository in Unity Hub and select `Game/`, or open this folder directly with Unity Hub using editor version `6000.3.2f1`.
 
-## Planned runtime structure
+## Project structure
 
 ```text
 Assets/_Project/
@@ -26,4 +22,8 @@ Assets/_Project/
   Settings/         # Shared project-owned configuration
 ```
 
-These are intended folders, not generated Unity assets. Keep editable art sources in `art/` and supporting puzzle documents in `design/`. Agreed code moves here from `development/`; the integrated project has one implementation per system.
+The `_Project` folders above have been created and Unity has generated their `.meta` files. Keep editable art sources in the repository's `art/` folders and puzzle documents in `design/`; import reviewed exports into this Unity project.
+
+Before the first gameplay implementation, review the [proposed developer task split](../docs/DEVELOPMENT_PLAN.md) and agree on the active scene, input bindings, player / lantern interface, and recovery rules. Coordinate edits to shared scenes, prefabs, packages, and project settings using [the collaboration guide](../docs/COLLABORATION.md). Confirm package versions and input bindings with the team before gameplay work begins.
+
+Unity-generated `Library/`, `Temp/`, logs, and local settings are excluded from Git.

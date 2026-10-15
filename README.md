@@ -49,11 +49,13 @@ The MVP focuses on **two Office stages** with movement and jumping, the lantern 
 
 ## Current status
 
-This repository currently contains the design documents and collaboration setup. **No Unity project, gameplay implementation, playable build, or verified controls are included yet.** All gameplay systems described here are planned.
+The shared Unity project is initialized in `Game/` with the **Universal 2D** template using Unity **6000.3.2f1**. This is a clean project foundation; **gameplay, a playable build, and verified controls are not implemented yet.** All gameplay systems described here remain planned.
 
 - [x] Latest supplied GDD archived
 - [x] Editable GDD and project overview
-- [ ] Create the Unity 2D project and record the editor/package versions
+- [x] Create the Unity 2D project and record the editor version
+- [ ] Review the proposed developer task split
+- [ ] Verify package setup and agree on input bindings and shared system interfaces
 - [ ] Prototype movement, lantern, fuel, and Ember Veins
 - [ ] Build and playtest the two Office stages
 - [ ] Polish art, sound, puzzle readability, and recovery after failure
@@ -61,18 +63,18 @@ This repository currently contains the design documents and collaboration setup.
 
 ## Getting started
 
-Clone the repository to read or edit the documentation:
+Clone the repository and open the Unity project:
 
 ```sh
 git clone https://github.com/unitybtw/the-lighten-road.git
 cd the-lighten-road
 ```
 
-Start with [docs/GDD.md](docs/GDD.md). The intended technology is Unity 2D, C#, Unity Tilemap, and URP 2D Lighting. The exact Unity version, package versions, input bindings, target platforms, and build instructions will be recorded when the Unity project is added. There is currently nothing to run in Unity.
+Open `Game/` in Unity Hub with editor **6000.3.2f1**. The project was created from the Universal 2D template. Start with [Game/README.md](Game/README.md) for setup notes and [docs/GDD.md](docs/GDD.md) for the design. Package versions, input bindings, target platforms, and build instructions still need review. There is no playable gameplay yet.
 
 ## Working as a team
 
-Each teammate has a dedicated workspace for prototypes, art sources, or puzzle design. Start with the [collaboration guide](docs/COLLABORATION.md) for folder ownership, task branches, PRs, and Unity scene coordination. The shared Unity project will live in `Game/` once initialized.
+Each teammate has a dedicated workspace for prototypes, art sources, or puzzle design. Start with the [collaboration guide](docs/COLLABORATION.md) for folder ownership, task branches, PRs, and Unity scene coordination. Review the [proposed developer task split](docs/DEVELOPMENT_PLAN.md) before implementation; assignments and interfaces there are a draft for the team to review.
 
 ## Repository guide
 
@@ -80,10 +82,11 @@ Each teammate has a dedicated workspace for prototypes, art sources, or puzzle d
 | --- | --- |
 | [docs/GDD.md](docs/GDD.md) | Editable design, MVP boundaries, and open decisions |
 | [docs/COLLABORATION.md](docs/COLLABORATION.md) | Team workspaces and branch / review workflow |
+| [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) | Draft ownership split for Siraç and Kemal to review |
 | [development/](development/) | Separate Siraç and Kemal prototype workspaces |
 | [art/](art/) | Separate Can and Maksim art sources and exports |
 | [design/](design/) | Furkan’s level designs and balance proposals |
-| [Game/](Game/) | Reserved shared Unity project location and setup guide |
+| [Game/](Game/) | Shared Unity 6000.3.2f1 Universal 2D project |
 | [docs/The-Lighten-Road-GDD.pdf](docs/The-Lighten-Road-GDD.pdf) | Latest three-page team design document |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branch, review, and Unity asset workflow |
 
