@@ -27,6 +27,14 @@ namespace TheLightenRoad.Lantern
 
         public bool IsFlared { get; private set; }
         public LanternFuel Fuel => fuel;
+        public bool IsLowFuel => fuel != null && fuel.NormalizedFuel <= lowFuelThreshold;
+        public float LowFuelThreshold => lowFuelThreshold;
+        public Key ToggleFlareKey { get => toggleFlareKey; set => toggleFlareKey = value; }
+        public Light2D LanternLight => lanternLight;
+        public float DimIntensity => dimIntensity;
+        public float FlareIntensity => flareIntensity;
+        public float DimRadius => dimRadius;
+        public float FlareRadius => flareRadius;
 
         private void Awake()
         {

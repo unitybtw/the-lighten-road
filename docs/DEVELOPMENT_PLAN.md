@@ -1,8 +1,8 @@
 # Proposed Developer Task Split
 
-**Status: Siraç's movement and first lantern prototype are available for review; Kemal's machinery work remains planned.** The sandbox now exposes a shared fuel component and Dim / Flare behavior. Temporary bindings and tuning still need team review before integration.
+**Status: Siraç's player movement, camera, lantern API, and ember pickup foundation are implemented and covered by 22 passing automated Play Mode tests; Kemal's machinery work remains planned.** The lantern API is isolated in its own assembly (`TheLightenRoad.Lantern`) and ready for Kemal's Ember Vein Power / Drain interactions. Temporary bindings and tuning remain provisional for team review.
 
-**2026-10-15 checkpoint:** `MovementSandbox` contains the tested player movement / camera prototype and the first lantern prototype. Four Unity Play Mode tests cover movement and camera only. The lantern compiled, rendered Dim / Flare light in Play Mode, displayed its fuel meter, and responded to the F toggle through the Game view. The lantern has not been automated-tested. See [Siraç's notes](../development/sirac/README.md) for controls, tuning, limitations, and next steps.
+**2026-10-15 checkpoint:** `MovementSandbox` contains the tested player movement / camera prototype, the lantern prototype, and the ember pickup. All 22 automated Play Mode tests passed in Unity MCP (4 movement/camera, 11 lantern fuel, 4 lantern controller, 3 ember pickup integration). The lantern API exposes `TrySpendFuel`, `CanSpendFuel`, `AddFuel`, `Initialize`, capacity/fuel queries, and change / depletion events. See [Siraç's notes](../development/sirac/README.md) for controls, tuning, test suites, and next steps.
 
 The shared project is `Game/`, created with Unity **6000.3.2f1** and the **Universal 2D** template. Both developers should use that editor version for this project.
 

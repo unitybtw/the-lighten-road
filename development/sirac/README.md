@@ -39,10 +39,34 @@ Added to the same sandbox and reusable player prefab:
 
 The sandbox uses **100 fuel capacity**, **80 starting fuel**, a **20-unit pickup**, **0 fuel/second in Dim**, **0.5 fuel/second in Flare**, **2 / 5.5 unit light radii**, and **F** as temporary values. These are inspector-configurable and remain open for review with Kemal and Furkan. There is no death / respawn flow or heartbeat audio yet. The depletion event is the handoff point for a later failure system.
 
-Unity MCP was used to attach the components to the player prefab, create and place the pickup prefab, update and save `MovementSandbox`, and inspect live behavior. From the Game view, moving into the pickup restored fuel from 80 to 100 and removed the pickup; at full fuel the pickup remained. The F key also switched modes while the meter updated. The scene validator found no missing scripts or broken prefabs. The four existing automated tests still cover movement / camera only; the lantern and pickup have not yet received automated coverage. Physical gamepad, lighting polish, and gameplay balance remain unreviewed.
+Unity MCP was used to attach the components to the player prefab, create and place the pickup prefab, update and save `MovementSandbox`, and inspect live behavior. From the Game view, moving into the pickup restored fuel from 80 to 100 and removed the pickup; at full fuel the pickup remained. The F key also switched modes while the meter updated. The scene validator found no missing scripts or broken prefabs.
 
 Open the scene in `Game/` using Unity 6000.3.2f1 and press Play. Focus Game view; move with **A/D or Left/Right**, jump with **Space**, and press **F** to switch the lantern. The visible meter and glow provide the current review surface.
 
+## Checkpoint 3 — assembly definition, API refinement, and automated tests (2026-10-15)
+
+Strengthened the lantern foundation for team integration and automated testing:
+
+- **Assembly Definition (`TheLightenRoad.Lantern`):** Separated lantern code into its own assembly referencing `Unity.InputSystem`, `Unity.RenderPipelines.Universal.Runtime`, and `Unity.RenderPipelines.Universal.2D.Runtime`. This allows Kemal's future `TheLightenRoad.Interaction` and `TheLightenRoad.Mechanisms` assemblies to reference the lantern API directly without relying on `Assembly-CSharp`.
+- **API additions for Kemal's Power / Drain system:**
+  - `LanternFuel.CanSpendFuel(float amount)`: non-mutating check so interaction prompts can preview whether an Ember Vein Power interaction is affordable.
+  - `LanternFuel.IsFull` and `LanternFuel.IsEmpty`: clean status queries.
+  - `LanternFuel.Initialize(float current, float capacity)`: runtime reconfiguration for test fixtures and stage transitions (cumulative fuel carryover between chambers).
+  - `LanternFuel.SetDrainRates(float dimDrain, float flareDrain)`: configurable drain rates.
+  - Accessors for starting fuel, drain rates, low-fuel status (`LanternController.IsLowFuel`), low-fuel threshold, toggle key, and pickup amount/collection status (`EmberPickup.FuelAmount`, `EmberPickup.IsCollected`, `EmberPickup.SetFuelAmount`).
+- **Comprehensive automated test coverage (22 Play Mode tests, all passed):**
+  - `LanternFuelTests` (11 tests): default initialization; custom initialization with non-positive capacity rejection; `TrySpendFuel` deduction, failure, and negative amount rejection; `CanSpendFuel` queries; `AddFuel` capping at capacity, zero return when full, and negative amount rejection; `FuelChanged` and `FuelDepleted` event dispatches; and `TickLanternDrain` consumption across Dim and Flare.
+  - `LanternControllerTests` (4 tests): Dim / Flare mode toggle and zero-fuel rejection; auto-revert from Flare to Dim when fuel depletes; low-fuel threshold detection; and synthetic keyboard **F** key input toggle.
+  - `EmberPickupTests` (3 tests): exercises the actual `PlayerPrototype` and `EmberPickup` prefabs; confirms 80 to 100 fuel restoration and pickup destruction upon contact; confirms pickup is preserved when lantern is full; and confirms non-player colliders are ignored.
+  - `PlayerMotor2DTests` (4 existing tests re-verified): horizontal movement, single grounded jump and airborne rejection, side-wall non-clinging, and camera follow.
+
+### Live Verification
+
+Verified in Unity 6000.3.2f1 via Unity MCP:
+- All **22 Play Mode tests passed** (`TestResults.xml` recorded duration ~5.4s).
+- Scene validation for `MovementSandbox.unity`: **0 missing scripts, 0 broken prefabs, 0 issues**.
+- Unity console: **0 compile errors, 0 warnings**.
+
 ### Next checkpoint
 
-Review the movement, lantern, and pickup values with the team, then coordinate with Kemal before integrating his Ember Vein Power / Drain prototype against `LanternFuel`. Keep final capacities, costs, radii, bindings, depletion recovery, and stage persistence open until the team agrees.
+Coordinate with Kemal on his Ember Vein Power / Drain prototype (`Game/Assets/_Project/Scripts/Interaction/` and `Game/Assets/_Project/Scripts/Mechanisms/`) using the shared `TheLightenRoad.Lantern` assembly. Final tuning values, bindings, and persistence remain provisional pending team playtesting.

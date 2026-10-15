@@ -1,5 +1,5 @@
 ﻿<Solution>
   <Project Path="TheLightenRoad.Player.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="TheLightenRoad.Player.PlayModeTests.csproj" />
+  <Project Path="TheLightenRoad.Lantern.csproj" />
 </Solution>

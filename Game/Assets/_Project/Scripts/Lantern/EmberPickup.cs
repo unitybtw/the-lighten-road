@@ -10,6 +10,14 @@ namespace TheLightenRoad.Lantern
 
         private bool collected;
 
+        public float FuelAmount => fuelAmount;
+        public bool IsCollected => collected;
+
+        public void SetFuelAmount(float amount)
+        {
+            fuelAmount = Mathf.Max(0f, amount);
+        }
+
         private void Awake()
         {
             GetComponent<Collider2D>().isTrigger = true;

@@ -18,6 +18,12 @@ namespace TheLightenRoad.Lantern
         public float Capacity => capacity;
         public float CurrentFuel { get; private set; }
         public float NormalizedFuel => capacity > 0f ? CurrentFuel / capacity : 0f;
+        public bool IsFull => CurrentFuel >= capacity;
+        public bool IsEmpty => CurrentFuel <= 0f;
+
+        public float StartingFuel => startingFuel;
+        public float DimDrainPerSecond => dimDrainPerSecond;
+        public float FlareDrainPerSecond => flareDrainPerSecond;
 
         /// <summary>Raised when fuel changes. Arguments are current fuel and capacity.</summary>
         public event Action<float, float> FuelChanged;
@@ -30,6 +36,15 @@ namespace TheLightenRoad.Lantern
             FuelChanged?.Invoke(CurrentFuel, capacity);
             if (CurrentFuel <= 0f)
                 FuelDepleted?.Invoke();
+        }
+
+        /// <summary>
+        /// Check whether the lantern has at least the required fuel amount without spending it.
+        /// Useful for Kemal's Ember Vein interaction prompts and pre-spend checks.
+        /// </summary>
+        public bool CanSpendFuel(float amount)
+        {
+            return amount >= 0f && CurrentFuel >= amount;
         }
 
         public bool TrySpendFuel(float amount)
@@ -51,7 +66,25 @@ namespace TheLightenRoad.Lantern
             return CurrentFuel - before;
         }
 
-        internal void TickLanternDrain(bool flared, float deltaTime)
+        /// <summary>
+        /// Reconfigures fuel and capacity directly at runtime.
+        /// Useful for stage transitions (fuel carryover between chambers) and automated tests.
+        /// </summary>
+        public void Initialize(float current, float maxCapacity)
+        {
+            if (maxCapacity <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(maxCapacity), "Capacity must be positive.");
+            capacity = maxCapacity;
+            SetFuel(current);
+        }
+
+        public void SetDrainRates(float dimDrain, float flareDrain)
+        {
+            dimDrainPerSecond = Mathf.Max(0f, dimDrain);
+            flareDrainPerSecond = Mathf.Max(0f, flareDrain);
+        }
+
+        public void TickLanternDrain(bool flared, float deltaTime)
         {
             float rate = flared ? flareDrainPerSecond : dimDrainPerSecond;
             if (rate > 0f && deltaTime > 0f)
