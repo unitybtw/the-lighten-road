@@ -4,6 +4,8 @@
 
 Read [the GDD](docs/GDD.md) and its open decisions before implementing a system. Discuss changes to mechanics or scope in an issue or pull request so the working design stays consistent with the game.
 
+Read [the collaboration guide](docs/COLLABORATION.md) for personal workspaces, task branches, shared scene ownership, and integration into `Game/`. CODEOWNERS and PR / issue templates are included to support review; branch protection and required approvals are not configured.
+
 ## Working together
 
 1. Pull the latest `main` and create a focused branch, such as `feature/lantern-fuel`, `art/archive-tiles`, or `docs/puzzle-rules`.
@@ -14,7 +16,7 @@ Read [the GDD](docs/GDD.md) and its open decisions before implementing a system.
 
 ## Unity project conventions
 
-The Unity project has not been added yet. When it is created:
+The Unity project has not been added yet. Follow [Game/README.md](Game/README.md) to initialize it under `Game/`. When it is created:
 
 - Record the exact editor version and package dependencies.
 - Use visible `.meta` files and Force Text asset serialization.

@@ -1,0 +1,12 @@
+# Review routing only; does not grant access or block edits.
+# More specific matches below override the shared default.
+* @unitybtw @kemal-berke
+/development/sirac/ @unitybtw
+/development/kemal/ @kemal-berke
+/Game/ @unitybtw @kemal-berke
+/art/ @benesas @Ichnolith
+/art/can/ @benesas
+/art/maksim/ @Ichnolith
+/design/ @aeshmacodex
+/docs/GDD.md @aeshmacodex
+/docs/The-Lighten-Road-GDD.pdf @aeshmacodex

@@ -70,11 +70,20 @@ cd the-lighten-road
 
 Start with [docs/GDD.md](docs/GDD.md). The intended technology is Unity 2D, C#, Unity Tilemap, and URP 2D Lighting. The exact Unity version, package versions, input bindings, target platforms, and build instructions will be recorded when the Unity project is added. There is currently nothing to run in Unity.
 
+## Working as a team
+
+Each teammate has a dedicated workspace for prototypes, art sources, or puzzle design. Start with the [collaboration guide](docs/COLLABORATION.md) for folder ownership, task branches, PRs, and Unity scene coordination. The shared Unity project will live in `Game/` once initialized.
+
 ## Repository guide
 
 | Path | Contents |
 | --- | --- |
 | [docs/GDD.md](docs/GDD.md) | Editable design, MVP boundaries, and open decisions |
+| [docs/COLLABORATION.md](docs/COLLABORATION.md) | Team workspaces and branch / review workflow |
+| [development/](development/) | Separate Siraç and Kemal prototype workspaces |
+| [art/](art/) | Separate Can and Maksim art sources and exports |
+| [design/](design/) | Furkan’s level designs and balance proposals |
+| [Game/](Game/) | Reserved shared Unity project location and setup guide |
 | [docs/The-Lighten-Road-GDD.pdf](docs/The-Lighten-Road-GDD.pdf) | Latest three-page team design document |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Branch, review, and Unity asset workflow |
 
