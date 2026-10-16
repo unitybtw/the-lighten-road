@@ -100,7 +100,7 @@ Each teammate has a dedicated workspace for prototypes, art sources, or puzzle d
 <a href="https://github.com/unitybtw/the-lighten-road/commits/main/">
   <picture>
     <source media="(prefers-reduced-motion: reduce)" srcset="docs/team-activity/team-activity.png">
-    <img src="docs/team-activity/team-activity.gif" alt="Team commit activity: circular GitHub profile photos, commit counts and each member's share of team commits" width="1200">
+    <img src="docs/team-activity/team-activity.gif" alt="Team activity: overlapping circular GitHub portraits with names and commit counts above one color-coded proportional bar. Siraç is blue." width="900">
   </picture>
 </a>
 

@@ -35,6 +35,15 @@ class ActivityTests(unittest.TestCase):
         self.assertEqual(counts["kemal-berke"], 2)
         self.assertEqual(api.call_args_list[1].args[0], next_page)
 
+    def test_shared_bar_preserves_proportions_and_does_not_fill_zero_contributors(self):
+        members = [{"commits": count} for count in (28, 1, 0, 1, 0)]
+        spans = [(start, end) for _, start, end in generate.bar_segments(members, 720)]
+        self.assertEqual(spans, [(0, 672), (672, 696), (696, 696), (696, 720), (720, 720)])
+        thirds = [{"commits": 1}] * 3
+        self.assertEqual(sum(end - start for _, start, end in generate.bar_segments(thirds, 100)), 100)
+        empty = [{"commits": 0}] * 5
+        self.assertTrue(all(start == end == 0 for _, start, end in generate.bar_segments(empty, 720)))
+
     def test_unchanged_statistics_do_not_churn_the_snapshot_for_bot_commits(self):
         def profile(member):
             login, name, role = member

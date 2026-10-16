@@ -5,6 +5,7 @@ import argparse
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from functools import lru_cache
 from hashlib import sha256
 from io import BytesIO
 import json
@@ -29,10 +30,19 @@ TEAM = [
     ("Ichnolith", "Maksim", "Artist"),
     ("aeshmacodex", "Furkan", "Game Designer"),
 ]
-WIDTH, HEIGHT = 1200, 570
-GOLD = (231, 182, 109)
-IVORY = (242, 232, 212)
-MUTED = (139, 153, 166)
+WIDTH, HEIGHT = 900, 278
+SCALE = 3
+BACKGROUND = (13, 17, 23)
+IVORY = (231, 237, 245)
+MUTED = (117, 130, 149)
+# Identity colors stay fixed even when commit rankings change.
+COLORS = {
+    "unitybtw": (84, 153, 255),
+    "kemal-berke": (69, 203, 177),
+    "benesas": (238, 185, 91),
+    "ichnolith": (172, 136, 248),
+    "aeshmacodex": (233, 138, 173),
+}
 
 
 def api(path):
@@ -118,89 +128,105 @@ def snapshot(revision, branch):
     return data
 
 
+@lru_cache(maxsize=64)
 def font(size):
-    return ImageFont.truetype(str(FONT), size)
+    return ImageFont.truetype(str(FONT), size * SCALE)
 
 
 def text(draw, position, value, size, fill=IVORY, anchor=None):
-    draw.text(position, value, font=font(size), fill=fill, anchor=anchor)
+    draw.text(tuple(round(v * SCALE) for v in position), value,
+              font=font(size), fill=fill, anchor=anchor)
 
 
-def circle_avatar(frame, login, center):
-    avatar = Image.open(OUTPUT / "avatars" / (login.lower() + ".png")).convert("RGB")
-    avatar = ImageOps.fit(avatar, (76, 76), method=Image.Resampling.LANCZOS)
-    mask = Image.new("L", (304, 304), 0)
-    ImageDraw.Draw(mask).ellipse((0, 0, 303, 303), fill=255)
-    mask = mask.resize((76, 76), Image.Resampling.LANCZOS)
-    frame.paste(avatar, (center[0] - 38, center[1] - 38), mask)
+def bar_segments(members, width):
+    """Cumulative rounding preserves the total and gives zero commits zero pixels."""
+    total = sum(m["commits"] for m in members)
+    accumulated = 0
+    for member in members:
+        start = round(width * accumulated / total) if total else 0
+        accumulated += member["commits"]
+        end = round(width * accumulated / total) if total else 0
+        yield member, start, end
 
 
 def render(data):
-    base = Image.new("RGB", (WIDTH, HEIGHT))
-    draw = ImageDraw.Draw(base)
-    for y in range(HEIGHT):
-        t = y / HEIGHT
-        draw.line((0, y, WIDTH, y), fill=(int(12 + t * 2), int(18 + t * 2), int(25 + t * 3)))
-    draw.rounded_rectangle((0, 0, WIDTH - 1, HEIGHT - 1), radius=18, outline=(41, 51, 60), width=1)
-    draw.line((26, 0, 290, 0), fill=GOLD, width=2)
-    text(draw, (28, 27), "THE PEOPLE BEHIND THE LIGHT", 11, GOLD)
-    text(draw, (27, 51), "Building the road, together.", 34)
-    text(draw, (29, 103), "Repository activity  /  five teammates, one shared world", 14, MUTED)
-    text(draw, (1168, 39), str(data["team_commits"]), 43, IVORY, "ra")
-    text(draw, (1168, 92), "TEAM COMMITS", 10, MUTED, "ra")
-    members = sorted(enumerate(data["members"]), key=lambda item: (-item[1]["commits"], item[0]))
-    maximum = max((m["commits"] for m in data["members"]), default=0)
-    cards = []
-    for column, (_, member) in enumerate(members):
-        x, y, w = 25 + column * 233, 155, 218
-        leading = maximum > 0 and member["commits"] == maximum
-        border = (116, 90, 56) if leading else (44, 56, 65)
-        fill = (28, 28, 27) if leading else (18, 26, 34)
-        draw.rounded_rectangle((x, y, x + w, 480), radius=12, fill=fill, outline=border)
-        text(draw, (x + 18, 173), "MOST COMMITS" if leading else "TEAM CONTRIBUTOR", 9, GOLD if leading else MUTED)
-        center = (x + w // 2, 239)
-        draw.ellipse((center[0] - 42, center[1] - 42, center[0] + 42, center[1] + 42), outline=border, width=2)
-        circle_avatar(base, member["login"], center)
-        text(draw, (center[0], 291), member["name"], 23, IVORY, "ma")
-        text(draw, (center[0], 324), "@" + member["login"], 13, MUTED, "ma")
-        text(draw, (center[0], 347), member["role"], 12, MUTED, "ma")
-        text(draw, (x + 18, 388), str(member["commits"]), 33, GOLD if leading else IVORY)
-        count_width = draw.textlength(str(member["commits"]), font=font(33))
-        text(draw, (x + 23 + count_width, 408), "COMMITS", 9, MUTED)
-        share = member["commits"] / max(1, data["team_commits"])
-        text(draw, (x + w - 18, 408), f"{share:.0%}", 11, MUTED, "ra")
-        draw.rounded_rectangle((x + 18, 448, x + w - 18, 452), radius=2, fill=(45, 54, 60))
-        length = (w - 36) * share
-        if length > 0:
-            draw.rounded_rectangle((x + 18, 448, x + 18 + max(3, length), 452), radius=2, fill=GOLD if leading else (120, 153, 163))
-        cards.append((center, leading, x + 18, length))
-    draw.line((28, 502, 1172, 502), fill=(42, 52, 61))
-    text(draw, (29, 517), "Commits show activity, not effort. Art, design, reviews and work outside Git also matter.", 13, MUTED)
-    text(draw, (29, 543), data["branch"] + "  /  author-linked commits  /  merges & bots excluded", 10, MUTED)
-    text(draw, (1170, 543), "Updated " + data["updated_at"], 10, MUTED, "ra")
-    base.save(OUTPUT / "team-activity.png", optimize=True)
+    # Supersampling keeps small type and circular masks crisp at README sizes.
+    members = data["members"]  # Stable roster order also matches the shared bar.
+    avatars = {
+        m["login"]: Image.open(OUTPUT / "avatars" / (m["login"].lower() + ".png")).convert("RGB")
+        for m in members
+    }
+    bar_x, bar_y, bar_width, bar_height = 90, 230, 720, 12
+    segments = list(bar_segments(members, bar_width * SCALE))
+    bar_mask = Image.new("L", (bar_width * SCALE, bar_height * SCALE), 0)
+    ImageDraw.Draw(bar_mask).rounded_rectangle(
+        (0, 0, bar_mask.width - 1, bar_mask.height - 1), radius=bar_mask.height / 2, fill=255)
 
-    frames = []
-    # Figures and bar lengths remain accurate in every frame; motion is purely decorative.
-    for index in range(48):
-        phase = index / 48
-        frame = base.copy()
+    def frame_at(phase=None):
+        frame = Image.new("RGB", (WIDTH * SCALE, HEIGHT * SCALE), BACKGROUND)
         draw = ImageDraw.Draw(frame)
-        for column, (center, leading, start, length) in enumerate(cards):
-            if leading:
-                pulse = (math.sin(phase * math.tau) + 1) / 2
-                ring = tuple(int(a + pulse * (b - a)) for a, b in zip((103, 81, 52), GOLD))
-                draw.ellipse((center[0] - 42, center[1] - 42, center[0] + 42, center[1] + 42), outline=ring, width=2)
-            if length >= 4:
-                shimmer = (phase + column * 0.13) % 1
-                tip = start + min(length, max(3, length)) * shimmer
-                draw.line((tip, 449, min(start + max(3, length), tip + 10), 449), fill=IVORY, width=1)
-        frames.append(frame)
-    # A single shared palette avoids avatar / text color flicker between GIF frames.
-    palette = base.quantize(colors=192)
+        text(draw, (38, 23), "TEAM ACTIVITY", 10, MUTED)
+        text(draw, (WIDTH - 38, 23), f'{data["team_commits"]} commits', 11, MUTED, "ra")
+        pulses = []
+        for index in range(len(members)):
+            distance = ((phase - index / len(members) + 0.5) % 1 - 0.5) if phase is not None else 0.5
+            pulses.append(max(0, math.cos(distance * math.tau)) ** 18)
+
+        # The gently expanding portrait comes to the front of the overlapping row.
+        centers = [WIDTH / 2 + (i - (len(members) - 1) / 2) * 76 for i in range(len(members))]
+        for index in sorted(range(len(members)), key=lambda i: pulses[i]):
+            member, pulse, cx = members[index], pulses[index], centers[index]
+            color = COLORS[member["login"].lower()]
+            radius, cy = round((46 + 5 * pulse) * SCALE), round((106 - 2 * pulse) * SCALE)
+            cx = round(cx * SCALE)
+            # A background rim separates overlapping photographs without card chrome.
+            rim = radius + 4 * SCALE
+            draw.ellipse((cx - rim, cy - rim, cx + rim, cy + rim), fill=BACKGROUND)
+            draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=color)
+            diameter = 2 * (radius - 2 * SCALE)
+            avatar = ImageOps.fit(avatars[member["login"]], (diameter, diameter), method=Image.Resampling.LANCZOS)
+            mask = Image.new("L", (diameter, diameter), 0)
+            ImageDraw.Draw(mask).ellipse((0, 0, diameter - 1, diameter - 1), fill=255)
+            frame.paste(avatar, (cx - diameter // 2, cy - diameter // 2), mask)
+
+        for index, member in enumerate(members):
+            color, pulse, cx = COLORS[member["login"].lower()], pulses[index], centers[index]
+            name_color = tuple(round(a + pulse * (b - a)) for a, b in zip(IVORY, color))
+            text(draw, (cx, 172 - pulse), member["name"], 15, name_color, "ma")
+            count = member["commits"]
+            text(draw, (cx, 196), f'{count} commit' + ("" if count == 1 else "s"), 10, MUTED, "ma")
+            dot = 2 * SCALE
+            x, y = round(cx * SCALE), 216 * SCALE
+            draw.ellipse((x - dot, y - dot, x + dot, y + dot), fill=color)
+
+        bar = Image.new("RGB", bar_mask.size, (32, 41, 54))
+        bar_draw = ImageDraw.Draw(bar)
+        for member, start, end in segments:
+            if end > start:
+                bar_draw.rectangle((start, 0, end - 1, bar.height - 1), fill=COLORS[member["login"].lower()])
+        if phase is not None and data["team_commits"]:
+            # A soft light passes across the existing fill; proportions never animate.
+            center = (phase * 1.4 - 0.2) * bar.width
+            for x in range(max(0, round(center - 100 * SCALE)), min(bar.width, round(center + 100 * SCALE))):
+                strength = 0.22 * math.exp(-((x - center) / (36 * SCALE)) ** 2)
+                original = bar.getpixel((x, 0))
+                highlight = tuple(round(v + (255 - v) * strength) for v in original)
+                bar_draw.line((x, 0, x, bar.height), fill=highlight)
+        frame.paste(bar, (bar_x * SCALE, bar_y * SCALE), bar_mask)
+        return frame.resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
+
+    base = frame_at()
+    base.save(OUTPUT / "team-activity.png", optimize=True)
+    frames = [frame_at(index / 60) for index in range(60)]
+    # Include every motion state in one palette, preventing color flicker.
+    sheet = Image.new("RGB", (WIDTH, HEIGHT * 7))
+    sheet.paste(base, (0, 0))
+    for index in range(6):
+        sheet.paste(frames[index * 10], (0, (index + 1) * HEIGHT))
+    palette = sheet.quantize(colors=256)
     frames = [f.quantize(palette=palette, dither=Image.Dither.NONE) for f in frames]
     frames[0].save(OUTPUT / "team-activity.gif", save_all=True, append_images=frames[1:],
-                   duration=125, loop=0, disposal=1, optimize=True)
+                   duration=100, loop=0, disposal=1, optimize=True)
 
 
 def update_readme(data):
@@ -212,7 +238,7 @@ def update_readme(data):
 <a href="https://github.com/{REPO}/commits/{data['branch']}/">
   <picture>
     <source media="(prefers-reduced-motion: reduce)" srcset="docs/team-activity/team-activity.png">
-    <img src="docs/team-activity/team-activity.gif" alt="Team commit activity: circular GitHub profile photos, commit counts and each member's share of team commits" width="1200">
+    <img src="docs/team-activity/team-activity.gif" alt="Team activity: overlapping circular GitHub portraits with names and commit counts above one color-coded proportional bar. Siraç is blue." width="900">
   </picture>
 </a>
 
