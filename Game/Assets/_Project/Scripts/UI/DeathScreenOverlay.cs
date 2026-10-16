@@ -113,18 +113,18 @@ namespace TheLightenRoad.UI
             {
                 case DeathReason.Darkness:
                     icon.sprite = PixelSprites.ExtinguishedFlame;
-                    headerText.text = "KARANLIKTA KAYBOLDUN";
-                    subtitleText.text = "Fenerin alevi söndü... Karanlık seni yuttu.";
+                    headerText.text = "LOST IN THE DARK";
+                    subtitleText.text = "Your lantern went out. The darkness took you.";
                     break;
                 case DeathReason.Void:
                     icon.sprite = PixelSprites.SkullIcon;
-                    headerText.text = "DİPSİZ KUYUYA DÜŞTÜN";
-                    subtitleText.text = "Eski dünyanın derinliklerinde kayboldun.";
+                    headerText.text = "LOST TO THE ABYSS";
+                    subtitleText.text = "You vanished into the depths of the old world.";
                     break;
                 case DeathReason.Hazard:
                     icon.sprite = PixelSprites.SkullIcon;
-                    headerText.text = "YOK OLDUN";
-                    subtitleText.text = "Harabelerin ölümcül tehlikesi seni yakaladı.";
+                    headerText.text = "YOU PERISHED";
+                    subtitleText.text = "The ruins claimed another life.";
                     break;
             }
 
@@ -315,7 +315,7 @@ namespace TheLightenRoad.UI
             // 4e. Prompt
             promptText = AddText("Prompt", centerGroup, font, new Vector2(0f, -65f), new Vector2(380f, 20f), 10,
                 TextAnchor.MiddleCenter, Color.clear);
-            promptText.text = "[SPACE] / [R] Yeniden Doğ";
+            promptText.text = "[SPACE] / [R] Respawn";
 
             canvas.enabled = false;
         }

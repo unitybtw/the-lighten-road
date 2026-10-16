@@ -285,9 +285,16 @@ Continue expanding player systems in `Sandbox/Sirac/`:
 1. Procedural 8-bit audio feedback / sound synthesis for footsteps, jumps, flame ignition, and low-fuel heartbeat.
 2. Secret wall runes / glyphs that only reveal when illuminated by Flare mode.
 
+## Checkpoint 11 — Minimal animated ember HUD (2026-10-16)
 
+Rebuilt `LanternHUD` as a compact, borderless overlay (210 × 54 at a 960 × 540 reference resolution). The five existing crystal sprites show full / half / empty embers, with two fine charge marks per crystal, an exact charge count, and overflow inventory. A small key hint uses the controller's configured input; an active scout shows its remaining seconds and a thin time indicator.
 
+Motion is limited to a short staggered entrance, subtle ember breathing, a brief gain / spend response, and a fading pickup receipt. `Reduce Motion` disables decorative movement while retaining state feedback. The HUD does not change gameplay fuel, scout duration, pickups, or death / respawn. A resource-backed TextMesh Pro SDF font uses the already included OFL Liberation Sans source and includes Turkish glyphs.
 
+![Minimal ember reserve HUD in MovementSandbox](previews/ember-hud-minimal.png)
 
+Validation: all 11 `LanternHUDTests` passed through Unity MCP, covering full / half / empty states, overflow, scout tracking without extra fuel spending, pickup feedback including single charges, disable / re-enable, reduced motion, and retargeting. Dim and Flare were also inspected in Unity Game view. The remaining gameplay suites were not rerun for this UI change.
 
+All current player-facing UI is in English: ember / charge counts, pickup receipts, Flare prompts, timers, empty reserve feedback, death messages, and respawn instructions. HUD timers use English decimal formatting regardless of the system locale.
 
+English UI verification: 15 / 15 Play Mode tests passed (11 HUD + 4 player respawn); the English Flare HUD was visually checked and the live hazard overlay displayed English death and respawn messages.

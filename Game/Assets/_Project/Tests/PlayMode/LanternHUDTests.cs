@@ -97,23 +97,23 @@ public sealed class LanternHUDTests
     {
         fuel.Initialize(6f, 10f);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("[F] İZCİ FIRLAT"));
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
 
         controller.SetFlared(true);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("ALEV İZCİSİ"));
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
 
         controller.SetFlared(false);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("[F] İZCİ FIRLAT"));
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
     }
 
     [Test]
-    public void EmptyEmberStateDisplaysKorTukendi()
+    public void EmptyEmberStateDisplaysEnglishWarning()
     {
         fuel.Initialize(0f, 10f);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("[F] KOR TÜKENDİ"));
+        Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
         for (int i = 0; i < 5; i++)
         {
             Assert.That(hud.GetSlotColor(i), Is.EqualTo(Color.clear));
@@ -134,5 +134,73 @@ public sealed class LanternHUDTests
 
         Step(1.5f);
         Assert.That(hud.IsShowingPickup, Is.False);
+    }
+
+    [Test]
+    public void SingleChargeGainIsNotMisreportedAsAFullEmber()
+    {
+        Step(0.1f);
+        fuel.AddFuel(1f);
+        Step(0.05f);
+        Assert.That(hud.PickupText, Is.EqualTo("+1 CHARGE"));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(7));
+        Assert.That(hud.GetSlotSprite(3), Is.EqualTo(PixelSprites.EmberHalf));
+    }
+
+    [Test]
+    public void ScoutMeterReflectsControllerWithoutSpendingAdditionalCharges()
+    {
+        Step(0.1f);
+        controller.SetFlared(true);
+        float afterActivation = fuel.CurrentFuel;
+        Step(0.1f);
+        Assert.That(hud.ScoutProgress, Is.EqualTo(controller.FlareTimer / controller.FlareScoutDuration).Within(0.001f));
+        Assert.That(hud.ScoutProgress, Is.GreaterThan(0f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(afterActivation));
+        Assert.That(hud.IsShowingSpend, Is.True);
+
+        controller.SetFlared(false);
+        Step(0.05f);
+        Assert.That(hud.ScoutProgress, Is.Zero);
+    }
+
+    [Test]
+    public void DisablingHudHidesCanvasAndReenableDoesNotFakePickup()
+    {
+        Step(0.1f);
+        hud.enabled = false;
+        Assert.That(hud.Canvas.enabled, Is.False);
+        fuel.AddFuel(2f);
+        hud.enabled = true;
+        Step(0.1f);
+        Assert.That(hud.Canvas.enabled, Is.True);
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
+        Assert.That(hud.IsShowingPickup, Is.False);
+    }
+
+    [Test]
+    public void ReducedMotionKeepsInventoryAndPickupFeedbackReadable()
+    {
+        hud.ReduceMotion = true;
+        Step(0.1f);
+        fuel.AddFuel(2f);
+        Step(0.1f);
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
+        Assert.That(hud.IsShowingPickup, Is.True);
+        Assert.That(hud.PickupText, Is.EqualTo("+1 EMBER"));
+        Assert.That(hud.Canvas.GetComponentInChildren<CanvasGroup>().alpha, Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void RetargetingClearsPreviousInventoryFeedback()
+    {
+        Step(0.1f);
+        fuel.AddFuel(2f);
+        Step(0.05f);
+        Assert.That(hud.IsShowingPickup, Is.True);
+        hud.SetTarget(controller);
+        Step(0.05f);
+        Assert.That(hud.IsShowingPickup, Is.False);
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
     }
 }

@@ -5,7 +5,8 @@
         "TheLightenRoad.Lantern",
         "TheLightenRoad.Player",
         "UnityEngine.UI",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
