@@ -1,0 +1,325 @@
+fileFormatVersion: 2
+guid: a566f67e4aa1848e4952cb3f3bad0005
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3095914135086503838
+    second: SpikeSheet_0
+  - first:
+      213: -4328810153973934136
+    second: SpikeSheet_1
+  - first:
+      213: -10571759574128189
+    second: SpikeSheet_2
+  - first:
+      213: -4062731393447248931
+    second: SpikeSheet_3
+  - first:
+      213: 118188681383519469
+    second: SpikeSheet_4
+  - first:
+      213: -1430942527168542214
+    second: SpikeSheet_5
+  - first:
+      213: 5278571434673573839
+    second: SpikeSheet_6
+  - first:
+      213: 2811011558311343044
+    second: SpikeSheet_7
+  - first:
+      213: 8516828830431704138
+    second: SpikeSheet_8
+  - first:
+      213: -5150789365090156902
+    second: SpikeSheet_9
+  - first:
+      213: -6640016233147693323
+    second: SpikeSheet_10
+  - first:
+      213: -8886981427137822705
+    second: SpikeSheet_11
+  - first:
+      213: -2678875822537628138
+    second: SpikeSheet_12
+  - first:
+      213: 222344775524243394
+    second: SpikeSheet_13
+  - first:
+      213: -997126997053123837
+    second: SpikeSheet_14
+  - first:
+      213: -4951392983552476450
+    second: SpikeSheet_15
+  - first:
+      213: -8480650157282350760
+    second: SpikeSheet_16
+  - first:
+      213: -9033097700941607453
+    second: SpikeSheet_17
+  - first:
+      213: 1034575357930864778
+    second: SpikeSheet_18
+  - first:
+      213: 5004246763806305400
+    second: SpikeSheet_19
+  - first:
+      213: 6140270595604074144
+    second: SpikeSheet_20
+  - first:
+      213: 3968493374505184510
+    second: SpikeSheet_21
+  - first:
+      213: -3923520350181731991
+    second: SpikeSheet_22
+  - first:
+      213: 6781130642120899147
+    second: SpikeSheet_23
+  - first:
+      213: -5502075959676705417
+    second: SpikeSheet_24
+  - first:
+      213: -1247360104359592025
+    second: SpikeSheet_25
+  - first:
+      213: -4525226356047814361
+    second: SpikeSheet_26
+  - first:
+      213: -7292320985637717186
+    second: SpikeSheet_27
+  - first:
+      213: -7449961328585849578
+    second: SpikeSheet_28
+  - first:
+      213: -8365937868490472796
+    second: SpikeSheet_29
+  - first:
+      213: -5762855517495025237
+    second: SpikeSheet_30
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 640
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Spike 01
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 186
+        width: 325
+        height: 274
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 083678506a04e4a9ab2fbc6ce7c34e02
+      internalID: 188572474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spike 02
+      rect:
+        serializedVersion: 2
+        x: 533
+        y: 186
+        width: 323
+        height: 274
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e7e376e118c1434891f4bfe8c0c61e6
+      internalID: 1610714947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spike 03
+      rect:
+        serializedVersion: 2
+        x: 917
+        y: 186
+        width: 326
+        height: 274
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bfa4ec51024134589a0c3116cd383958
+      internalID: -1952966482
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spike 04
+      rect:
+        serializedVersion: 2
+        x: 1303
+        y: 186
+        width: 325
+        height: 274
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 65837edb209f9493a8b04ba853dc1258
+      internalID: 232735451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Spike 05
+      rect:
+        serializedVersion: 2
+        x: 1685
+        y: 186
+        width: 328
+        height: 274
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c6e317daa97be453ab93cee6ec1f4de9
+      internalID: 1929409482
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 15643c5ef4a464129875b4b87273273e
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Spike 01: 188572474
+      Spike 02: 1610714947
+      Spike 03: -1952966482
+      Spike 04: 232735451
+      Spike 05: 1929409482
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

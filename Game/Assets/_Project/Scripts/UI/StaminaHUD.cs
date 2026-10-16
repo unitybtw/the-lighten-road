@@ -1,109 +1,82 @@
 using TheLightenRoad.Player;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace TheLightenRoad.UI
 {
-    /// <summary>
-    /// Premium, slender stamina gauge anchored at the bottom-center of the screen.
-    /// Features:
-    /// - Contextual motion: Smoothly slides up from below the screen upon sprinting/exertion,
-    ///   and gracefully slides back down beneath the screen when rested and full.
-    /// - Liquid dual-fill: Instant fill drop with smooth trailing ghost bar for physical weight.
-    /// - Multi-layer aura: Ambient resting shadow, soft breathing glow, and energetic pulse on low stamina/exhaustion.
-    /// - Clean rounded pill contour with internal masking.
-    /// </summary>
+    /// <summary>A quiet, weathered endurance instrument. Presentation never spends stamina.</summary>
     [DisallowMultipleComponent]
     public sealed class StaminaHUD : MonoBehaviour
     {
         [Header("Target (auto-found when empty)")]
         [SerializeField] private PlayerStamina target;
-
-        [Header("Layout — Bottom Center")]
-        [Tooltip("Vertical resting position in pixels above the bottom edge of the screen.")]
-        [SerializeField] private float bottomOffset = 26f;
-        [Tooltip("Vertical hidden position in pixels below the bottom edge of the screen.")]
-        [SerializeField] private float hiddenOffset = -35f;
-        [Tooltip("Dimensions of the slender stamina pill (width x height).")]
-        [SerializeField] private Vector2 barSize = new Vector2(150f, 5f);
-
-        [Header("Colors & Styling")]
-        [SerializeField] private Color staminaColor = new Color(0.96f, 0.72f, 0.24f, 1f);
-        [SerializeField] private Color exhaustedColor = new Color(0.92f, 0.24f, 0.16f, 1f);
-        [SerializeField] private Color ghostColor = new Color(1f, 0.92f, 0.70f, 0.70f);
-        [SerializeField] private Color trackColor = new Color(0.05f, 0.07f, 0.09f, 0.92f);
-        [SerializeField] private Color borderColor = new Color(0.22f, 0.26f, 0.30f, 0.95f);
-        [SerializeField] private Color shadowColor = new Color(0f, 0f, 0f, 0.65f);
-
-        [Header("Animation & Behavior")]
-        [Tooltip("Seconds resting at full stamina before sliding down out of view.")]
-        [SerializeField, Min(0.2f)] private float idleFadeDelay = 1.0f;
-        [Tooltip("Speed when sliding up into view upon exertion.")]
-        [SerializeField, Min(1f)] private float popUpSpeed = 5.0f;
-        [Tooltip("Speed when sliding down below the screen upon resting.")]
-        [SerializeField, Min(1f)] private float retreatSpeed = 2.5f;
-        [Tooltip("Ghost bar catch-up delay in seconds.")]
-        [SerializeField, Min(0.05f)] private float ghostDelay = 0.18f;
-        [Tooltip("Ghost bar drain speed.")]
+        [SerializeField] private TMP_FontAsset fontAsset;
+        [Header("Layout — bottom center, reference resolution 960x540")]
+        [SerializeField] private float bottomOffset = 28f;
+        [SerializeField] private float hiddenOffset = -34f;
+        [SerializeField] private Vector2 barSize = new Vector2(154f, 3f);
+        [Header("Weathered ivory, iron and fired clay")]
+        [SerializeField] private Color staminaColor = new Color32(194, 178, 139, 255);
+        [SerializeField] private Color exhaustedColor = new Color32(170, 100, 75, 255);
+        [SerializeField] private Color ghostColor = new Color32(107, 97, 76, 255);
+        [SerializeField] private Color trackColor = new Color32(25, 26, 23, 255);
+        [SerializeField] private Color borderColor = new Color32(76, 72, 60, 255);
+        [Header("Motion")]
+        [SerializeField] private bool reduceMotion;
+        [SerializeField, Min(0.2f)] private float idleFadeDelay = 1.1f;
+        [SerializeField, Min(1f)] private float popUpSpeed = 6f;
+        [SerializeField, Min(1f)] private float retreatSpeed = 3f;
+        [SerializeField, Min(0.05f)] private float ghostDelay = 0.14f;
         [SerializeField, Min(0.1f)] private float ghostCatchupSpeed = 2.4f;
 
         private Canvas canvas;
-        private CanvasScaler scaler;
-        private RectTransform panel;
+        private RectTransform panel, tip, sheen;
         private CanvasGroup panelGroup;
-        private Image shadowImage;
-        private Image exhaustedGlow;
-        private Image borderImage;
-        private Image trackImage;
-        private Image ghostImage;
-        private Image fillImage;
-
-        private float currentFill = 1f;
-        private float ghostFill = 1f;
-        private float ghostTimer;
-        private float fullIdleTimer;
-        private float currentVisibility = 1f;
-        private float recoveryFlashTimer;
-        private bool isExhausted;
-        private bool isBuilt;
+        private Image frame, fillImage, ghostImage, breath, sheenImage;
+        private TextMeshProUGUI label, status;
+        private PlayerStamina boundTarget;
         private PlayerMotor2D motor;
+        private float currentFill = 1f, ghostFill = 1f, ghostTimer, fullIdleTimer;
+        private float currentVisibility = 1f, recoveryTimer, recovering;
+        private float phase;
+        private float safeBottom;
+        private Rect lastSafeArea;
+        private int lastHeight;
 
         public PlayerStamina Target => target;
+        public Canvas Canvas => canvas;
         public float DisplayedFill => currentFill;
         public float DisplayedGhostFill => ghostFill;
-        public bool IsExhausted => isExhausted;
+        public bool IsExhausted { get; private set; }
         public float PanelAlpha => panelGroup != null ? panelGroup.alpha : 0f;
         public float BottomOffset => bottomOffset;
         public float HiddenOffset => hiddenOffset;
         public float Visibility => currentVisibility;
         public Vector2 BarSize => barSize;
         public Vector2 AnchoredPosition => panel != null ? panel.anchoredPosition : Vector2.zero;
+        public string StatusText => status != null ? status.text : string.Empty;
+        public bool ReduceMotion { get => reduceMotion; set => reduceMotion = value; }
 
-        private void Awake()
-        {
-            BuildHierarchy();
-        }
+        private void Awake() => BuildHierarchy();
 
         private void OnEnable()
         {
-            fullIdleTimer = 0f;
-            currentFill = ghostFill = 1f;
+            fullIdleTimer = ghostTimer = recoveryTimer = recovering = phase = 0f;
             currentVisibility = 1f;
             TryBind();
+            Tick(0f);
         }
 
         private void OnDisable()
         {
             Unbind();
+            if (canvas != null) canvas.enabled = false;
         }
 
         private void Update()
         {
-            if (target == null)
-            {
-                TryBind();
-            }
-
+            if (boundTarget != target || boundTarget == null) TryBind();
             Tick(Time.unscaledDeltaTime);
         }
 
@@ -111,320 +84,205 @@ namespace TheLightenRoad.UI
         {
             Unbind();
             target = newTarget;
-            motor = null;
+            fullIdleTimer = ghostTimer = recoveryTimer = recovering = 0f;
+            currentVisibility = 1f;
             TryBind();
+            Tick(0f);
         }
 
         private void TryBind()
         {
-            if (target == null)
+            if (target == null) target = FindAnyObjectByType<PlayerStamina>();
+            if (boundTarget == target && boundTarget != null) return;
+            Unbind();
+            boundTarget = target;
+            if (boundTarget == null)
             {
-                target = FindAnyObjectByType<PlayerStamina>();
+                if (canvas != null) canvas.enabled = false;
+                return;
             }
-
-            if (target != null)
-            {
-                motor = target.GetComponent<PlayerMotor2D>();
-                target.StaminaChanged += HandleStaminaChanged;
-                target.ExhaustionChanged += HandleExhaustionChanged;
-                isExhausted = target.IsExhausted;
-                currentFill = ghostFill = target.NormalizedStamina;
-            }
+            motor = boundTarget.GetComponent<PlayerMotor2D>();
+            boundTarget.StaminaChanged += HandleStaminaChanged;
+            boundTarget.ExhaustionChanged += HandleExhaustionChanged;
+            currentFill = ghostFill = Mathf.Clamp01(boundTarget.NormalizedStamina);
+            IsExhausted = boundTarget.IsExhausted;
+            if (canvas != null) canvas.enabled = true;
         }
 
         private void Unbind()
         {
-            if (target != null)
+            if (boundTarget != null)
             {
-                target.StaminaChanged -= HandleStaminaChanged;
-                target.ExhaustionChanged -= HandleExhaustionChanged;
+                boundTarget.StaminaChanged -= HandleStaminaChanged;
+                boundTarget.ExhaustionChanged -= HandleExhaustionChanged;
             }
+            boundTarget = null;
+            motor = null;
         }
 
         private void HandleStaminaChanged(float current, float max)
         {
-            float targetNorm = max > 0.001f ? Mathf.Clamp01(current / max) : 0f;
-
-            if (targetNorm < currentFill)
+            float value = max > 0.001f ? Mathf.Clamp01(current / max) : 0f;
+            if (value < currentFill)
             {
                 ghostTimer = ghostDelay;
+                recovering = 0f;
                 fullIdleTimer = 0f;
-                currentVisibility = 1f;
-                if (panelGroup != null)
-                {
-                    panelGroup.alpha = 1f;
-                }
             }
-            else if (targetNorm >= 0.999f && currentFill < 0.999f)
+            else if (value > currentFill)
             {
-                recoveryFlashTimer = 0.35f;
+                recovering = 0.35f;
+                if (value >= 0.999f && currentFill < 0.999f) recoveryTimer = 0.55f;
             }
-
-            currentFill = targetNorm;
+            currentFill = value;
         }
 
         private void HandleExhaustionChanged(bool exhausted)
         {
-            isExhausted = exhausted;
-            if (exhausted)
-            {
-                fullIdleTimer = 0f;
-                currentVisibility = 1f;
-                if (panelGroup != null)
-                {
-                    panelGroup.alpha = 1f;
-                }
-            }
+            IsExhausted = exhausted;
+            fullIdleTimer = 0f;
         }
 
-        public void Tick(float dt)
+        public void Tick(float deltaTime)
         {
-            if (!isBuilt) return;
+            if (panel == null || boundTarget == null) return;
+            float dt = Mathf.Max(0f, deltaTime);
+            phase += dt;
+            recoveryTimer = Mathf.Max(0f, recoveryTimer - dt);
+            recovering = Mathf.Max(0f, recovering - dt);
+            if (ghostTimer > 0f) ghostTimer = Mathf.Max(0f, ghostTimer - dt);
+            else ghostFill = Mathf.MoveTowards(ghostFill, currentFill, ghostCatchupSpeed * dt);
+            if (ghostFill < currentFill) ghostFill = currentFill;
 
-            bool isSprinting = motor != null && motor.IsSprinting;
+            bool running = motor != null && motor.IsSprinting;
+            bool low = currentFill <= 0.25f;
+            string state = IsExhausted ? "EXHAUSTED" : low ? "LOW" : running ? "SPRINTING"
+                : recovering > 0f ? "RECOVERING" : currentFill >= 0.999f ? "READY" : "REST";
+            if (status.text != state) status.text = state;
+            Color ink = IsExhausted || low ? exhaustedColor : staminaColor;
+            status.color = IsExhausted || low ? exhaustedColor : new Color32(137, 128, 106, 255);
+            fillImage.color = Color.Lerp(ink, new Color32(219, 206, 170, 255), recoveryTimer * 0.2f);
+            fillImage.fillAmount = currentFill;
+            ghostImage.fillAmount = ghostFill;
+            frame.color = Color.Lerp(borderColor, exhaustedColor, IsExhausted ? 0.45f : 0f);
+            float breathAlpha = reduceMotion || !IsExhausted ? 0.8f : 0.65f + 0.25f * (0.5f + 0.5f * Mathf.Sin(phase * 5f));
+            breath.color = new Color(ink.r, ink.g, ink.b, breathAlpha);
+            tip.gameObject.SetActive(currentFill > 0.01f && currentFill < 0.999f);
+            tip.anchoredPosition = new Vector2(-barSize.x / 2f + currentFill * barSize.x, 6f);
+            sheen.gameObject.SetActive(!reduceMotion && recoveryTimer > 0f);
+            sheen.anchoredPosition = new Vector2(Mathf.Lerp(-barSize.x * 0.15f, barSize.x * 1.15f, 1f - recoveryTimer / 0.55f), 0f);
+            sheenImage.color = new Color(0.85f, 0.79f, 0.64f, 0.22f * recoveryTimer / 0.55f);
 
-            // Ghost bar trailing animation
-            if (ghostTimer > 0f)
-            {
-                ghostTimer -= dt;
-            }
-            else if (ghostFill > currentFill)
-            {
-                ghostFill = Mathf.MoveTowards(ghostFill, currentFill, ghostCatchupSpeed * dt);
-            }
-            else
-            {
-                ghostFill = currentFill;
-            }
-
-            // Recovery gleam timer
-            if (recoveryFlashTimer > 0f)
-            {
-                recoveryFlashTimer = Mathf.Max(0f, recoveryFlashTimer - dt);
-            }
-
-            bool isLowStamina = currentFill <= 0.25f || isExhausted;
-
-            // Apply fill and color to stamina fill bar
-            if (fillImage != null)
-            {
-                fillImage.fillAmount = currentFill;
-
-                if (isExhausted)
-                {
-                    float pulse = Mathf.PingPong(Time.unscaledTime * 6f, 1f);
-                    fillImage.color = Color.Lerp(exhaustedColor, staminaColor, pulse * 0.35f);
-                }
-                else if (isLowStamina)
-                {
-                    float lowPulse = Mathf.PingPong(Time.unscaledTime * 5f, 1f);
-                    Color warnTint = Color.Lerp(staminaColor, exhaustedColor, 0.65f);
-                    fillImage.color = Color.Lerp(staminaColor, warnTint, lowPulse);
-                }
-                else if (recoveryFlashTimer > 0f)
-                {
-                    float flashNorm = recoveryFlashTimer / 0.35f;
-                    fillImage.color = Color.Lerp(staminaColor, Color.white, flashNorm * 0.45f);
-                }
-                else
-                {
-                    fillImage.color = staminaColor;
-                }
-            }
-
-            if (ghostImage != null)
-            {
-                ghostImage.fillAmount = ghostFill;
-            }
-
-            // Dynamic aura glow behind the bar
-            if (exhaustedGlow != null)
-            {
-                if (isExhausted)
-                {
-                    float pulse = (Mathf.Sin(Time.unscaledTime * 8f) + 1f) * 0.5f;
-                    exhaustedGlow.color = new Color(exhaustedColor.r, exhaustedColor.g, exhaustedColor.b, 0.45f * pulse);
-                }
-                else if (isLowStamina)
-                {
-                    float pulse = (Mathf.Sin(Time.unscaledTime * 6f) + 1f) * 0.5f;
-                    exhaustedGlow.color = new Color(exhaustedColor.r, exhaustedColor.g, exhaustedColor.b, 0.25f * pulse);
-                }
-                else if (isSprinting || currentFill < 0.999f)
-                {
-                    float subtleBreath = (Mathf.Sin(Time.unscaledTime * 4f) + 1f) * 0.5f;
-                    exhaustedGlow.color = new Color(staminaColor.r, staminaColor.g, staminaColor.b, 0.18f + 0.12f * subtleBreath);
-                }
-                else
-                {
-                    exhaustedGlow.color = Color.clear;
-                }
-            }
-
-            // Contextual emergence: active when sprinting, depleted, recovering, or exhausted
-            bool shouldBeVisible = (currentFill < 0.999f) || isExhausted || isSprinting;
-            if (shouldBeVisible)
-            {
-                fullIdleTimer = 0f;
-            }
-            else
-            {
-                fullIdleTimer += dt;
-            }
-
-            float targetVisibility = (fullIdleTimer >= idleFadeDelay) ? 0f : 1f;
-            float animSpeed = (targetVisibility > currentVisibility) ? popUpSpeed : retreatSpeed;
-            currentVisibility = Mathf.MoveTowards(currentVisibility, targetVisibility, animSpeed * dt);
-
-            // Smooth easing curve
-            float curvedT = (targetVisibility > 0.5f)
-                ? EaseOutCubic(currentVisibility)
-                : EaseInCubic(currentVisibility);
-
-            // Vertical position slide: smoothly rises from hiddenOffset (-35px) to bottomOffset (+26px)
-            float currentY = Mathf.Lerp(hiddenOffset, bottomOffset, curvedT);
-            if (panel != null)
-            {
-                panel.anchoredPosition = new Vector2(0f, currentY);
-
-                // Subtle scale spring when sliding in
-                float scale = Mathf.Lerp(0.90f, 1.0f, curvedT);
-                panel.localScale = new Vector3(scale, scale, 1f);
-            }
-
-            // Alpha fade
-            if (panelGroup != null)
-            {
-                panelGroup.alpha = Mathf.SmoothStep(0f, 1f, currentVisibility);
-            }
+            bool active = currentFill < 0.999f || IsExhausted || running || recoveryTimer > 0f;
+            fullIdleTimer = active ? 0f : fullIdleTimer + dt;
+            float wanted = fullIdleTimer >= idleFadeDelay ? 0f : 1f;
+            currentVisibility = reduceMotion ? wanted : Mathf.MoveTowards(currentVisibility, wanted,
+                (wanted > currentVisibility ? popUpSpeed : retreatSpeed) * dt);
+            float eased = Mathf.SmoothStep(0f, 1f, currentVisibility);
+            UpdateSafeArea();
+            panel.anchoredPosition = new Vector2(0f, Mathf.Lerp(hiddenOffset, bottomOffset + safeBottom, eased));
+            panelGroup.alpha = eased;
         }
 
-        private static float EaseOutCubic(float t)
+        private void UpdateSafeArea()
         {
-            float inv = 1f - Mathf.Clamp01(t);
-            return 1f - inv * inv * inv;
-        }
-
-        private static float EaseInCubic(float t)
-        {
-            float val = Mathf.Clamp01(t);
-            return val * val * val;
+            if (Screen.safeArea == lastSafeArea && Screen.height == lastHeight) return;
+            lastSafeArea = Screen.safeArea;
+            lastHeight = Screen.height;
+            safeBottom = lastHeight > 0 ? lastSafeArea.yMin * 540f / lastHeight : 0f;
         }
 
         private void BuildHierarchy()
         {
-            if (isBuilt) return;
-
-            // Dedicated independent Canvas for Stamina HUD
-            var canvasGo = new GameObject("StaminaHUD Canvas");
-            canvasGo.transform.SetParent(transform, false);
-            canvas = canvasGo.AddComponent<Canvas>();
+            var root = new GameObject("Stamina HUD / etched reserve", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            root.transform.SetParent(transform, false);
+            canvas = root.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 99;
-            scaler = canvasGo.AddComponent<CanvasScaler>();
+            var scaler = root.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(960f, 540f);
             scaler.matchWidthOrHeight = 1f;
+            panel = Rect("Endurance instrument", root.transform, new Vector2(0f, bottomOffset), new Vector2(barSize.x + 32f, 28f));
+            panelGroup = panel.gameObject.AddComponent<CanvasGroup>();
+            panelGroup.interactable = panelGroup.blocksRaycasts = false;
+            if (fontAsset == null) fontAsset = Resources.Load<TMP_FontAsset>("UI/EmberHUD");
+            var shadow = Graphic("Recess shadow", panel, new Vector2(0f, 5f), new Vector2(barSize.x + 11f, 11f), PixelSprites.StaminaPlate, new Color(0f, 0f, 0f, 0.35f));
+            shadow.raycastTarget = false;
+            frame = Graphic("Chipped iron edge", panel, new Vector2(0f, 6f), new Vector2(barSize.x + 8f, 7f), PixelSprites.StaminaPlate, borderColor);
+            var track = Rect("Engraved channel", panel, new Vector2(0f, 6f), barSize);
+            track.pivot = new Vector2(0.5f, 0.5f);
+            track.gameObject.AddComponent<RectMask2D>();
+            StretchGraphic("Soot track", track, trackColor);
+            ghostImage = StretchGraphic("Spent endurance trail", track, ghostColor, true);
+            fillImage = StretchGraphic("Endurance", track, staminaColor, true);
+            for (int i = 1; i < 4; i++) Graphic("Etch " + i, panel,
+                new Vector2(-barSize.x / 2f + barSize.x * i / 4f, 6f), new Vector2(0.7f, barSize.y), PixelSprites.White, new Color(0.08f, 0.09f, 0.075f, 0.8f));
+            tip = Graphic("Remaining edge", panel, new Vector2(barSize.x / 2f, 6f), new Vector2(0.7f, barSize.y + 1f), PixelSprites.White,
+                new Color32(219, 201, 156, 210)).rectTransform;
+            breath = Graphic("Breath engraving", panel, new Vector2(-barSize.x / 2f - 13f, 11f), new Vector2(11f, 13f), PixelSprites.BreathMark, staminaColor);
+            label = Text("Stamina", panel, "STAMINA", TextAlignmentOptions.Left);
+            status = Text("State", panel, "READY", TextAlignmentOptions.Right);
+            sheen = Rect("Recovery glint", track, Vector2.zero, new Vector2(barSize.x * 0.12f, barSize.y));
+            sheen.anchorMin = sheen.anchorMax = new Vector2(0f, 0.5f);
+            sheen.pivot = new Vector2(0.5f, 0.5f);
+            sheenImage = StretchGraphic("Glint", sheen, Color.clear);
+        }
 
-            // Outer panel anchored Bottom-Center
-            var panelGo = new GameObject("Stamina Gauge");
-            panel = panelGo.AddComponent<RectTransform>();
-            panel.SetParent(canvas.transform, false);
-            panel.anchorMin = new Vector2(0.5f, 0f);
-            panel.anchorMax = new Vector2(0.5f, 0f);
-            panel.pivot = new Vector2(0.5f, 0f);
-            panel.anchoredPosition = new Vector2(0f, bottomOffset);
-            panel.sizeDelta = barSize + new Vector2(6f, 6f);
+        private RectTransform Rect(string name, Transform parent, Vector2 position, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            return rect;
+        }
 
-            panelGroup = panelGo.AddComponent<CanvasGroup>();
-            panelGroup.blocksRaycasts = false;
-            panelGroup.interactable = false;
+        private Image Graphic(string name, Transform parent, Vector2 position, Vector2 size, Sprite sprite, Color color)
+        {
+            var rect = Rect(name, parent, position, size);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = sprite;
+            image.color = color;
+            image.raycastTarget = false;
+            return image;
+        }
 
-            // Soft ambient drop shadow behind everything for clean depth
-            var shadowGo = new GameObject("Ambient Shadow");
-            var shadowRect = shadowGo.AddComponent<RectTransform>();
-            shadowRect.SetParent(panel, false);
-            shadowRect.anchorMin = Vector2.zero;
-            shadowRect.anchorMax = Vector2.one;
-            shadowRect.offsetMin = new Vector2(-10f, -8f);
-            shadowRect.offsetMax = new Vector2(10f, 6f);
-            shadowImage = shadowGo.AddComponent<Image>();
-            shadowImage.sprite = PixelSprites.PillGlow;
-            shadowImage.type = Image.Type.Sliced;
-            shadowImage.color = shadowColor;
+        private Image StretchGraphic(string name, RectTransform parent, Color color, bool filled = false)
+        {
+            var rect = Rect(name, parent, Vector2.zero, Vector2.zero);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = PixelSprites.White;
+            image.color = color;
+            image.raycastTarget = false;
+            if (filled)
+            {
+                image.type = Image.Type.Filled;
+                image.fillMethod = Image.FillMethod.Horizontal;
+                image.fillOrigin = 0;
+            }
+            return image;
+        }
 
-            // Dynamic aura / exhaustion pulse behind the bar
-            var glowGo = new GameObject("Exhaustion Glow");
-            var glowRect = glowGo.AddComponent<RectTransform>();
-            glowRect.SetParent(panel, false);
-            glowRect.anchorMin = Vector2.zero;
-            glowRect.anchorMax = Vector2.one;
-            glowRect.offsetMin = new Vector2(-14f, -12f);
-            glowRect.offsetMax = new Vector2(14f, 12f);
-            exhaustedGlow = glowGo.AddComponent<Image>();
-            exhaustedGlow.sprite = PixelSprites.PillGlow;
-            exhaustedGlow.type = Image.Type.Sliced;
-            exhaustedGlow.color = Color.clear;
-
-            // Outer dark frame / border (Pill shape)
-            var borderGo = new GameObject("Border");
-            var borderRect = borderGo.AddComponent<RectTransform>();
-            borderRect.SetParent(panel, false);
-            borderRect.anchorMin = Vector2.zero;
-            borderRect.anchorMax = Vector2.one;
-            borderRect.sizeDelta = Vector2.zero;
-            borderImage = borderGo.AddComponent<Image>();
-            borderImage.sprite = PixelSprites.PillBorder;
-            borderImage.type = Image.Type.Sliced;
-            borderImage.color = borderColor;
-
-            // Inner track background (Pill shape with Mask to clip fills into smooth pill curve)
-            var trackGo = new GameObject("Track");
-            var trackRect = trackGo.AddComponent<RectTransform>();
-            trackRect.SetParent(borderRect, false);
-            trackRect.anchorMin = Vector2.zero;
-            trackRect.anchorMax = Vector2.one;
-            trackRect.offsetMin = new Vector2(1f, 1f);
-            trackRect.offsetMax = new Vector2(-1f, -1f);
-            trackImage = trackGo.AddComponent<Image>();
-            trackImage.sprite = PixelSprites.Pill;
-            trackImage.type = Image.Type.Sliced;
-            trackImage.color = trackColor;
-
-            var mask = trackGo.AddComponent<Mask>();
-            mask.showMaskGraphic = true;
-
-            // Trailing ghost bar (clipped inside pill track)
-            var ghostGo = new GameObject("Ghost Fill");
-            var ghostRect = ghostGo.AddComponent<RectTransform>();
-            ghostRect.SetParent(trackRect, false);
-            ghostRect.anchorMin = Vector2.zero;
-            ghostRect.anchorMax = Vector2.one;
-            ghostRect.sizeDelta = Vector2.zero;
-            ghostImage = ghostGo.AddComponent<Image>();
-            ghostImage.sprite = PixelSprites.White;
-            ghostImage.type = Image.Type.Filled;
-            ghostImage.fillMethod = Image.FillMethod.Horizontal;
-            ghostImage.fillOrigin = (int)Image.OriginHorizontal.Left;
-            ghostImage.fillAmount = 1f;
-            ghostImage.color = ghostColor;
-
-            // Main stamina fill bar (clipped inside pill track)
-            var fillGo = new GameObject("Stamina Fill");
-            var fillRect = fillGo.AddComponent<RectTransform>();
-            fillRect.SetParent(trackRect, false);
-            fillRect.anchorMin = Vector2.zero;
-            fillRect.anchorMax = Vector2.one;
-            fillRect.sizeDelta = Vector2.zero;
-            fillImage = fillGo.AddComponent<Image>();
-            fillImage.sprite = PixelSprites.White;
-            fillImage.type = Image.Type.Filled;
-            fillImage.fillMethod = Image.FillMethod.Horizontal;
-            fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
-            fillImage.fillAmount = 1f;
-            fillImage.color = staminaColor;
-
-            isBuilt = true;
+        private TextMeshProUGUI Text(string name, Transform parent, string value, TextAlignmentOptions alignment)
+        {
+            var rect = Rect(name, parent, new Vector2(0f, 15f), new Vector2(barSize.x, 12f));
+            var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
+            text.font = fontAsset;
+            text.fontSize = 6.5f;
+            text.characterSpacing = 2f;
+            text.text = value;
+            text.color = new Color32(137, 128, 106, 255);
+            text.alignment = alignment;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.raycastTarget = false;
+            return text;
         }
     }
 }

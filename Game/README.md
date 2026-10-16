@@ -6,15 +6,19 @@ The shared Unity project uses the **Universal 2D** template in Unity **6000.3.2f
 
 Open this repository in Unity Hub and select `Game/`, or open this folder directly with Unity Hub using editor version `6000.3.2f1`.
 
-## First movement checkpoint
+## Current playable prototype
 
-Open `Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity`, press Play, and focus the Game view. **A/D or Left/Right** moves the amber placeholder character; **Space** jumps. A gamepad left stick and south button are also bound, but have not been tested with a physical gamepad. Controls and tuning are temporary.
+Open `Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity` and press Play. The scene now contains **The Ruined Archive**, a 72m prototype route with an optional upper office, three ember pickups, two rest checkpoints, floor spikes and two broken bridges. See the [level layout and asset notes](Assets/_Project/Scenes/Sandbox/Sirac/LevelMap/README.md).
 
-The scene contains a floor, boundary walls, three ascending platforms, the reusable `PlayerPrototype` prefab, a following orthographic camera, and a reusable `EmberPickup` prefab placed along the route. Press **F** to switch between **Dim** and **Flare**. The meter in the upper-left shows fuel; the default prototype starts at 80 / 100, Dim costs no fuel, Flare drains 0.5 units/second, and the pickup restores 20 units. The pickup remains in the scene if the lantern is full. Those values and F are temporary, inspector-configurable choices for the first review. Below 25% fuel, the light pulses. Zero fuel switches back to Dim and raises a depletion event; the death / respawn flow is not implemented. Details and the next step are in [Siraç's workspace notes](../development/sirac/README.md).
+**A/D or Left/Right** walks, **Shift** sprints, **Space** jumps, **F** starts a six-second Flare scout, and **Backspace** resets this route. Hold Space for a full jump. Walking restores stamina; sprinting and sprint jumps spend it. Each ember provides two scout charges. Dim is an infinite baseline light, and the game remains navigable without spending embers. The top-left stone reserve and contextual bottom-center stamina bar show their current state. A gamepad is bound but physical controller playtesting remains pending.
+
+The current character, lantern, reactive ember pickups, death/respawn flow, particles and ambient music remain in this scene. This is a playable level prototype; puzzle machinery and final environment art are still pending team integration.
 
 ## Validation
 
-In `Window > General > Test Runner`, select **PlayMode** and run `TheLightenRoad.Player.PlayModeTests` and `TheLightenRoad.Sirac.TestChamber.PlayModeTests`. On **2026-10-16**, all **59 tests passed** in Unity 6000.3.2f1 through Unity MCP on macOS: movement, camera, lantern fuel and controller, pickups, HUD, particles, respawn, and the archive test chamber. These results do not establish final game feel or physical gamepad support.
+In `Window > General > Test Runner`, select **PlayMode**. On **2026-10-16**, Unity 6000.3.2f1 through Unity MCP passed all **7 stamina HUD tests** and all **3 Ruined Archive integration tests**, including continuous keyboard traversal without fuel, the optional office reward, spike death, checkpoints and route reset.
+
+The broader three-assembly run passed **79/81** tests. `FollowCamera2DTests.CameraLeadsAheadWhenTargetMovesHorizontally` missed its timing assertion and passed on an isolated rerun. The older `ArchiveTestChamberTests.FullRouteCanBeCompletedUsingMovementAndSingleJumps` still fails with the current movement tuning (six deaths, stopped at x=34.85); that separate older scene was not changed. These results do not establish final game feel or physical gamepad support.
 
 [Project checks](../docs/TESTING.md) runs license-free project validation weekly, on relevant pull requests, and manually. GitHub-hosted Unity tests are configured but require repository license secrets before they can run; their skipped state is reported separately from passing integrity checks.
 

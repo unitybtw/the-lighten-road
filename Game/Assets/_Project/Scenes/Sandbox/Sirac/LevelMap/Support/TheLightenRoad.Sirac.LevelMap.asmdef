@@ -1,0 +1,4 @@
+{
+  "name": "TheLightenRoad.Sirac.LevelMap",
+  "references": ["TheLightenRoad.Player", "TheLightenRoad.Lantern", "Unity.InputSystem", "Unity.TextMeshPro", "UnityEngine.UI"]
+}

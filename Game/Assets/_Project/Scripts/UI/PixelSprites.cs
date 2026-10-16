@@ -27,6 +27,32 @@ namespace TheLightenRoad.UI
         private static Sprite pill;
         private static Sprite pillBorder;
         private static Sprite pillGlow;
+        private static Sprite staminaPlate;
+        private static Sprite breathMark;
+
+        public static Sprite BreathMark => breathMark != null ? breathMark : breathMark = Build(new[] {
+            ".....#.....", ".....#.....", "....#.#....", "...#...#...", "..#.....#..",
+            "..#..#..#..", ".#...#...#.", ".#...#...#.", ".#...#...#.", "..#..#..#..", "...##.##..."
+        }, c => c == '#' ? Color.white : Color.clear);
+
+        public static Sprite StaminaPlate
+        {
+            get
+            {
+                if (staminaPlate != null) return staminaPlate;
+                var map = new string[7];
+                int[] bevel = { 3, 1, 0, 0, 0, 1, 3 };
+                for (int y = 0; y < map.Length; y++)
+                {
+                    var row = new char[96];
+                    for (int x = 0; x < row.Length; x++)
+                        row[x] = x >= bevel[y] && x < row.Length - bevel[y]
+                            && !(y == 0 && (x == 24 || x == 73)) && !(y == 6 && x == 57) ? '#' : '.';
+                    map[y] = new string(row);
+                }
+                return staminaPlate = Build(map, c => c == '#' ? Color.white : Color.clear);
+            }
+        }
 
         public static Sprite White => white != null ? white : white = Build(new[] { "#" },
             c => Color.white);

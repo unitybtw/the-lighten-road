@@ -308,3 +308,24 @@ All new scene support code, tests, typography, and materials live under `Scenes/
 Verified through Unity MCP in 6000.3.2f1: all three `ArchiveTestChamberTests` passed. The actual authored map was completed using synthetic A/D and single-jump input with no deaths; trench death returned the player to Checkpoint 01 with six charges; Backspace restored all eight pickups and the starting state. Scene validation found zero missing scripts and zero broken prefabs. This is a test blockout, not the completed Office MVP or a human completion-time result.
 
 ![Archive stacks under Flare lighting](previews/archive-test-chamber.png)
+
+
+## Checkpoint 13 — The Ruined Archive (2026-10-16)
+
+Rebuilt the current `MovementSandbox` as a 72m ruin route with an optional upper office, three ember reserves, two checkpoints, progressive spike encounters and two 2.2m bridge gaps. The supplied five-spike JPEG was prepared as a transparent sprite strip; provenance, extraction prompt, positions and editing instructions are in the [level notes](../../Game/Assets/_Project/Scenes/Sandbox/Sirac/LevelMap/README.md). Shadow casters use the unscaled collider parents so Flare illumination remains correct. Art is a prototype blockout.
+
+All three new real-scene Play Mode tests passed: the main route without fuel or deaths, the office reward, and spike / checkpoint / reset behavior. Existing player tuning, audio, shared prefabs and Kemal's work are preserved.
+
+![Service crossing](previews/ruined-archive-service.png)
+
+## Checkpoint 14 — Etched stamina instrument (2026-10-16)
+
+Replaced the bottom stamina pill with a thin engraved iron channel, muted ivory reserve, quarter etches, breath mark and quiet English state labels. Drain leaves a delayed trail; exhaustion uses fired-clay color and a restrained pulse; recovery adds a short glint. The instrument smoothly enters when needed and fades below the screen after resting at full reserve. Reduce Motion removes decorative movement and uses instant visibility changes. Safe-area bottom insets are respected. No stamina costs, regeneration or movement tuning changed.
+
+All seven stamina HUD tests passed, covering reserve binding, drain trail, exhaustion recovery, gradual visibility, reduced motion, disable/re-enable and reset. Actual Unity rendering was inspected at 1920×1080 in Dim and Flare, including exhaustion. These focused preview captures render the stamina canvas with the gameplay camera; other overlay HUDs are omitted from the captures.
+
+The complete three-assembly run passed 79/81. The camera lead timing test passed in isolation afterward; the older ArchiveTestChamber traversal remains failing with current tuning (six deaths at x=34.85). Its scene and traversal test were left unchanged. No standalone build or physical controller verification was performed.
+
+![Stamina instrument](previews/stamina-redesign.png)
+
+![Exhausted reserve](previews/stamina-redesign-exhausted.png)

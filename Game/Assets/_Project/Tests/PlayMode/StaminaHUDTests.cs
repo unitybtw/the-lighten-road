@@ -50,7 +50,7 @@ public sealed class StaminaHUDTests
         Assert.That(hud.DisplayedGhostFill, Is.EqualTo(1f).Within(0.01f));
         Assert.That(hud.IsExhausted, Is.False);
         Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.BottomOffset).Within(0.1f), "Gauge should be positioned at the bottom-center.");
-        Assert.That(hud.BarSize.x, Is.GreaterThan(100f), "Pill gauge width should be slender and proportional.");
+        Assert.That(hud.BarSize.x, Is.GreaterThan(100f), "Gauge width should be slender and proportional.");
     }
 
     [Test]
@@ -113,14 +113,41 @@ public sealed class StaminaHUDTests
         Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.HiddenOffset).Within(1.0f),
             "Panel must slide down below screen into hidden offset when resting.");
 
-        // When stamina is consumed, panel immediately wakes up and slides up to view
+        // Consumption starts a gradual reveal without an opacity jump.
         stamina.ConsumeSprint(1.0f);
-        Assert.That(hud.PanelAlpha, Is.EqualTo(1f).Within(0.01f),
-            "Panel alpha must immediately snap to 1.0 on stamina consumption.");
+        Assert.That(hud.PanelAlpha, Is.EqualTo(0f).Within(0.01f));
+        hud.Tick(0.05f);
+        Assert.That(hud.PanelAlpha, Is.InRange(0.01f, 0.99f));
 
         hud.Tick(0.3f);
         Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.BottomOffset).Within(1.0f),
             "Panel must smoothly slide back up to bottom offset when sprinting.");
+    }
+
+    [Test]
+    public void ReducedMotionRevealsWithoutSlidingAndShowsLowReserve()
+    {
+        hud.ReduceMotion = true;
+        Step(3f);
+        Assert.That(hud.PanelAlpha, Is.Zero);
+        stamina.ConsumeSprint(4f);
+        hud.Tick(0f);
+        Assert.That(hud.PanelAlpha, Is.EqualTo(1f));
+        Assert.That(hud.StatusText, Is.EqualTo("LOW"));
+        Assert.That(stamina.NormalizedStamina, Is.EqualTo(0.2f).Within(0.001f));
+    }
+
+    [Test]
+    public void DisabledHudHidesAndRebindsToCurrentReserve()
+    {
+        hud.enabled = false;
+        Assert.That(hud.Canvas.enabled, Is.False);
+        stamina.ConsumeSprint(2f);
+        hud.enabled = true;
+        Assert.That(hud.Canvas.enabled, Is.True);
+        Assert.That(hud.DisplayedFill, Is.EqualTo(0.6f).Within(0.001f));
+        stamina.ConsumeSprint(1f);
+        Assert.That(hud.DisplayedFill, Is.EqualTo(0.4f).Within(0.001f));
     }
 
     [Test]
