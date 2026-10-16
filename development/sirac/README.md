@@ -206,9 +206,44 @@ Elevated camera feel in `FollowCamera2D.cs` with dynamic, responsive platformer 
 
 ### Next checkpoint
 
+## Checkpoint 9 — Death & Respawn Loop with Atmospheric UI/UX (2026-10-16)
+
+Implemented the failure state and retry flow specified in GDD Section 5.3 & 6.2 ("At zero fuel: Trigger the designed failure and respawn flow"):
+
+- **`PlayerRespawnController.cs` (`TheLightenRoad.Player`):**
+  - Manages player mortality state machine (`Alive`, `Dying`, `Dead`, `Respawning`).
+  - **Darkness Depletion:** Automatically listens to `LanternFuel.FuelDepleted` when fuel drops to 0. Extinguishes the lantern and freezes motor input and physics simulation.
+  - **Void / Fall Detection:** Checks vertical position against configurable `voidKillY` threshold (`-5.5`).
+  - **Respawn Flow:** Teleports player to active checkpoint/spawn position (`-5, 1, 0`), re-initializes lantern fuel to baseline (`80` fuel), re-ignites lantern, resets camera, and smoothly restores player mobility.
+  - **Input Flexibility:** Features an automatic countdown timer (`autoRespawnDelay = 2.4s`) with manual skip support ([Space], [Enter], [R], or Gamepad South) to instantly respawn.
+- **`DeathScreenOverlay.cs` & `PixelSprites.cs` (`TheLightenRoad.UI`):**
+  - Procedural high-order Screen Space Overlay Canvas (`sortingOrder = 200`, reference resolution $640 \times 360$).
+  - **Encroaching Vignette:** Stepped pixel-art radial darkness texture closing in as the character is consumed by the dark.
+  - **Void Blackout:** Deep void curtain (`#06070a`) fading over gameplay.
+  - **Contextual Lore Messages & Icons:**
+    - Darkness: Extinguished flame wisp icon, `"KARANLIKTA KAYBOLDUN"`, *"Fenerin alevi söndü... Karanlık seni yuttu."*
+    - Void: Pixel skull icon, `"DİPSİZ KUYUYA DÜŞTÜN"`, *"Eski dünyanın derinliklerinde kayboldun."*
+    - Hazard: `"YOK OLDUN"`, *"Harabelerin ölümcül tehlikesi seni yakaladı."*
+  - **Animated Prompt & Countdown Bar:** Breathes with a warm amber pulse (`[SPACE] / [R] Yeniden Doğ`) and displays a smooth horizontal countdown progress bar.
+  - **Rekindling Flash:** On respawn, a warm golden-orange radial bloom flashes from the center as the lantern's flame bursts back to life.
+- **`HazardTrigger2D.cs` (`TheLightenRoad.Player`):**
+  - Modular trigger component for environmental dangers and void zones. Added a $50$-unit wide `Void Pit` trigger at $Y = -6$ in `MovementSandbox.unity`.
+
+### Automated Test Coverage (44 Play Mode tests)
+
+- Added 4 new Play Mode tests in `PlayerRespawnTests.cs`:
+  - `DepletedFuelTriggersDarknessDeath`: verifies death state, motor shutdown, and overlay activation upon fuel depletion.
+  - `FallingBelowVoidLimitTriggersVoidDeath`: verifies void limit detection.
+  - `HazardTriggerKillsPlayerOnContact`: verifies `HazardTrigger2D` collision trigger.
+  - `RespawnRestoresPlayerFuelPositionAndMotor`: verifies complete restoration of player position, 80 fuel, and movement capabilities.
+- Total **44 Play Mode tests** across player motor, game feel, camera follow & cinematic juice, lantern fuel, dim/flare controller, shadows/flicker, atmospheric particle FX, death/respawn loop, ember pickups, and HUD.
+
+### Next checkpoint
+
 Continue expanding player systems in `Sandbox/Sirac/`:
-1. Death & Respawn loop on fuel depletion or hazard contact (`PlayerRespawnController`).
-2. Procedural 8-bit audio feedback / sound synthesis for footsteps, jumps, flame ignition, and low-fuel heartbeat.
+1. Procedural 8-bit audio feedback / sound synthesis for footsteps, jumps, flame ignition, and low-fuel heartbeat.
+2. Secret wall runes / glyphs that only reveal when illuminated by Flare mode.
+
 
 
 

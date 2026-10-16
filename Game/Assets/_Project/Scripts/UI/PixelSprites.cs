@@ -3,8 +3,8 @@ using UnityEngine;
 namespace TheLightenRoad.UI
 {
     /// <summary>
-    /// Procedurally generated point-filtered sprites for the HUD, so the UI works before
-    /// final art from Can / Maksim is imported. Replace with imported sprites later.
+    /// Procedurally generated point-filtered sprites for the HUD and overlays, so the UI works
+    /// before final art from Can / Maksim is imported.
     /// </summary>
     internal static class PixelSprites
     {
@@ -12,6 +12,9 @@ namespace TheLightenRoad.UI
         private static Sprite glow;
         private static Sprite flame;
         private static Sprite lanternFrame;
+        private static Sprite vignette;
+        private static Sprite extinguishedFlame;
+        private static Sprite skullIcon;
 
         public static Sprite White => white != null ? white : white = Build(new[] { "#" },
             c => Color.white);
@@ -47,6 +50,32 @@ namespace TheLightenRoad.UI
             ".*@*.",
         };
 
+        // 7x8 extinguished flame / wisp
+        private static readonly string[] ExtinguishedFlameMap =
+        {
+            "...~...",
+            "..~....",
+            "...~...",
+            "....~..",
+            "..~~...",
+            ".~..~..",
+            "..~~...",
+            ".......",
+        };
+
+        // 8x8 pixel skull
+        private static readonly string[] SkullMap =
+        {
+            "..####..",
+            ".######.",
+            ".##..##.",
+            ".######.",
+            "..####..",
+            "..####..",
+            "..#.##..",
+            "........",
+        };
+
         public static Sprite LanternFrame => lanternFrame != null ? lanternFrame : lanternFrame = Build(LanternMap, c =>
         {
             switch (c)
@@ -64,6 +93,24 @@ namespace TheLightenRoad.UI
             {
                 case '@': return Color.white;
                 case '*': return new Color(1f, 0.72f, 0.5f, 1f);
+                default: return Color.clear;
+            }
+        });
+
+        public static Sprite ExtinguishedFlame => extinguishedFlame != null ? extinguishedFlame : extinguishedFlame = Build(ExtinguishedFlameMap, c =>
+        {
+            switch (c)
+            {
+                case '~': return new Color(0.75f, 0.7f, 0.7f, 0.85f);
+                default: return Color.clear;
+            }
+        });
+
+        public static Sprite SkullIcon => skullIcon != null ? skullIcon : skullIcon = Build(SkullMap, c =>
+        {
+            switch (c)
+            {
+                case '#': return new Color32(235, 225, 215, 255);
                 default: return Color.clear;
             }
         });
@@ -89,6 +136,30 @@ namespace TheLightenRoad.UI
                 }
                 texture.Apply();
                 return glow = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
+            }
+        }
+
+        public static Sprite Vignette
+        {
+            get
+            {
+                if (vignette != null)
+                    return vignette;
+
+                const int size = 64;
+                var texture = NewTexture(size, size);
+                float r = size / 2f;
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(r, r)) / r;
+                    // Stepped pixel vignette: center clear, outer edge completely black
+                    float a = Mathf.Clamp01((d - 0.32f) / 0.68f);
+                    a = Mathf.Round(a * 10f) / 10f;
+                    texture.SetPixel(x, y, new Color(0.02f, 0.02f, 0.04f, a));
+                }
+                texture.Apply();
+                return vignette = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
             }
         }
 

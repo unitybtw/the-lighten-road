@@ -100,6 +100,7 @@ GameObject:
   - component: {fileID: 8374520008009650060}
   - component: {fileID: 265321852609213324}
   - component: {fileID: 910238475618293012}
+  - component: {fileID: 512839401726481023}
   m_Layer: 0
   m_Name: PlayerPrototype
   m_TagString: Untagged
@@ -401,4 +402,27 @@ MonoBehaviour:
   sparkStartColor: {r: 1, g: 0.95, b: 0.6, a: 1}
   sortingLayerName: Default
   orderInLayer: 8
+--- !u!114 &512839401726481023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738987852800000031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eed9661355b34d3daaca68b29b55ff34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerRespawnController
+  motor: {fileID: 8053443060755001231}
+  lantern: {fileID: 265321852609213324}
+  fuel: {fileID: 8374520008009650060}
+  followCamera: {fileID: 0}
+  spawnPosition: {x: -5, y: 1, z: 0}
+  respawnFuelAmount: 80
+  enableVoidKill: 1
+  voidKillY: -5.5
+  autoRespawnDelay: 2.4
+  allowManualRespawnInput: 1
+
 
