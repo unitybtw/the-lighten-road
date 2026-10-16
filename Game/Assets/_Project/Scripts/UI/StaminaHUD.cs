@@ -5,11 +5,13 @@ using UnityEngine.UI;
 namespace TheLightenRoad.UI
 {
     /// <summary>
-    /// Slender, responsive stamina gauge anchored beneath the Ember Reserve.
+    /// Premium, slender stamina gauge anchored at the bottom-center of the screen.
     /// Features:
-    /// - Immediate fill drop with smooth trailing ghost bar for satisfying physical weight.
-    /// - Vitality amber fill transitioning to warning pulse when exhausted.
-    /// - Soft resting fade when full and idle, snapping to full opacity when running.
+    /// - Contextual motion: Smoothly slides up from below the screen upon sprinting/exertion,
+    ///   and gracefully slides back down beneath the screen when rested and full.
+    /// - Liquid dual-fill: Instant fill drop with smooth trailing ghost bar for physical weight.
+    /// - Multi-layer aura: Ambient resting shadow, soft breathing glow, and energetic pulse on low stamina/exhaustion.
+    /// - Clean rounded pill contour with internal masking.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class StaminaHUD : MonoBehaviour
@@ -18,44 +20,53 @@ namespace TheLightenRoad.UI
         [SerializeField] private PlayerStamina target;
 
         [Header("Layout — Bottom Center")]
-        [Tooltip("Vertical offset in pixels from the bottom edge of the screen.")]
-        [SerializeField] private float bottomOffset = 24f;
+        [Tooltip("Vertical resting position in pixels above the bottom edge of the screen.")]
+        [SerializeField] private float bottomOffset = 26f;
+        [Tooltip("Vertical hidden position in pixels below the bottom edge of the screen.")]
+        [SerializeField] private float hiddenOffset = -35f;
         [Tooltip("Dimensions of the slender stamina pill (width x height).")]
         [SerializeField] private Vector2 barSize = new Vector2(150f, 5f);
 
         [Header("Colors & Styling")]
-        [SerializeField] private Color staminaColor = new Color(0.94f, 0.68f, 0.24f, 1f);
-        [SerializeField] private Color exhaustedColor = new Color(0.90f, 0.22f, 0.14f, 1f);
-        [SerializeField] private Color ghostColor = new Color(1f, 0.90f, 0.65f, 0.70f);
-        [SerializeField] private Color trackColor = new Color(0.04f, 0.06f, 0.08f, 0.88f);
-        [SerializeField] private Color borderColor = new Color(0.18f, 0.22f, 0.26f, 0.95f);
+        [SerializeField] private Color staminaColor = new Color(0.96f, 0.72f, 0.24f, 1f);
+        [SerializeField] private Color exhaustedColor = new Color(0.92f, 0.24f, 0.16f, 1f);
+        [SerializeField] private Color ghostColor = new Color(1f, 0.92f, 0.70f, 0.70f);
+        [SerializeField] private Color trackColor = new Color(0.05f, 0.07f, 0.09f, 0.92f);
+        [SerializeField] private Color borderColor = new Color(0.22f, 0.26f, 0.30f, 0.95f);
+        [SerializeField] private Color shadowColor = new Color(0f, 0f, 0f, 0.65f);
 
-        [Header("Behavior")]
-        [Tooltip("Fade alpha when resting at full stamina (0 = fully contextual fade-out).")]
-        [SerializeField, Range(0f, 1f)] private float idleAlpha = 0f;
-        [Tooltip("Seconds at full stamina before fading out.")]
-        [SerializeField, Min(0.2f)] private float idleFadeDelay = 1.2f;
+        [Header("Animation & Behavior")]
+        [Tooltip("Seconds resting at full stamina before sliding down out of view.")]
+        [SerializeField, Min(0.2f)] private float idleFadeDelay = 1.0f;
+        [Tooltip("Speed when sliding up into view upon exertion.")]
+        [SerializeField, Min(1f)] private float popUpSpeed = 5.0f;
+        [Tooltip("Speed when sliding down below the screen upon resting.")]
+        [SerializeField, Min(1f)] private float retreatSpeed = 2.5f;
         [Tooltip("Ghost bar catch-up delay in seconds.")]
-        [SerializeField, Min(0.05f)] private float ghostDelay = 0.22f;
+        [SerializeField, Min(0.05f)] private float ghostDelay = 0.18f;
         [Tooltip("Ghost bar drain speed.")]
-        [SerializeField, Min(0.1f)] private float ghostCatchupSpeed = 2.2f;
+        [SerializeField, Min(0.1f)] private float ghostCatchupSpeed = 2.4f;
 
         private Canvas canvas;
         private CanvasScaler scaler;
         private RectTransform panel;
         private CanvasGroup panelGroup;
-        private Image trackImage;
+        private Image shadowImage;
+        private Image exhaustedGlow;
         private Image borderImage;
+        private Image trackImage;
         private Image ghostImage;
         private Image fillImage;
-        private Image exhaustedGlow;
 
         private float currentFill = 1f;
         private float ghostFill = 1f;
         private float ghostTimer;
         private float fullIdleTimer;
+        private float currentVisibility = 1f;
+        private float recoveryFlashTimer;
         private bool isExhausted;
         private bool isBuilt;
+        private PlayerMotor2D motor;
 
         public PlayerStamina Target => target;
         public float DisplayedFill => currentFill;
@@ -63,6 +74,8 @@ namespace TheLightenRoad.UI
         public bool IsExhausted => isExhausted;
         public float PanelAlpha => panelGroup != null ? panelGroup.alpha : 0f;
         public float BottomOffset => bottomOffset;
+        public float HiddenOffset => hiddenOffset;
+        public float Visibility => currentVisibility;
         public Vector2 BarSize => barSize;
         public Vector2 AnchoredPosition => panel != null ? panel.anchoredPosition : Vector2.zero;
 
@@ -75,6 +88,7 @@ namespace TheLightenRoad.UI
         {
             fullIdleTimer = 0f;
             currentFill = ghostFill = 1f;
+            currentVisibility = 1f;
             TryBind();
         }
 
@@ -97,6 +111,7 @@ namespace TheLightenRoad.UI
         {
             Unbind();
             target = newTarget;
+            motor = null;
             TryBind();
         }
 
@@ -109,6 +124,7 @@ namespace TheLightenRoad.UI
 
             if (target != null)
             {
+                motor = target.GetComponent<PlayerMotor2D>();
                 target.StaminaChanged += HandleStaminaChanged;
                 target.ExhaustionChanged += HandleExhaustionChanged;
                 isExhausted = target.IsExhausted;
@@ -133,10 +149,15 @@ namespace TheLightenRoad.UI
             {
                 ghostTimer = ghostDelay;
                 fullIdleTimer = 0f;
+                currentVisibility = 1f;
                 if (panelGroup != null)
                 {
                     panelGroup.alpha = 1f;
                 }
+            }
+            else if (targetNorm >= 0.999f && currentFill < 0.999f)
+            {
+                recoveryFlashTimer = 0.35f;
             }
 
             currentFill = targetNorm;
@@ -145,15 +166,22 @@ namespace TheLightenRoad.UI
         private void HandleExhaustionChanged(bool exhausted)
         {
             isExhausted = exhausted;
-            if (exhausted && panelGroup != null)
+            if (exhausted)
             {
-                panelGroup.alpha = 1f;
+                fullIdleTimer = 0f;
+                currentVisibility = 1f;
+                if (panelGroup != null)
+                {
+                    panelGroup.alpha = 1f;
+                }
             }
         }
 
         public void Tick(float dt)
         {
             if (!isBuilt) return;
+
+            bool isSprinting = motor != null && motor.IsSprinting;
 
             // Ghost bar trailing animation
             if (ghostTimer > 0f)
@@ -169,13 +197,39 @@ namespace TheLightenRoad.UI
                 ghostFill = currentFill;
             }
 
-            // Apply fills to UI images
+            // Recovery gleam timer
+            if (recoveryFlashTimer > 0f)
+            {
+                recoveryFlashTimer = Mathf.Max(0f, recoveryFlashTimer - dt);
+            }
+
+            bool isLowStamina = currentFill <= 0.25f || isExhausted;
+
+            // Apply fill and color to stamina fill bar
             if (fillImage != null)
             {
                 fillImage.fillAmount = currentFill;
-                fillImage.color = isExhausted
-                    ? Color.Lerp(exhaustedColor, staminaColor, Mathf.PingPong(Time.unscaledTime * 5f, 1f) * 0.3f)
-                    : staminaColor;
+
+                if (isExhausted)
+                {
+                    float pulse = Mathf.PingPong(Time.unscaledTime * 6f, 1f);
+                    fillImage.color = Color.Lerp(exhaustedColor, staminaColor, pulse * 0.35f);
+                }
+                else if (isLowStamina)
+                {
+                    float lowPulse = Mathf.PingPong(Time.unscaledTime * 5f, 1f);
+                    Color warnTint = Color.Lerp(staminaColor, exhaustedColor, 0.65f);
+                    fillImage.color = Color.Lerp(staminaColor, warnTint, lowPulse);
+                }
+                else if (recoveryFlashTimer > 0f)
+                {
+                    float flashNorm = recoveryFlashTimer / 0.35f;
+                    fillImage.color = Color.Lerp(staminaColor, Color.white, flashNorm * 0.45f);
+                }
+                else
+                {
+                    fillImage.color = staminaColor;
+                }
             }
 
             if (ghostImage != null)
@@ -183,13 +237,23 @@ namespace TheLightenRoad.UI
                 ghostImage.fillAmount = ghostFill;
             }
 
-            // Exhaustion glow pulsing
+            // Dynamic aura glow behind the bar
             if (exhaustedGlow != null)
             {
                 if (isExhausted)
                 {
-                    float pulse = (Mathf.Sin(Time.unscaledTime * 7f) + 1f) * 0.5f;
-                    exhaustedGlow.color = new Color(exhaustedColor.r, exhaustedColor.g, exhaustedColor.b, 0.4f * pulse);
+                    float pulse = (Mathf.Sin(Time.unscaledTime * 8f) + 1f) * 0.5f;
+                    exhaustedGlow.color = new Color(exhaustedColor.r, exhaustedColor.g, exhaustedColor.b, 0.45f * pulse);
+                }
+                else if (isLowStamina)
+                {
+                    float pulse = (Mathf.Sin(Time.unscaledTime * 6f) + 1f) * 0.5f;
+                    exhaustedGlow.color = new Color(exhaustedColor.r, exhaustedColor.g, exhaustedColor.b, 0.25f * pulse);
+                }
+                else if (isSprinting || currentFill < 0.999f)
+                {
+                    float subtleBreath = (Mathf.Sin(Time.unscaledTime * 4f) + 1f) * 0.5f;
+                    exhaustedGlow.color = new Color(staminaColor.r, staminaColor.g, staminaColor.b, 0.18f + 0.12f * subtleBreath);
                 }
                 else
                 {
@@ -197,46 +261,70 @@ namespace TheLightenRoad.UI
                 }
             }
 
-            // Contextual fade: fully visible when consuming or recovering; fades out when rested at full
-            if (currentFill >= 0.999f && !isExhausted)
-            {
-                fullIdleTimer += dt;
-            }
-            else
+            // Contextual emergence: active when sprinting, depleted, recovering, or exhausted
+            bool shouldBeVisible = (currentFill < 0.999f) || isExhausted || isSprinting;
+            if (shouldBeVisible)
             {
                 fullIdleTimer = 0f;
             }
+            else
+            {
+                fullIdleTimer += dt;
+            }
 
-            float targetAlpha = fullIdleTimer >= idleFadeDelay ? idleAlpha : 1f;
+            float targetVisibility = (fullIdleTimer >= idleFadeDelay) ? 0f : 1f;
+            float animSpeed = (targetVisibility > currentVisibility) ? popUpSpeed : retreatSpeed;
+            currentVisibility = Mathf.MoveTowards(currentVisibility, targetVisibility, animSpeed * dt);
+
+            // Smooth easing curve
+            float curvedT = (targetVisibility > 0.5f)
+                ? EaseOutCubic(currentVisibility)
+                : EaseInCubic(currentVisibility);
+
+            // Vertical position slide: smoothly rises from hiddenOffset (-35px) to bottomOffset (+26px)
+            float currentY = Mathf.Lerp(hiddenOffset, bottomOffset, curvedT);
+            if (panel != null)
+            {
+                panel.anchoredPosition = new Vector2(0f, currentY);
+
+                // Subtle scale spring when sliding in
+                float scale = Mathf.Lerp(0.90f, 1.0f, curvedT);
+                panel.localScale = new Vector3(scale, scale, 1f);
+            }
+
+            // Alpha fade
             if (panelGroup != null)
             {
-                float fadeSpeed = targetAlpha > panelGroup.alpha ? 8f : 2.0f;
-                panelGroup.alpha = Mathf.MoveTowards(panelGroup.alpha, targetAlpha, fadeSpeed * dt);
+                panelGroup.alpha = Mathf.SmoothStep(0f, 1f, currentVisibility);
             }
+        }
+
+        private static float EaseOutCubic(float t)
+        {
+            float inv = 1f - Mathf.Clamp01(t);
+            return 1f - inv * inv * inv;
+        }
+
+        private static float EaseInCubic(float t)
+        {
+            float val = Mathf.Clamp01(t);
+            return val * val * val;
         }
 
         private void BuildHierarchy()
         {
             if (isBuilt) return;
 
-            // Look for existing HUD Canvas (e.g. from LanternHUD) or create one
-            var existingCanvas = FindAnyObjectByType<LanternHUD>()?.Canvas;
-            if (existingCanvas != null)
-            {
-                canvas = existingCanvas;
-            }
-            else
-            {
-                var canvasGo = new GameObject("StaminaHUD Canvas");
-                canvasGo.transform.SetParent(transform, false);
-                canvas = canvasGo.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = 99;
-                scaler = canvasGo.AddComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(960f, 540f);
-                scaler.matchWidthOrHeight = 1f;
-            }
+            // Dedicated independent Canvas for Stamina HUD
+            var canvasGo = new GameObject("StaminaHUD Canvas");
+            canvasGo.transform.SetParent(transform, false);
+            canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 99;
+            scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(960f, 540f);
+            scaler.matchWidthOrHeight = 1f;
 
             // Outer panel anchored Bottom-Center
             var panelGo = new GameObject("Stamina Gauge");
@@ -252,14 +340,27 @@ namespace TheLightenRoad.UI
             panelGroup.blocksRaycasts = false;
             panelGroup.interactable = false;
 
-            // Exhaustion warning glow behind the bar (Pill glow aura)
+            // Soft ambient drop shadow behind everything for clean depth
+            var shadowGo = new GameObject("Ambient Shadow");
+            var shadowRect = shadowGo.AddComponent<RectTransform>();
+            shadowRect.SetParent(panel, false);
+            shadowRect.anchorMin = Vector2.zero;
+            shadowRect.anchorMax = Vector2.one;
+            shadowRect.offsetMin = new Vector2(-10f, -8f);
+            shadowRect.offsetMax = new Vector2(10f, 6f);
+            shadowImage = shadowGo.AddComponent<Image>();
+            shadowImage.sprite = PixelSprites.PillGlow;
+            shadowImage.type = Image.Type.Sliced;
+            shadowImage.color = shadowColor;
+
+            // Dynamic aura / exhaustion pulse behind the bar
             var glowGo = new GameObject("Exhaustion Glow");
             var glowRect = glowGo.AddComponent<RectTransform>();
             glowRect.SetParent(panel, false);
             glowRect.anchorMin = Vector2.zero;
             glowRect.anchorMax = Vector2.one;
-            glowRect.offsetMin = new Vector2(-12f, -10f);
-            glowRect.offsetMax = new Vector2(12f, 10f);
+            glowRect.offsetMin = new Vector2(-14f, -12f);
+            glowRect.offsetMax = new Vector2(14f, 12f);
             exhaustedGlow = glowGo.AddComponent<Image>();
             exhaustedGlow.sprite = PixelSprites.PillGlow;
             exhaustedGlow.type = Image.Type.Sliced;
@@ -277,7 +378,7 @@ namespace TheLightenRoad.UI
             borderImage.type = Image.Type.Sliced;
             borderImage.color = borderColor;
 
-            // Inner track background (Pill shape with Mask to clip fills into pill curve)
+            // Inner track background (Pill shape with Mask to clip fills into smooth pill curve)
             var trackGo = new GameObject("Track");
             var trackRect = trackGo.AddComponent<RectTransform>();
             trackRect.SetParent(borderRect, false);
@@ -304,7 +405,7 @@ namespace TheLightenRoad.UI
             ghostImage.sprite = PixelSprites.White;
             ghostImage.type = Image.Type.Filled;
             ghostImage.fillMethod = Image.FillMethod.Horizontal;
-            ghostImage.fillOrigin = 0;
+            ghostImage.fillOrigin = (int)Image.OriginHorizontal.Left;
             ghostImage.fillAmount = 1f;
             ghostImage.color = ghostColor;
 
@@ -319,7 +420,7 @@ namespace TheLightenRoad.UI
             fillImage.sprite = PixelSprites.White;
             fillImage.type = Image.Type.Filled;
             fillImage.fillMethod = Image.FillMethod.Horizontal;
-            fillImage.fillOrigin = 0;
+            fillImage.fillOrigin = (int)Image.OriginHorizontal.Left;
             fillImage.fillAmount = 1f;
             fillImage.color = staminaColor;
 

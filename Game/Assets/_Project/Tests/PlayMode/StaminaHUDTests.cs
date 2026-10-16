@@ -97,11 +97,12 @@ public sealed class StaminaHUDTests
     [Test]
     public void FadesToIdleAlphaWhenFullAndRested()
     {
-        // Immediately at start, opacity is 1.0
+        // Immediately at start, opacity is 1.0 and positioned at bottom offset
         hud.Tick(0.1f);
         Assert.That(hud.PanelAlpha, Is.GreaterThan(0.9f));
+        Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.BottomOffset).Within(0.1f));
 
-        // After resting idle at 100% for 3 seconds, panel completely fades out (contextual HUD)
+        // After resting idle at 100% for 3 seconds, panel slides down below screen and completely fades out
         for (int i = 0; i < 180; i++)
         {
             hud.Tick(1f / 60f);
@@ -109,11 +110,17 @@ public sealed class StaminaHUDTests
 
         Assert.That(hud.PanelAlpha, Is.EqualTo(0f).Within(0.05f),
             "Panel alpha should fade out completely when resting at full stamina to maintain clean screen.");
+        Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.HiddenOffset).Within(1.0f),
+            "Panel must slide down below screen into hidden offset when resting.");
 
-        // When stamina is consumed, panel immediately wakes up to full visibility
+        // When stamina is consumed, panel immediately wakes up and slides up to view
         stamina.ConsumeSprint(1.0f);
         Assert.That(hud.PanelAlpha, Is.EqualTo(1f).Within(0.01f),
             "Panel alpha must immediately snap to 1.0 on stamina consumption.");
+
+        hud.Tick(0.3f);
+        Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.BottomOffset).Within(1.0f),
+            "Panel must smoothly slide back up to bottom offset when sprinting.");
     }
 
     [Test]

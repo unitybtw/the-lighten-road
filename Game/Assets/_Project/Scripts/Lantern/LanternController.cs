@@ -76,7 +76,7 @@ namespace TheLightenRoad.Lantern
 
         public bool IsFlared { get; private set; }
         public bool ShowDebugOverlay { get => showDebugOverlay; set => showDebugOverlay = value; }
-        public LanternFuel Fuel => fuel;
+        public LanternFuel Fuel => fuel != null ? fuel : (fuel = GetComponent<LanternFuel>());
         public bool IsLowFuel => fuel != null && fuel.NormalizedFuel <= lowFuelThreshold;
         public float LowFuelThreshold => lowFuelThreshold;
         public Key ToggleFlareKey { get => toggleFlareKey; set => toggleFlareKey = value; }

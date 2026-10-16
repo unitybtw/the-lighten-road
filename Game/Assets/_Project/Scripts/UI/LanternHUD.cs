@@ -30,7 +30,7 @@ namespace TheLightenRoad.UI
 
         [Header("Minimalism & Burning Ember Feedback")]
         [Tooltip("When enabled, hides the text prompts (key bind, mode label) and relies on the burning ember particles.")]
-        [SerializeField] private bool minimalMode = true;
+        [SerializeField] private bool minimalMode = false;
         [Tooltip("Enable rising spark particles from the actively burning ember during Flare.")]
         [SerializeField] private bool enableBurnParticles = true;
         [SerializeField, Range(4, 16)] private int sparksPerSlot = 8;
@@ -62,6 +62,7 @@ namespace TheLightenRoad.UI
         {
             public RectTransform Root;
             public CanvasGroup Group;
+            public Image Socket;
             public Image Glow;
             public Image BurnAura;
             public Image Fill;
@@ -291,9 +292,9 @@ namespace TheLightenRoad.UI
 
         public void Tick(float deltaTime, float time)
         {
-            bool available = isActiveAndEnabled && target != null && target.Fuel != null;
-            canvas.enabled = available;
-            if (!available) return;
+            bool available = isActiveAndEnabled;
+            if (canvas != null) canvas.enabled = available;
+            if (!available || target == null || target.Fuel == null) return;
 
             float dt = Mathf.Max(0f, deltaTime);
             LanternFuel fuel = target.Fuel;
@@ -408,7 +409,7 @@ namespace TheLightenRoad.UI
                 float bump = Mathf.Sin(settle * Mathf.PI) * reaction;
                 slot.Fill.rectTransform.localScale = Vector3.one * (1f + bump * (slot.Gained ? 0.12f : -0.08f));
                 float reveal = reduceMotion ? 1f : Mathf.Clamp01((entrance - i * 0.025f) / 0.25f);
-                slot.Group.alpha = (slot.Charges > 0 || i == lastBurningSlot || slot.Reaction > 0f) ? EaseOut(reveal) : 0f;
+                slot.Group.alpha = EaseOut(reveal);
                 slot.Root.anchoredPosition = new Vector2(i * 28f, -(1f - EaseOut(reveal)) * 2f);
 
                 float breath = reduceMotion ? 0f : Mathf.Sin(time * 1.6f + i * 0.85f) * 0.015f;
@@ -589,6 +590,8 @@ namespace TheLightenRoad.UI
                 slots[i] = slot;
                 slot.Root = Rect($"Ember {i + 1}", panel, new Vector2(i * 28f, 0f), new Vector2(22f, 30f));
                 slot.Group = slot.Root.gameObject.AddComponent<CanvasGroup>();
+                slot.Socket = Picture("Ember socket", slot.Root, new Vector2(1f, -1f), new Vector2(20f, 27f), PixelSprites.EmberEmpty, new Color(0.42f, 0.38f, 0.32f, 0.55f));
+                CenterPivot(slot.Socket.rectTransform);
                 slot.Glow = Picture("Ember aura", slot.Root, new Vector2(-6f, 5f), new Vector2(34f, 34f), PixelSprites.Glow, Color.clear);
                 slot.BurnAura = Picture("Ember burn aura", slot.Root, new Vector2(-7f, 6f), new Vector2(36f, 36f), PixelSprites.Glow, Color.clear);
                 CenterPivot(slot.BurnAura.rectTransform);
@@ -630,7 +633,7 @@ namespace TheLightenRoad.UI
             popupLabel = Text("Pickup receipt", panel, new Vector2(0f, -Height - 5f), new Vector2(Width, 16f), 8f, "", Color.clear, 0.4f);
 
             ApplyMinimalMode();
-            canvas.enabled = false;
+            canvas.enabled = true;
         }
 
         private TextMeshProUGUI Text(string name, Transform parent, Vector2 position, Vector2 size,
