@@ -1,0 +1,52 @@
+{
+  "repository": "unitybtw/the-lighten-road",
+  "branch": "main",
+  "members": [
+    {
+      "login": "unitybtw",
+      "name": "Siraç",
+      "role": "Game Developer",
+      "profile_url": "https://github.com/unitybtw",
+      "avatar_sha256": "43cb557c4de39c735f1a0cbb49add740f202ee6cfe1b21c74662cb537752da96",
+      "commits": 27
+    },
+    {
+      "login": "kemal-berke",
+      "name": "Kemal",
+      "role": "Game Developer",
+      "profile_url": "https://github.com/kemal-berke",
+      "avatar_sha256": "43d4096f3065cc22f4632f2fc422a5f469ade1f9c716614cdd16ee1e2a6337e5",
+      "commits": 1
+    },
+    {
+      "login": "benesas",
+      "name": "Can",
+      "role": "Artist",
+      "profile_url": "https://github.com/benesas",
+      "avatar_sha256": "a6c657996bead54d3330ecea45789392636f21e0e113f7b35698cd45da08064c",
+      "commits": 0
+    },
+    {
+      "login": "Ichnolith",
+      "name": "Maksim",
+      "role": "Artist",
+      "profile_url": "https://github.com/Ichnolith",
+      "avatar_sha256": "4c3d66ab026778d6c0a9ebcd2e653ea6fd3d87a2dca00f303960519b06e35543",
+      "commits": 1
+    },
+    {
+      "login": "aeshmacodex",
+      "name": "Furkan",
+      "role": "Game Designer",
+      "profile_url": "https://github.com/aeshmacodex",
+      "avatar_sha256": "e77917d593be3612ef67261be3f4fda934b607b3c5f931427961a3e1adfa04bf",
+      "commits": 0
+    }
+  ],
+  "team_commits": 29,
+  "other_linked_author_commits": 0,
+  "unlinked_author_commits": 0,
+  "method": "Non-merge commits authored by GitHub-linked accounts on the default branch; bots excluded. Co-author trailers and work outside Git are not counted.",
+  "source_revision": "50d3312559c1acadb95391f1421dcb9aadb830fb",
+  "updated_at": "2026-10-16 12:25 UTC"
+}

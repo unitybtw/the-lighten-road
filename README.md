@@ -96,6 +96,32 @@ Each teammate has a dedicated workspace for prototypes, art sources, or puzzle d
 
 ## Team
 
+<!-- TEAM-ACTIVITY:START -->
+<a href="https://github.com/unitybtw/the-lighten-road/commits/main/">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="docs/team-activity/team-activity.png">
+    <img src="docs/team-activity/team-activity.gif" alt="Team commit activity: circular GitHub profile photos, commit counts and each member's share of team commits" width="1200">
+  </picture>
+</a>
+
+<details>
+<summary>Commit counts and methodology</summary>
+
+| Team member | Role | Authored commits |
+| --- | --- | ---: |
+| [Siraç](https://github.com/unitybtw) | Game Developer | 27 |
+| [Kemal](https://github.com/kemal-berke) | Game Developer | 1 |
+| [Maksim](https://github.com/Ichnolith) | Artist | 1 |
+| [Can](https://github.com/benesas) | Artist | 0 |
+| [Furkan](https://github.com/aeshmacodex) | Game Designer | 0 |
+
+Counts cover GitHub-linked commit authors on `main`, excluding merge commits and bots. Co-author trailers, issues, reviews, uncommitted assets and work outside Git are not counted. Commit volume is an activity signal, not a measure of effort or work quality.
+
+[View the data](docs/team-activity/activity.json) · [Static image](docs/team-activity/team-activity.png) · [How updates work](docs/team-activity/README.md)
+
+</details>
+<!-- TEAM-ACTIVITY:END -->
+
 | Team member | Role | GitHub |
 | --- | --- | --- |
 | Siraç Göktuğ Şimşek | Game Developer | [@unitybtw](https://github.com/unitybtw) |
