@@ -2,7 +2,8 @@
     "name": "TheLightenRoad.Interaction",
     "rootNamespace": "",
     "references": [
-        "GUID:05883718e3ef1448fa862c8d1b8f7888"
+        "GUID:05883718e3ef1448fa862c8d1b8f7888",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

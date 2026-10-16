@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
-using TheLightenRoad.Lantern; 
+using UnityEngine.InputSystem; 
+using TheLightenRoad.Lantern;
 
 namespace TheLightenRoad.Interaction
 {
@@ -13,13 +14,31 @@ namespace TheLightenRoad.Interaction
 
         [Header("Energy Cost (Charges)")]
         [Tooltip("1 Ember = 2 Charges. How many charges needed to power this machine?")]
-        public int chargesRequired = 2; // Örn: 1 tam kor harcar
+        public int chargesRequired = 2;
 
         [Header("Mechanism Events")]
         public UnityEvent OnPowered;
         public UnityEvent OnDrained;
 
-        // "E" tuþu basýldýðýnda Input veya Interaction Controller'ý bu fonksiyonu tetikleyecek.
+        private void Update()
+        {
+            // Yeni Input Sistemi ile E tuþunu dinliyoruz
+            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            {
+                var lantern = FindFirstObjectByType<LanternFuel>();
+
+                if (lantern != null)
+                {
+                    // Mesafeyi de 3f'e çýkardýk ki objenin pivot merkezinden dolayý uzak kalma sorunu yaþamayalým
+                    float distance = Vector2.Distance(transform.position, lantern.transform.position);
+                    if (distance <= 3f)
+                    {
+                        Interact(lantern.gameObject);
+                    }
+                }
+            }
+        }
+
         public void Interact(GameObject interactor)
         {
             var lantern = interactor.GetComponentInChildren<LanternFuel>();
@@ -27,11 +46,8 @@ namespace TheLightenRoad.Interaction
 
             if (currentState == VeinState.Drained)
             {
-                // CanSpendFuel metodunu kullanarak yeterli þarj var mý kontrol et.
-                // 1 Charge = 1.0f fuel deðerine denk geldiði için float çevrimi yapýyoruz.
                 if (lantern.CanSpendFuel(chargesRequired))
                 {
-                    // Gereken þarj miktarý kadar TrySpendCharge döngüsü çalýþtýr
                     for (int i = 0; i < chargesRequired; i++)
                     {
                         lantern.TrySpendCharge();
@@ -48,10 +64,7 @@ namespace TheLightenRoad.Interaction
             }
             else if (currentState == VeinState.Powered)
             {
-                // Kor damarýndan þarjlarý geri al (Drain)
-                // scriptinde AddFuel kullanýlýyor. 1 charge = 1.0f fuel.
                 lantern.AddFuel(chargesRequired);
-
                 currentState = VeinState.Drained;
                 OnDrained?.Invoke();
                 Debug.Log($"Ember Vein Drained! Recovered {chargesRequired} charges.");
