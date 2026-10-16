@@ -70,6 +70,13 @@ namespace TheLightenRoad.Player
 
         private void Awake()
         {
+            var cam = GetComponent<Camera>();
+            if (cam != null)
+            {
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = Color.black;
+            }
+
             currentFollowPosition = transform.position;
             if (target != null)
                 BindTarget(target);
