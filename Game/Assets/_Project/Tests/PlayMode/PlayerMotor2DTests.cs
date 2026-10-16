@@ -130,11 +130,21 @@ public sealed class PlayerMotor2DTests
         yield return new WaitForSeconds(0.15f);
         Assert.That(motor.FacingDirection, Is.EqualTo(1));
         Assert.That(renderer.flipX, Is.False, "Facing right should not flip sprite horizontally.");
+        if (motor.LanternTransform != null)
+        {
+            Assert.That(motor.LanternTransform.localPosition.x, Is.GreaterThan(0f),
+                "Facing right should place lantern light on the positive X side.");
+        }
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
         yield return new WaitForSeconds(0.2f);
         Assert.That(motor.FacingDirection, Is.EqualTo(-1));
         Assert.That(renderer.flipX, Is.True, "Facing left must flip sprite horizontally.");
+        if (motor.LanternTransform != null)
+        {
+            Assert.That(motor.LanternTransform.localPosition.x, Is.LessThan(0f),
+                "Facing left must flip lantern light position horizontally.");
+        }
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         yield return null;

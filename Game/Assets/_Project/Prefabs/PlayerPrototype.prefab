@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 128753085553950437}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 0.15, z: -0.1}
+  m_LocalPosition: {x: 0.49, y: 0.47, z: -0.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -208,6 +208,7 @@ MonoBehaviour:
   jumpCutMultiplier: 0.5
   spriteRenderer: {fileID: 8652911498168288635}
   visualTransform: {fileID: 4784108273523114100}
+  lanternTransform: {fileID: 4544971111738067096}
   enableSquashAndStretch: 1
   jumpStretch: {x: 0.85, y: 1.25}
   landSquash: {x: 1.25, y: 0.75}
@@ -288,7 +289,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.75, y: 1.6, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1229258085084030723}
@@ -342,8 +343,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 2868101353237766674, guid: 48c0bd67f942046b0aa5b24f91e7ee69, type: 3}
-  m_Color: {r: 1, g: 0.72, b: 0.33, a: 1}
+  m_Sprite: {fileID: 21300000, guid: 3474f9c09b01418dae9b8d461b87dae8, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -365,7 +366,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TheLightenRoad.Effects::TheLightenRoad.Effects.PlayerFootstepDustFX
   motor: {fileID: 8053443060755001231}
-  feetOffset: {x: 0, y: -0.45}
+  feetOffset: {x: 0, y: -0.8}
   enableRunDust: 1
   runDustInterval: 0.14
   runDustCount: 1

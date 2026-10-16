@@ -22,6 +22,7 @@ namespace TheLightenRoad.Player
         [Header("Visual Juice & Polish")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Transform visualTransform;
+        [SerializeField] private Transform lanternTransform;
         [SerializeField] private bool enableSquashAndStretch = true;
         [SerializeField] private Vector2 jumpStretch = new Vector2(0.85f, 1.25f);
         [SerializeField] private Vector2 landSquash = new Vector2(1.25f, 0.75f);
@@ -58,6 +59,7 @@ namespace TheLightenRoad.Player
         public bool IsInCoyoteTime => coyoteTimer > 0f && !IsGrounded;
         public bool HasBufferedJump => jumpBufferTimer > 0f;
         public Vector3 CurrentVisualScale => visualTransform != null ? visualTransform.localScale : Vector3.one;
+        public Transform LanternTransform => lanternTransform;
         public float HorizontalInput => horizontalInput;
         public Rigidbody2D Body => body;
 
@@ -77,6 +79,13 @@ namespace TheLightenRoad.Player
 
             if (visualTransform != null)
                 baseVisualScale = visualTransform.localScale;
+
+            if (lanternTransform == null)
+            {
+                var lanternChild = transform.Find("Lantern Light");
+                if (lanternChild != null)
+                    lanternTransform = lanternChild;
+            }
 
             // Local prototype bindings avoid changing the team's shared input asset.
             move = new InputAction("Move", InputActionType.Value, expectedControlType: "Axis");
@@ -185,6 +194,13 @@ namespace TheLightenRoad.Player
                 if (spriteRenderer != null)
                 {
                     spriteRenderer.flipX = facingDirection < 0;
+                }
+
+                if (lanternTransform != null)
+                {
+                    var lp = lanternTransform.localPosition;
+                    lp.x = Mathf.Abs(lp.x) * facingDirection;
+                    lanternTransform.localPosition = lp;
                 }
             }
         }
