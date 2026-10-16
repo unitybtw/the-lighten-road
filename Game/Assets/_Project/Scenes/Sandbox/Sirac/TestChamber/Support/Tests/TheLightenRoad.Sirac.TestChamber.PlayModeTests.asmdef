@@ -1,0 +1,10 @@
+{
+  "name": "TheLightenRoad.Sirac.TestChamber.PlayModeTests",
+  "references": [
+    "TheLightenRoad.Sirac.TestChamber",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "Unity.InputSystem"
+  ],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

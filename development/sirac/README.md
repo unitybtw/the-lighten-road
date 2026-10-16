@@ -298,3 +298,13 @@ Validation: all 11 `LanternHUDTests` passed through Unity MCP, covering full / h
 All current player-facing UI is in English: ember / charge counts, pickup receipts, Flare prompts, timers, empty reserve feedback, death messages, and respawn instructions. HUD timers use English decimal formatting regardless of the system locale.
 
 English UI verification: 15 / 15 Play Mode tests passed (11 HUD + 4 player respawn); the English Flare HUD was visually checked and the live hazard overlay displayed English death and respawn messages.
+
+## Checkpoint 12 — Archive test chamber (2026-10-16)
+
+Open `Game/Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity`. This separate 70m-wide blockout contains an intake, archive shelves and optional mezzanine, a service crossing, a blackout corridor, and an exit. Three 2m trenches test jump clearance and failure recovery; checkpoint triggers at x=14 and x=32.5 keep retries local. Eight ember pickups exercise resource collection and the HUD. Backspace resets the whole test route, including pickups and checkpoints.
+
+All new scene support code, tests, typography, and materials live under `Scenes/Sandbox/Sirac/TestChamber/`. Existing player and pickup prefabs are instantiated without modifying their sources. Kemal's scene, development folders, interactions, and machinery are unchanged. No shared build setting was added.
+
+Verified through Unity MCP in 6000.3.2f1: all three `ArchiveTestChamberTests` passed. The actual authored map was completed using synthetic A/D and single-jump input with no deaths; trench death returned the player to Checkpoint 01 with six charges; Backspace restored all eight pickups and the starting state. Scene validation found zero missing scripts and zero broken prefabs. This is a test blockout, not the completed Office MVP or a human completion-time result.
+
+![Archive stacks under Flare lighting](previews/archive-test-chamber.png)
