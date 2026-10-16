@@ -28,6 +28,13 @@ namespace TheLightenRoad.UI
         [SerializeField] private AudioClip emberBreakClip;
         [SerializeField, Range(0f, 1f)] private float emberBreakVolume = 0.25f;
 
+        [Header("Minimalism & Burning Ember Feedback")]
+        [Tooltip("When enabled, hides the text prompts (key bind, mode label) and relies on the burning ember particles.")]
+        [SerializeField] private bool minimalMode = true;
+        [Tooltip("Enable rising spark particles from the actively burning ember during Flare.")]
+        [SerializeField] private bool enableBurnParticles = true;
+        [SerializeField, Range(4, 16)] private int sparksPerSlot = 8;
+
         [Header("Motion")]
         [Tooltip("Keep status changes immediate and suppress decorative movement / pulsing.")]
         [SerializeField] private bool reduceMotion;
@@ -39,18 +46,34 @@ namespace TheLightenRoad.UI
         private static readonly Color Ivory = new Color32(222, 204, 169, 255);
         private static readonly Color Muted = new Color32(133, 120, 101, 255);
 
+        private struct UiSpark
+        {
+            public Image Image;
+            public Vector2 Position;
+            public Vector2 Velocity;
+            public float Life;
+            public float MaxLife;
+            public float Seed;
+            public float BaseSize;
+            public bool Active;
+        }
+
         private sealed class Slot
         {
             public RectTransform Root;
             public CanvasGroup Group;
             public Image Glow;
+            public Image BurnAura;
             public Image Fill;
             public Image Ghost;
             public Image Cracks;
+            public RectTransform SparkRoot;
+            public UiSpark[] Sparks;
             public int Charges = -1;
             public float Reaction;
             public bool Gained;
             public bool Broken;
+            public float SparkSpawnTimer;
         }
 
         private Canvas canvas;
@@ -59,6 +82,8 @@ namespace TheLightenRoad.UI
         private RectTransform panel;
         private Slot[] slots;
         private TextMeshProUGUI overflowBadge;
+        private RectTransform promptContainer;
+        private CanvasGroup promptGroup;
         private TextMeshProUGUI modeLabel;
         private TextMeshProUGUI detailLabel;
         private TextMeshProUGUI keyLabel;
@@ -76,6 +101,9 @@ namespace TheLightenRoad.UI
         public float ActiveEmberLevel => target != null && target.HasActiveScout ? target.ScoutEmberLevel : 0f;
         public float ActiveCrackAmount => target != null && target.HasActiveScout && target.ScoutIsSecondUse ? 1f - target.ScoutProgress : 0f;
         public float GetSlotCrackAlpha(int index) => ValidSlot(index) ? slots[index].Cracks.color.a : 0f;
+        public float GetSlotBurnAuraAlpha(int index) => ValidSlot(index) && slots[index].BurnAura != null ? slots[index].BurnAura.color.a : 0f;
+        public int ActiveSparkCount => GetActiveSparkCount();
+        public bool IsEmberActivelyBurning => target != null && target.HasActiveScout;
         private Rect lastSafeArea;
         private Vector2Int lastScreen;
 
@@ -90,6 +118,20 @@ namespace TheLightenRoad.UI
         public int DisplayedCharges => Mathf.Max(0, lastCharges);
         public float ScoutProgress => target != null ? target.ScoutProgress : 0f;
         public bool ReduceMotion { get => reduceMotion; set => reduceMotion = value; }
+        public bool MinimalMode
+        {
+            get => minimalMode;
+            set
+            {
+                minimalMode = value;
+                ApplyMinimalMode();
+            }
+        }
+        public bool EnableBurnParticles
+        {
+            get => enableBurnParticles;
+            set => enableBurnParticles = value;
+        }
         public Sprite GetSlotSprite(int index) => ValidSlot(index) ? slots[index].Fill.sprite : null;
         public Color GetSlotColor(int index) => ValidSlot(index) ? slots[index].Fill.color : Color.clear;
         private bool lastChangeWasGain;
@@ -100,6 +142,12 @@ namespace TheLightenRoad.UI
         {
             maxDisplaySlots = Mathf.Clamp(maxDisplaySlots, 1, 5);
             BuildHierarchy();
+            ApplyMinimalMode();
+        }
+
+        private void OnValidate()
+        {
+            ApplyMinimalMode();
         }
 
         private void OnEnable()
@@ -115,6 +163,7 @@ namespace TheLightenRoad.UI
             Unbind();
             if (canvas != null)
                 canvas.enabled = false;
+            ClearAllSparks();
         }
 
         public void SetTarget(LanternController controller)
@@ -124,12 +173,58 @@ namespace TheLightenRoad.UI
             lastCharges = -1;
             popupTimer = 0f;
             countReaction = 0f;
-            foreach (Slot slot in slots)
+            ClearAllSparks();
+            if (slots != null)
             {
-                slot.Charges = -1;
-                slot.Reaction = 0f;
+                foreach (Slot slot in slots)
+                {
+                    slot.Charges = -1;
+                    slot.Reaction = 0f;
+                    slot.SparkSpawnTimer = 0f;
+                }
             }
             TryBind();
+        }
+
+        private void ApplyMinimalMode()
+        {
+            if (promptGroup != null)
+            {
+                promptGroup.alpha = minimalMode ? 0f : 1f;
+                promptGroup.blocksRaycasts = false;
+                promptGroup.interactable = false;
+            }
+        }
+
+        private void ClearAllSparks()
+        {
+            if (slots == null) return;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i]?.BurnAura != null) slots[i].BurnAura.color = Color.clear;
+                if (slots[i]?.Sparks == null) continue;
+                for (int s = 0; s < slots[i].Sparks.Length; s++)
+                {
+                    slots[i].Sparks[s].Active = false;
+                    if (slots[i].Sparks[s].Image != null)
+                        slots[i].Sparks[s].Image.color = Color.clear;
+                }
+            }
+        }
+
+        private int GetActiveSparkCount()
+        {
+            if (slots == null) return 0;
+            int count = 0;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i]?.Sparks == null) continue;
+                for (int s = 0; s < slots[i].Sparks.Length; s++)
+                {
+                    if (slots[i].Sparks[s].Active) count++;
+                }
+            }
+            return count;
         }
 
         private void TryBind()
@@ -323,6 +418,103 @@ namespace TheLightenRoad.UI
                 slot.Ghost.rectTransform.anchoredPosition = new Vector2(1f,
                     -1f + (1f - reaction) * (slot.Broken ? -6f : 4f));
                 slot.Ghost.rectTransform.localScale = Vector3.one;
+
+                // Burning ember heat aura and fiery sparks
+                bool isBurningThisSlot = (target != null && target.HasActiveScout && i == lastBurningSlot);
+                if (isBurningThisSlot && slot.BurnAura != null)
+                {
+                    float heatFlicker = Mathf.PerlinNoise(time * 16f, i * 11.3f);
+                    float auraAlpha = reduceMotion ? 0.55f : (0.5f + 0.35f * heatFlicker);
+                    Color baseFire = target.ScoutIsSecondUse
+                        ? new Color(1f, 0.32f, 0.1f, auraAlpha)
+                        : new Color(1f, 0.62f, 0.18f, auraAlpha);
+                    slot.BurnAura.color = baseFire;
+                    if (!reduceMotion)
+                    {
+                        float scale = 1f + 0.14f * (heatFlicker - 0.5f);
+                        slot.BurnAura.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                    }
+
+                    if (enableBurnParticles && !reduceMotion)
+                    {
+                        slot.SparkSpawnTimer -= dt;
+                        if (slot.SparkSpawnTimer <= 0f)
+                        {
+                            slot.SparkSpawnTimer = 0.06f;
+                            if (slot.Sparks != null)
+                            {
+                                for (int s = 0; s < slot.Sparks.Length; s++)
+                                {
+                                    if (!slot.Sparks[s].Active)
+                                    {
+                                        float maxLife = Random.Range(0.35f, 0.65f);
+                                        float size = Random.Range(3f, 5f);
+                                        slot.Sparks[s].Active = true;
+                                        slot.Sparks[s].Life = maxLife;
+                                        slot.Sparks[s].MaxLife = maxLife;
+                                        slot.Sparks[s].BaseSize = size;
+                                        slot.Sparks[s].Seed = Random.value * 100f;
+                                        slot.Sparks[s].Position = new Vector2(Random.Range(-5f, 5f), Random.Range(-4f, 6f));
+                                        slot.Sparks[s].Velocity = new Vector2(Random.Range(-10f, 10f), Random.Range(30f, 58f));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (slot.BurnAura != null)
+                {
+                    slot.BurnAura.color = Color.clear;
+                }
+
+                if (slot.Sparks != null)
+                {
+                    for (int s = 0; s < slot.Sparks.Length; s++)
+                    {
+                        if (!slot.Sparks[s].Active)
+                        {
+                            slot.Sparks[s].Image.color = Color.clear;
+                            continue;
+                        }
+
+                        slot.Sparks[s].Life -= dt;
+                        if (slot.Sparks[s].Life <= 0f || reduceMotion)
+                        {
+                            slot.Sparks[s].Active = false;
+                            slot.Sparks[s].Image.color = Color.clear;
+                            continue;
+                        }
+
+                        float t = 1f - Mathf.Clamp01(slot.Sparks[s].Life / slot.Sparks[s].MaxLife);
+                        slot.Sparks[s].Position += slot.Sparks[s].Velocity * dt;
+                        float drift = Mathf.Sin(time * 14f + slot.Sparks[s].Seed) * 10f * dt;
+                        slot.Sparks[s].Position.x += drift;
+
+                        Color sparkColor;
+                        if (t < 0.35f)
+                        {
+                            sparkColor = Color.Lerp(
+                                new Color(1f, 0.98f, 0.85f, 1f),
+                                new Color(1f, 0.72f, 0.22f, 0.95f),
+                                t / 0.35f
+                            );
+                        }
+                        else
+                        {
+                            sparkColor = Color.Lerp(
+                                new Color(1f, 0.72f, 0.22f, 0.95f),
+                                new Color(0.85f, 0.25f, 0.05f, 0f),
+                                (t - 0.35f) / 0.65f
+                            );
+                        }
+
+                        float currentSize = slot.Sparks[s].BaseSize * (1f - t * 0.4f);
+                        slot.Sparks[s].Image.rectTransform.anchoredPosition = slot.Sparks[s].Position;
+                        slot.Sparks[s].Image.rectTransform.sizeDelta = new Vector2(currentSize, currentSize);
+                        slot.Sparks[s].Image.color = sparkColor;
+                    }
+                }
             }
         }
 
@@ -398,6 +590,8 @@ namespace TheLightenRoad.UI
                 slot.Root = Rect($"Ember {i + 1}", panel, new Vector2(i * 28f, 0f), new Vector2(22f, 30f));
                 slot.Group = slot.Root.gameObject.AddComponent<CanvasGroup>();
                 slot.Glow = Picture("Ember aura", slot.Root, new Vector2(-6f, 5f), new Vector2(34f, 34f), PixelSprites.Glow, Color.clear);
+                slot.BurnAura = Picture("Ember burn aura", slot.Root, new Vector2(-7f, 6f), new Vector2(36f, 36f), PixelSprites.Glow, Color.clear);
+                CenterPivot(slot.BurnAura.rectTransform);
 
                 slot.Fill = Picture("Ember", slot.Root, new Vector2(1f, -1f), new Vector2(20f, 27f), PixelSprites.EmberFull, Color.clear);
                 slot.Cracks = Picture("Growing fractures", slot.Root, new Vector2(1f, -1f), new Vector2(20f, 27f), emberCrackArt != null ? emberCrackArt : PixelSprites.EmberCracks, Color.clear);
@@ -407,16 +601,35 @@ namespace TheLightenRoad.UI
                 CenterPivot(slot.Fill.rectTransform);
                 slot.Ghost = Picture("Spent afterglow", slot.Root, new Vector2(1f, -1f), new Vector2(20f, 27f), PixelSprites.EmberFull, Color.clear);
 
+                slot.SparkRoot = Rect("Sparks", slot.Root, new Vector2(11f, -15f), Vector2.zero);
+                slot.SparkRoot.pivot = new Vector2(0.5f, 0.5f);
+                int sparkCount = Mathf.Clamp(sparksPerSlot, 4, 16);
+                slot.Sparks = new UiSpark[sparkCount];
+                for (int s = 0; s < sparkCount; s++)
+                {
+                    var sparkImg = Picture($"Spark {s + 1}", slot.SparkRoot, Vector2.zero, new Vector2(3f, 3f), PixelSprites.Spark, Color.clear);
+                    CenterPivot(sparkImg.rectTransform);
+                    slot.Sparks[s] = new UiSpark
+                    {
+                        Image = sparkImg,
+                        Active = false,
+                        Life = 0f
+                    };
+                }
             }
 
             overflowBadge = Text("Overflow", panel, new Vector2(maxDisplaySlots * 28f, -10f), new Vector2(30f, 16f), 10f, "", Gold);
-            keyLabel = Text("Bound key", panel, new Vector2(0f, -38f), new Vector2(10f, 12f), 7f, "F", Muted);
-            modeLabel = Text("Action", panel, new Vector2(16f, -38f), new Vector2(85f, 12f), 7f, "FLARE", Muted);
-            detailLabel = Text("Ember wear", panel, new Vector2(100f, -38f), new Vector2(70f, 12f), 7f, "", Muted);
+
+            promptContainer = Rect("Prompt Labels", panel, new Vector2(0f, -38f), new Vector2(Width, 14f));
+            promptGroup = promptContainer.gameObject.AddComponent<CanvasGroup>();
+            keyLabel = Text("Bound key", promptContainer, new Vector2(0f, 0f), new Vector2(10f, 12f), 7f, "F", Muted);
+            modeLabel = Text("Action", promptContainer, new Vector2(16f, 0f), new Vector2(85f, 12f), 7f, "FLARE", Muted);
+            detailLabel = Text("Ember wear", promptContainer, new Vector2(100f, 0f), new Vector2(70f, 12f), 7f, "", Muted);
             detailLabel.alignment = TextAlignmentOptions.MidlineRight;
 
             popupLabel = Text("Pickup receipt", panel, new Vector2(0f, -Height - 5f), new Vector2(Width, 16f), 8f, "", Color.clear, 0.4f);
 
+            ApplyMinimalMode();
             canvas.enabled = false;
         }
 

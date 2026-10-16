@@ -23,6 +23,7 @@ namespace TheLightenRoad.UI
         private static Sprite emberEmpty;
         private static Sprite emberCracks;
         private static Sprite emberFragments;
+        private static Sprite spark;
 
         public static Sprite White => white != null ? white : white = Build(new[] { "#" },
             c => Color.white);
@@ -114,6 +115,15 @@ namespace TheLightenRoad.UI
         };
         public static Sprite EmberFragments => emberFragments != null ? emberFragments : emberFragments = Build(EmberFragmentMap,
             c => c == '#' ? new Color(0.6f, 0.56f, 0.48f, 1f) : Color.clear);
+
+        private static readonly string[] SparkMap =
+        {
+            ".#.",
+            "###",
+            ".#.",
+        };
+        public static Sprite Spark => spark != null ? spark : spark = Build(SparkMap,
+            c => c == '#' ? Color.white : Color.clear);
 
         public static Sprite LanternFrame => lanternFrame != null ? lanternFrame : lanternFrame = Build(LanternMap, c =>
         {

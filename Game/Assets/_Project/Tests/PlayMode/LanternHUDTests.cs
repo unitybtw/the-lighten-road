@@ -253,4 +253,47 @@ public sealed class LanternHUDTests
         Assert.That(hud.IsShowingPickup, Is.False);
         Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
     }
+
+    [Test]
+    public void BurningEmberEmitsSparksAndHeatAuraWhileFlareIsActive()
+    {
+        fuel.Initialize(6f, 10f); // 3 embers
+        Step(0.1f);
+        Assert.That(hud.IsEmberActivelyBurning, Is.False);
+        Assert.That(hud.ActiveSparkCount, Is.Zero);
+        Assert.That(hud.GetSlotBurnAuraAlpha(2), Is.Zero);
+
+        controller.SetFlared(true);
+        Step(0.2f);
+
+        Assert.That(hud.IsEmberActivelyBurning, Is.True);
+        Assert.That(hud.GetSlotBurnAuraAlpha(2), Is.GreaterThan(0f));
+        Assert.That(hud.ActiveSparkCount, Is.GreaterThan(0));
+
+        controller.SetFlared(false);
+        controller.TickScout(controller.TransitionDuration);
+        Step(0.8f);
+
+        Assert.That(hud.IsEmberActivelyBurning, Is.False);
+        Assert.That(hud.GetSlotBurnAuraAlpha(2), Is.Zero);
+        Assert.That(hud.ActiveSparkCount, Is.Zero);
+    }
+
+    [Test]
+    public void MinimalModeTogglesPromptVisibilityWhilePreservingModeText()
+    {
+        hud.MinimalMode = true;
+        fuel.Initialize(4f, 10f);
+        Step(0.1f);
+        Assert.That(hud.MinimalMode, Is.True);
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
+
+        controller.SetFlared(true);
+        Step(0.05f);
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
+
+        hud.MinimalMode = false;
+        Assert.That(hud.MinimalMode, Is.False);
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
+    }
 }
