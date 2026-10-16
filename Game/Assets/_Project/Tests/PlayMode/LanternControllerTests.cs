@@ -96,6 +96,21 @@ public sealed class LanternControllerTests
         Assert.That(controller.IsFlared, Is.False);
     }
 
+    [Test]
+    public void ShadowAndFlickerSettingsConfigurable()
+    {
+        controller.EnableShadows = true;
+        controller.ShadowIntensity = 0.9f;
+        controller.ShadowSoftness = 0.4f;
+
+        Assert.That(controller.EnableShadows, Is.True);
+        Assert.That(controller.ShadowIntensity, Is.EqualTo(0.9f).Within(0.01f));
+        Assert.That(controller.ShadowSoftness, Is.EqualTo(0.4f).Within(0.01f));
+
+        Assert.That(controller.EnableFlicker, Is.True);
+        Assert.That(controller.FlickerIntensity, Is.GreaterThan(0f));
+    }
+
     [UnityTearDown]
     public IEnumerator TearDown()
     {

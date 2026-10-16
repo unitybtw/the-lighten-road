@@ -22,6 +22,17 @@ namespace TheLightenRoad.Lantern
         [SerializeField, Range(0f, 1f)] private float lowFuelMinimumLight = 0.45f;
         [SerializeField, Min(0.1f)] private float lowFuelPulseRate = 5f;
 
+        [Header("2D Dynamic Shadows")]
+        [SerializeField] private bool enableShadows = true;
+        [SerializeField, Range(0f, 1f)] private float shadowIntensity = 0.85f;
+        [SerializeField, Range(0f, 1f)] private float shadowSoftness = 0.25f;
+
+        [Header("Organic Flame Flicker")]
+        [SerializeField] private bool enableFlicker = true;
+        [SerializeField, Range(0f, 0.2f)] private float flickerIntensity = 0.04f;
+        [SerializeField, Range(0f, 0.2f)] private float flickerRadius = 0.05f;
+        [SerializeField, Min(0.1f)] private float flickerSpeed = 8f;
+
         [Header("Debug")]
         [Tooltip("Legacy IMGUI meter. LanternHUD replaces it; enable only for debugging.")]
         [SerializeField] private bool showDebugOverlay;
@@ -43,6 +54,12 @@ namespace TheLightenRoad.Lantern
         public float FlareIntensity => flareIntensity;
         public float DimRadius => dimRadius;
         public float FlareRadius => flareRadius;
+        public bool EnableShadows { get => enableShadows; set { enableShadows = value; ApplyLight(); } }
+        public float ShadowIntensity { get => shadowIntensity; set { shadowIntensity = value; ApplyLight(); } }
+        public float ShadowSoftness { get => shadowSoftness; set { shadowSoftness = value; ApplyLight(); } }
+        public bool EnableFlicker { get => enableFlicker; set => enableFlicker = value; }
+        public float FlickerIntensity => flickerIntensity;
+        public float FlickerSpeed => flickerSpeed;
 
         private void Awake()
         {
@@ -89,15 +106,26 @@ namespace TheLightenRoad.Lantern
                 return;
 
             lanternLight.color = lanternColor;
+            lanternLight.shadowsEnabled = enableShadows;
+            lanternLight.shadowIntensity = shadowIntensity;
+            lanternLight.shadowSoftness = shadowSoftness;
+
             float pulse = 1f;
-            if (fuel.NormalizedFuel <= lowFuelThreshold)
+            if (fuel != null && fuel.NormalizedFuel <= lowFuelThreshold)
             {
                 float phase = (Mathf.Sin(Time.time * lowFuelPulseRate * Mathf.PI * 2f) + 1f) * 0.5f;
                 pulse = Mathf.Lerp(lowFuelMinimumLight, 1f, phase);
             }
 
-            lanternLight.intensity = (IsFlared ? flareIntensity : dimIntensity) * pulse;
-            lanternLight.pointLightOuterRadius = (IsFlared ? flareRadius : dimRadius) * pulse;
+            float flicker = 1f;
+            if (enableFlicker && (fuel == null || fuel.CurrentFuel > 0f))
+            {
+                float noise = (Mathf.PerlinNoise(Time.time * flickerSpeed, 0.31f) * 2f - 1f);
+                flicker = 1f + noise * flickerIntensity;
+            }
+
+            lanternLight.intensity = (IsFlared ? flareIntensity : dimIntensity) * pulse * flicker;
+            lanternLight.pointLightOuterRadius = (IsFlared ? flareRadius : dimRadius) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
         }
 
         private void OnGUI()

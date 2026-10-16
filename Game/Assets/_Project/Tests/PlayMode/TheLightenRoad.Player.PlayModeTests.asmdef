@@ -1,5 +1,11 @@
 {
   "name": "TheLightenRoad.Player.PlayModeTests",
-  "references": ["TheLightenRoad.Player", "TheLightenRoad.Lantern", "TheLightenRoad.UI", "UnityEngine.UI", "Unity.InputSystem"],
+  "references": [
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.UI",
+    "UnityEngine.UI",
+    "Unity.InputSystem"
+  ],
   "optionalUnityReferences": ["TestAssemblies"]
 }

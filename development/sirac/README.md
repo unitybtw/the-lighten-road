@@ -123,11 +123,32 @@ Elevated movement responsiveness in `PlayerMotor2D.cs` with classic high-feel pl
   - `VisualSquashAndStretchReactsToJump`: verifies vertical stretch on jump initiation and smooth recovery.
 - Total **32 Play Mode tests** covering player motor, camera, lantern fuel, dim/flare controller, ember pickups, and HUD.
 
+## Checkpoint 6 — 2D dynamic shadows and organic flame flicker (2026-10-16)
+
+Integrated real-time 2D shadow casting and atmospheric flame undulation into `MovementSandbox.unity` and `LanternController.cs`:
+
+- **2D Dynamic Shadow Casters:**
+  - Attached `ShadowCaster2D` to all obstacles and boundaries in `MovementSandbox.unity` (`Step 01`, `Step 02`, `Step 03`, `Left Boundary`, `Right Boundary`).
+  - Obstacles now cast crisp, dramatic 2D occlusion shadows across the floor and walls as the player moves with the lantern.
+  - Added `ShadowSetupUtility.cs` under `Editor/` providing a 1-click Unity menu item (`Tools -> The Lighten Road -> Setup 2D Dynamic Shadows`) to automatically inspect, attach, and configure `ShadowCaster2D` on any active scene.
+- **Organic Flame Flicker:**
+  - Added continuous Perlin-noise-driven flame modulation to `LanternController.cs`:
+    - Simulates subtle, organic breathing of the flame (`flickerIntensity = 0.04`, `flickerRadius = 0.05`, `flickerSpeed = 8`).
+    - Dynamic shadows subtly shift and dance in real-time, elevating the subterranean ruin atmosphere from static lighting to an immersive living torchlight feel.
+- **Inspector Tuning Parameters (`LanternController.cs` & `PlayerPrototype.prefab`):**
+  - Configurable `enableShadows` toggle, `shadowIntensity` ($0.85$), and `shadowSoftness` ($0.25$).
+  - Configurable `enableFlicker` toggle, intensity, and speed.
+
+### Automated Test Coverage (33 Play Mode tests)
+
+- Added automated test in `LanternControllerTests.cs` verifying dynamic shadow and organic flicker property configuration.
+- Total **33 Play Mode tests** covering player motor, game feel, camera, lantern fuel, dim/flare controller, shadows/flicker, ember pickups, and HUD.
+
 ### Next checkpoint
 
 Continue expanding player systems in `Sandbox/Sirac/`:
 1. Death & Respawn loop on fuel depletion or hazard contact (`PlayerRespawnController`).
 2. Player sprite integration with Maksim's 24-frame Light character idle animation.
-3. 2D dynamic shadows & organic light flicker in URP.
+
 
 

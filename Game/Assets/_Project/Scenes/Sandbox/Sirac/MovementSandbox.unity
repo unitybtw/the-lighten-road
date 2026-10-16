@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 224081376}
   - component: {fileID: 224081378}
   - component: {fileID: 224081377}
+  - component: {fileID: 224081379}
   m_Layer: 0
   m_Name: Right Boundary
   m_TagString: Untagged
@@ -268,6 +269,7 @@ GameObject:
   - component: {fileID: 566924632}
   - component: {fileID: 566924634}
   - component: {fileID: 566924633}
+  - component: {fileID: 566924635}
   m_Layer: 0
   m_Name: Step 02
   m_TagString: Untagged
@@ -406,6 +408,7 @@ GameObject:
   - component: {fileID: 661618551}
   - component: {fileID: 661618553}
   - component: {fileID: 661618552}
+  - component: {fileID: 661618554}
   m_Layer: 0
   m_Name: Step 03
   m_TagString: Untagged
@@ -685,6 +688,7 @@ GameObject:
   - component: {fileID: 1528471740}
   - component: {fileID: 1528471742}
   - component: {fileID: 1528471741}
+  - component: {fileID: 1528471743}
   m_Layer: 0
   m_Name: Left Boundary
   m_TagString: Untagged
@@ -931,6 +935,7 @@ GameObject:
   - component: {fileID: 1978378621}
   - component: {fileID: 1978378623}
   - component: {fileID: 1978378622}
+  - component: {fileID: 1978378624}
   m_Layer: 0
   m_Name: Step 01
   m_TagString: Untagged
@@ -1367,3 +1372,133 @@ SceneRoots:
   - {fileID: 957211470}
   - {fileID: 1241960835}
   - {fileID: 2066023617}
+--- !u!114 &1978378624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1978378620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ComponentVersion: 5
+  m_HasValidData: 1
+  m_ShadowCastingSource: 1
+  m_ShadowShape2DComponent: {fileID: 0}
+  m_ShadowShape2DProvider: {fileID: 0}
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 00000000
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  m_ShadowShapeGroup: {fileID: 0}
+--- !u!114 &566924635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 566924631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ComponentVersion: 5
+  m_HasValidData: 1
+  m_ShadowCastingSource: 1
+  m_ShadowShape2DComponent: {fileID: 0}
+  m_ShadowShape2DProvider: {fileID: 0}
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 00000000
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  m_ShadowShapeGroup: {fileID: 0}
+--- !u!114 &661618554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 661618550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ComponentVersion: 5
+  m_HasValidData: 1
+  m_ShadowCastingSource: 1
+  m_ShadowShape2DComponent: {fileID: 0}
+  m_ShadowShape2DProvider: {fileID: 0}
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 00000000
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  m_ShadowShapeGroup: {fileID: 0}
+--- !u!114 &1528471743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1528471739}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ComponentVersion: 5
+  m_HasValidData: 1
+  m_ShadowCastingSource: 1
+  m_ShadowShape2DComponent: {fileID: 0}
+  m_ShadowShape2DProvider: {fileID: 0}
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 00000000
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  m_ShadowShapeGroup: {fileID: 0}
+--- !u!114 &224081379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 224081375}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ComponentVersion: 5
+  m_HasValidData: 1
+  m_ShadowCastingSource: 1
+  m_ShadowShape2DComponent: {fileID: 0}
+  m_ShadowShape2DProvider: {fileID: 0}
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_ApplyToSortingLayers: 00000000
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  m_ShadowShapeGroup: {fileID: 0}

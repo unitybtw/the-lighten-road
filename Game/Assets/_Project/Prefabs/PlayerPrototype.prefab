@@ -252,6 +252,13 @@ MonoBehaviour:
   lowFuelThreshold: 0.25
   lowFuelMinimumLight: 0.45
   lowFuelPulseRate: 5
+  enableShadows: 1
+  shadowIntensity: 0.85
+  shadowSoftness: 0.25
+  enableFlicker: 1
+  flickerIntensity: 0.04
+  flickerRadius: 0.05
+  flickerSpeed: 8
 --- !u!1 &6310001053283258633
 GameObject:
   m_ObjectHideFlags: 0
