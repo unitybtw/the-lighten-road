@@ -1,0 +1,143 @@
+name: Project checks
+
+on:
+  schedule:
+    - cron: '23 3 * * 1'
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Game/**'
+      - 'scripts/**'
+      - '.github/workflows/project-checks.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integrity:
+    name: Project integrity and tooling tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install dashboard test dependency
+        run: python -m pip install -r scripts/team_activity/requirements.txt
+      - name: Test integrity checks
+        run: python -m unittest discover -s scripts/ci -p 'test_*.py'
+      - name: Test contribution counting
+        run: python -m unittest discover -s scripts/team_activity -p 'test_*.py'
+      - name: Inspect tracked Unity project files
+        id: integrity
+        run: python scripts/ci/check_project.py --output reports/project-integrity.json
+      - name: Summarize project integrity
+        if: always()
+        env:
+          INTEGRITY_OUTCOME: ${{ steps.integrity.outcome }}
+        run: |
+          {
+            echo '## Project integrity'
+            echo "Tracked Unity file checks: ${INTEGRITY_OUTCOME}."
+            echo 'These checks do not execute Unity gameplay tests. See the Unity license configuration and Unity Play Mode jobs.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload integrity report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: project-integrity-${{ github.run_id }}
+          path: reports/project-integrity.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  unity-configuration:
+    name: Unity license configuration
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      ready: ${{ steps.license.outputs.ready }}
+    steps:
+      - name: Check whether Unity CI credentials are configured
+        id: license
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          if [[ -n "$UNITY_EMAIL" && -n "$UNITY_PASSWORD" && ( -n "$UNITY_LICENSE" || -n "$UNITY_SERIAL" ) ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+            echo '## Unity Play Mode: configured' >> "$GITHUB_STEP_SUMMARY"
+            echo 'See the Unity Play Mode job for actual test results.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::Unity gameplay tests NOT RUN: configure the Unity license secrets described in docs/TESTING.md.'
+            {
+              echo '## Unity Play Mode: NOT RUN'
+              echo 'Unity license secrets are missing. This is not a passing gameplay test run.'
+              echo 'Set UNITY_EMAIL, UNITY_PASSWORD and either UNITY_LICENSE (Personal) or UNITY_SERIAL (Pro) in repository Actions secrets.'
+              echo 'See docs/TESTING.md. Project integrity and Python tests still run without these secrets.'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  unity-playmode:
+    name: Unity Play Mode
+    needs: unity-configuration
+    if: needs.unity-configuration.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out project
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Cache imported Unity assets
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: Game/Library
+          key: unity-playmode-linux-${{ hashFiles('Game/ProjectSettings/ProjectVersion.txt', 'Game/Packages/manifest.json', 'Game/Packages/packages-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            unity-playmode-linux-${{ hashFiles('Game/ProjectSettings/ProjectVersion.txt', 'Game/Packages/manifest.json', 'Game/Packages/packages-lock.json') }}-
+      - name: Compile project and run all Play Mode tests
+        id: tests
+        uses: game-ci/unity-test-runner@32e57712352b500e17974b245a6dce9e11a73213 # v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Game
+          unityVersion: auto
+          testMode: PlayMode
+          artifactsPath: artifacts/unity-playmode
+          coverageEnabled: false
+      - name: Summarize Unity execution
+        if: always()
+        env:
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+        run: |
+          {
+            echo '## Unity Play Mode'
+            echo "Runner outcome: ${TEST_OUTCOME}."
+            echo 'Download the Unity artifact for NUnit XML results and Editor logs. Compilation or test failures fail this job.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Unity results and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unity-playmode-${{ github.run_id }}
+          path: artifacts/unity-playmode
+          if-no-files-found: warn
+          retention-days: 14

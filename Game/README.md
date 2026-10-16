@@ -14,7 +14,9 @@ The scene contains a floor, boundary walls, three ascending platforms, the reusa
 
 ## Validation
 
-In `Window > General > Test Runner`, select **PlayMode** and run `TheLightenRoad.Player.PlayModeTests`. On 2026-10-15 all **4 tests passed** in Unity 6000.3.2f1 using the actual player prefab: movement in both directions and release-to-stop; one jump, rejection of an airborne jump, and landing; camera follow; and falling along a wall while holding toward it. These checks cover a flat test floor and a vertical wall. They do not establish final game feel, complete level playability, or physical gamepad support.
+In `Window > General > Test Runner`, select **PlayMode** and run `TheLightenRoad.Player.PlayModeTests` and `TheLightenRoad.Sirac.TestChamber.PlayModeTests`. On **2026-10-16**, all **53 tests passed** in Unity 6000.3.2f1 through Unity MCP on macOS: movement, camera, lantern fuel and controller, pickups, HUD, particles, respawn, and the archive test chamber. These results do not establish final game feel or physical gamepad support.
+
+[Project checks](../docs/TESTING.md) runs license-free project validation weekly, on relevant pull requests, and manually. GitHub-hosted Unity tests are configured but require repository license secrets before they can run; their skipped state is reported separately from passing integrity checks.
 
 ## Unity MCP tooling
 
