@@ -1,12 +1,6 @@
 name: Update team activity
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'docs/team-activity/**'
-  schedule:
-    - cron: '23 5 * * *'
   workflow_dispatch:
 
 permissions:

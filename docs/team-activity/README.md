@@ -10,7 +10,7 @@ All five team members are always shown in stable roster order. Overlapping portr
 
 ## Updates
 
-[Update team activity](../../.github/workflows/team-activity.yml) refreshes the dashboard after human pushes to `main`, on a daily schedule, or through **Actions → Update team activity → Run workflow**. It commits only the README's generated section and `docs/team-activity/`. If the data and images do not change, no update commit is created. Its bot commits are excluded from the statistics. A concurrent push may reject the bot's normal push; rerun the workflow after it finishes rather than force-pushing.
+[Update team activity](../../.github/workflows/team-activity.yml) runs only when manually started through **Actions → Update team activity → Run workflow**. Pushes and scheduled timers do not trigger it. The README animation keeps playing using the last published snapshot; commit counts change only after a manual or local refresh. It commits only the README's generated section and `docs/team-activity/`. If the data and images do not change, no update commit is created. Its bot commits are excluded from the statistics. A concurrent push may reject the bot's normal push; rerun the workflow after it finishes rather than force-pushing.
 
 The workflow uses the repository's automatic `GITHUB_TOKEN`; no personal access token or external badge service is required. GitHub avatars are fetched publicly without forwarding that token. Only public profile details, counts, avatar PNGs, and aggregate metadata are published.
 
