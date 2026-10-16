@@ -60,7 +60,7 @@ public sealed class ArchiveTestChamberTests
         int deaths = 0;
         bool dying = false;
         bool spaceHeld = false;
-        while (elapsed < 30f && !director.IsComplete)
+        while (elapsed < 35f && !director.IsComplete)
         {
             if (player.State != RespawnState.Alive)
             {
@@ -77,12 +77,21 @@ public sealed class ArchiveTestChamberTests
                 float foot = position.y - 0.8f;
                 bool obstacle = Physics2D.RaycastAll(new Vector2(position.x + 0.45f, foot + 0.2f), Vector2.right, 0.65f)
                     .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
-                bool groundAhead = Physics2D.RaycastAll(new Vector2(position.x + 0.95f, foot + 0.35f), Vector2.down, 0.75f)
+                bool gapUpcoming = !Physics2D.RaycastAll(new Vector2(position.x + 2.0f, foot + 0.35f), Vector2.down, 0.75f)
                     .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
+                bool gapEdge = !Physics2D.RaycastAll(new Vector2(position.x + 0.6f, foot + 0.35f), Vector2.down, 0.75f)
+                    .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
+
                 // Release Space between presses even if a short overhead collision ends a jump early.
-                if (motor.IsGrounded && jumpHold <= 0f && !spaceHeld && (obstacle || !groundAhead)) jumpHold = 0.35f;
+                if (motor.IsGrounded && jumpHold <= 0f && !spaceHeld && (obstacle || gapEdge))
+                {
+                    jumpHold = gapEdge ? 0.55f : 0.35f;
+                }
                 spaceHeld = jumpHold > 0f;
-                InputSystem.QueueStateEvent(keyboard, spaceHeld ? new KeyboardState(Key.D, Key.Space) : new KeyboardState(Key.D));
+                bool sprint = spaceHeld || gapUpcoming;
+                InputSystem.QueueStateEvent(keyboard, spaceHeld
+                    ? (sprint ? new KeyboardState(Key.D, Key.Space, Key.LeftShift) : new KeyboardState(Key.D, Key.Space))
+                    : (sprint ? new KeyboardState(Key.D, Key.LeftShift) : new KeyboardState(Key.D)));
             }
             yield return null;
             jumpHold -= Time.deltaTime;

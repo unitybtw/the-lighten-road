@@ -7,7 +7,13 @@ namespace TheLightenRoad.Player
     public sealed class PlayerMotor2D : MonoBehaviour
     {
         [Header("Movement")]
-        [SerializeField, Min(0f)] private float moveSpeed = 5f;
+        [Tooltip("Atmospheric walking speed through dark ruins.")]
+        [SerializeField, Min(0f)] private float walkSpeed = 3.2f;
+        [Tooltip("Athletic sprint speed for crossing wide gaps and escaping.")]
+        [SerializeField, Min(0f)] private float runSpeed = 5.5f;
+
+        [Header("Stamina & Endurance")]
+        [SerializeField] private PlayerStamina stamina;
 
         [Header("Jumping & Responsiveness")]
         [SerializeField, Min(0f)] private float jumpSpeed = 9f;
@@ -36,6 +42,7 @@ namespace TheLightenRoad.Player
         private Rigidbody2D body;
         private InputAction move;
         private InputAction jump;
+        private InputAction sprint;
         private float horizontalInput;
 
         private float coyoteTimer;
@@ -51,7 +58,13 @@ namespace TheLightenRoad.Player
 
         public bool IsGrounded { get; private set; }
         public int FacingDirection => facingDirection;
-        public float MoveSpeed { get => moveSpeed; set => moveSpeed = value; }
+        public float WalkSpeed { get => walkSpeed; set => walkSpeed = value; }
+        public float RunSpeed { get => runSpeed; set => runSpeed = value; }
+        public float MoveSpeed { get => CurrentSpeed; set => walkSpeed = value; }
+        public float CurrentSpeed => IsRunning ? runSpeed : walkSpeed;
+        public bool IsRunning { get; private set; }
+        public bool IsSprinting => IsRunning;
+        public PlayerStamina Stamina => stamina;
         public float JumpSpeed { get => jumpSpeed; set => jumpSpeed = value; }
         public float CoyoteTime { get => coyoteTime; set => coyoteTime = value; }
         public float JumpBufferTime { get => jumpBufferTime; set => jumpBufferTime = value; }
@@ -87,6 +100,9 @@ namespace TheLightenRoad.Player
                     lanternTransform = lanternChild;
             }
 
+            if (stamina == null)
+                stamina = GetComponent<PlayerStamina>();
+
             // Local prototype bindings avoid changing the team's shared input asset.
             move = new InputAction("Move", InputActionType.Value, expectedControlType: "Axis");
             move.AddCompositeBinding("1DAxis")
@@ -99,12 +115,20 @@ namespace TheLightenRoad.Player
 
             jump = new InputAction("Jump", InputActionType.Button, "<Keyboard>/space");
             jump.AddBinding("<Gamepad>/buttonSouth");
+
+            sprint = new InputAction("Sprint", InputActionType.Button);
+            sprint.AddBinding("<Keyboard>/leftShift");
+            sprint.AddBinding("<Keyboard>/rightShift");
+            sprint.AddBinding("<Gamepad>/leftStickPress");
+            sprint.AddBinding("<Gamepad>/rightTrigger");
+            sprint.AddBinding("<Gamepad>/buttonEast");
         }
 
         private void OnEnable()
         {
             move.Enable();
             jump.Enable();
+            sprint.Enable();
         }
 
         private void Update()
@@ -159,8 +183,42 @@ namespace TheLightenRoad.Player
                 jumpBufferTimer -= Time.fixedDeltaTime;
             }
 
+            bool sprintHeld = (sprint != null && (sprint.IsPressed() || sprint.ReadValue<float>() > 0.5f))
+                || (Keyboard.current != null && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed));
+            bool hasHorizontalInput = Mathf.Abs(horizontalInput) > 0.05f;
+
+            if (IsGrounded)
+            {
+                bool canSprint = sprintHeld && hasHorizontalInput && (stamina == null || stamina.CanSprint);
+                if (canSprint)
+                {
+                    IsRunning = true;
+                    if (stamina != null)
+                    {
+                        stamina.ConsumeSprint(Time.fixedDeltaTime);
+                    }
+                }
+                else
+                {
+                    IsRunning = false;
+                    if (stamina != null)
+                    {
+                        stamina.Regenerate(Time.fixedDeltaTime);
+                    }
+                }
+            }
+            else
+            {
+                // In air: retain running momentum if we jumped while running
+                if (IsRunning && stamina != null && sprintHeld)
+                {
+                    stamina.ConsumeSprint(Time.fixedDeltaTime * 0.5f);
+                }
+            }
+
             var velocity = body.linearVelocity;
-            velocity.x = horizontalInput * moveSpeed;
+            float currentMoveSpeed = IsRunning ? runSpeed : walkSpeed;
+            velocity.x = horizontalInput * currentMoveSpeed;
 
             // Execute jump if buffer is active AND player is either grounded or within coyote time
             if (jumpBufferTimer > 0f && (IsGrounded || coyoteTimer > 0f))
@@ -170,6 +228,12 @@ namespace TheLightenRoad.Player
                 coyoteTimer = 0f;
                 jumpBufferTimer = 0f;
                 jumpReleased = false;
+
+                if (IsRunning && stamina != null)
+                {
+                    stamina.TryConsumeJump();
+                }
+
                 ApplySquash(jumpStretch);
                 OnJumped?.Invoke();
             }
@@ -237,11 +301,13 @@ namespace TheLightenRoad.Player
         {
             move.Disable();
             jump.Disable();
+            sprint.Disable();
             horizontalInput = 0f;
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;
             jumpReleased = false;
             IsGrounded = false;
+            IsRunning = false;
             if (body != null)
                 body.linearVelocity = new Vector2(0f, body.linearVelocity.y);
         }
@@ -250,6 +316,7 @@ namespace TheLightenRoad.Player
         {
             move?.Dispose();
             jump?.Dispose();
+            sprint?.Dispose();
         }
     }
 }

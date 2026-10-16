@@ -99,7 +99,7 @@ public sealed class PlayerMotor2DTests
         body.linearVelocity = Vector2.zero;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
-        yield return new WaitForSeconds(0.7f);
+        yield return new WaitForSeconds(0.9f);
         Assert.That(body.position.y, Is.LessThan(1.2f),
             "Pressing into a side wall must not keep the player suspended.");
         Assert.That(motor.IsGrounded, Is.True);
@@ -163,10 +163,10 @@ public sealed class PlayerMotor2DTests
         yield return new WaitForSeconds(0.3f);
         Assert.That(motor.IsGrounded, Is.True, "Player must settle on ledge first.");
 
-        // Walk off the right edge of the ledge (past X = 2.0)
+        // Walk off the right edge of the ledge (past X = 2.0). Capsule width is 0.75m, so player reaches > 2.4m to clear.
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
-        yield return new WaitForSeconds(0.15f);
-        Assert.That(body.position.x, Is.GreaterThan(2.05f), "Player must be past the ledge edge.");
+        yield return new WaitForSeconds(0.24f);
+        Assert.That(body.position.x, Is.GreaterThan(2.4f), "Player must be past the ledge edge.");
         Assert.That(motor.IsGrounded, Is.False, "Player is now in the air.");
         Assert.That(motor.IsInCoyoteTime, Is.True, "Player should be within the coyote time window.");
 
@@ -182,20 +182,20 @@ public sealed class PlayerMotor2DTests
     public IEnumerator JumpBufferExecutesUponLanding()
     {
         // Drop player from height
-        body.position = new Vector2(0f, 2.5f);
+        body.position = new Vector2(0f, 2.8f);
         body.linearVelocity = Vector2.zero;
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.15f);
         Assert.That(motor.IsGrounded, Is.False);
 
-        // Press jump while still ~0.08s above the floor
-        yield return new WaitForSeconds(0.2f);
+        // Press jump while still ~0.05s above the floor
+        yield return new WaitForSeconds(0.15f);
         Assert.That(motor.IsGrounded, Is.False);
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
-        yield return new WaitForSeconds(0.04f);
+        yield return new WaitForSeconds(0.03f);
         Assert.That(motor.HasBufferedJump, Is.True, "Jump input must be buffered.");
 
         // Allow player to touch ground; buffered jump should fire immediately
-        yield return new WaitForSeconds(0.12f);
+        yield return new WaitForSeconds(0.08f);
         Assert.That(body.linearVelocity.y, Is.GreaterThan(1f), "Buffered jump must propel player upward upon landing.");
     }
 
@@ -217,6 +217,81 @@ public sealed class PlayerMotor2DTests
         yield return new WaitForSeconds(0.4f);
         Assert.That(motor.CurrentVisualScale.y, Is.EqualTo(initialScale.y).Within(0.08f),
             "Visual scale should smoothly recover toward base scale.");
+    }
+
+    [UnityTest]
+    public IEnumerator WalkingAndSprintingModesWithShift()
+    {
+        var stamina = player.GetComponent<PlayerStamina>();
+        Assert.That(stamina, Is.Not.Null, "Player must have PlayerStamina component.");
+
+        // 1. Walk test (only Key.D)
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(0.2f);
+        Assert.That(motor.IsRunning, Is.False, "Player must walk when Shift is not held.");
+        Assert.That(body.linearVelocity.x, Is.EqualTo(motor.WalkSpeed).Within(0.2f));
+
+        // 2. Sprint test (Key.D + Key.LeftShift)
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift));
+        yield return new WaitForSeconds(0.2f);
+        Assert.That(motor.IsRunning, Is.True, "Player must sprint when Shift is held.");
+        Assert.That(body.linearVelocity.x, Is.EqualTo(motor.RunSpeed).Within(0.2f));
+        Assert.That(stamina.CurrentStamina, Is.LessThan(stamina.MaxStamina), "Stamina must drain while sprinting.");
+
+        // 3. Stop and verify regen
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        float staminaBeforeRegen = stamina.CurrentStamina;
+        yield return new WaitForSeconds(0.8f);
+        Assert.That(stamina.CurrentStamina, Is.GreaterThan(staminaBeforeRegen), "Stamina must regenerate when resting.");
+    }
+
+    [UnityTest]
+    public IEnumerator ExhaustionForcesPlayerToWalkUntilRecovered()
+    {
+        var stamina = player.GetComponent<PlayerStamina>();
+        stamina.Initialize(3f, 100f);
+
+        // Sprint until exhausted
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift));
+        yield return new WaitForSeconds(0.35f);
+
+        Assert.That(stamina.IsExhausted, Is.True,
+            $"Stamina: {stamina.CurrentStamina}/{stamina.MaxStamina}, Grounded: {motor.IsGrounded}, Running: {motor.IsRunning}, Vel: {body.linearVelocity}, Pos: {body.position}");
+        Assert.That(motor.IsRunning, Is.False, "Exhausted player cannot sprint even if Shift is held.");
+        Assert.That(body.linearVelocity.x, Is.EqualTo(motor.WalkSpeed).Within(0.25f));
+
+        // Release keys and wait for recovery threshold (25%)
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        yield return new WaitForSeconds(1.8f);
+        Assert.That(stamina.IsExhausted, Is.False, "Exhaustion must clear once recovered past threshold.");
+        Assert.That(stamina.CanSprint, Is.True);
+    }
+
+    [UnityTest]
+    public IEnumerator SprintJumpCoversSignificantlyMoreHorizontalDistance()
+    {
+        // Measure walking jump
+        body.position = new Vector2(0f, 0.8f);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.Space));
+        yield return new WaitForSeconds(0.65f);
+        float walkJumpDistance = body.position.x;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        yield return new WaitForSeconds(0.1f);
+
+        // Reset position and stamina
+        body.position = new Vector2(0f, 0.8f);
+        var stamina = player.GetComponent<PlayerStamina>();
+        if (stamina != null) stamina.ResetStamina();
+        yield return new WaitForSeconds(0.1f);
+
+        // Measure sprint jump
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
+        yield return new WaitForSeconds(0.65f);
+        float sprintJumpDistance = body.position.x;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+
+        Assert.That(sprintJumpDistance, Is.GreaterThan(walkJumpDistance + 0.6f),
+            $"Sprint jump ({sprintJumpDistance:F2}m) must cover substantially more ground than walk jump ({walkJumpDistance:F2}m).");
     }
 
     [UnityTearDown]

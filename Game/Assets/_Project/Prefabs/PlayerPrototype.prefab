@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 265321852609213324}
   - component: {fileID: 910238475618293012}
   - component: {fileID: 512839401726481023}
+  - component: {fileID: 6332020728371791968}
   m_Layer: 0
   m_Name: PlayerPrototype
   m_TagString: Untagged
@@ -201,7 +202,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 639a219e678784e43b9e6e620276226b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerMotor2D
-  moveSpeed: 5
+  walkSpeed: 3.2
+  runSpeed: 5.5
+  stamina: {fileID: 6332020728371791968}
   jumpSpeed: 9
   coyoteTime: 0.15
   jumpBufferTime: 0.12
@@ -418,6 +421,7 @@ MonoBehaviour:
   motor: {fileID: 8053443060755001231}
   lantern: {fileID: 265321852609213324}
   fuel: {fileID: 8374520008009650060}
+  stamina: {fileID: 6332020728371791968}
   followCamera: {fileID: 0}
   spawnPosition: {x: -5, y: 1, z: 0}
   respawnFuelAmount: 6
@@ -426,5 +430,23 @@ MonoBehaviour:
   killOnFuelDepleted: 0
   autoRespawnDelay: 2.4
   allowManualRespawnInput: 1
+--- !u!114 &6332020728371791968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738987852800000031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5f11a1b8efe418b8fd61db3d8dad06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerStamina
+  maxStamina: 100
+  sprintDrainPerSecond: 20
+  staminaRegenPerSecond: 25
+  regenDelayAfterSprint: 0.5
+  jumpStaminaCost: 10
+  exhaustionRecoveryThreshold: 0.25
 
 

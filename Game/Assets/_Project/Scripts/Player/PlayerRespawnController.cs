@@ -28,6 +28,7 @@ namespace TheLightenRoad.Player
         [SerializeField] private PlayerMotor2D motor;
         [SerializeField] private LanternController lantern;
         [SerializeField] private LanternFuel fuel;
+        [SerializeField] private PlayerStamina stamina;
         [SerializeField] private FollowCamera2D followCamera;
 
         [Header("Spawn & Checkpoint")]
@@ -72,6 +73,8 @@ namespace TheLightenRoad.Player
                 lantern = GetComponentInChildren<LanternController>();
             if (fuel == null)
                 fuel = GetComponentInChildren<LanternFuel>();
+            if (stamina == null)
+                stamina = GetComponent<PlayerStamina>();
             if (followCamera == null)
                 followCamera = FindAnyObjectByType<FollowCamera2D>();
 
@@ -194,6 +197,10 @@ namespace TheLightenRoad.Player
             // Restore lantern fuel
             if (fuel != null)
                 fuel.Initialize(respawnFuelAmount, fuel.Capacity);
+
+            // Restore stamina
+            if (stamina != null)
+                stamina.ResetStamina();
 
             // Turn lantern back to Dim mode if needed
             if (lantern != null)
