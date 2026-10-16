@@ -850,6 +850,21 @@ MonoBehaviour:
   target: {fileID: 3212747221082265427}
   offset: {x: 0, y: 1.5, z: -10}
   smoothTime: 0.15
+  enableLookAhead: 1
+  lookAheadDistance: 0.85
+  idleLookAheadDistance: 0.35
+  lookAheadSmoothTime: 0.25
+  enableFallAnticipation: 1
+  fallVelocityThreshold: -3.5
+  fallLeadDistance: 1.2
+  fallSmoothTime: 0.35
+  enableLandingShake: 1
+  minShakeImpactSpeed: 8
+  landingShakeIntensity: 0.08
+  landingShakeDuration: 0.12
+  enableBounds: 0
+  boundsMin: {x: -50, y: -10}
+  boundsMax: {x: 50, y: 20}
 --- !u!81 &1847739765
 AudioListener:
   m_ObjectHideFlags: 0
