@@ -272,22 +272,31 @@ public sealed class PlayerMotor2DTests
     {
         // Measure walking jump
         body.position = new Vector2(0f, 0.8f);
+        body.linearVelocity = Vector2.zero;
+        yield return new WaitForSeconds(0.1f);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(0.05f);
+        float walkStartX = body.position.x;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.Space));
         yield return new WaitForSeconds(0.65f);
-        float walkJumpDistance = body.position.x;
+        float walkJumpDistance = body.position.x - walkStartX;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         yield return new WaitForSeconds(0.1f);
 
         // Reset position and stamina
         body.position = new Vector2(0f, 0.8f);
+        body.linearVelocity = Vector2.zero;
         var stamina = player.GetComponent<PlayerStamina>();
         if (stamina != null) stamina.ResetStamina();
         yield return new WaitForSeconds(0.1f);
 
-        // Measure sprint jump
+        // Measure sprint jump (running start before takeoff)
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift));
+        yield return new WaitForSeconds(0.05f);
+        float sprintStartX = body.position.x;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
         yield return new WaitForSeconds(0.65f);
-        float sprintJumpDistance = body.position.x;
+        float sprintJumpDistance = body.position.x - sprintStartX;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
 
         Assert.That(sprintJumpDistance, Is.GreaterThan(walkJumpDistance + 0.6f),

@@ -49,6 +49,8 @@ public sealed class StaminaHUDTests
         Assert.That(hud.DisplayedFill, Is.EqualTo(1f).Within(0.01f));
         Assert.That(hud.DisplayedGhostFill, Is.EqualTo(1f).Within(0.01f));
         Assert.That(hud.IsExhausted, Is.False);
+        Assert.That(hud.AnchoredPosition.y, Is.EqualTo(hud.BottomOffset).Within(0.1f), "Gauge should be positioned at the bottom-center.");
+        Assert.That(hud.BarSize.x, Is.GreaterThan(100f), "Pill gauge width should be slender and proportional.");
     }
 
     [Test]
@@ -99,14 +101,19 @@ public sealed class StaminaHUDTests
         hud.Tick(0.1f);
         Assert.That(hud.PanelAlpha, Is.GreaterThan(0.9f));
 
-        // After resting idle at 100% for 3 seconds, panel dims towards idle alpha (0.45)
+        // After resting idle at 100% for 3 seconds, panel completely fades out (contextual HUD)
         for (int i = 0; i < 180; i++)
         {
             hud.Tick(1f / 60f);
         }
 
-        Assert.That(hud.PanelAlpha, Is.LessThan(0.7f),
-            "Panel alpha should gently dim when resting at full stamina to maintain clean minimal screen.");
+        Assert.That(hud.PanelAlpha, Is.EqualTo(0f).Within(0.05f),
+            "Panel alpha should fade out completely when resting at full stamina to maintain clean screen.");
+
+        // When stamina is consumed, panel immediately wakes up to full visibility
+        stamina.ConsumeSprint(1.0f);
+        Assert.That(hud.PanelAlpha, Is.EqualTo(1f).Within(0.01f),
+            "Panel alpha must immediately snap to 1.0 on stamina consumption.");
     }
 
     [Test]

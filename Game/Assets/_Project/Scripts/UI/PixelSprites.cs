@@ -24,6 +24,9 @@ namespace TheLightenRoad.UI
         private static Sprite emberCracks;
         private static Sprite emberFragments;
         private static Sprite spark;
+        private static Sprite pill;
+        private static Sprite pillBorder;
+        private static Sprite pillGlow;
 
         public static Sprite White => white != null ? white : white = Build(new[] { "#" },
             c => Color.white);
@@ -241,6 +244,112 @@ namespace TheLightenRoad.UI
                 }
                 texture.Apply();
                 return vignette = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 16f);
+            }
+        }
+
+        public static Sprite Pill
+        {
+            get
+            {
+                if (pill != null) return pill;
+                const int w = 32;
+                const int h = 10;
+                const float r = 5f;
+                var texture = new Texture2D(w, h, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                    hideFlags = HideFlags.DontSave
+                };
+
+                for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float px = x + 0.5f;
+                    float py = y + 0.5f;
+                    float dist = px < r ? Vector2.Distance(new Vector2(px, py), new Vector2(r, r))
+                        : px > w - r ? Vector2.Distance(new Vector2(px, py), new Vector2(w - r, r))
+                        : Mathf.Abs(py - r);
+                    float alpha = Mathf.Clamp01(r - dist + 0.5f);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+                texture.Apply();
+                return pill = Sprite.Create(texture, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 16f,
+                    0, SpriteMeshType.FullRect, new Vector4(r, r, r, r));
+            }
+        }
+
+        public static Sprite PillBorder
+        {
+            get
+            {
+                if (pillBorder != null) return pillBorder;
+                const int w = 32;
+                const int h = 10;
+                const float r = 5f;
+                const float stroke = 1.2f;
+                var texture = new Texture2D(w, h, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                    hideFlags = HideFlags.DontSave
+                };
+
+                for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float px = x + 0.5f;
+                    float py = y + 0.5f;
+                    float dist = px < r ? Vector2.Distance(new Vector2(px, py), new Vector2(r, r))
+                        : px > w - r ? Vector2.Distance(new Vector2(px, py), new Vector2(w - r, r))
+                        : Mathf.Abs(py - r);
+                    float outer = Mathf.Clamp01(r - dist + 0.5f);
+                    float inner = Mathf.Clamp01((r - stroke) - dist + 0.5f);
+                    float alpha = Mathf.Clamp01(outer - inner);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+                texture.Apply();
+                return pillBorder = Sprite.Create(texture, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 16f,
+                    0, SpriteMeshType.FullRect, new Vector4(r, r, r, r));
+            }
+        }
+
+        public static Sprite PillGlow
+        {
+            get
+            {
+                if (pillGlow != null) return pillGlow;
+                const int w = 48;
+                const int h = 24;
+                const float r = 8f;
+                const float halo = 6f;
+                var texture = new Texture2D(w, h, TextureFormat.RGBA32, false)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                    hideFlags = HideFlags.DontSave
+                };
+
+                for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float px = x + 0.5f;
+                    float py = y + 0.5f;
+                    float cx = w * 0.5f;
+                    float cy = h * 0.5f;
+                    float capR = cy - halo;
+                    float left = cx - 12f;
+                    float right = cx + 12f;
+                    float dist = px < left ? Vector2.Distance(new Vector2(px, py), new Vector2(left, cy))
+                        : px > right ? Vector2.Distance(new Vector2(px, py), new Vector2(right, cy))
+                        : Mathf.Abs(py - cy);
+                    float falloff = Mathf.Clamp01(1f - Mathf.Max(0f, dist - capR) / halo);
+                    float alpha = falloff * falloff;
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+                }
+                texture.Apply();
+                return pillGlow = Sprite.Create(texture, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 16f,
+                    0, SpriteMeshType.FullRect, new Vector4(16, 12, 16, 12));
             }
         }
 

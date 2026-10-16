@@ -17,22 +17,24 @@ namespace TheLightenRoad.UI
         [Header("Target (auto-found when empty)")]
         [SerializeField] private PlayerStamina target;
 
-        [Header("Layout — reference resolution 960x540")]
-        [SerializeField] private Vector2 screenMargin = new Vector2(24f, 76f);
-        [SerializeField] private Vector2 barSize = new Vector2(136f, 7f);
+        [Header("Layout — Bottom Center")]
+        [Tooltip("Vertical offset in pixels from the bottom edge of the screen.")]
+        [SerializeField] private float bottomOffset = 24f;
+        [Tooltip("Dimensions of the slender stamina pill (width x height).")]
+        [SerializeField] private Vector2 barSize = new Vector2(150f, 5f);
 
         [Header("Colors & Styling")]
-        [SerializeField] private Color staminaColor = new Color(0.92f, 0.65f, 0.22f, 1f);
-        [SerializeField] private Color exhaustedColor = new Color(0.85f, 0.22f, 0.14f, 1f);
-        [SerializeField] private Color ghostColor = new Color(1f, 0.92f, 0.68f, 0.75f);
-        [SerializeField] private Color trackColor = new Color(0.06f, 0.08f, 0.10f, 0.85f);
-        [SerializeField] private Color borderColor = new Color(0.18f, 0.22f, 0.26f, 1f);
+        [SerializeField] private Color staminaColor = new Color(0.94f, 0.68f, 0.24f, 1f);
+        [SerializeField] private Color exhaustedColor = new Color(0.90f, 0.22f, 0.14f, 1f);
+        [SerializeField] private Color ghostColor = new Color(1f, 0.90f, 0.65f, 0.70f);
+        [SerializeField] private Color trackColor = new Color(0.04f, 0.06f, 0.08f, 0.88f);
+        [SerializeField] private Color borderColor = new Color(0.18f, 0.22f, 0.26f, 0.95f);
 
         [Header("Behavior")]
-        [Tooltip("Fade alpha when resting at full stamina.")]
-        [SerializeField, Range(0.1f, 1f)] private float idleAlpha = 0.45f;
-        [Tooltip("Seconds at full stamina before fading to idle alpha.")]
-        [SerializeField, Min(0.5f)] private float idleFadeDelay = 2.0f;
+        [Tooltip("Fade alpha when resting at full stamina (0 = fully contextual fade-out).")]
+        [SerializeField, Range(0f, 1f)] private float idleAlpha = 0f;
+        [Tooltip("Seconds at full stamina before fading out.")]
+        [SerializeField, Min(0.2f)] private float idleFadeDelay = 1.2f;
         [Tooltip("Ghost bar catch-up delay in seconds.")]
         [SerializeField, Min(0.05f)] private float ghostDelay = 0.22f;
         [Tooltip("Ghost bar drain speed.")]
@@ -60,6 +62,9 @@ namespace TheLightenRoad.UI
         public float DisplayedGhostFill => ghostFill;
         public bool IsExhausted => isExhausted;
         public float PanelAlpha => panelGroup != null ? panelGroup.alpha : 0f;
+        public float BottomOffset => bottomOffset;
+        public Vector2 BarSize => barSize;
+        public Vector2 AnchoredPosition => panel != null ? panel.anchoredPosition : Vector2.zero;
 
         private void Awake()
         {
@@ -128,6 +133,10 @@ namespace TheLightenRoad.UI
             {
                 ghostTimer = ghostDelay;
                 fullIdleTimer = 0f;
+                if (panelGroup != null)
+                {
+                    panelGroup.alpha = 1f;
+                }
             }
 
             currentFill = targetNorm;
@@ -136,6 +145,10 @@ namespace TheLightenRoad.UI
         private void HandleExhaustionChanged(bool exhausted)
         {
             isExhausted = exhausted;
+            if (exhausted && panelGroup != null)
+            {
+                panelGroup.alpha = 1f;
+            }
         }
 
         public void Tick(float dt)
@@ -184,7 +197,7 @@ namespace TheLightenRoad.UI
                 }
             }
 
-            // Idle opacity fade when full and rested
+            // Contextual fade: fully visible when consuming or recovering; fades out when rested at full
             if (currentFill >= 0.999f && !isExhausted)
             {
                 fullIdleTimer += dt;
@@ -197,7 +210,8 @@ namespace TheLightenRoad.UI
             float targetAlpha = fullIdleTimer >= idleFadeDelay ? idleAlpha : 1f;
             if (panelGroup != null)
             {
-                panelGroup.alpha = Mathf.MoveTowards(panelGroup.alpha, targetAlpha, 2.5f * dt);
+                float fadeSpeed = targetAlpha > panelGroup.alpha ? 8f : 2.0f;
+                panelGroup.alpha = Mathf.MoveTowards(panelGroup.alpha, targetAlpha, fadeSpeed * dt);
             }
         }
 
@@ -224,21 +238,34 @@ namespace TheLightenRoad.UI
                 scaler.matchWidthOrHeight = 1f;
             }
 
-            // Outer panel anchored Top-Left
+            // Outer panel anchored Bottom-Center
             var panelGo = new GameObject("Stamina Gauge");
             panel = panelGo.AddComponent<RectTransform>();
             panel.SetParent(canvas.transform, false);
-            panel.anchorMin = new Vector2(0f, 1f);
-            panel.anchorMax = new Vector2(0f, 1f);
-            panel.pivot = new Vector2(0f, 1f);
-            panel.anchoredPosition = new Vector2(screenMargin.x, -screenMargin.y);
-            panel.sizeDelta = barSize + new Vector2(4f, 4f);
+            panel.anchorMin = new Vector2(0.5f, 0f);
+            panel.anchorMax = new Vector2(0.5f, 0f);
+            panel.pivot = new Vector2(0.5f, 0f);
+            panel.anchoredPosition = new Vector2(0f, bottomOffset);
+            panel.sizeDelta = barSize + new Vector2(6f, 6f);
 
             panelGroup = panelGo.AddComponent<CanvasGroup>();
             panelGroup.blocksRaycasts = false;
             panelGroup.interactable = false;
 
-            // Outer dark frame / border
+            // Exhaustion warning glow behind the bar (Pill glow aura)
+            var glowGo = new GameObject("Exhaustion Glow");
+            var glowRect = glowGo.AddComponent<RectTransform>();
+            glowRect.SetParent(panel, false);
+            glowRect.anchorMin = Vector2.zero;
+            glowRect.anchorMax = Vector2.one;
+            glowRect.offsetMin = new Vector2(-12f, -10f);
+            glowRect.offsetMax = new Vector2(12f, 10f);
+            exhaustedGlow = glowGo.AddComponent<Image>();
+            exhaustedGlow.sprite = PixelSprites.PillGlow;
+            exhaustedGlow.type = Image.Type.Sliced;
+            exhaustedGlow.color = Color.clear;
+
+            // Outer dark frame / border (Pill shape)
             var borderGo = new GameObject("Border");
             var borderRect = borderGo.AddComponent<RectTransform>();
             borderRect.SetParent(panel, false);
@@ -246,10 +273,11 @@ namespace TheLightenRoad.UI
             borderRect.anchorMax = Vector2.one;
             borderRect.sizeDelta = Vector2.zero;
             borderImage = borderGo.AddComponent<Image>();
-            borderImage.sprite = PixelSprites.White;
+            borderImage.sprite = PixelSprites.PillBorder;
+            borderImage.type = Image.Type.Sliced;
             borderImage.color = borderColor;
 
-            // Inner track background
+            // Inner track background (Pill shape with Mask to clip fills into pill curve)
             var trackGo = new GameObject("Track");
             var trackRect = trackGo.AddComponent<RectTransform>();
             trackRect.SetParent(borderRect, false);
@@ -258,10 +286,14 @@ namespace TheLightenRoad.UI
             trackRect.offsetMin = new Vector2(1f, 1f);
             trackRect.offsetMax = new Vector2(-1f, -1f);
             trackImage = trackGo.AddComponent<Image>();
-            trackImage.sprite = PixelSprites.White;
+            trackImage.sprite = PixelSprites.Pill;
+            trackImage.type = Image.Type.Sliced;
             trackImage.color = trackColor;
 
-            // Trailing ghost bar
+            var mask = trackGo.AddComponent<Mask>();
+            mask.showMaskGraphic = true;
+
+            // Trailing ghost bar (clipped inside pill track)
             var ghostGo = new GameObject("Ghost Fill");
             var ghostRect = ghostGo.AddComponent<RectTransform>();
             ghostRect.SetParent(trackRect, false);
@@ -276,7 +308,7 @@ namespace TheLightenRoad.UI
             ghostImage.fillAmount = 1f;
             ghostImage.color = ghostColor;
 
-            // Main stamina fill bar
+            // Main stamina fill bar (clipped inside pill track)
             var fillGo = new GameObject("Stamina Fill");
             var fillRect = fillGo.AddComponent<RectTransform>();
             fillRect.SetParent(trackRect, false);
@@ -290,18 +322,6 @@ namespace TheLightenRoad.UI
             fillImage.fillOrigin = 0;
             fillImage.fillAmount = 1f;
             fillImage.color = staminaColor;
-
-            // Exhaustion warning glow
-            var glowGo = new GameObject("Exhaustion Glow");
-            var glowRect = glowGo.AddComponent<RectTransform>();
-            glowRect.SetParent(panel, false);
-            glowRect.anchorMin = Vector2.zero;
-            glowRect.anchorMax = Vector2.one;
-            glowRect.offsetMin = new Vector2(-6f, -6f);
-            glowRect.offsetMax = new Vector2(6f, 6f);
-            exhaustedGlow = glowGo.AddComponent<Image>();
-            exhaustedGlow.sprite = PixelSprites.Glow;
-            exhaustedGlow.color = Color.clear;
 
             isBuilt = true;
         }
