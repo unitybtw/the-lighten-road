@@ -67,6 +67,38 @@ Verified in Unity 6000.3.2f1 via Unity MCP:
 - Scene validation for `MovementSandbox.unity`: **0 missing scripts, 0 broken prefabs, 0 issues**.
 - Unity console: **0 compile errors, 0 warnings**.
 
+## Checkpoint 4 — pixel-art lantern HUD (2026-10-16)
+
+Replaced the legacy debug IMGUI overlay with a fully procedural pixel-art HUD rendered via a pixel-perfect Screen Space Overlay Canvas (reference resolution $640 \times 360$):
+
+- **Component & Assembly (`LanternHUD.cs`, `TheLightenRoad.UI`):**
+  - Modular UI assembly cleanly referencing `TheLightenRoad.Lantern`, `UnityEngine.UI`, and `Unity.InputSystem`.
+  - Automatically binds to the active player's `LanternController` and listens to `FuelChanged`, `FuelDepleted`, and `FlareChanged` events.
+- **Visual Features:**
+  - **Procedural Pixel-Art Lantern (`PixelSprites.cs`):** 11×15 brass lantern casing with an animated multi-harmonic flame, glass reflections, and a radial warm glow halo that intensifies during Flare mode.
+  - **Segmented Fuel Bar & Drain Trail:** 20 distinct segments with pixel-snapped horizontal filling. Includes a two-phase drain trail (white-amber lag) so energy consumption is readable at a glance.
+  - **Dynamic Palette Shift & Low Fuel Warning:** Healthy amber at high capacity, shifting toward hot orange and warning red as fuel diminishes. Below 25% capacity, the border and flame pulse with a heartbeat rhythm, and labels switch to `DIM LOW` / `FLARE LOW`.
+  - **Mode Indicator & Input Key Hint:** Crisp labels displaying current mode (`DIM`, `FLARE`, `EMPTY`) along with the configurable toggle key binding (`[F]`).
+  - **Pickup & Depletion Feedback:** Floating `+20` popup indicator upon collecting Ember Pickups and a pixel-snapped screen shake when fuel reaches zero.
+- **Legacy IMGUI Overlay:** Gated behind `LanternController.ShowDebugOverlay` (disabled by default) to keep production builds clean while preserving debugging capabilities.
+
+![Pixel-Art Lantern HUD states across Dim, Flare, Drain Trail, Low Fuel, Pickup, and Empty](previews/lantern-hud.png)
+
+### Automated Test Coverage (28 Play Mode tests, all passed)
+
+- Added 6 new automated tests in `LanternHUDTests.cs`:
+  - `BuildsOverlayCanvasAndShowsCurrentFuel`: verifies canvas hierarchy construction, controller binding, percentage, and initial fill.
+  - `DisplayedFillEasesDownWhileTrailLingers`: confirms the two-stage visual drain trail.
+  - `FlareModeUpdatesLabel`: verifies real-time UI reaction to mode toggles.
+  - `LowAndEmptyFuelAreFlagged`: confirms low-fuel threshold detection and empty status.
+  - `FuelGainShowsPickupFeedback`: verifies the animated pickup feedback.
+  - `LegacyDebugOverlayIsOffByDefault`: verifies IMGUI overlay is disabled by default.
+- All **28 Play Mode tests passing** in Unity Test Runner.
+
 ### Next checkpoint
 
-Coordinate with Kemal on his Ember Vein Power / Drain prototype (`Game/Assets/_Project/Scripts/Interaction/` and `Game/Assets/_Project/Scripts/Mechanisms/`) using the shared `TheLightenRoad.Lantern` assembly. Final tuning values, bindings, and persistence remain provisional pending team playtesting.
+Continue expanding player systems in `Sandbox/Sirac/`:
+1. Death & Respawn loop on fuel depletion or hazard contact (`PlayerRespawnController`).
+2. Player sprite integration with Maksim's 24-frame Light character idle animation.
+3. Movement feel polish (Coyote Time & Jump Buffering).
+

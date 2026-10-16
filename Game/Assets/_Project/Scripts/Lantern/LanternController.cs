@@ -22,10 +22,18 @@ namespace TheLightenRoad.Lantern
         [SerializeField, Range(0f, 1f)] private float lowFuelMinimumLight = 0.45f;
         [SerializeField, Min(0.1f)] private float lowFuelPulseRate = 5f;
 
+        [Header("Debug")]
+        [Tooltip("Legacy IMGUI meter. LanternHUD replaces it; enable only for debugging.")]
+        [SerializeField] private bool showDebugOverlay;
+
         private LanternFuel fuel;
         private Keyboard keyboard;
 
+        /// <summary>Raised when the lantern switches between Dim (false) and Flare (true).</summary>
+        public event System.Action<bool> FlareChanged;
+
         public bool IsFlared { get; private set; }
+        public bool ShowDebugOverlay { get => showDebugOverlay; set => showDebugOverlay = value; }
         public LanternFuel Fuel => fuel;
         public bool IsLowFuel => fuel != null && fuel.NormalizedFuel <= lowFuelThreshold;
         public float LowFuelThreshold => lowFuelThreshold;
@@ -66,6 +74,7 @@ namespace TheLightenRoad.Lantern
 
             IsFlared = flared;
             ApplyLight();
+            FlareChanged?.Invoke(IsFlared);
             return true;
         }
 
@@ -93,7 +102,7 @@ namespace TheLightenRoad.Lantern
 
         private void OnGUI()
         {
-            if (fuel == null)
+            if (!showDebugOverlay || fuel == null)
                 return;
 
             const float width = 260f;
