@@ -5,9 +5,12 @@ using UnityEngine.UI;
 namespace TheLightenRoad.UI
 {
     /// <summary>
-    /// Pixel-art lantern HUD: lantern icon with live flame, segmented fuel bar with a drain trail,
-    /// Dim / Flare mode label, low-fuel warning, and pickup feedback.
-    /// Builds its own Screen Space Overlay canvas at runtime, so it needs no prefab or art import.
+    /// RPG-style Ember inventory HUD in accordance with Game Designer Furkan's feedback:
+    /// - 5 discrete ember slots side-by-side like an RPG health bar.
+    /// - Each ember displays 3 visual states: Full (2 charges), Half (1 charge), Empty (0 charges).
+    /// - Stacking badge (+1, +2, +N) positioned next to the 5th slot when total embers exceed 5.
+    /// - Timed Flare scout indicator and floating pickup feedback.
+    /// Builds its own Screen Space Overlay Canvas at runtime.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class LanternHUD : MonoBehaviour
@@ -16,63 +19,42 @@ namespace TheLightenRoad.UI
         [SerializeField] private LanternController target;
 
         [Header("Layout — reference resolution 640x360")]
-        [SerializeField] private Vector2 screenMargin = new Vector2(10f, 10f);
-        [SerializeField, Min(4)] private int segmentCount = 20;
+        [SerializeField] private Vector2 screenMargin = new Vector2(14f, 14f);
+        [SerializeField] private int maxDisplaySlots = 5;
 
-        [Header("Animation")]
-        [SerializeField, Min(0.1f)] private float fillFollowSpeed = 6f;
-        [SerializeField, Min(0f)] private float trailDelay = 0.45f;
-        [SerializeField, Min(0.05f)] private float trailFollowSpeed = 1.6f;
-        [SerializeField, Min(0.1f)] private float lowFuelBlinkRate = 2.5f;
-
-        [Header("Palette")]
-        [SerializeField] private Color panelColor = new Color32(14, 11, 16, 255);
+        [Header("Colors")]
+        [SerializeField] private Color panelColor = new Color32(14, 11, 16, 220);
         [SerializeField] private Color borderColor = new Color32(92, 64, 40, 255);
-        [SerializeField] private Color fuelHighColor = new Color32(255, 184, 64, 255);
-        [SerializeField] private Color fuelLowColor = new Color32(232, 64, 40, 255);
-        [SerializeField] private Color trailColor = new Color32(255, 236, 200, 200);
-        [SerializeField] private Color dimTextColor = new Color32(196, 160, 120, 255);
-        [SerializeField] private Color flareTextColor = new Color32(255, 214, 110, 255);
+        [SerializeField] private Color badgeTextColor = new Color32(255, 215, 110, 255);
+        [SerializeField] private Color dimTextColor = new Color32(185, 155, 120, 255);
+        [SerializeField] private Color flareTextColor = new Color32(255, 185, 60, 255);
+        [SerializeField] private Color emptyTextColor = new Color32(140, 110, 100, 255);
 
-        // Runtime-built hierarchy
+        // Runtime hierarchy
         private Canvas canvas;
         private RectTransform panel;
-        private Image panelBorder;
-        private Image glow;
-        private Image glass;
-        private Image flame;
-        private Image fill;
-        private Image trail;
-        private Image flash;
+        private Image[] slotSockets;
+        private Image[] slotFills;
+        private Text overflowBadge;
         private Text modeLabel;
-        private Text percentLabel;
-        private Text keyHint;
+        private Text timerLabel;
         private Text popupLabel;
-        private Vector2 panelBasePosition;
+        private Image flareGlow;
 
         // State
-        private float displayedFill;
-        private float trailFill;
-        private float trailHoldTimer;
-        private float lastFuel = -1f;
-        private float flashTimer;
+        private float lastCharges = -1f;
         private float popupTimer;
-        private float shakeTimer;
-        private float flameFlareBlend;
+        private float flashTimer;
         private bool subscribed;
-
-        private const float FlashDuration = 0.3f;
-        private const float PopupDuration = 0.9f;
-        private const float ShakeDuration = 0.45f;
 
         public LanternController Target => target;
         public Canvas Canvas => canvas;
-        public float DisplayedFill => displayedFill;
-        public float TrailFill => trailFill;
         public string ModeText => modeLabel != null ? modeLabel.text : string.Empty;
-        public string PercentText => percentLabel != null ? percentLabel.text : string.Empty;
-        public bool IsShowingLowFuel { get; private set; }
+        public string OverflowText => overflowBadge != null ? overflowBadge.text : string.Empty;
         public bool IsShowingPickup => popupTimer > 0f;
+        public int MaxDisplaySlots => maxDisplaySlots;
+        public Sprite GetSlotSprite(int index) => (slotFills != null && index >= 0 && index < slotFills.Length) ? slotFills[index].sprite : null;
+        public Color GetSlotColor(int index) => (slotFills != null && index >= 0 && index < slotFills.Length) ? slotFills[index].color : Color.clear;
 
         private void Awake()
         {
@@ -89,12 +71,11 @@ namespace TheLightenRoad.UI
             Unbind();
         }
 
-        /// <summary>Bind to a specific lantern (useful for tests or multiple players).</summary>
         public void SetTarget(LanternController controller)
         {
             Unbind();
             target = controller;
-            lastFuel = -1f;
+            lastCharges = -1f;
             TryBind();
         }
 
@@ -106,7 +87,6 @@ namespace TheLightenRoad.UI
                 return;
 
             target.FlareChanged += HandleFlareChanged;
-            target.Fuel.FuelDepleted += HandleDepleted;
             subscribed = true;
         }
 
@@ -119,154 +99,117 @@ namespace TheLightenRoad.UI
             }
 
             target.FlareChanged -= HandleFlareChanged;
-            if (target.Fuel != null)
-                target.Fuel.FuelDepleted -= HandleDepleted;
             subscribed = false;
         }
 
         private void HandleFlareChanged(bool flared)
         {
-            flashTimer = flared ? FlashDuration * 0.5f : 0f;
-        }
-
-        private void HandleDepleted()
-        {
-            shakeTimer = ShakeDuration;
+            flashTimer = 0.3f;
         }
 
         private void Update()
         {
             if (!subscribed)
                 TryBind();
+
             if (target == null || target.Fuel == null)
             {
-                canvas.enabled = false;
+                if (canvas != null)
+                    canvas.enabled = false;
                 return;
             }
 
-            canvas.enabled = true;
+            if (canvas != null && !canvas.enabled)
+                canvas.enabled = true;
+
             Tick(Time.unscaledDeltaTime, Time.unscaledTime);
         }
 
-        /// <summary>Advance HUD animation. Public so Play Mode tests can step it deterministically.</summary>
         public void Tick(float deltaTime, float time)
         {
             LanternFuel fuel = target.Fuel;
-            float normalized = Mathf.Clamp01(fuel.NormalizedFuel);
-            float current = fuel.CurrentFuel;
+            int totalCharges = fuel.TotalCharges;
+            int totalEmbers = fuel.TotalEmbers;
+            int overflow = fuel.OverflowEmbers;
 
-            if (lastFuel < 0f)
+            // Detect pickup additions
+            if (lastCharges >= 0 && totalCharges > lastCharges)
             {
-                // First frame: snap instead of animating from zero.
-                displayedFill = trailFill = normalized;
+                int gainedCharges = totalCharges - Mathf.RoundToInt(lastCharges);
+                ShowPickup(Mathf.CeilToInt(gainedCharges / 2f));
             }
-            else if (current > lastFuel + 0.5f)
+            lastCharges = totalCharges;
+
+            // Update the 5 discrete ember slots
+            for (int i = 0; i < maxDisplaySlots; i++)
             {
-                ShowPickup(current - lastFuel);
-                trailFill = Mathf.Max(trailFill, normalized);
+                // Each slot represents 2 charges
+                int chargesForThisEmber = Mathf.Clamp(totalCharges - (i * 2), 0, 2);
+
+                if (chargesForThisEmber == 2)
+                {
+                    slotFills[i].sprite = PixelSprites.EmberFull;
+                    slotFills[i].color = Color.white;
+                }
+                else if (chargesForThisEmber == 1)
+                {
+                    slotFills[i].sprite = PixelSprites.EmberHalf;
+                    slotFills[i].color = Color.white;
+                }
+                else
+                {
+                    slotFills[i].color = Color.clear;
+                }
             }
-            else if (current < lastFuel - 0.01f)
+
+            // Overflow badge (e.g. "+1", "+2", "+4")
+            if (overflow > 0)
             {
-                trailHoldTimer = trailDelay;
-            }
-            lastFuel = current;
-
-            // Main fill eases toward the real value; the trail lingers, then catches up.
-            displayedFill = Mathf.MoveTowards(displayedFill, normalized,
-                Mathf.Max(0.002f, Mathf.Abs(normalized - displayedFill)) * fillFollowSpeed * deltaTime * 4f);
-            if (trailHoldTimer > 0f)
-                trailHoldTimer -= deltaTime;
-            else
-                trailFill = Mathf.MoveTowards(trailFill, displayedFill, trailFollowSpeed * deltaTime * 0.5f);
-            if (trailFill < displayedFill)
-                trailFill = displayedFill;
-
-            fill.fillAmount = SnapToPixels(displayedFill);
-            trail.fillAmount = SnapToPixels(trailFill);
-
-            bool flared = target.IsFlared;
-            IsShowingLowFuel = target.IsLowFuel;
-            float blink = (Mathf.Sin(time * lowFuelBlinkRate * Mathf.PI * 2f) + 1f) * 0.5f;
-
-            // Fuel colour: warm amber that heats toward red as fuel drops; blinks when low.
-            float heat = Mathf.InverseLerp(0.6f, 0.1f, normalized);
-            Color fuelColor = Color.Lerp(fuelHighColor, fuelLowColor, heat);
-            if (IsShowingLowFuel)
-                fuelColor = Color.Lerp(fuelColor, Color.white * 0.35f + fuelLowColor * 0.65f, blink * 0.6f);
-            fill.color = fuelColor;
-
-            // Labels
-            if (fuel.IsEmpty)
-            {
-                modeLabel.text = "EMPTY";
-                modeLabel.color = Color.Lerp(fuelLowColor, dimTextColor, blink);
-            }
-            else if (IsShowingLowFuel)
-            {
-                modeLabel.text = flared ? "FLARE  LOW" : "DIM  LOW";
-                modeLabel.color = Color.Lerp(fuelLowColor, flared ? flareTextColor : dimTextColor, blink);
+                overflowBadge.text = "+" + overflow;
+                overflowBadge.color = badgeTextColor;
             }
             else
             {
-                modeLabel.text = flared ? "FLARE" : "DIM";
-                modeLabel.color = flared ? flareTextColor : dimTextColor;
+                overflowBadge.text = string.Empty;
             }
 
-            percentLabel.text = Mathf.CeilToInt(normalized * 100f) + "%";
-            percentLabel.color = IsShowingLowFuel ? Color.Lerp(fuelLowColor, dimTextColor, blink) : dimTextColor;
-            keyHint.text = "[" + target.ToggleFlareKey + "]";
+            // Mode and Scout labels
+            if (target.IsFlared)
+            {
+                float remaining = target.FlareTimer;
+                modeLabel.text = "ALEV İZCİSİ";
+                modeLabel.color = flareTextColor;
+                timerLabel.text = remaining > 0f ? $"{remaining:0.0}s" : string.Empty;
+                timerLabel.color = flareTextColor;
 
-            panelBorder.color = IsShowingLowFuel ? Color.Lerp(borderColor, fuelLowColor, blink) : borderColor;
+                float pulse = (Mathf.Sin(time * 8f) + 1f) * 0.5f;
+                flareGlow.color = new Color(1f, 0.7f, 0.2f, 0.25f + pulse * 0.25f);
+            }
+            else
+            {
+                flareGlow.color = Color.clear;
+                timerLabel.text = string.Empty;
 
-            AnimateLantern(flared, normalized, deltaTime, time);
-            AnimateFeedback(deltaTime);
-        }
+                if (totalCharges <= 0)
+                {
+                    modeLabel.text = "[F] KOR TÜKENDİ";
+                    modeLabel.color = emptyTextColor;
+                }
+                else
+                {
+                    modeLabel.text = "[F] İZCİ FIRLAT";
+                    modeLabel.color = dimTextColor;
+                }
+            }
 
-        private void AnimateLantern(bool flared, float normalized, float deltaTime, float time)
-        {
-            flameFlareBlend = Mathf.MoveTowards(flameFlareBlend, flared ? 1f : 0f, deltaTime * 6f);
-            bool empty = normalized <= 0f;
-
-            // Organic flicker from layered sines.
-            float flicker = 0.85f + 0.1f * Mathf.Sin(time * 13.1f) + 0.05f * Mathf.Sin(time * 29.7f + 1.3f);
-            if (IsShowingLowFuel)
-                flicker *= 0.55f + 0.45f * Mathf.PerlinNoise(time * 9f, 0.37f);
-
-            Color dimFlame = new Color32(255, 128, 48, 255);
-            Color flareFlame = new Color32(255, 230, 140, 255);
-            Color flameColor = Color.Lerp(dimFlame, flareFlame, flameFlareBlend);
-            flameColor.a = empty ? 0f : Mathf.Clamp01(flicker);
-            flame.color = flameColor;
-
-            float flameScale = Mathf.Lerp(0.75f, 1.1f, flameFlareBlend) * (0.95f + 0.05f * flicker);
-            flame.rectTransform.localScale = new Vector3(1f, empty ? 0f : flameScale, 1f);
-
-            Color glassColor = Color.Lerp(new Color32(120, 60, 24, 255), new Color32(255, 196, 96, 255), flameFlareBlend);
-            glassColor.a = empty ? 0.08f : Mathf.Lerp(0.25f, 0.55f, flameFlareBlend) * flicker;
-            glass.color = glassColor;
-
-            Color glowColor = Color.Lerp(new Color32(255, 110, 40, 255), new Color32(255, 170, 70, 255), flameFlareBlend);
-            glowColor.a = empty ? 0f : Mathf.Lerp(0.14f, 0.4f, flameFlareBlend) * flicker;
-            glow.color = glowColor;
-            float glowScale = Mathf.Lerp(0.85f, 1.2f, flameFlareBlend) * (0.97f + 0.03f * flicker);
-            glow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
-        }
-
-        private void AnimateFeedback(float deltaTime)
-        {
-            // White flash over the bar (pickup / flare ignition)
-            if (flashTimer > 0f)
-                flashTimer -= deltaTime;
-            flash.color = new Color(1f, 0.95f, 0.8f, Mathf.Clamp01(flashTimer / FlashDuration) * 0.85f);
-
-            // Floating "+N" popup
+            // Feedback animations
             if (popupTimer > 0f)
             {
                 popupTimer -= deltaTime;
-                float t = 1f - Mathf.Clamp01(popupTimer / PopupDuration);
+                float t = 1f - Mathf.Clamp01(popupTimer / 0.9f);
                 popupLabel.rectTransform.anchoredPosition = new Vector2(popupLabel.rectTransform.anchoredPosition.x,
-                    -18f + Mathf.Round(t * 10f));
-                Color c = popupLabel.color;
+                    -36f + Mathf.Round(t * 8f));
+                Color c = flareTextColor;
                 c.a = t < 0.7f ? 1f : Mathf.Lerp(1f, 0f, (t - 0.7f) / 0.3f);
                 popupLabel.color = c;
             }
@@ -275,34 +218,16 @@ namespace TheLightenRoad.UI
                 popupLabel.color = Color.clear;
             }
 
-            // Shake on depletion — whole-pixel offsets keep the pixel look crisp.
-            Vector2 offset = Vector2.zero;
-            if (shakeTimer > 0f)
-            {
-                shakeTimer -= deltaTime;
-                float strength = Mathf.Ceil(2f * Mathf.Clamp01(shakeTimer / ShakeDuration));
-                offset = new Vector2(Mathf.Round(Random.Range(-strength, strength)),
-                    Mathf.Round(Random.Range(-strength, strength)));
-            }
-            panel.anchoredPosition = panelBasePosition + offset;
+            if (flashTimer > 0f)
+                flashTimer -= deltaTime;
         }
 
-        private void ShowPickup(float amount)
+        private void ShowPickup(int emberCount)
         {
-            flashTimer = FlashDuration;
-            popupTimer = PopupDuration;
-            popupLabel.text = "+" + Mathf.RoundToInt(amount);
+            popupTimer = 0.9f;
+            popupLabel.text = "+" + emberCount + " KOR";
             popupLabel.color = flareTextColor;
         }
-
-        private float SnapToPixels(float value)
-        {
-            // Bar is 104 reference pixels wide; snap so the edge moves one pixel at a time.
-            const float barPixels = 104f;
-            return Mathf.Round(value * barPixels) / barPixels;
-        }
-
-        // ------------------------------------------------------------------ hierarchy
 
         private void BuildHierarchy()
         {
@@ -312,128 +237,112 @@ namespace TheLightenRoad.UI
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100;
             canvas.pixelPerfect = true;
+
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(640f, 360f);
             scaler.matchWidthOrHeight = 1f;
 
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            Sprite white = PixelSprites.White;
+            if (font == null)
+                font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-            // Panel: outer border + inner fill (2px border, drawn as two layered rects)
-            panelBasePosition = new Vector2(screenMargin.x, -screenMargin.y);
-            panel = CreateRect("Panel", canvasGo.transform, panelBasePosition, new Vector2(156f, 40f));
-            panelBorder = AddImage(panel.gameObject, white, borderColor);
-            var inner = CreateRect("Inner", panel, new Vector2(2f, -2f), new Vector2(152f, 36f));
-            AddImage(inner.gameObject, white, panelColor);
-            // Top highlight line for a bevelled feel
-            var bevel = CreateRect("Bevel", inner, Vector2.zero, new Vector2(152f, 1f));
-            AddImage(bevel.gameObject, white, new Color(1f, 0.85f, 0.6f, 0.08f));
+            // Main Panel
+            Vector2 basePos = new Vector2(screenMargin.x, -screenMargin.y);
+            panel = CreateRect("EmberHUDPanel", canvasGo.transform, basePos, new Vector2(146f, 44f));
+            var border = AddImage(panel.gameObject, PixelSprites.White, borderColor);
+            var inner = CreateRect("Inner", panel, new Vector2(2f, -2f), new Vector2(142f, 40f));
+            AddImage(inner.gameObject, PixelSprites.White, panelColor);
 
-            // Lantern icon (11x15 pixel art at 2x = 22x30)
-            var iconRoot = CreateRect("Lantern", inner, new Vector2(5f, -3f), new Vector2(22f, 30f));
-            glow = AddImage(CreateCentered("Glow", iconRoot, new Vector2(0f, -3f), new Vector2(36f, 36f)).gameObject,
-                PixelSprites.Glow, Color.clear);
-            glass = AddImage(CreateRect("Glass", iconRoot, new Vector2(6f, -10f), new Vector2(10f, 12f)).gameObject,
-                white, Color.clear);
-            var flameRect = CreateRect("Flame", iconRoot, new Vector2(6f, -10f), new Vector2(10f, 12f));
-            flameRect.pivot = new Vector2(0.5f, 0f);
-            flameRect.anchoredPosition = new Vector2(11f, -22f);
-            flame = AddImage(flameRect.gameObject, PixelSprites.Flame, Color.clear);
-            AddImage(CreateRect("Frame", iconRoot, Vector2.zero, new Vector2(22f, 30f)).gameObject,
-                PixelSprites.LanternFrame, Color.white);
+            // Flare active ambient glow backing
+            var glowRect = CreateRect("FlareGlow", inner, Vector2.zero, new Vector2(142f, 40f));
+            flareGlow = AddImage(glowRect.gameObject, PixelSprites.White, Color.clear);
 
-            // Mode label + percentage + key hint
-            modeLabel = AddText("Mode", inner, font, new Vector2(33f, -2f), new Vector2(80f, 14f), 10,
-                TextAnchor.MiddleLeft, dimTextColor);
-            percentLabel = AddText("Percent", inner, font, new Vector2(98f, -2f), new Vector2(34f, 14f), 9,
-                TextAnchor.MiddleRight, dimTextColor);
-            keyHint = AddText("Key", inner, font, new Vector2(132f, -2f), new Vector2(18f, 14f), 8,
-                TextAnchor.MiddleRight, new Color32(120, 100, 84, 255));
+            // 5 Ember slots
+            slotSockets = new Image[maxDisplaySlots];
+            slotFills = new Image[maxDisplaySlots];
 
-            // Fuel bar: outline, background, trail, fill, flash, segment dividers
-            var barOutline = CreateRect("BarOutline", inner, new Vector2(32f, -19f), new Vector2(108f, 12f));
-            AddImage(barOutline.gameObject, white, new Color32(6, 4, 8, 255));
-            var bar = CreateRect("Bar", barOutline, new Vector2(2f, -2f), new Vector2(104f, 8f));
-            AddImage(bar.gameObject, white, new Color32(36, 26, 22, 255));
-            trail = AddFilled(CreateRect("Trail", bar, Vector2.zero, new Vector2(104f, 8f)).gameObject, white, trailColor);
-            fill = AddFilled(CreateRect("Fill", bar, Vector2.zero, new Vector2(104f, 8f)).gameObject, white, fuelHighColor);
-            var shine = CreateRect("Shine", bar, Vector2.zero, new Vector2(104f, 2f));
-            AddImage(shine.gameObject, white, new Color(1f, 1f, 1f, 0.12f));
-            flash = AddImage(CreateRect("Flash", bar, Vector2.zero, new Vector2(104f, 8f)).gameObject, white, Color.clear);
+            float slotStartX = 6f;
+            float slotY = -6f;
+            float slotSpacing = 20f;
 
-            float segmentWidth = 104f / segmentCount;
-            for (int i = 1; i < segmentCount; i++)
+            for (int i = 0; i < maxDisplaySlots; i++)
             {
-                var divider = CreateRect("Div" + i, bar, new Vector2(Mathf.Round(i * segmentWidth), 0f), new Vector2(1f, 8f));
-                AddImage(divider.gameObject, white, new Color32(14, 10, 12, 170));
+                Vector2 slotPos = new Vector2(slotStartX + i * slotSpacing, slotY);
+
+                // Socket background
+                var socketRect = CreateRect($"Slot_{i}_Socket", inner, slotPos, new Vector2(16f, 16f));
+                slotSockets[i] = AddImage(socketRect.gameObject, PixelSprites.EmberEmpty, Color.white);
+
+                // Ember crystal foreground
+                var fillRect = CreateRect($"Slot_{i}_Fill", inner, slotPos, new Vector2(16f, 16f));
+                slotFills[i] = AddImage(fillRect.gameObject, PixelSprites.EmberFull, Color.white);
             }
 
-            popupLabel = AddText("Popup", panel, font, new Vector2(160f, -18f), new Vector2(40f, 14f), 10,
+            // Overflow badge right next to the 5th slot
+            overflowBadge = AddText("OverflowBadge", inner, font,
+                new Vector2(slotStartX + maxDisplaySlots * slotSpacing + 2f, slotY + 2f),
+                new Vector2(32f, 16f), 10, TextAnchor.MiddleLeft, badgeTextColor);
+            overflowBadge.fontStyle = FontStyle.Bold;
+
+            // Labels below slots
+            modeLabel = AddText("ModeLabel", inner, font, new Vector2(6f, -24f), new Vector2(90f, 14f), 9,
+                TextAnchor.MiddleLeft, dimTextColor);
+
+            timerLabel = AddText("TimerLabel", inner, font, new Vector2(98f, -24f), new Vector2(38f, 14f), 9,
+                TextAnchor.MiddleRight, flareTextColor);
+            timerLabel.fontStyle = FontStyle.Bold;
+
+            popupLabel = AddText("PopupLabel", inner, font, new Vector2(6f, -38f), new Vector2(120f, 14f), 10,
                 TextAnchor.MiddleLeft, Color.clear);
-            popupLabel.GetComponent<Outline>().enabled = true;
+            popupLabel.fontStyle = FontStyle.Bold;
+
+            canvas.enabled = false;
         }
 
-        private static RectTransform CreateRect(string name, Transform parent, Vector2 topLeft, Vector2 size)
+        private static RectTransform CreateRect(string name, Transform parent, Vector2 pos, Vector2 size)
         {
             var go = new GameObject(name, typeof(RectTransform));
-            var rect = (RectTransform)go.transform;
-            rect.SetParent(parent, false);
-            rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = topLeft;
+            rect.anchoredPosition = pos;
             rect.sizeDelta = size;
-            return rect;
-        }
-
-        private static RectTransform CreateCentered(string name, Transform parent, Vector2 offset, Vector2 size)
-        {
-            var rect = CreateRect(name, parent, Vector2.zero, size);
-            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = offset;
             return rect;
         }
 
         private static Image AddImage(GameObject go, Sprite sprite, Color color)
         {
-            var image = go.AddComponent<Image>();
-            image.sprite = sprite;
-            image.color = color;
-            image.raycastTarget = false;
-            return image;
+            var img = go.AddComponent<Image>();
+            img.sprite = sprite;
+            img.color = color;
+            img.raycastTarget = false;
+            return img;
         }
 
-        private static Image AddFilled(GameObject go, Sprite sprite, Color color)
+        private static Text AddText(string name, Transform parent, Font font, Vector2 pos, Vector2 size, int fontSize,
+            TextAnchor alignment, Color color)
         {
-            var image = AddImage(go, sprite, color);
-            image.type = Image.Type.Filled;
-            image.fillMethod = Image.FillMethod.Horizontal;
-            image.fillOrigin = (int)Image.OriginHorizontal.Left;
-            return image;
-        }
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = pos;
+            rect.sizeDelta = size;
 
-        private static Text AddText(string name, Transform parent, Font font, Vector2 topLeft, Vector2 size,
-            int fontSize, TextAnchor anchor, Color color)
-        {
-            var rect = CreateRect(name, parent, topLeft, size);
-            var text = rect.gameObject.AddComponent<Text>();
-            text.font = font;
-            text.fontSize = fontSize;
-            text.fontStyle = FontStyle.Bold;
-            text.alignment = anchor;
-            text.color = color;
-            text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            text.raycastTarget = false;
-            var outline = rect.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            outline.effectDistance = new Vector2(1f, -1f);
-            return text;
-        }
-
-        private void OnDestroy()
-        {
-            Unbind();
+            var txt = go.AddComponent<Text>();
+            txt.font = font;
+            txt.fontSize = fontSize;
+            txt.alignment = alignment;
+            txt.color = color;
+            txt.raycastTarget = false;
+            txt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            return txt;
         }
     }
 }

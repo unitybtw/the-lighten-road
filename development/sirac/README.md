@@ -240,9 +240,51 @@ Implemented the failure state and retry flow specified in GDD Section 5.3 & 6.2 
 
 ### Next checkpoint
 
+## Checkpoint 10 — Game Designer Furkan Feedback #1: Discrete Ember Economy, RPG HUD, Office Room Scale, and 100% Darkness (2026-10-16)
+
+Resolved all design points from GitHub Issue #1 (`F_Feedback#1`) opened by Game Designer Furkan Aydın (`@aeshmacodex`):
+
+- **1. Level Design — Human Office Scale & Dynamic Ceiling Shadows:**
+  - Real human office proportions: ceiling is positioned ~1 body height above the player ($1.6\text{m}$ character $\rightarrow$ ceiling bottom at $Y = 3.2\text{m}$, top at $Y = 3.45\text{m}$).
+  - Added an office doorway partition leaving a $1.7\text{m}$ clearance door.
+  - Equipped with `ShadowCaster2D` and URP 2D Lit materials, allowing the lantern's light to hit the ceiling directly and cast dramatic upward and doorway shadows.
+- **2. 100% Pitch Black Stage Darkness:**
+  - `Global Light 2D` in `MovementSandbox.unity` set to pure black `{r: 0, g: 0, b: 0, a: 1}` and `intensity = 0` (0% ambient light, true pitch darkness instead of 80% opacity).
+- **3. Infinite Baseline Dim Light:**
+  - The character **always** has an infinite baseline light resource in hand; `dimDrainPerSecond = 0f`.
+  - The lantern will never run out of light naturally in Dim mode.
+- **4. Tuned Light Radii (50% & 200% of previous Flare):**
+  - **Dim Radius:** $2.75\text{ units}$ ($50\%$ of previous $5.5$).
+  - **Flare Radius:** $11.0\text{ units}$ ($200\%$ of previous $5.5$).
+  - **Intensities:** Dim $= 0.55$, Flare $= 1.25$.
+- **5. Discrete Ember Economy & RPG Health-Bar HUD (`LanternHUD.cs` & `PixelSprites.cs`):**
+  - Replaced continuous fuel gauge with an RPG HP-bar style layout in the top-left corner.
+  - **5 Discrete Slots:** Displays up to 5 ember crystal sockets horizontally:
+    - **Full Ember:** 2 charges (bright amber crystal with white-hot core).
+    - **Half Ember:** 1 charge (cracked ember stone with half charge remaining).
+    - **Empty Socket:** 0 charges (dark bronze socket frame).
+  - **Timed Scout Pulse:** Pressing `[F]` spends 1 charge (`TrySpendCharge()`) and flares the lantern for a $6.0\text{s}$ timed scout pulse, then automatically dampens back to infinite Dim.
+  - **Dynamic `+N` Overflow Badge:** Inventory capacity expands dynamically. When total embers exceed 5, a golden `+1`, `+2`, `+N` badge appears to the right of the 5th icon (e.g., 9 embers $= 5$ icons $+ 4$ badge).
+  - **Always-Collected Pickups:** Pickups (`EmberPickup.cs`) are **always** collected into inventory regardless of current count (never rejected).
+  - **HUD Feedback:** Shows live scout timer countdown (`ALEV İZCİSİ (4.2s)`), empty state warning (`[F] KOR TÜKENDİ`), and floating pickup feedback (`+1 KOR`).
+- **6. Character Animations:**
+  - Preserved existing sprite setup without touching animation clips or controllers, respecting Furkan's note that animations are assigned to artists Can & Maksim.
+
+### Automated Test Coverage (45 Play Mode tests)
+
+- Updated and expanded test suites across all affected modules:
+  - `LanternHUDTests.cs`: 6 tests verifying 5-slot hierarchy, Full/Half/Empty visual states, `+N` overflow badge, Flare scout label/timer, empty state, and pickup feedback popup.
+  - `EmberPickupTests.cs`: 3 tests verifying charge increments, always-collected overflow behavior, and non-player trigger filtering.
+  - `LanternFuelTests.cs`: 12 tests verifying discrete ember properties (`TotalCharges`, `TotalEmbers`, `FullEmbers`, `HasHalfEmber`, `OverflowEmbers`), charge deductions, and infinite Dim drain.
+  - `LanternControllerTests.cs`: 6 tests verifying $2.75$ / $11.0$ radii, timed scout expenditure, low-fuel threshold, and shadow settings.
+- **100% Pass Rate: 45 / 45 Play Mode tests passing.**
+
+### Next checkpoint
+
 Continue expanding player systems in `Sandbox/Sirac/`:
 1. Procedural 8-bit audio feedback / sound synthesis for footsteps, jumps, flame ignition, and low-fuel heartbeat.
 2. Secret wall runes / glyphs that only reveal when illuminated by Flare mode.
+
 
 
 

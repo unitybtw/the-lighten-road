@@ -206,7 +206,8 @@ public sealed class PlayerMotor2DTests
 
         // Trigger jump
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
-        yield return new WaitForSeconds(0.05f);
+        yield return null;
+        yield return new WaitForFixedUpdate();
 
         // During jump initiation, visual scale should stretch vertically (Y > initial Y)
         Assert.That(motor.CurrentVisualScale.y, Is.GreaterThan(initialScale.y * 1.02f),

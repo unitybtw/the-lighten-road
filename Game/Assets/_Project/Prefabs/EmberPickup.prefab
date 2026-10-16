@@ -173,4 +173,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d04b1c3f8640410d991f4b6fcfb432b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TheLightenRoad.Lantern.EmberPickup
-  fuelAmount: 20
+  fuelAmount: 2

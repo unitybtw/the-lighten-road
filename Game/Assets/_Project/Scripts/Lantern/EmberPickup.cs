@@ -2,11 +2,16 @@ using UnityEngine;
 
 namespace TheLightenRoad.Lantern
 {
-    /// <summary>A reusable prototype pickup that restores lantern fuel on contact.</summary>
+    /// <summary>
+    /// Reusable ember pickup that adds an ember crystal to the player's inventory on contact.
+    /// In accordance with Game Designer Furkan's feedback, embers are always collected
+    /// and added into inventory (stacked into the top-left HUD).
+    /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public sealed class EmberPickup : MonoBehaviour
     {
-        [SerializeField, Min(0f)] private float fuelAmount = 20f;
+        [Tooltip("Amount of fuel/charges restored (default 2 = 1 full ember).")]
+        [SerializeField, Min(0f)] private float fuelAmount = 2f;
 
         private bool collected;
 
@@ -32,9 +37,8 @@ namespace TheLightenRoad.Lantern
             if (fuel == null)
                 return;
 
-            // Full lanterns leave the pickup available for a later return.
-            if (fuel.AddFuel(fuelAmount) <= 0f)
-                return;
+            // Always collect ember and add to inventory
+            fuel.AddFuel(fuelAmount);
 
             collected = true;
             Destroy(gameObject);

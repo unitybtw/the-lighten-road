@@ -4,26 +4,37 @@ using UnityEngine;
 namespace TheLightenRoad.Lantern
 {
     /// <summary>
-    /// Shared fuel state for lantern modes and environmental mechanisms.
-    /// Values are prototype tuning defaults, not final game balance.
+    /// Shared fuel and ember charge state.
+    /// Each ember has 2 charges (Full = 2, Half = 1, Expended = 0).
+    /// Dim light is an infinite baseline resource; embers provide charges for Flare scouting
+    /// and machinery interaction.
     /// </summary>
     public sealed class LanternFuel : MonoBehaviour
     {
-        [Header("Prototype tuning — review with the team")]
-        [SerializeField, Min(0.01f)] private float capacity = 100f;
-        [SerializeField, Min(0f)] private float startingFuel = 100f;
-        [SerializeField, Min(0f)] private float dimDrainPerSecond;
-        [SerializeField, Min(0f)] private float flareDrainPerSecond = 0.5f;
+        [Header("Ember & Fuel Tuning")]
+        [SerializeField, Min(0.01f)] private float capacity = 10f; // 5 Embers = 10 charges max standard HUD
+        [SerializeField, Min(0f)] private float startingFuel = 6f; // 3 Embers = 6 charges by default
+        [SerializeField, Min(0f)] private float dimDrainPerSecond = 0f; // Infinite in Dim mode
+        [SerializeField, Min(0f)] private float flareDrainPerSecond = 0f;
+        [SerializeField] private bool allowOverflowCapacity = true;
 
         public float Capacity => capacity;
         public float CurrentFuel { get; private set; }
         public float NormalizedFuel => capacity > 0f ? CurrentFuel / capacity : 0f;
         public bool IsFull => CurrentFuel >= capacity;
         public bool IsEmpty => CurrentFuel <= 0f;
+        public bool AllowOverflowCapacity { get => allowOverflowCapacity; set => allowOverflowCapacity = value; }
 
         public float StartingFuel => startingFuel;
         public float DimDrainPerSecond => dimDrainPerSecond;
         public float FlareDrainPerSecond => flareDrainPerSecond;
+
+        // Discrete Ember Inventory Properties (Game Designer Furkan's Feedback)
+        public int TotalCharges => Mathf.RoundToInt(CurrentFuel);
+        public int TotalEmbers => Mathf.CeilToInt(CurrentFuel / 2f);
+        public int FullEmbers => Mathf.FloorToInt(CurrentFuel / 2f);
+        public bool HasHalfEmber => (Mathf.RoundToInt(CurrentFuel) % 2) == 1;
+        public int OverflowEmbers => Mathf.Max(0, TotalEmbers - 5);
 
         /// <summary>Raised when fuel changes. Arguments are current fuel and capacity.</summary>
         public event Action<float, float> FuelChanged;
@@ -38,10 +49,6 @@ namespace TheLightenRoad.Lantern
                 FuelDepleted?.Invoke();
         }
 
-        /// <summary>
-        /// Check whether the lantern has at least the required fuel amount without spending it.
-        /// Useful for Kemal's Ember Vein interaction prompts and pre-spend checks.
-        /// </summary>
         public bool CanSpendFuel(float amount)
         {
             return amount >= 0f && CurrentFuel >= amount;
@@ -57,19 +64,30 @@ namespace TheLightenRoad.Lantern
             return true;
         }
 
+        public bool TrySpendCharge()
+        {
+            return TrySpendFuel(1f);
+        }
+
         public float AddFuel(float amount)
         {
             if (amount < 0f)
                 throw new ArgumentOutOfRangeException(nameof(amount), "Fuel recovery cannot be negative.");
+
+            // Never reject picking up embers: automatically expand capacity to hold inventory
+            if (allowOverflowCapacity && CurrentFuel + amount > capacity)
+                capacity = CurrentFuel + amount;
+
             float before = CurrentFuel;
             SetFuel(CurrentFuel + amount);
             return CurrentFuel - before;
         }
 
-        /// <summary>
-        /// Reconfigures fuel and capacity directly at runtime.
-        /// Useful for stage transitions (fuel carryover between chambers) and automated tests.
-        /// </summary>
+        public void AddEmbers(int count)
+        {
+            AddFuel(count * 2f);
+        }
+
         public void Initialize(float current, float maxCapacity)
         {
             if (maxCapacity <= 0f)

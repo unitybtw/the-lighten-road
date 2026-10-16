@@ -4,7 +4,13 @@ using UnityEngine.Rendering.Universal;
 
 namespace TheLightenRoad.Lantern
 {
-    /// <summary>Prototype Dim / Flare input and URP 2D light presentation.</summary>
+    /// <summary>
+    /// Controls lantern illumination, Dim/Flare scout states, 2D dynamic shadows, and flame flicker.
+    /// In accordance with Game Designer Furkan's feedback:
+    /// - Dim radius is 2.75 units (50% of old flare) with infinite light.
+    /// - Flare radius is 11.0 units (200% of old flare) acting as a powerful scout mode.
+    /// - Each scout use expends 1 charge from the player's ember inventory.
+    /// </summary>
     [RequireComponent(typeof(LanternFuel))]
     public sealed class LanternController : MonoBehaviour
     {
@@ -13,14 +19,21 @@ namespace TheLightenRoad.Lantern
 
         [Header("Prototype lighting — tune during playtesting")]
         [SerializeField] private Light2D lanternLight;
-        [SerializeField, Min(0f)] private float dimIntensity = 0.25f;
-        [SerializeField, Min(0f)] private float flareIntensity = 1.1f;
-        [SerializeField, Min(0.01f)] private float dimRadius = 2f;
-        [SerializeField, Min(0.01f)] private float flareRadius = 5.5f;
-        [SerializeField] private Color lanternColor = new Color(1f, 0.55f, 0.2f);
+        [SerializeField, Min(0f)] private float dimIntensity = 0.55f;
+        [SerializeField, Min(0f)] private float flareIntensity = 1.25f;
+        [Tooltip("50% of old Flare radius (2.75 units).")]
+        [SerializeField, Min(0.01f)] private float dimRadius = 2.75f;
+        [Tooltip("200% of old Flare radius (11.0 units).")]
+        [SerializeField, Min(0.01f)] private float flareRadius = 11.0f;
+        [SerializeField] private Color lanternColor = new Color(1f, 0.58f, 0.22f);
         [SerializeField, Range(0f, 1f)] private float lowFuelThreshold = 0.25f;
-        [SerializeField, Range(0f, 1f)] private float lowFuelMinimumLight = 0.45f;
+        [SerializeField, Range(0f, 1f)] private float lowFuelMinimumLight = 0.5f;
         [SerializeField, Min(0.1f)] private float lowFuelPulseRate = 5f;
+
+        [Header("Flare Scout Timing")]
+        [Tooltip("Duration in seconds that 1 ember charge keeps Flare scout light active.")]
+        [SerializeField, Min(1f)] private float flareScoutDuration = 6.0f;
+        [SerializeField] private bool useTimedScoutMode = true;
 
         [Header("2D Dynamic Shadows")]
         [SerializeField] private bool enableShadows = true;
@@ -39,6 +52,7 @@ namespace TheLightenRoad.Lantern
 
         private LanternFuel fuel;
         private Keyboard keyboard;
+        private float flareTimer;
 
         /// <summary>Raised when the lantern switches between Dim (false) and Flare (true).</summary>
         public event System.Action<bool> FlareChanged;
@@ -54,6 +68,8 @@ namespace TheLightenRoad.Lantern
         public float FlareIntensity => flareIntensity;
         public float DimRadius => dimRadius;
         public float FlareRadius => flareRadius;
+        public float FlareTimer => flareTimer;
+        public float FlareScoutDuration => flareScoutDuration;
         public bool EnableShadows { get => enableShadows; set { enableShadows = value; ApplyLight(); } }
         public float ShadowIntensity { get => shadowIntensity; set { shadowIntensity = value; ApplyLight(); } }
         public float ShadowSoftness { get => shadowSoftness; set { shadowSoftness = value; ApplyLight(); } }
@@ -75,16 +91,54 @@ namespace TheLightenRoad.Lantern
         {
             keyboard = Keyboard.current;
             if (keyboard != null && keyboard[toggleFlareKey].wasPressedThisFrame)
-                SetFlared(!IsFlared);
+                ToggleFlare();
 
-            fuel.TickLanternDrain(IsFlared, Time.deltaTime);
+            if (IsFlared)
+            {
+                if (useTimedScoutMode)
+                {
+                    flareTimer -= Time.deltaTime;
+                    if (flareTimer <= 0f)
+                    {
+                        SetFlared(false);
+                    }
+                }
+                else
+                {
+                    fuel.TickLanternDrain(true, Time.deltaTime);
+                }
+            }
+
             ApplyLight();
+        }
+
+        public void ToggleFlare()
+        {
+            SetFlared(!IsFlared);
         }
 
         public bool SetFlared(bool flared)
         {
-            if (flared && fuel.CurrentFuel <= 0f)
-                return false;
+            if (flared)
+            {
+                if (fuel.CurrentFuel <= 0f)
+                    return false;
+
+                if (!IsFlared)
+                {
+                    // Deduct 1 charge when activating Flare scout mode
+                    if (useTimedScoutMode)
+                    {
+                        if (!fuel.TrySpendFuel(1f))
+                            return false;
+                        flareTimer = flareScoutDuration;
+                    }
+                }
+            }
+            else
+            {
+                flareTimer = 0f;
+            }
 
             if (IsFlared == flared)
                 return true;
@@ -118,7 +172,7 @@ namespace TheLightenRoad.Lantern
             }
 
             float flicker = 1f;
-            if (enableFlicker && (fuel == null || fuel.CurrentFuel > 0f))
+            if (enableFlicker)
             {
                 float noise = (Mathf.PerlinNoise(Time.time * flickerSpeed, 0.31f) * 2f - 1f);
                 flicker = 1f + noise * flickerIntensity;
@@ -138,22 +192,7 @@ namespace TheLightenRoad.Lantern
             var panel = new Rect(16f, 16f, width, height);
             GUI.Box(panel, string.Empty);
             GUI.Label(new Rect(28f, 20f, width - 20f, 20f),
-                $"LANTERN  {(IsFlared ? "FLARE" : "DIM")}  |  F: toggle");
-
-            var previousColor = GUI.color;
-            GUI.color = new Color(0.16f, 0.13f, 0.1f, 1f);
-            GUI.DrawTexture(new Rect(28f, 43f, width - 24f, 12f), Texture2D.whiteTexture);
-            GUI.color = lanternColor;
-            GUI.DrawTexture(new Rect(28f, 43f, (width - 24f) * fuel.NormalizedFuel, 12f), Texture2D.whiteTexture);
-            GUI.color = previousColor;
-            GUI.Label(new Rect(width + 24f, 39f, 100f, 20f),
-                $"{fuel.CurrentFuel:0}/{fuel.Capacity:0}");
-        }
-
-        private void OnDestroy()
-        {
-            if (fuel != null)
-                fuel.FuelDepleted -= HandleFuelDepleted;
+                $"[F] {(IsFlared ? "FLARE (SCOUT)" : "DIM (INFINITE)")} — Embers: {fuel.TotalEmbers} ({fuel.TotalCharges} charges)");
         }
     }
 }

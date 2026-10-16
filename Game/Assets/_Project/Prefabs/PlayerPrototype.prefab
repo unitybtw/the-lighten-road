@@ -49,8 +49,8 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 0.55, b: 0.2, a: 1}
-  m_Intensity: 0.25
+  m_Color: {r: 1, g: 0.58, b: 0.22, a: 1}
+  m_Intensity: 0.55
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 00000000
@@ -74,7 +74,7 @@ MonoBehaviour:
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0.35
-  m_PointLightOuterRadius: 2
+  m_PointLightOuterRadius: 2.75
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -230,10 +230,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 211aab67af51b4a90b0a77be80f84727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TheLightenRoad.Lantern.LanternFuel
-  capacity: 100
-  startingFuel: 80
+  capacity: 10
+  startingFuel: 6
   dimDrainPerSecond: 0
-  flareDrainPerSecond: 0.5
+  flareDrainPerSecond: 0
+  allowOverflowCapacity: 1
 --- !u!114 &265321852609213324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -248,11 +249,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TheLightenRoad.Lantern.LanternController
   toggleFlareKey: 20
   lanternLight: {fileID: 2300634082449694988}
-  dimIntensity: 0.25
-  flareIntensity: 1.1
-  dimRadius: 2
-  flareRadius: 5.5
-  lanternColor: {r: 1, g: 0.55, b: 0.2, a: 1}
+  dimIntensity: 0.55
+  flareIntensity: 1.25
+  dimRadius: 2.75
+  flareRadius: 11
+  lanternColor: {r: 1, g: 0.58, b: 0.22, a: 1}
   lowFuelThreshold: 0.25
   lowFuelMinimumLight: 0.45
   lowFuelPulseRate: 5
@@ -419,9 +420,10 @@ MonoBehaviour:
   fuel: {fileID: 8374520008009650060}
   followCamera: {fileID: 0}
   spawnPosition: {x: -5, y: 1, z: 0}
-  respawnFuelAmount: 80
+  respawnFuelAmount: 6
   enableVoidKill: 1
   voidKillY: -5.5
+  killOnFuelDepleted: 0
   autoRespawnDelay: 2.4
   allowManualRespawnInput: 1
 

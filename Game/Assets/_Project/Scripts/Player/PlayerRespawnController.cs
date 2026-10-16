@@ -32,11 +32,14 @@ namespace TheLightenRoad.Player
 
         [Header("Spawn & Checkpoint")]
         [SerializeField] private Vector3 spawnPosition = new Vector3(-5f, 1f, 0f);
-        [SerializeField, Min(0f)] private float respawnFuelAmount = 80f;
+        [SerializeField, Min(0f)] private float respawnFuelAmount = 6f;
 
         [Header("Void & Hazard")]
         [SerializeField] private bool enableVoidKill = true;
         [SerializeField] private float voidKillY = -5.5f;
+
+        [Header("Darkness Death (Disabled by default: lantern baseline light is infinite)")]
+        [SerializeField] private bool killOnFuelDepleted;
 
         [Header("Timings & Input")]
         [Tooltip("Seconds the death screen remains visible before auto-respawning.")]
@@ -55,6 +58,7 @@ namespace TheLightenRoad.Player
         public DeathReason LastDeathReason => lastDeathReason;
         public Vector3 SpawnPosition { get => spawnPosition; set => spawnPosition = value; }
         public float RespawnFuelAmount { get => respawnFuelAmount; set => respawnFuelAmount = value; }
+        public bool KillOnFuelDepleted { get => killOnFuelDepleted; set => killOnFuelDepleted = value; }
         public float VoidKillY { get => voidKillY; set => voidKillY = value; }
         public float AutoRespawnDelay { get => autoRespawnDelay; set => autoRespawnDelay = value; }
         public float StateTimer => stateTimer;
@@ -215,7 +219,8 @@ namespace TheLightenRoad.Player
 
         private void HandleFuelDepleted()
         {
-            Kill(DeathReason.Darkness);
+            if (killOnFuelDepleted)
+                Kill(DeathReason.Darkness);
         }
     }
 }

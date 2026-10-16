@@ -67,6 +67,7 @@ public sealed class PlayerRespawnTests
     {
         Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
 
+        respawnController.KillOnFuelDepleted = true;
         // Drain fuel to 0
         fuel.TrySpendFuel(fuel.CurrentFuel);
         Assert.That(fuel.IsEmpty, Is.True);

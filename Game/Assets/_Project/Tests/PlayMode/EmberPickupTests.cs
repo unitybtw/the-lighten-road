@@ -11,7 +11,7 @@ public sealed class EmberPickupTests
     private GameObject obstacle;
 
     [UnityTest]
-    public IEnumerator RestoresFuelAndDestroysPickupWhenLanternNeedsFuel()
+    public IEnumerator RestoresChargesAndDestroysPickupWhenCollected()
     {
 #if UNITY_EDITOR
         var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -26,15 +26,16 @@ public sealed class EmberPickupTests
 
         var fuel = player.GetComponent<LanternFuel>();
         Assert.That(fuel, Is.Not.Null);
-        // PlayerPrototype starts with 80 fuel and 100 capacity.
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(80f));
+        // PlayerPrototype starts with 6 charges (3 full embers).
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
 
         // Allow 2D physics trigger to register
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
         yield return null;
 
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(100f), "Fuel must be restored to 100.");
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(8f), "Charges must be incremented by 2 (1 ember).");
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(4));
         Assert.That(pickup == null, Is.True, "Ember pickup must be destroyed after collection.");
 #else
         Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
@@ -43,7 +44,7 @@ public sealed class EmberPickupTests
     }
 
     [UnityTest]
-    public IEnumerator PreservesPickupWhenLanternIsFull()
+    public IEnumerator AlwaysCollectsPickupAndAddsToInventoryEvenWhenFull()
     {
 #if UNITY_EDITOR
         var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -55,17 +56,18 @@ public sealed class EmberPickupTests
         player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
 
         var fuel = player.GetComponent<LanternFuel>();
-        fuel.Initialize(100f, 100f);
+        fuel.Initialize(10f, 10f); // 5 Embers (fills the 5-slot HUD)
         Assert.That(fuel.IsFull, Is.True);
 
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
         yield return null;
 
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(100f));
-        Assert.That(pickup != null, Is.True, "Pickup must not be destroyed when lantern is already full.");
-        var ember = pickup.GetComponent<EmberPickup>();
-        Assert.That(ember.IsCollected, Is.False);
+        // Furkan's rule: pickups are ALWAYS collected and added to inventory (overflow expands to +1)
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(12f));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(6));
+        Assert.That(fuel.OverflowEmbers, Is.EqualTo(1));
+        Assert.That(pickup == null, Is.True, "Pickup must be collected into inventory even when slots are full.");
 #else
         Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
         yield break;

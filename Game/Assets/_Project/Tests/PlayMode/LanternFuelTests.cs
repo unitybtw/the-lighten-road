@@ -25,22 +25,25 @@ public sealed class LanternFuelTests
     [Test]
     public void InitializesWithDefaultCapacityAndStartingFuel()
     {
-        Assert.That(fuel.Capacity, Is.EqualTo(100f));
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(100f));
-        Assert.That(fuel.IsFull, Is.True);
-        Assert.That(fuel.IsEmpty, Is.False);
-        Assert.That(fuel.NormalizedFuel, Is.EqualTo(1f));
+        Assert.That(fuel.Capacity, Is.EqualTo(10f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
+        Assert.That(fuel.TotalCharges, Is.EqualTo(6));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(fuel.FullEmbers, Is.EqualTo(3));
+        Assert.That(fuel.HasHalfEmber, Is.False);
+        Assert.That(fuel.OverflowEmbers, Is.EqualTo(0));
     }
 
     [Test]
     public void InitializeSetsCurrentFuelAndCapacity()
     {
-        fuel.Initialize(40f, 80f);
-        Assert.That(fuel.Capacity, Is.EqualTo(80f));
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(40f));
-        Assert.That(fuel.NormalizedFuel, Is.EqualTo(0.5f));
-        Assert.That(fuel.IsFull, Is.False);
-        Assert.That(fuel.IsEmpty, Is.False);
+        fuel.Initialize(5f, 10f);
+        Assert.That(fuel.Capacity, Is.EqualTo(10f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(5f));
+        Assert.That(fuel.TotalCharges, Is.EqualTo(5));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(fuel.FullEmbers, Is.EqualTo(2));
+        Assert.That(fuel.HasHalfEmber, Is.True);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => fuel.Initialize(10f, 0f));
         Assert.Throws<ArgumentOutOfRangeException>(() => fuel.Initialize(10f, -5f));
@@ -49,70 +52,85 @@ public sealed class LanternFuelTests
     [Test]
     public void TrySpendFuelDeductsWhenSufficientAndRejectsWhenInsufficient()
     {
-        fuel.Initialize(50f, 100f);
+        fuel.Initialize(5f, 10f);
 
-        bool spent = fuel.TrySpendFuel(20f);
+        bool spent = fuel.TrySpendFuel(2f);
         Assert.That(spent, Is.True);
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(30f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(3f));
 
-        bool overspent = fuel.TrySpendFuel(40f);
+        bool overspent = fuel.TrySpendFuel(4f);
         Assert.That(overspent, Is.False);
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(30f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(3f));
     }
 
     [Test]
-    public void TrySpendFuelRejectsNegativeAmount()
+    public void TrySpendChargeDeductsOneCharge()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => fuel.TrySpendFuel(-5f));
+        fuel.Initialize(4f, 10f);
+
+        bool spent = fuel.TrySpendCharge();
+        Assert.That(spent, Is.True);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(3));
+        Assert.That(fuel.HasHalfEmber, Is.True);
     }
 
     [Test]
-    public void CanSpendFuelChecksAvailabilityWithoutDeducting()
+    public void AddEmbersAddsTwoChargesPerEmber()
     {
-        fuel.Initialize(30f, 100f);
+        fuel.Initialize(4f, 10f);
 
-        Assert.That(fuel.CanSpendFuel(30f), Is.True);
-        Assert.That(fuel.CanSpendFuel(20f), Is.True);
-        Assert.That(fuel.CanSpendFuel(35f), Is.False);
-        Assert.That(fuel.CanSpendFuel(-1f), Is.False);
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(30f));
+        fuel.AddEmbers(2);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(8));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(4));
     }
 
     [Test]
-    public void AddFuelIncreasesUpToCapacityAndReturnsAcceptedAmount()
+    public void AllowOverflowCapacityExpandsInventoryWhenCollectingBeyondStandardHUD()
     {
-        fuel.Initialize(70f, 100f);
+        fuel.Initialize(10f, 10f);
+        fuel.AllowOverflowCapacity = true;
 
-        float accepted = fuel.AddFuel(20f);
-        Assert.That(accepted, Is.EqualTo(20f));
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(90f));
+        fuel.AddEmbers(2); // Adds 4 charges -> 14 charges (7 embers)
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(14f));
+        Assert.That(fuel.Capacity, Is.EqualTo(14f));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(7));
+        Assert.That(fuel.OverflowEmbers, Is.EqualTo(2));
+    }
 
-        float cappedAccepted = fuel.AddFuel(25f);
-        Assert.That(cappedAccepted, Is.EqualTo(10f));
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(100f));
+    [Test]
+    public void BoundedCapacityCapsWhenOverflowIsDisabled()
+    {
+        fuel.Initialize(8f, 10f);
+        fuel.AllowOverflowCapacity = false;
+
+        float accepted = fuel.AddFuel(5f);
+        Assert.That(accepted, Is.EqualTo(2f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(10f));
         Assert.That(fuel.IsFull, Is.True);
-    }
-
-    [Test]
-    public void AddFuelWhenFullReturnsZero()
-    {
-        fuel.Initialize(100f, 100f);
-
-        float accepted = fuel.AddFuel(15f);
-        Assert.That(accepted, Is.EqualTo(0f));
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(100f));
     }
 
     [Test]
     public void AddFuelRejectsNegativeAmount()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => fuel.AddFuel(-10f));
+        Assert.Throws<ArgumentOutOfRangeException>(() => fuel.AddFuel(-5f));
+    }
+
+    [Test]
+    public void CanSpendFuelChecksAvailabilityWithoutDeducting()
+    {
+        fuel.Initialize(3f, 10f);
+
+        Assert.That(fuel.CanSpendFuel(3f), Is.True);
+        Assert.That(fuel.CanSpendFuel(2f), Is.True);
+        Assert.That(fuel.CanSpendFuel(4f), Is.False);
+        Assert.That(fuel.CanSpendFuel(-1f), Is.False);
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(3f));
     }
 
     [Test]
     public void RaisesFuelChangedEventOnSpendAndAdd()
     {
-        fuel.Initialize(50f, 100f);
+        fuel.Initialize(5f, 10f);
         float lastFuel = -1f;
         float lastCap = -1f;
         fuel.FuelChanged += (f, c) =>
@@ -121,42 +139,39 @@ public sealed class LanternFuelTests
             lastCap = c;
         };
 
-        fuel.TrySpendFuel(15f);
-        Assert.That(lastFuel, Is.EqualTo(35f));
-        Assert.That(lastCap, Is.EqualTo(100f));
+        fuel.TrySpendFuel(2f);
+        Assert.That(lastFuel, Is.EqualTo(3f));
+        Assert.That(lastCap, Is.EqualTo(10f));
 
-        fuel.AddFuel(25f);
-        Assert.That(lastFuel, Is.EqualTo(60f));
-        Assert.That(lastCap, Is.EqualTo(100f));
+        fuel.AddFuel(3f);
+        Assert.That(lastFuel, Is.EqualTo(6f));
+        Assert.That(lastCap, Is.EqualTo(10f));
     }
 
     [Test]
     public void RaisesFuelDepletedEventOnlyWhenFuelReachesZero()
     {
-        fuel.Initialize(20f, 100f);
+        fuel.Initialize(2f, 10f);
         int depletedCount = 0;
         fuel.FuelDepleted += () => depletedCount++;
 
-        fuel.TrySpendFuel(10f);
+        fuel.TrySpendCharge();
         Assert.That(depletedCount, Is.EqualTo(0));
 
-        fuel.TrySpendFuel(10f);
-        Assert.That(depletedCount, Is.EqualTo(1));
-
-        fuel.TrySpendFuel(5f);
+        fuel.TrySpendCharge();
         Assert.That(depletedCount, Is.EqualTo(1));
     }
 
     [Test]
-    public void TickLanternDrainConsumesFuelInFlareAndPreservesInDim()
+    public void InfiniteDimDrainPreservesFuelWhileFlareConsumes()
     {
-        fuel.Initialize(50f, 100f);
-        fuel.SetDrainRates(dimDrain: 0f, flareDrain: 10f);
+        fuel.Initialize(6f, 10f);
+        fuel.SetDrainRates(dimDrain: 0f, flareDrain: 2f);
 
-        fuel.TickLanternDrain(flared: false, deltaTime: 1f);
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(50f));
+        fuel.TickLanternDrain(flared: false, deltaTime: 3f);
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f), "Dim mode should never drain fuel.");
 
-        fuel.TickLanternDrain(flared: true, deltaTime: 2f);
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(30f));
+        fuel.TickLanternDrain(flared: true, deltaTime: 1f);
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(4f));
     }
 }

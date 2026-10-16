@@ -1,4 +1,7 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
+
+[assembly: InternalsVisibleTo("TheLightenRoad.Player.PlayModeTests")]
 
 namespace TheLightenRoad.UI
 {
@@ -6,7 +9,7 @@ namespace TheLightenRoad.UI
     /// Procedurally generated point-filtered sprites for the HUD and overlays, so the UI works
     /// before final art from Can / Maksim is imported.
     /// </summary>
-    internal static class PixelSprites
+    public static class PixelSprites
     {
         private static Sprite white;
         private static Sprite glow;
@@ -15,6 +18,9 @@ namespace TheLightenRoad.UI
         private static Sprite vignette;
         private static Sprite extinguishedFlame;
         private static Sprite skullIcon;
+        private static Sprite emberFull;
+        private static Sprite emberHalf;
+        private static Sprite emberEmpty;
 
         public static Sprite White => white != null ? white : white = Build(new[] { "#" },
             c => Color.white);
@@ -76,6 +82,51 @@ namespace TheLightenRoad.UI
             "........",
         };
 
+        // 10x10 Ember Full
+        private static readonly string[] EmberFullMap =
+        {
+            "....##....",
+            "...#++#...",
+            "..#++++#..",
+            ".#++@@++#.",
+            ".#+@@@@+#.",
+            ".#+@@@@+#.",
+            ".#++@@++#.",
+            "..#++++#..",
+            "...#++#...",
+            "....##....",
+        };
+
+        // 10x10 Ember Half
+        private static readonly string[] EmberHalfMap =
+        {
+            "....##....",
+            "...#+-#...",
+            "..#++--#..",
+            ".#++@---#.",
+            ".#+@@---#.",
+            ".#+@@---#.",
+            ".#++@---#.",
+            "..#++--#..",
+            "...#+-#...",
+            "....##....",
+        };
+
+        // 10x10 Ember Empty socket
+        private static readonly string[] EmberEmptyMap =
+        {
+            "....##....",
+            "...#..#...",
+            "..#....#..",
+            ".#......#.",
+            ".#......#.",
+            ".#......#.",
+            ".#......#.",
+            "..#....#..",
+            "...#..#...",
+            "....##....",
+        };
+
         public static Sprite LanternFrame => lanternFrame != null ? lanternFrame : lanternFrame = Build(LanternMap, c =>
         {
             switch (c)
@@ -111,6 +162,38 @@ namespace TheLightenRoad.UI
             switch (c)
             {
                 case '#': return new Color32(235, 225, 215, 255);
+                default: return Color.clear;
+            }
+        });
+
+        public static Sprite EmberFull => emberFull != null ? emberFull : emberFull = Build(EmberFullMap, c =>
+        {
+            switch (c)
+            {
+                case '#': return new Color32(48, 24, 12, 255);
+                case '+': return new Color32(255, 140, 32, 255);
+                case '@': return new Color32(255, 242, 180, 255);
+                default: return Color.clear;
+            }
+        });
+
+        public static Sprite EmberHalf => emberHalf != null ? emberHalf : emberHalf = Build(EmberHalfMap, c =>
+        {
+            switch (c)
+            {
+                case '#': return new Color32(48, 24, 12, 255);
+                case '+': return new Color32(255, 120, 24, 255);
+                case '@': return new Color32(255, 220, 150, 255);
+                case '-': return new Color32(75, 58, 48, 200);
+                default: return Color.clear;
+            }
+        });
+
+        public static Sprite EmberEmpty => emberEmpty != null ? emberEmpty : emberEmpty = Build(EmberEmptyMap, c =>
+        {
+            switch (c)
+            {
+                case '#': return new Color32(65, 52, 44, 180);
                 default: return Color.clear;
             }
         });

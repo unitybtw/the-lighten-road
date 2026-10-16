@@ -28,58 +28,59 @@ public sealed class LanternControllerTests
         testObject = new GameObject("Test Lantern Controller");
         fuel = testObject.AddComponent<LanternFuel>();
         controller = testObject.AddComponent<LanternController>();
+        fuel.Initialize(6f, 10f); // 3 Embers (6 charges)
         yield return null;
     }
 
     [Test]
-    public void ToggleFlareModeUpdatesStateAndRejectsWhenEmpty()
+    public void RadiiMatchFurkanSpecifications()
     {
-        fuel.Initialize(50f, 100f);
+        // 50% of old 5.5 = 2.75, 200% of old 5.5 = 11.0
+        Assert.That(controller.DimRadius, Is.EqualTo(2.75f).Within(0.01f));
+        Assert.That(controller.FlareRadius, Is.EqualTo(11.0f).Within(0.01f));
+    }
+
+    [Test]
+    public void ToggleFlareModeConsumesOneChargeAndSetsScoutTimer()
+    {
+        fuel.Initialize(6f, 10f);
 
         Assert.That(controller.IsFlared, Is.False);
         bool flared = controller.SetFlared(true);
         Assert.That(flared, Is.True);
         Assert.That(controller.IsFlared, Is.True);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(5), "Activating Flare scout should consume 1 charge.");
+        Assert.That(controller.FlareTimer, Is.EqualTo(controller.FlareScoutDuration).Within(0.1f));
 
         bool dimmed = controller.SetFlared(false);
         Assert.That(dimmed, Is.True);
         Assert.That(controller.IsFlared, Is.False);
+        Assert.That(controller.FlareTimer, Is.EqualTo(0f));
 
-        fuel.Initialize(0f, 100f);
+        // When empty, flare must be rejected
+        fuel.Initialize(0f, 10f);
         bool flareRejected = controller.SetFlared(true);
         Assert.That(flareRejected, Is.False);
         Assert.That(controller.IsFlared, Is.False);
     }
 
     [Test]
-    public void RevertsFlareToDimWhenFuelDepleted()
-    {
-        fuel.Initialize(20f, 100f);
-        controller.SetFlared(true);
-        Assert.That(controller.IsFlared, Is.True);
-
-        fuel.TrySpendFuel(20f);
-        Assert.That(fuel.IsEmpty, Is.True);
-        Assert.That(controller.IsFlared, Is.False);
-    }
-
-    [Test]
     public void IdentifiesLowFuelThreshold()
     {
-        fuel.Initialize(80f, 100f);
+        fuel.Initialize(6f, 10f);
         Assert.That(controller.IsLowFuel, Is.False);
 
-        fuel.Initialize(25f, 100f);
+        fuel.Initialize(2f, 10f);
         Assert.That(controller.IsLowFuel, Is.True);
 
-        fuel.Initialize(10f, 100f);
+        fuel.Initialize(1f, 10f);
         Assert.That(controller.IsLowFuel, Is.True);
     }
 
     [UnityTest]
     public IEnumerator SimulateKeyToggleSwitchesMode()
     {
-        fuel.Initialize(80f, 100f);
+        fuel.Initialize(6f, 10f);
         Assert.That(controller.IsFlared, Is.False);
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.F));

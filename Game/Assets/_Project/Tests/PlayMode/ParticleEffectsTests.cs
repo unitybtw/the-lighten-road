@@ -75,7 +75,7 @@ public sealed class ParticleEffectsTests
             "Returning to Dim mode should restore normal spark emission rate.");
 
         // Drain fuel to 0
-        fuel.TrySpendFuel(100f);
+        fuel.TrySpendFuel(fuel.CurrentFuel);
         yield return null;
 
         Assert.That(sparks.CurrentEmissionRate, Is.EqualTo(0f),
