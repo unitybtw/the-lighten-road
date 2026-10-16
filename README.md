@@ -109,7 +109,7 @@ Each teammate has a dedicated workspace for prototypes, art sources, or puzzle d
 
 | Team member | Role | Authored commits |
 | --- | --- | ---: |
-| [Siraç](https://github.com/unitybtw) | Game Developer | 27 |
+| [Siraç](https://github.com/unitybtw) | Game Developer | 28 |
 | [Kemal](https://github.com/kemal-berke) | Game Developer | 1 |
 | [Maksim](https://github.com/Ichnolith) | Artist | 1 |
 | [Can](https://github.com/benesas) | Artist | 0 |

@@ -7,15 +7,15 @@
       "name": "Siraç",
       "role": "Game Developer",
       "profile_url": "https://github.com/unitybtw",
-      "avatar_sha256": "43cb557c4de39c735f1a0cbb49add740f202ee6cfe1b21c74662cb537752da96",
-      "commits": 27
+      "avatar_sha256": "9469817448132c76770ddfe2bbcf6da560ce4d3ce451f14373ee8a1e26c70efb",
+      "commits": 28
     },
     {
       "login": "kemal-berke",
       "name": "Kemal",
       "role": "Game Developer",
       "profile_url": "https://github.com/kemal-berke",
-      "avatar_sha256": "43d4096f3065cc22f4632f2fc422a5f469ade1f9c716614cdd16ee1e2a6337e5",
+      "avatar_sha256": "5b55eff0be7016598b25c5dd516dc1ac83566f2104c746e8835d57478efd5c6b",
       "commits": 1
     },
     {
@@ -23,7 +23,7 @@
       "name": "Can",
       "role": "Artist",
       "profile_url": "https://github.com/benesas",
-      "avatar_sha256": "a6c657996bead54d3330ecea45789392636f21e0e113f7b35698cd45da08064c",
+      "avatar_sha256": "4ca5ab402fd2388fdddb43816c35107c37f0c728417946d8d677bda7bc6a3e83",
       "commits": 0
     },
     {
@@ -31,7 +31,7 @@
       "name": "Maksim",
       "role": "Artist",
       "profile_url": "https://github.com/Ichnolith",
-      "avatar_sha256": "4c3d66ab026778d6c0a9ebcd2e653ea6fd3d87a2dca00f303960519b06e35543",
+      "avatar_sha256": "76e8c5e38141a4f58771aac9c3d2a65be6fd508a0852b93544ec55821b08ac5e",
       "commits": 1
     },
     {
@@ -39,14 +39,14 @@
       "name": "Furkan",
       "role": "Game Designer",
       "profile_url": "https://github.com/aeshmacodex",
-      "avatar_sha256": "e77917d593be3612ef67261be3f4fda934b607b3c5f931427961a3e1adfa04bf",
+      "avatar_sha256": "a0d437d93b3ca2440bc8374395185b0f2e35a545f782309fe87c44aa7b5d9a6f",
       "commits": 0
     }
   ],
-  "team_commits": 29,
+  "team_commits": 30,
   "other_linked_author_commits": 0,
   "unlinked_author_commits": 0,
   "method": "Non-merge commits authored by GitHub-linked accounts on the default branch; bots excluded. Co-author trailers and work outside Git are not counted.",
-  "source_revision": "50d3312559c1acadb95391f1421dcb9aadb830fb",
-  "updated_at": "2026-10-16 12:25 UTC"
+  "source_revision": "810dc31b11c6b7f577783cdd1bceadbe20aaccce",
+  "updated_at": "2026-10-16 12:27 UTC"
 }
