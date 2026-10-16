@@ -1,0 +1,19 @@
+{
+    "name": "TheLightenRoad.Effects",
+    "rootNamespace": "TheLightenRoad.Effects",
+    "references": [
+        "TheLightenRoad.Player",
+        "TheLightenRoad.Lantern",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.2D.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

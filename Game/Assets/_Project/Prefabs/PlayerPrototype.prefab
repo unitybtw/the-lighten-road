@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4544971111738067096}
   - component: {fileID: 2300634082449694988}
+  - component: {fileID: 718293847561829303}
   m_Layer: 0
   m_Name: Lantern Light
   m_TagString: Untagged
@@ -98,6 +99,7 @@ GameObject:
   - component: {fileID: 8053443060755001231}
   - component: {fileID: 8374520008009650060}
   - component: {fileID: 265321852609213324}
+  - component: {fileID: 910238475618293012}
   m_Layer: 0
   m_Name: PlayerPrototype
   m_TagString: Untagged
@@ -350,3 +352,52 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &910238475618293012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738987852800000031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 321286823d2e4177ad6631f1e26ce686, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Effects::TheLightenRoad.Effects.PlayerFootstepDustFX
+  motor: {fileID: 8053443060755001231}
+  feetOffset: {x: 0, y: -0.45}
+  enableRunDust: 1
+  runDustInterval: 0.14
+  runDustCount: 1
+  enableJumpDust: 1
+  jumpDustCount: 4
+  enableLandDust: 1
+  baseLandDustCount: 6
+  dustColor: {r: 0.85, g: 0.82, b: 0.78, a: 0.5}
+  sortingLayerName: Default
+  orderInLayer: 2
+--- !u!114 &718293847561829303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 128753085553950437}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1947a96781418b8998fd5357eca875, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Effects::TheLightenRoad.Effects.LanternSparksFX
+  lantern: {fileID: 265321852609213324}
+  fuel: {fileID: 8374520008009650060}
+  dimEmissionRate: 4
+  dimSpeedRange: {x: 0.6, y: 1.2}
+  dimLifetimeRange: {x: 0.6, y: 1}
+  flareEmissionRate: 22
+  flareSpeedRange: {x: 1.2, y: 2.4}
+  flareLifetimeRange: {x: 0.8, y: 1.4}
+  sparkSize: {x: 0.04, y: 0.09}
+  sparkStartColor: {r: 1, g: 0.95, b: 0.6, a: 1}
+  sortingLayerName: Default
+  orderInLayer: 8
+

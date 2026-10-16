@@ -144,11 +144,44 @@ Integrated real-time 2D shadow casting and atmospheric flame undulation into `Mo
 - Added automated test in `LanternControllerTests.cs` verifying dynamic shadow and organic flicker property configuration.
 - Total **33 Play Mode tests** covering player motor, game feel, camera, lantern fuel, dim/flare controller, shadows/flicker, ember pickups, and HUD.
 
+## Checkpoint 7 — Atmospheric Particle FX: Ambient Dust Motes, Lantern Sparks, and Footstep Dust (2026-10-16)
+
+Elevated subterranean ruin immersion with three reactive 2D particle systems using URP 2D Lit and Unlit shaders:
+
+- **1. Ambient Dust Motes (`DustMotesAtmosphere.cs`):**
+  - Ethereal motes lazily drifting across the sandbox environment (`areaSize = (26, 14)`).
+  - Uses `Universal Render Pipeline/2D/Sprite-Lit-Default` with soft circular gradient particles.
+  - In darkness, motes are almost imperceptible; when illuminated by the player's lantern `Light2D`, they ignite into sparkling warm amber motes, providing breathtaking depth and illumination feedback.
+  - Perlin noise turbulence module provides gentle, organic subterranean air currents.
+- **2. Lantern Sparks & Embers (`LanternSparksFX.cs`):**
+  - Hot fire sparks and embers rising from the lantern flame into the air.
+  - Simulated in **World Space**: when the player walks or runs, embers trail behind organically instead of staying locked to the player transform.
+  - **Dim Mode:** Calm, slow embers ($4\text{ sparks/s}$, gentle upward float).
+  - **Flare Mode (Shift):** Energetic fiery blast ($22\text{ sparks/s}$, faster speed, wider cone, bright yellow-white to deep crimson-ember color over lifetime).
+  - **Zero Fuel:** Flame dies and spark emission immediately ceases when fuel reaches 0.
+- **3. Footstep & Movement Dust (`PlayerFootstepDustFX.cs`):**
+  - Ground movement and kinetic impacts emit subtle dust puffs at the player's feet:
+    - **Run Dust:** Emits tiny dust puffs kicking backwards away from `FacingDirection` while moving on stone ground.
+    - **Jump Puff:** Bursts outwards horizontally upon takeoff.
+    - **Landing Shockwave:** Expanding dust cloud upon touchdown with particle count and velocity scaling dynamically with landing impact velocity.
+- **Editor Tooling & Asset Pipelines:**
+  - Procedural soft textures (`Particle_SoftCircle.png`, `Particle_Spark.png`, `Particle_DustPuff.png`) and fallback procedural generator (`ParticleTextures.cs`).
+  - Added 1-click Editor utility: `Tools -> The Lighten Road -> Setup Atmospheric Particle Effects` in `EffectsSetupUtility.cs`.
+
+### Automated Test Coverage (36 Play Mode tests)
+
+- Added `ParticleEffectsTests.cs` verifying:
+  - `DustMotesAtmosphereInitializesAndConfiguresModules`: verifies ParticleSystem creation, box shape, world simulation space, and emission.
+  - `LanternSparksFXRespondsToDimAndFlare`: verifies emission rate boost during Flare mode and shutdown on fuel depletion.
+  - `PlayerFootstepDustFXInitializesChildSystems`: verifies dynamic instantiation of run dust and burst particle child systems.
+- Total **36 Play Mode tests** across player motor, game feel, camera, lantern fuel, dim/flare controller, shadows/flicker, atmospheric particle FX, ember pickups, and HUD.
+
 ### Next checkpoint
 
 Continue expanding player systems in `Sandbox/Sirac/`:
-1. Death & Respawn loop on fuel depletion or hazard contact (`PlayerRespawnController`).
-2. Player sprite integration with Maksim's 24-frame Light character idle animation.
+1. Player sprite integration with Maksim's 24-frame Light character idle/flare spritesheet.
+2. Death & Respawn loop on fuel depletion or hazard contact (`PlayerRespawnController`).
+
 
 
 

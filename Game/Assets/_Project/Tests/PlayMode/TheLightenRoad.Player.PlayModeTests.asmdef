@@ -4,6 +4,7 @@
     "TheLightenRoad.Player",
     "TheLightenRoad.Lantern",
     "TheLightenRoad.UI",
+    "TheLightenRoad.Effects",
     "UnityEngine.UI",
     "Unity.InputSystem"
   ],

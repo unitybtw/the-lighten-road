@@ -43,6 +43,10 @@ namespace TheLightenRoad.Player
         private int facingDirection = 1;
         private Vector3 baseVisualScale = Vector3.one;
         private Vector2 squashScale = Vector2.one;
+        private float previousVerticalVelocity;
+
+        public event System.Action OnJumped;
+        public event System.Action<float> OnLanded;
 
         public bool IsGrounded { get; private set; }
         public int FacingDirection => facingDirection;
@@ -54,6 +58,8 @@ namespace TheLightenRoad.Player
         public bool IsInCoyoteTime => coyoteTimer > 0f && !IsGrounded;
         public bool HasBufferedJump => jumpBufferTimer > 0f;
         public Vector3 CurrentVisualScale => visualTransform != null ? visualTransform.localScale : Vector3.one;
+        public float HorizontalInput => horizontalInput;
+        public Rigidbody2D Body => body;
 
         private void Awake()
         {
@@ -129,7 +135,9 @@ namespace TheLightenRoad.Player
                 // Trigger landing squash when touching ground from air
                 if (!wasGrounded && body.linearVelocity.y <= 0.1f)
                 {
+                    float impactSpeed = Mathf.Abs(previousVerticalVelocity);
                     ApplySquash(landSquash);
+                    OnLanded?.Invoke(impactSpeed);
                 }
             }
             else
@@ -154,6 +162,7 @@ namespace TheLightenRoad.Player
                 jumpBufferTimer = 0f;
                 jumpReleased = false;
                 ApplySquash(jumpStretch);
+                OnJumped?.Invoke();
             }
 
             // Variable jump: cutting upward velocity when space is released early
@@ -167,6 +176,7 @@ namespace TheLightenRoad.Player
             }
 
             body.linearVelocity = velocity;
+            previousVerticalVelocity = velocity.y;
 
             // Update facing direction and flip sprite
             if (Mathf.Abs(horizontalInput) > 0.05f)
