@@ -109,8 +109,8 @@ namespace TheLightenRoad.Effects
             if (ps == null)
                 return;
 
-            bool hasFuel = fuel == null || fuel.CurrentFuel > 0f;
-            bool isFlared = lantern != null && lantern.IsFlared;
+            bool hasFuel = fuel == null || fuel.CurrentFuel > 0f || (lantern != null && lantern.HasActiveScout);
+            float blend = lantern != null ? lantern.FlareBlend : 0f;
 
             var emission = ps.emission;
             var main = ps.main;
@@ -121,18 +121,13 @@ namespace TheLightenRoad.Effects
                 return;
             }
 
-            if (isFlared)
-            {
-                emission.rateOverTime = flareEmissionRate;
-                main.startSpeed = new ParticleSystem.MinMaxCurve(flareSpeedRange.x, flareSpeedRange.y);
-                main.startLifetime = new ParticleSystem.MinMaxCurve(flareLifetimeRange.x, flareLifetimeRange.y);
-            }
-            else
-            {
-                emission.rateOverTime = dimEmissionRate;
-                main.startSpeed = new ParticleSystem.MinMaxCurve(dimSpeedRange.x, dimSpeedRange.y);
-                main.startLifetime = new ParticleSystem.MinMaxCurve(dimLifetimeRange.x, dimLifetimeRange.y);
-            }
+            emission.rateOverTime = Mathf.Lerp(dimEmissionRate, flareEmissionRate, blend);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(
+                Mathf.Lerp(dimSpeedRange.x, flareSpeedRange.x, blend),
+                Mathf.Lerp(dimSpeedRange.y, flareSpeedRange.y, blend));
+            main.startLifetime = new ParticleSystem.MinMaxCurve(
+                Mathf.Lerp(dimLifetimeRange.x, flareLifetimeRange.x, blend),
+                Mathf.Lerp(dimLifetimeRange.y, flareLifetimeRange.y, blend));
         }
     }
 }

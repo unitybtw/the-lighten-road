@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using UnityEngine.Rendering.Universal;
 
 public sealed class LanternControllerTests
 {
@@ -27,6 +28,9 @@ public sealed class LanternControllerTests
 
         testObject = new GameObject("Test Lantern Controller");
         fuel = testObject.AddComponent<LanternFuel>();
+        var lightObject = new GameObject("Test Lantern Light");
+        lightObject.transform.SetParent(testObject.transform);
+        lightObject.AddComponent<Light2D>();
         controller = testObject.AddComponent<LanternController>();
         fuel.Initialize(6f, 10f); // 3 Embers (6 charges)
         yield return null;
@@ -55,7 +59,9 @@ public sealed class LanternControllerTests
         bool dimmed = controller.SetFlared(false);
         Assert.That(dimmed, Is.True);
         Assert.That(controller.IsFlared, Is.False);
-        Assert.That(controller.FlareTimer, Is.EqualTo(0f));
+        Assert.That(controller.HasActiveScout, Is.True, "The reserved ember finishes during the dimming transition.");
+        controller.TickScout(controller.TransitionDuration);
+        Assert.That(controller.FlareTimer, Is.Zero);
 
         // When empty, flare must be rejected
         fuel.Initialize(0f, 10f);
@@ -110,6 +116,83 @@ public sealed class LanternControllerTests
 
         Assert.That(controller.EnableFlicker, Is.True);
         Assert.That(controller.FlickerIntensity, Is.GreaterThan(0f));
+    }
+
+    [Test]
+    public void LightFadesBothWaysWithinTheScoutTimer()
+    {
+        controller.EnableFlicker = false;
+        controller.SetFlared(true);
+        Assert.That(controller.LanternLight.pointLightOuterRadius, Is.EqualTo(controller.DimRadius).Within(0.01f));
+        controller.TickScout(controller.TransitionDuration * 0.5f);
+        Assert.That(controller.FlareBlend, Is.GreaterThan(0f).And.LessThan(1f));
+        Assert.That(controller.LanternLight.pointLightOuterRadius, Is.GreaterThan(controller.DimRadius).And.LessThan(controller.FlareRadius));
+        controller.TickScout(controller.TransitionDuration * 0.5f);
+        Assert.That(controller.FlareBlend, Is.EqualTo(1f).Within(0.001f));
+        controller.TickScout(controller.FlareScoutDuration - 1.5f * controller.TransitionDuration);
+        Assert.That(controller.FlareBlend, Is.EqualTo(0.5f).Within(0.001f));
+        Assert.That(controller.FlareTimer, Is.EqualTo(controller.TransitionDuration * 0.5f).Within(0.001f));
+        controller.TickScout(controller.TransitionDuration);
+        Assert.That(controller.FlareBlend, Is.Zero);
+        Assert.That(controller.IsFlared, Is.False);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(5));
+    }
+
+    [Test]
+    public void FirstUseFadesToHalfAndLastChargeBreaksOnlyAfterSecondUseCompletes()
+    {
+        fuel.Initialize(2f, 10f);
+        int breaks = 0;
+        controller.EmberBroken += () => breaks++;
+        controller.SetFlared(true);
+        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(1f));
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(0.75f).Within(0.001f));
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(1));
+        Assert.That(breaks, Is.Zero);
+        Assert.That(controller.SetFlared(true), Is.True);
+        Assert.That(fuel.IsEmpty, Is.True);
+        Assert.That(controller.IsFlared, Is.True, "The final reserved charge must still grant its full scout.");
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(0.25f).Within(0.001f));
+        Assert.That(breaks, Is.Zero);
+        controller.TickScout(controller.FlareScoutDuration);
+        controller.TickScout(controller.FlareScoutDuration);
+        Assert.That(breaks, Is.EqualTo(1));
+        Assert.That(controller.HasActiveScout, Is.False);
+    }
+
+    [Test]
+    public void EarlyReleaseFadesWithoutReservingAnotherCharge()
+    {
+        controller.SetFlared(true);
+        controller.TickScout(controller.TransitionDuration);
+        controller.SetFlared(false);
+        Assert.That(controller.IsDimming, Is.True);
+        Assert.That(controller.SetFlared(true), Is.False);
+        controller.TickScout(controller.TransitionDuration * 0.5f);
+        Assert.That(controller.FlareBlend, Is.GreaterThan(0f).And.LessThan(1f));
+        controller.TickScout(controller.TransitionDuration);
+        Assert.That(controller.HasActiveScout, Is.False);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(5));
+        Assert.That(controller.SetFlared(true), Is.True);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(4));
+    }
+
+    [Test]
+    public void ResetCancelsBurnWithoutPlayingABreak()
+    {
+        fuel.Initialize(1f, 10f);
+        int breaks = 0;
+        controller.EmberBroken += () => breaks++;
+        controller.SetFlared(true);
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        controller.ResetToDim();
+        controller.TickScout(controller.FlareScoutDuration);
+        Assert.That(breaks, Is.Zero);
+        Assert.That(controller.FlareBlend, Is.Zero);
+        Assert.That(controller.HasActiveScout, Is.False);
     }
 
     [UnityTearDown]

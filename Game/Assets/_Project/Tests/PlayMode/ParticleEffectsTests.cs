@@ -69,7 +69,7 @@ public sealed class ParticleEffectsTests
 
         // Stop flare
         lantern.SetFlared(false);
-        yield return null;
+        yield return new WaitForSeconds(lantern.TransitionDuration + 0.05f);
 
         Assert.That(sparks.CurrentEmissionRate, Is.EqualTo(initialRate).Within(0.1f),
             "Returning to Dim mode should restore normal spark emission rate.");

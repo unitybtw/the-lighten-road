@@ -197,7 +197,7 @@ namespace TheLightenRoad.Player
 
             // Turn lantern back to Dim mode if needed
             if (lantern != null)
-                lantern.SetFlared(false);
+                lantern.ResetToDim();
 
             // Re-center camera cleanly
             if (followCamera != null)

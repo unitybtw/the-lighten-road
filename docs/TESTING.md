@@ -38,6 +38,6 @@ After adding the secrets, manually run **Project checks** and confirm **Unity Pl
 
 ## Latest local gameplay baseline
 
-On **2026-10-16**, Unity **6000.3.2f1** ran **53 Play Mode tests: 53 passed, 0 failed, 0 skipped**, through Unity MCP on macOS. Assemblies: `TheLightenRoad.Player.PlayModeTests` and `TheLightenRoad.Sirac.TestChamber.PlayModeTests`. This includes movement, camera, lantern fuel and controller, pickups, HUD, particles, respawn, and the archive test-chamber route/checkpoint/restart checks. This is local Editor evidence, not a GitHub-hosted test run.
+On **2026-10-16**, Unity **6000.3.2f1** ran **59 Play Mode tests: 59 passed, 0 failed, 0 skipped**, through Unity MCP on macOS. Assemblies: `TheLightenRoad.Player.PlayModeTests` and `TheLightenRoad.Sirac.TestChamber.PlayModeTests`. This includes movement, camera, lantern fuel and controller, pickups, HUD, particles, respawn, and the archive test-chamber route/checkpoint/restart checks. This is local Editor evidence, not a GitHub-hosted test run.
 
 The README team activity generator remains a separate, manually triggered workflow. Its bot commits are excluded from the contribution graphic.

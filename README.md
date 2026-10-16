@@ -49,7 +49,7 @@ The MVP focuses on **two Office stages** with movement and jumping, the lantern 
 
 ## Current status
 
-The shared Unity project uses **Unity 6000.3.2f1 / Universal 2D**. Siraç's sandbox combines horizontal movement, one grounded jump, camera follow, lantern fuel / Dim-Flare prototype, and an ember pickup. All **53 automated Play Mode tests passed locally on 2026-10-16** (movement, camera, lantern fuel API, controller mode switching, and pickup prefab integration). Ember Veins, Office stages, and a standalone playable build remain planned.
+The shared Unity project uses **Unity 6000.3.2f1 / Universal 2D**. Siraç's sandbox combines horizontal movement, one grounded jump, camera follow, lantern fuel / Dim-Flare prototype, and an ember pickup. All **59 automated Play Mode tests passed locally on 2026-10-16** (movement, camera, lantern fuel API, controller mode switching, and pickup prefab integration). Ember Veins, Office stages, and a standalone playable build remain planned.
 
 - [x] Latest supplied GDD archived
 - [x] Editable GDD and project overview
@@ -59,7 +59,7 @@ The shared Unity project uses **Unity 6000.3.2f1 / Universal 2D**. Siraç's sand
 - [x] Prototype movement, single jump, and camera follow in Siraç's sandbox
 - [x] Add lantern fuel API and Dim / Flare sandbox prototype (with `TheLightenRoad.Lantern.asmdef`)
 - [x] Add a reusable lantern fuel pickup to Siraç's sandbox
-- [x] 53 automated Play Mode tests passing locally in Unity Test Runner (2026-10-16)
+- [x] 59 automated Play Mode tests passing locally in Unity Test Runner (2026-10-16)
 - [ ] Integrate Ember Veins with the shared lantern API
 - [ ] Build and playtest the two Office stages
 - [ ] Polish art, sound, puzzle readability, and recovery after failure
@@ -76,9 +76,11 @@ cd the-lighten-road
 
 Open `Game/` in Unity Hub with editor **6000.3.2f1**, then open `Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity` and press Play. Use **A/D or Left/Right** to move, **Space** to jump, and the current temporary **F** binding to toggle the lantern between Dim and Flare. The Game view shows the fuel meter. Start with [Game/README.md](Game/README.md) for setup and tests, and [docs/GDD.md](docs/GDD.md) for the design. Final input bindings, fuel balance, target platforms, and build instructions still need team review.
 
+The latest [ember and lantern prototype update](docs/FEEDBACK-2026-10-16.md) adds gradual Dim/Flare transitions, two-use ember fading and cracking, a quieter HUD, and three pickups in Siraç's archive test chamber. Icons, crack audio, and backdrop are prototype assets.
+
 ## Automated checks
 
-[Project checks](https://github.com/unitybtw/the-lighten-road/actions/workflows/project-checks.yml) runs weekly, on relevant pull requests, and manually. It checks Unity asset metadata, GUID collisions, project files, build scene links, and tooling regressions. Hosted Unity gameplay tests require license secrets and are explicitly marked **NOT RUN** until configured. The latest local Unity baseline is **53/53 passing Play Mode tests**; see [testing and CI setup](docs/TESTING.md) for scope, results, and activation.
+[Project checks](https://github.com/unitybtw/the-lighten-road/actions/workflows/project-checks.yml) runs weekly, on relevant pull requests, and manually. It checks Unity asset metadata, GUID collisions, project files, build scene links, and tooling regressions. Hosted Unity gameplay tests require license secrets and are explicitly marked **NOT RUN** until configured. The latest local Unity baseline is **59/59 passing Play Mode tests**; see [testing and CI setup](docs/TESTING.md) for scope, results, and activation.
 
 ## Working as a team
 

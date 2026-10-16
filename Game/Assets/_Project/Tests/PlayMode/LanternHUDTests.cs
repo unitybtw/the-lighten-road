@@ -105,6 +105,9 @@ public sealed class LanternHUDTests
 
         controller.SetFlared(false);
         Step(0.05f);
+        Assert.That(hud.ModeText, Is.EqualTo("DIMMING"));
+        controller.TickScout(controller.TransitionDuration);
+        Step(0.05f);
         Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
     }
 
@@ -160,8 +163,55 @@ public sealed class LanternHUDTests
         Assert.That(hud.IsShowingSpend, Is.True);
 
         controller.SetFlared(false);
+        controller.TickScout(controller.TransitionDuration);
         Step(0.05f);
         Assert.That(hud.ScoutProgress, Is.Zero);
+    }
+
+    [Test]
+    public void EmberWearTracksTwoUsesAndBreaksOnceAtZero()
+    {
+        fuel.Initialize(2f, 10f);
+        Step(0.05f);
+        controller.SetFlared(true);
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        Step(0.05f);
+        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.75f).Within(0.001f));
+        Assert.That(hud.GetSlotSprite(0), Is.SameAs(PixelSprites.EmberFull));
+        Assert.That(hud.GetSlotColor(0), Is.Not.EqualTo(Color.white));
+        Assert.That(hud.ActiveCrackAmount, Is.Zero);
+        controller.TickScout(controller.FlareScoutDuration);
+        Step(0.05f);
+        Assert.That(hud.GetSlotSprite(0), Is.SameAs(PixelSprites.EmberHalf));
+        Assert.That(hud.BreakFeedbackCount, Is.Zero);
+        controller.SetFlared(true);
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        Step(0.05f);
+        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
+        Assert.That(hud.GetSlotCrackAlpha(0), Is.GreaterThan(0f));
+        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.25f).Within(0.001f));
+        controller.TickScout(controller.FlareScoutDuration);
+        Step(0.7f);
+        Assert.That(hud.GetSlotColor(0), Is.EqualTo(Color.clear));
+        Assert.That(hud.BreakFeedbackCount, Is.EqualTo(1));
+        Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
+    }
+
+    [Test]
+    public void PickupDuringBurnKeepsOneCorrectlyFadingEmber()
+    {
+        fuel.Initialize(2f, 10f);
+        Step(0.05f);
+        controller.SetFlared(true);
+        controller.TickScout(controller.FlareScoutDuration * 0.5f);
+        Step(0.05f);
+        fuel.AddEmbers(1);
+        Step(0.05f);
+        Assert.That(controller.ScoutEmberIndex, Is.EqualTo(1));
+        Assert.That(hud.GetSlotColor(0), Is.EqualTo(Color.white));
+        Assert.That(hud.GetSlotColor(1), Is.Not.EqualTo(Color.white));
+        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.75f).Within(0.001f));
+        Assert.That(hud.PickupText, Is.EqualTo("+1 EMBER"));
     }
 
     [Test]

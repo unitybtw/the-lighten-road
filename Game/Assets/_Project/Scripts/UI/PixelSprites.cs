@@ -21,6 +21,8 @@ namespace TheLightenRoad.UI
         private static Sprite emberFull;
         private static Sprite emberHalf;
         private static Sprite emberEmpty;
+        private static Sprite emberCracks;
+        private static Sprite emberFragments;
 
         public static Sprite White => white != null ? white : white = Build(new[] { "#" },
             c => Color.white);
@@ -82,50 +84,36 @@ namespace TheLightenRoad.UI
             "........",
         };
 
-        // 10x10 Ember Full
+        // Asymmetric rough stone placeholders. Replace through LanternHUD's art slots.
         private static readonly string[] EmberFullMap =
         {
-            "....##....",
-            "...#++#...",
-            "..#++++#..",
-            ".#++@@++#.",
-            ".#+@@@@+#.",
-            ".#+@@@@+#.",
-            ".#++@@++#.",
-            "..#++++#..",
-            "...#++#...",
-            "....##....",
+            "...##.....", "..#++#....", "..#+@+#...", ".#++@++#..", ".#+@@@+#..",
+            ".#+@@++#..", "..#++@++#.", "..#+++++#.", "...#+++#..", "....###...",
         };
-
-        // 10x10 Ember Half
         private static readonly string[] EmberHalfMap =
         {
-            "....##....",
-            "...#+-#...",
-            "..#++--#..",
-            ".#++@---#.",
-            ".#+@@---#.",
-            ".#+@@---#.",
-            ".#++@---#.",
-            "..#++--#..",
-            "...#+-#...",
-            "....##....",
+            "...##.....", "..#--#....", "..#-+-#...", ".#--+--#..", ".#-+++-#..",
+            ".#-++--#..", "..#--+--#.", "..#-----#.", "...#---#..", "....###...",
         };
-
-        // 10x10 Ember Empty socket
         private static readonly string[] EmberEmptyMap =
         {
-            "....##....",
-            "...#..#...",
-            "..#....#..",
-            ".#......#.",
-            ".#......#.",
-            ".#......#.",
-            ".#......#.",
-            "..#....#..",
-            "...#..#...",
-            "....##....",
+            "...##.....", "..#..#....", "..#...#...", ".#.....#..", ".#.....#..",
+            ".#.....#..", "..#.....#.", "..#.....#.", "...#...#..", "....###...",
         };
+        private static readonly string[] EmberCrackMap =
+        {
+            "....#.....", "....#.....", "...#......", "...##.....", "....#.....",
+            "...#.##...", "..#...#...", "......#...", ".....#....", ".....#....",
+        };
+        public static Sprite EmberCracks => emberCracks != null ? emberCracks : emberCracks = Build(EmberCrackMap,
+            c => c == '#' ? Color.white : Color.clear);
+        private static readonly string[] EmberFragmentMap =
+        {
+            "..##......", "..#....#..", "......##..", "..........", "...#......",
+            "..##..#...", "......##..", "..#.......", "...#......", "..........",
+        };
+        public static Sprite EmberFragments => emberFragments != null ? emberFragments : emberFragments = Build(EmberFragmentMap,
+            c => c == '#' ? new Color(0.6f, 0.56f, 0.48f, 1f) : Color.clear);
 
         public static Sprite LanternFrame => lanternFrame != null ? lanternFrame : lanternFrame = Build(LanternMap, c =>
         {
@@ -171,8 +159,8 @@ namespace TheLightenRoad.UI
             switch (c)
             {
                 case '#': return new Color32(48, 24, 12, 255);
-                case '+': return new Color32(255, 140, 32, 255);
-                case '@': return new Color32(255, 242, 180, 255);
+                case '+': return new Color32(190, 112, 46, 255);
+                case '@': return new Color32(244, 210, 135, 255);
                 default: return Color.clear;
             }
         });
@@ -182,8 +170,8 @@ namespace TheLightenRoad.UI
             switch (c)
             {
                 case '#': return new Color32(48, 24, 12, 255);
-                case '+': return new Color32(255, 120, 24, 255);
-                case '@': return new Color32(255, 220, 150, 255);
+                case '+': return new Color32(142, 88, 44, 255);
+                case '@': return new Color32(196, 151, 86, 255);
                 case '-': return new Color32(75, 58, 48, 200);
                 default: return Color.clear;
             }

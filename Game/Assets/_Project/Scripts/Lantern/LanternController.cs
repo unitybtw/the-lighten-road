@@ -35,6 +35,10 @@ namespace TheLightenRoad.Lantern
         [SerializeField, Min(1f)] private float flareScoutDuration = 6.0f;
         [SerializeField] private bool useTimedScoutMode = true;
 
+        [Header("Light transition")]
+        [Tooltip("Fade time is included in the scout duration, not added after it.")]
+        [SerializeField, Min(0.05f)] private float transitionDuration = 0.65f;
+
         [Header("2D Dynamic Shadows")]
         [SerializeField] private bool enableShadows = true;
         [SerializeField, Range(0f, 1f)] private float shadowIntensity = 0.85f;
@@ -53,9 +57,22 @@ namespace TheLightenRoad.Lantern
         private LanternFuel fuel;
         private Keyboard keyboard;
         private float flareTimer;
+        private float flareBlend;
+        private float scoutElapsed;
+        private float burnProgress;
+        private float releaseElapsed;
+        private float releaseDuration;
+        private float releaseStartBlend;
+        private float releaseStartProgress;
+        private int scoutChargesBefore;
+        private bool activeScout;
+        private bool releasing;
+        private bool reservingCharge;
 
         /// <summary>Raised when the lantern switches between Dim (false) and Flare (true).</summary>
         public event System.Action<bool> FlareChanged;
+        /// <summary>Raised once after the second use finishes, never when the first use starts.</summary>
+        public event System.Action EmberBroken;
 
         public bool IsFlared { get; private set; }
         public bool ShowDebugOverlay { get => showDebugOverlay; set => showDebugOverlay = value; }
@@ -70,6 +87,14 @@ namespace TheLightenRoad.Lantern
         public float FlareRadius => flareRadius;
         public float FlareTimer => flareTimer;
         public float FlareScoutDuration => flareScoutDuration;
+        public float TransitionDuration => transitionDuration;
+        public float FlareBlend => flareBlend;
+        public bool HasActiveScout => activeScout;
+        public bool IsDimming => releasing;
+        public float ScoutProgress => activeScout ? 1f - burnProgress : 0f;
+        public int ScoutEmberIndex => fuel != null ? fuel.TotalCharges / 2 : 0;
+        public bool ScoutIsSecondUse => scoutChargesBefore % 2 == 1;
+        public float ScoutEmberLevel => (ScoutIsSecondUse ? 0.5f : 1f) - 0.5f * burnProgress;
         public bool EnableShadows { get => enableShadows; set { enableShadows = value; ApplyLight(); } }
         public float ShadowIntensity { get => shadowIntensity; set { shadowIntensity = value; ApplyLight(); } }
         public float ShadowSoftness { get => shadowSoftness; set { shadowSoftness = value; ApplyLight(); } }
@@ -93,65 +118,116 @@ namespace TheLightenRoad.Lantern
             if (keyboard != null && keyboard[toggleFlareKey].wasPressedThisFrame)
                 ToggleFlare();
 
-            if (IsFlared)
+            TickScout(Time.deltaTime);
+        }
+
+        /// <summary>Advance the shared light / ember timeline using scaled gameplay time.</summary>
+        public void TickScout(float deltaTime)
+        {
+            float dt = Mathf.Max(0f, deltaTime);
+            if (activeScout)
             {
-                if (useTimedScoutMode)
+                if (releasing)
                 {
-                    flareTimer -= Time.deltaTime;
-                    if (flareTimer <= 0f)
-                    {
-                        SetFlared(false);
-                    }
+                    releaseElapsed += dt;
+                    float t = Mathf.Clamp01(releaseElapsed / Mathf.Max(0.001f, releaseDuration));
+                    float eased = Mathf.SmoothStep(0f, 1f, t);
+                    flareBlend = Mathf.Lerp(releaseStartBlend, 0f, eased);
+                    burnProgress = Mathf.Lerp(releaseStartProgress, 1f, eased);
+                    flareTimer = Mathf.Max(0f, releaseDuration - releaseElapsed);
+                    if (t >= 1f) FinishScout();
                 }
                 else
                 {
-                    fuel.TickLanternDrain(true, Time.deltaTime);
-                }
-            }
-
-            ApplyLight();
-        }
-
-        public void ToggleFlare()
-        {
-            SetFlared(!IsFlared);
-        }
-
-        public bool SetFlared(bool flared)
-        {
-            if (flared)
-            {
-                if (fuel.CurrentFuel <= 0f)
-                    return false;
-
-                if (!IsFlared)
-                {
-                    // Deduct 1 charge when activating Flare scout mode
-                    if (useTimedScoutMode)
-                    {
-                        if (!fuel.TrySpendFuel(1f))
-                            return false;
-                        flareTimer = flareScoutDuration;
-                    }
+                    scoutElapsed = Mathf.Min(flareScoutDuration, scoutElapsed + dt);
+                    flareTimer = Mathf.Max(0f, flareScoutDuration - scoutElapsed);
+                    burnProgress = Mathf.Clamp01(scoutElapsed / Mathf.Max(0.001f, flareScoutDuration));
+                    float fade = Mathf.Min(transitionDuration, flareScoutDuration * 0.5f);
+                    flareBlend = Mathf.Min(Mathf.SmoothStep(0f, 1f, scoutElapsed / fade),
+                        Mathf.SmoothStep(0f, 1f, flareTimer / fade));
+                    if (flareTimer <= 0f) FinishScout();
                 }
             }
             else
             {
-                flareTimer = 0f;
+                if (IsFlared && !useTimedScoutMode)
+                    fuel.TickLanternDrain(true, dt);
+                flareBlend = Mathf.MoveTowards(flareBlend, IsFlared ? 1f : 0f,
+                    dt / Mathf.Max(0.05f, transitionDuration));
             }
-
-            if (IsFlared == flared)
-                return true;
-
-            IsFlared = flared;
             ApplyLight();
+        }
+
+        public void ToggleFlare() => SetFlared(!IsFlared);
+
+        public bool SetFlared(bool flared)
+        {
+            if (IsFlared == flared) return true;
+            if (flared)
+            {
+                // An early release must finish before another charge can be reserved.
+                if (activeScout || fuel.CurrentFuel < (useTimedScoutMode ? 1f : 0.001f)) return false;
+                if (useTimedScoutMode)
+                {
+                    scoutChargesBefore = fuel.TotalCharges;
+                    reservingCharge = true;
+                    bool spent;
+                    try { spent = fuel.TrySpendCharge(); }
+                    finally { reservingCharge = false; }
+                    if (!spent) return false;
+                    scoutElapsed = burnProgress = releaseElapsed = 0f;
+                    releasing = false;
+                    activeScout = true;
+                    flareTimer = flareScoutDuration;
+                }
+            }
+            else if (activeScout)
+            {
+                releasing = true;
+                releaseElapsed = 0f;
+                releaseDuration = Mathf.Min(transitionDuration, flareTimer);
+                releaseStartBlend = flareBlend;
+                releaseStartProgress = burnProgress;
+                flareTimer = releaseDuration;
+            }
+            IsFlared = flared;
             FlareChanged?.Invoke(IsFlared);
+            ApplyLight();
             return true;
+        }
+
+        private void FinishScout()
+        {
+            if (!activeScout) return;
+            bool broken = ScoutIsSecondUse;
+            activeScout = releasing = false;
+            flareTimer = flareBlend = 0f;
+            burnProgress = 1f;
+            bool changed = IsFlared;
+            IsFlared = false;
+            if (changed) FlareChanged?.Invoke(false);
+            if (broken) EmberBroken?.Invoke();
+        }
+
+        /// <summary>Reset/retry cancels presentation without playing an ember break.</summary>
+        public void ResetToDim()
+        {
+            bool changed = IsFlared;
+            IsFlared = activeScout = releasing = false;
+            flareTimer = flareBlend = burnProgress = 0f;
+            if (changed) FlareChanged?.Invoke(false);
+            ApplyLight();
         }
 
         private void HandleFuelDepleted()
         {
-            SetFlared(false);
+            // Spending the last reserved charge still grants its complete scout duration.
+            if (!reservingCharge) SetFlared(false);
+        }
+
+        private void OnDestroy()
+        {
+            if (fuel != null) fuel.FuelDepleted -= HandleFuelDepleted;
         }
 
         private void ApplyLight()
@@ -178,8 +254,8 @@ namespace TheLightenRoad.Lantern
                 flicker = 1f + noise * flickerIntensity;
             }
 
-            lanternLight.intensity = (IsFlared ? flareIntensity : dimIntensity) * pulse * flicker;
-            lanternLight.pointLightOuterRadius = (IsFlared ? flareRadius : dimRadius) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
+            lanternLight.intensity = Mathf.Lerp(dimIntensity, flareIntensity, flareBlend) * pulse * flicker;
+            lanternLight.pointLightOuterRadius = Mathf.Lerp(dimRadius, flareRadius, flareBlend) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
         }
 
         private void OnGUI()

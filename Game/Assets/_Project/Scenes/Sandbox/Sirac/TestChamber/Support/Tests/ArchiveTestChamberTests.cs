@@ -128,6 +128,6 @@ public sealed class ArchiveTestChamberTests
         Assert.That(director.CheckpointIndex, Is.Zero);
         Assert.That(director.IsComplete, Is.False);
         Assert.That(motor.Body.position.x, Is.EqualTo(-5f).Within(0.2f));
-        Assert.That(director.GetComponentsInChildren<EmberPickup>().Length, Is.EqualTo(8));
+        Assert.That(director.GetComponentsInChildren<EmberPickup>().Length, Is.EqualTo(3));
     }
 }

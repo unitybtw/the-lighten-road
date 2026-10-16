@@ -8,17 +8,19 @@ The map uses the existing player, ember pickup, lantern, HUD, and respawn prefab
 
 | Section | Position | What to test |
 | --- | --- | --- |
-| Intake | Start x=-5 | Safe movement, lantern visibility, the first pickup, and initial instructions. |
-| Archive stacks | x=1–14 | 0.65m / 1m obstacles, variable jumps, camera look-ahead, optional 2m-high mezzanine, and an upper pickup. |
+| Intake | Start x=-5 | Safe movement, lantern visibility, initial instructions, and a safe start. |
+| Archive stacks | x=1–14 | 0.65m / 1m obstacles, variable jumps, camera look-ahead, optional 2m-high mezzanine, and an optional upper pickup. |
 | Service crossing | x=14–28 | Checkpoint 01, two 2m trenches separated by a 3m island, hazard death, and a recoverable retry. |
 | Blackout corridor | x=28–44 | Checkpoint 02, a 4.2m ceiling, obstacle silhouettes, 2D shadows, Flare scouting, and the final 2m trench. |
 | Recovery / archive access | x=44–62 | Resource recovery, final jump obstacles, the exit trigger at x=57.5, and restart feedback. |
 
 There is no global ambient illumination. Structural surfaces and background props use a local URP 2D lit material. World labels appear within the lantern's scouting range rather than revealing the entire route through darkness. The crate texture and character are existing project art; wall panels, shelves, pipework, and trench beds are editable blockout geometry.
 
+The stage contains **three pickups**, spaced at the archive mezzanine, service crossing, and recovery section. This follows Furkan's 2–3 pickup target; the backdrop remains prototype blockout art.
+
 ## Retry and reset
 
-Checkpoint triggers record safe spawn positions at x=14 and x=32.5. Later checkpoints take precedence over earlier ones. Hazards use the existing player death/respawn flow, restoring six charges on retry. Backspace restores the starting checkpoint, all eight ember pickups, and the exit state without reloading another teammate's scene or requiring build-settings changes.
+Checkpoint triggers record safe spawn positions at x=14 and x=32.5. Later checkpoints take precedence over earlier ones. Hazards use the existing player death/respawn flow, restoring six charges on retry. Backspace restores the starting checkpoint, all three ember pickups, and the exit state without reloading another teammate's scene or requiring build-settings changes.
 
 ## Verification
 

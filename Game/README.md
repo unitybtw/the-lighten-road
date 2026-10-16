@@ -14,9 +14,13 @@ The scene contains a floor, boundary walls, three ascending platforms, the reusa
 
 ## Validation
 
-In `Window > General > Test Runner`, select **PlayMode** and run `TheLightenRoad.Player.PlayModeTests` and `TheLightenRoad.Sirac.TestChamber.PlayModeTests`. On **2026-10-16**, all **53 tests passed** in Unity 6000.3.2f1 through Unity MCP on macOS: movement, camera, lantern fuel and controller, pickups, HUD, particles, respawn, and the archive test chamber. These results do not establish final game feel or physical gamepad support.
+In `Window > General > Test Runner`, select **PlayMode** and run `TheLightenRoad.Player.PlayModeTests` and `TheLightenRoad.Sirac.TestChamber.PlayModeTests`. On **2026-10-16**, all **59 tests passed** in Unity 6000.3.2f1 through Unity MCP on macOS: movement, camera, lantern fuel and controller, pickups, HUD, particles, respawn, and the archive test chamber. These results do not establish final game feel or physical gamepad support.
 
 [Project checks](../docs/TESTING.md) runs license-free project validation weekly, on relevant pull requests, and manually. GitHub-hosted Unity tests are configured but require repository license secrets before they can run; their skipped state is reported separately from passing integrity checks.
+
+## Latest ember feedback
+
+[Furkan's 2026-10-16 feedback](../docs/FEEDBACK-2026-10-16.md) is implemented in the current prototype: six-second scouts include their light transitions, first-use embers fade to half, second-use embers crack and disappear with a short placeholder sound, and the HUD uses the stone itself as the timer. Artist sprites and sound can be assigned in `LanternHUD`; final artwork remains pending. Siraç's archive chamber contains three pickups.
 
 ## Unity MCP tooling
 
