@@ -1,0 +1,16 @@
+{
+    "name": "TheLightenRoad.Interaction",
+    "rootNamespace": "",
+    "references": [
+        "GUID:05883718e3ef1448fa862c8d1b8f7888"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
