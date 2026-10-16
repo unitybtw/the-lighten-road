@@ -21,8 +21,8 @@ namespace TheLightenRoad.Lantern
         [SerializeField] private Light2D lanternLight;
         [SerializeField, Min(0f)] private float dimIntensity = 0.55f;
         [SerializeField, Min(0f)] private float flareIntensity = 1.25f;
-        [Tooltip("50% of old Flare radius (2.75 units).")]
-        [SerializeField, Min(0.01f)] private float dimRadius = 2.75f;
+        [Tooltip("Reduced by 30% from 2.75 to 1.925 units per Furkan's balancing feedback to limit dimmed visibility.")]
+        [SerializeField, Min(0.01f)] private float dimRadius = 1.925f;
         [Tooltip("200% of old Flare radius (11.0 units).")]
         [SerializeField, Min(0.01f)] private float flareRadius = 11.0f;
         [SerializeField] private Color lanternColor = new Color(1f, 0.58f, 0.22f);

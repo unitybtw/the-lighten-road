@@ -251,7 +251,7 @@ MonoBehaviour:
   lanternLight: {fileID: 2300634082449694988}
   dimIntensity: 0.55
   flareIntensity: 1.25
-  dimRadius: 2.75
+  dimRadius: 1.925
   flareRadius: 11
   lanternColor: {r: 1, g: 0.58, b: 0.22, a: 1}
   lowFuelThreshold: 0.25

@@ -39,8 +39,8 @@ public sealed class LanternControllerTests
     [Test]
     public void RadiiMatchFurkanSpecifications()
     {
-        // 50% of old 5.5 = 2.75, 200% of old 5.5 = 11.0
-        Assert.That(controller.DimRadius, Is.EqualTo(2.75f).Within(0.01f));
+        // Reduced by 30% from 2.75 to ~1.925 per Furkan's balancing feedback; Flare remains 11.0
+        Assert.That(controller.DimRadius, Is.EqualTo(1.925f).Within(0.01f));
         Assert.That(controller.FlareRadius, Is.EqualTo(11.0f).Within(0.01f));
     }
 
