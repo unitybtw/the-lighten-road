@@ -95,10 +95,39 @@ Replaced the legacy debug IMGUI overlay with a fully procedural pixel-art HUD re
   - `LegacyDebugOverlayIsOffByDefault`: verifies IMGUI overlay is disabled by default.
 - All **28 Play Mode tests passing** in Unity Test Runner.
 
+## Checkpoint 5 — platformer game feel and juice (2026-10-16)
+
+Elevated movement responsiveness in `PlayerMotor2D.cs` with classic high-feel platformer mechanics:
+
+- **Coyote Time (`0.15s`):**
+  - Allows jumping within a $0.15$-second window after walking off a platform ledge into midair. Eliminates the frustrating "missed jump" feeling at platform edges.
+  - Automatically resets upon jump execution so airborne double jumps remain impossible.
+- **Jump Buffering (`0.12s`):**
+  - Remembers jump presses initiated within $0.12$ seconds before touching the ground, automatically triggering an immediate jump the exact frame the player lands.
+- **Variable Jump Height (Jump Cut `0.5x`):**
+  - Releasing Space early while ascending cuts upward velocity in half, allowing players to perform snappy short hops over obstacles or full-height jumps by holding the button.
+- **Automatic Sprite Flipping:**
+  - Automatically updates `FacingDirection` and sets `SpriteRenderer.flipX` based on horizontal movement input with deadzone filtering.
+- **Procedural Squash & Stretch:**
+  - Adds visual-only spring deformation on `visualTransform` without distorting the physical `CapsuleCollider2D`:
+    - **Takeoff Stretch:** Stretches vertically (`0.85x, 1.25y`) to convey upward energy.
+    - **Landing Squash:** Compresses vertically on ground contact (`1.25x, 0.75y`) to convey weight and momentum.
+    - Smoothly recovers toward base scale via configurable recovery speed (`squashRecoverySpeed = 9`).
+
+### Automated Test Coverage (32 Play Mode tests, all passed)
+
+- Added 4 new Play Mode tests in `PlayerMotor2DTests.cs`:
+  - `MovementInputFlipsSpriteDirection`: verifies `FacingDirection` and `SpriteRenderer.flipX` reaction to left/right input.
+  - `CoyoteTimeAllowsJumpShortlyAfterLeavingLedge`: verifies walking past a ledge boundary and executing a jump in midair.
+  - `JumpBufferExecutesUponLanding`: verifies pre-landing jump buffering and immediate takeoff on contact.
+  - `VisualSquashAndStretchReactsToJump`: verifies vertical stretch on jump initiation and smooth recovery.
+- Total **32 Play Mode tests** covering player motor, camera, lantern fuel, dim/flare controller, ember pickups, and HUD.
+
 ### Next checkpoint
 
 Continue expanding player systems in `Sandbox/Sirac/`:
 1. Death & Respawn loop on fuel depletion or hazard contact (`PlayerRespawnController`).
 2. Player sprite integration with Maksim's 24-frame Light character idle animation.
-3. Movement feel polish (Coyote Time & Jump Buffering).
+3. 2D dynamic shadows & organic light flicker in URP.
+
 

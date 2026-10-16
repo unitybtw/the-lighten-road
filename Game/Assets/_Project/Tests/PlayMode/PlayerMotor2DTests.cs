@@ -120,6 +120,94 @@ public sealed class PlayerMotor2DTests
         Assert.That(cameraObject.transform.position.z, Is.EqualTo(-10f).Within(0.01f));
     }
 
+    [UnityTest]
+    public IEnumerator MovementInputFlipsSpriteDirection()
+    {
+        var renderer = player.GetComponentInChildren<SpriteRenderer>();
+        Assert.That(renderer, Is.Not.Null);
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(0.15f);
+        Assert.That(motor.FacingDirection, Is.EqualTo(1));
+        Assert.That(renderer.flipX, Is.False, "Facing right should not flip sprite horizontally.");
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        yield return new WaitForSeconds(0.2f);
+        Assert.That(motor.FacingDirection, Is.EqualTo(-1));
+        Assert.That(renderer.flipX, Is.True, "Facing left must flip sprite horizontally.");
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator CoyoteTimeAllowsJumpShortlyAfterLeavingLedge()
+    {
+        // Place a small test ledge that ends at X = 2.0
+        var ledge = new GameObject("Test Ledge");
+        ledge.transform.position = new Vector3(0f, 0f, 0f);
+        ledge.AddComponent<BoxCollider2D>().size = new Vector2(4f, 1f); // extends from -2.0 to +2.0
+
+        body.position = new Vector2(1.8f, 1.2f);
+        body.linearVelocity = Vector2.zero;
+        yield return new WaitForSeconds(0.3f);
+        Assert.That(motor.IsGrounded, Is.True, "Player must settle on ledge first.");
+
+        // Walk off the right edge of the ledge (past X = 2.0)
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(0.15f);
+        Assert.That(body.position.x, Is.GreaterThan(2.05f), "Player must be past the ledge edge.");
+        Assert.That(motor.IsGrounded, Is.False, "Player is now in the air.");
+        Assert.That(motor.IsInCoyoteTime, Is.True, "Player should be within the coyote time window.");
+
+        // Press jump while in the air during coyote time
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+        yield return new WaitForSeconds(0.08f);
+        Assert.That(body.linearVelocity.y, Is.GreaterThan(2f), "Coyote jump must launch the player upward.");
+
+        Object.Destroy(ledge);
+    }
+
+    [UnityTest]
+    public IEnumerator JumpBufferExecutesUponLanding()
+    {
+        // Drop player from height
+        body.position = new Vector2(0f, 2.5f);
+        body.linearVelocity = Vector2.zero;
+        yield return new WaitForSeconds(0.1f);
+        Assert.That(motor.IsGrounded, Is.False);
+
+        // Press jump while still ~0.08s above the floor
+        yield return new WaitForSeconds(0.2f);
+        Assert.That(motor.IsGrounded, Is.False);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+        yield return new WaitForSeconds(0.04f);
+        Assert.That(motor.HasBufferedJump, Is.True, "Jump input must be buffered.");
+
+        // Allow player to touch ground; buffered jump should fire immediately
+        yield return new WaitForSeconds(0.12f);
+        Assert.That(body.linearVelocity.y, Is.GreaterThan(1f), "Buffered jump must propel player upward upon landing.");
+    }
+
+    [UnityTest]
+    public IEnumerator VisualSquashAndStretchReactsToJump()
+    {
+        Vector3 initialScale = motor.CurrentVisualScale;
+
+        // Trigger jump
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+        yield return new WaitForSeconds(0.05f);
+
+        // During jump initiation, visual scale should stretch vertically (Y > initial Y)
+        Assert.That(motor.CurrentVisualScale.y, Is.GreaterThan(initialScale.y * 1.02f),
+            "Visual should stretch vertically upon jump takeoff.");
+
+        // Wait for recovery
+        yield return new WaitForSeconds(0.4f);
+        Assert.That(motor.CurrentVisualScale.y, Is.EqualTo(initialScale.y).Within(0.08f),
+            "Visual scale should smoothly recover toward base scale.");
+    }
+
     [UnityTearDown]
     public IEnumerator TearDown()
     {

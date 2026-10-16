@@ -200,6 +200,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerMotor2D
   moveSpeed: 5
   jumpSpeed: 9
+  coyoteTime: 0.15
+  jumpBufferTime: 0.12
+  variableJumpHeight: 1
+  jumpCutMultiplier: 0.5
+  spriteRenderer: {fileID: 8652911498168288635}
+  visualTransform: {fileID: 4784108273523114100}
+  enableSquashAndStretch: 1
+  jumpStretch: {x: 0.85, y: 1.25}
+  landSquash: {x: 1.25, y: 0.75}
+  squashRecoverySpeed: 9
   groundCheckDistance: 0.06
   groundLayers:
     serializedVersion: 2
