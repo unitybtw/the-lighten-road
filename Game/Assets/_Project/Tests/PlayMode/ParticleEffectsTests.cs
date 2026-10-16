@@ -46,8 +46,7 @@ public sealed class ParticleEffectsTests
         playerGo.transform.SetParent(testRoot.transform);
 
         var fuel = playerGo.AddComponent<LanternFuel>();
-        fuel.Capacity = 100f;
-        fuel.CurrentFuel = 100f;
+        fuel.Initialize(100f, 100f);
 
         var lantern = playerGo.AddComponent<LanternController>();
 
@@ -62,21 +61,21 @@ public sealed class ParticleEffectsTests
         Assert.That(initialRate, Is.GreaterThan(0f));
 
         // Flare the lantern
-        lantern.StartFlare();
+        lantern.SetFlared(true);
         yield return null;
 
         Assert.That(sparks.CurrentEmissionRate, Is.GreaterThan(initialRate),
             "Flare mode should significantly increase spark emission rate.");
 
         // Stop flare
-        lantern.StopFlare();
+        lantern.SetFlared(false);
         yield return null;
 
         Assert.That(sparks.CurrentEmissionRate, Is.EqualTo(initialRate).Within(0.1f),
             "Returning to Dim mode should restore normal spark emission rate.");
 
         // Drain fuel to 0
-        fuel.Consume(100f);
+        fuel.TrySpendFuel(100f);
         yield return null;
 
         Assert.That(sparks.CurrentEmissionRate, Is.EqualTo(0f),
