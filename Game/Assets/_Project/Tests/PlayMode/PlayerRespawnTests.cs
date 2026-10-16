@@ -73,7 +73,7 @@ public sealed class PlayerRespawnTests
 
         yield return null;
 
-        Assert.That(respawnController.State, Is.AnyOf(RespawnState.Dying, RespawnState.Dead));
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dying).Or.EqualTo(RespawnState.Dead));
         Assert.That(respawnController.LastDeathReason, Is.EqualTo(DeathReason.Darkness));
         Assert.That(motor.enabled, Is.False, "Player motor should be disabled upon death.");
         Assert.That(overlay.IsVisible, Is.True, "Death screen overlay should activate.");
@@ -85,7 +85,7 @@ public sealed class PlayerRespawnTests
         player.transform.position = new Vector3(0f, -4f, 0f);
         yield return null;
 
-        Assert.That(respawnController.State, Is.AnyOf(RespawnState.Dying, RespawnState.Dead));
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dying).Or.EqualTo(RespawnState.Dead));
         Assert.That(respawnController.LastDeathReason, Is.EqualTo(DeathReason.Void));
     }
 
@@ -102,7 +102,7 @@ public sealed class PlayerRespawnTests
         yield return new WaitForFixedUpdate();
         yield return null;
 
-        Assert.That(respawnController.State, Is.AnyOf(RespawnState.Dying, RespawnState.Dead));
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dying).Or.EqualTo(RespawnState.Dead));
         Assert.That(respawnController.LastDeathReason, Is.EqualTo(DeathReason.Hazard));
 
         Object.Destroy(hazardGo);
@@ -126,5 +126,7 @@ public sealed class PlayerRespawnTests
         Assert.That(player.transform.position.x, Is.EqualTo(respawnController.SpawnPosition.x).Within(0.1f));
         Assert.That(player.transform.position.y, Is.EqualTo(respawnController.SpawnPosition.y).Within(0.1f));
         Assert.That(fuel.CurrentFuel, Is.EqualTo(respawnController.RespawnFuelAmount).Within(0.1f));
+
+        yield return null;
     }
 }
