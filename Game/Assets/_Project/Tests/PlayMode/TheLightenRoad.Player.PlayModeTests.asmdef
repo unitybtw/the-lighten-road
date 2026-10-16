@@ -5,6 +5,7 @@
     "TheLightenRoad.Lantern",
     "TheLightenRoad.UI",
     "TheLightenRoad.Effects",
+    "TheLightenRoad.Audio",
     "UnityEngine.UI",
     "Unity.InputSystem",
     "Unity.RenderPipelines.Universal.Runtime",
