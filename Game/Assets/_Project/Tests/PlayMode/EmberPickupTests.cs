@@ -103,6 +103,122 @@ public sealed class EmberPickupTests
 #endif
     }
 
+    [UnityTest]
+    public IEnumerator DormantAndInvisibleInPureDarknessWhenOutOfLight()
+    {
+#if UNITY_EDITOR
+        var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Project/Prefabs/PlayerPrototype.prefab");
+        var pickupPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Project/Prefabs/EmberPickup.prefab");
+
+        player = Object.Instantiate(playerPrefab, new Vector3(-20f, 0f, 0f), Quaternion.identity);
+        pickup = Object.Instantiate(pickupPrefab, Vector3.zero, Quaternion.identity);
+
+        var ember = pickup.GetComponent<EmberPickup>();
+        Assert.That(ember, Is.Not.Null);
+
+        yield return null;
+        yield return null;
+
+        Assert.That(ember.IsIlluminated, Is.False, "Ember must not be illuminated in darkness.");
+        Assert.That(ember.ReactionProgress, Is.EqualTo(0f));
+        Assert.That(ember.IsFlaredUp, Is.False);
+        Assert.That(ember.VisualRenderer.color.a, Is.EqualTo(0f), "Ember must be completely invisible in pure darkness.");
+        Assert.That(ember.ReactiveLight.intensity, Is.EqualTo(0f), "Reactive light must be 0 in pure darkness.");
+#else
+        Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
+        yield break;
+#endif
+    }
+
+    [UnityTest]
+    public IEnumerator FlaresUpWhenScoutLightVisionExpandsOverIt()
+    {
+#if UNITY_EDITOR
+        var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Project/Prefabs/PlayerPrototype.prefab");
+        var pickupPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Project/Prefabs/EmberPickup.prefab");
+
+        player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+        var rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.gravityScale = 0f;
+            rb.linearVelocity = Vector2.zero;
+        }
+        pickup = Object.Instantiate(pickupPrefab, new Vector3(6f, 0f, 0f), Quaternion.identity);
+
+        var ember = pickup.GetComponent<EmberPickup>();
+        var lantern = player.GetComponent<LanternController>();
+        Assert.That(ember, Is.Not.Null);
+        Assert.That(lantern, Is.Not.Null);
+
+        yield return null;
+        yield return null;
+
+        Assert.That(ember.IsIlluminated, Is.False, "In Dim mode, 6m distance is outside light radius.");
+        Assert.That(ember.ReactionProgress, Is.EqualTo(0f));
+        Assert.That(ember.VisualRenderer.color.a, Is.EqualTo(0f));
+
+        lantern.SetFlared(true);
+        float elapsed = 0f;
+        while (elapsed < 0.6f)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Assert.That(ember.IsIlluminated, Is.True, "Scouting light reached the ember.");
+        Assert.That(ember.ReactionProgress, Is.GreaterThan(0.7f), "Ember must chemically flare up.");
+        Assert.That(ember.IsFlaredUp, Is.True);
+        Assert.That(ember.VisualRenderer.color.a, Is.GreaterThan(0.7f), "Ember must become visible.");
+        Assert.That(ember.ReactiveLight.intensity, Is.GreaterThan(0.4f), "Reactive light must shine.");
+#else
+        Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
+        yield break;
+#endif
+    }
+
+    [UnityTest]
+    public IEnumerator LightsUpWhenPlayerInDimStateComesClose()
+    {
+#if UNITY_EDITOR
+        var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Project/Prefabs/PlayerPrototype.prefab");
+        var pickupPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/_Project/Prefabs/EmberPickup.prefab");
+
+        player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+        var rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.gravityScale = 0f;
+            rb.linearVelocity = Vector2.zero;
+        }
+        pickup = Object.Instantiate(pickupPrefab, new Vector3(1.5f, 0f, 0f), Quaternion.identity);
+
+        var ember = pickup.GetComponent<EmberPickup>();
+        Assert.That(ember, Is.Not.Null);
+
+        float elapsed = 0f;
+        while (elapsed < 0.5f)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Assert.That(ember.IsIlluminated, Is.True, "Player's small light radius must illuminate nearby ember.");
+        Assert.That(ember.IsFlaredUp, Is.True);
+        Assert.That(ember.VisualRenderer.color.a, Is.GreaterThan(0.7f));
+        Assert.That(ember.ReactiveLight.intensity, Is.GreaterThan(0.4f));
+#else
+        Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
+        yield break;
+#endif
+    }
+
     [UnityTearDown]
     public IEnumerator TearDown()
     {
