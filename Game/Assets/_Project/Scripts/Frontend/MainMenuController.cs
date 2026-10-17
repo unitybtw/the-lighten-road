@@ -238,8 +238,8 @@ namespace TheLightenRoad.Frontend
             // Continuous breathing levitation on the Home Title Crest
             if (titleFloatGroup != null)
             {
-                float floatY = MenuPreferences.ReducedMotion ? 0f : Mathf.Sin(age * 1.45f) * 5.5f;
-                titleFloatGroup.anchoredPosition = new Vector2(0f, floatY);
+                float floatY = MenuPreferences.ReducedMotion ? 0f : Mathf.Sin(age * 1.45f) * 5.0f;
+                titleFloatGroup.anchoredPosition = new Vector2(0f, 290f + floatY);
             }
             if (titleAuraImage != null)
             {
@@ -728,8 +728,8 @@ namespace TheLightenRoad.Frontend
 
         private void BuildMinimalHomeView()
         {
-            // Floating Title Container (gently levitates in Update)
-            titleFloatGroup = CreateAnchoredRect("Title Float Group", home, new Vector2(1200f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 265f));
+            // Floating Title Container (gently levitates around y = 290 in Update)
+            titleFloatGroup = CreateAnchoredRect("Title Float Group", home, new Vector2(1200f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 290f));
 
             var titleAura = CreateAnchoredRect("Title Soft Lantern Glow", titleFloatGroup, new Vector2(920f, 260f), new Vector2(0.5f, 0.5f), Vector2.zero);
             titleAuraImage = titleAura.gameObject.AddComponent<Image>();
@@ -737,26 +737,26 @@ namespace TheLightenRoad.Frontend
             titleAuraImage.color = new Color(1.0f, 0.66f, 0.20f, 0.16f);
             titleAuraImage.raycastTarget = false;
 
-            var topCrest = CreateAnchoredRect("Top Ornate Crest", titleFloatGroup, new Vector2(440f, 34f), new Vector2(0.5f, 0.5f), new Vector2(0f, 96f));
+            var topCrest = CreateAnchoredRect("Top Ornate Crest", titleFloatGroup, new Vector2(440f, 34f), new Vector2(0.5f, 0.5f), new Vector2(0f, 92f));
             var topCrestImg = topCrest.gameObject.AddComponent<Image>();
             topCrestImg.sprite = filigreeSprite;
             topCrestImg.color = new Color(1.0f, 0.78f, 0.36f, 0.72f);
             topCrestImg.raycastTarget = false;
 
-            var eyebrow = CreateCenterLabel("Eyebrow", titleFloatGroup, "SOME LIGHTS REFUSE TO DIE", 11.5f, moonlightSilver, new Vector2(680f, 24f), new Vector2(0f, 62f));
+            var eyebrow = CreateCenterLabel("Eyebrow", titleFloatGroup, "SOME LIGHTS REFUSE TO DIE", 11.5f, moonlightSilver, new Vector2(680f, 24f), new Vector2(0f, 58f));
             eyebrow.characterSpacing = 11f;
 
-            var mainTitle = CreateCenterLabel("Title Lighten Road", titleFloatGroup, "THE LIGHTEN ROAD", 68f, radiantIvory, new Vector2(1280f, 88f), new Vector2(0f, 2f));
+            var mainTitle = CreateCenterLabel("Title Lighten Road", titleFloatGroup, "THE LIGHTEN ROAD", 66f, radiantIvory, new Vector2(1280f, 86f), new Vector2(0f, 0f));
             mainTitle.fontStyle = FontStyles.Bold;
             mainTitle.characterSpacing = 13f;
 
-            var midCrest = CreateAnchoredRect("Title Bottom Filigree", titleFloatGroup, new Vector2(580f, 38f), new Vector2(0.5f, 0.5f), new Vector2(0f, -58f));
+            var midCrest = CreateAnchoredRect("Title Bottom Filigree", titleFloatGroup, new Vector2(580f, 36f), new Vector2(0.5f, 0.5f), new Vector2(0f, -56f));
             var midCrestImg = midCrest.gameObject.AddComponent<Image>();
             midCrestImg.sprite = filigreeSprite;
             midCrestImg.color = amberGold;
             midCrestImg.raycastTarget = false;
 
-            activeRealmBadgeText = CreateCenterLabel("Active Realm Text", titleFloatGroup, "REALM I   •   THE RUINED ARCHIVE", 11.5f, amberGold, new Vector2(680f, 24f), new Vector2(0f, -92f));
+            activeRealmBadgeText = CreateCenterLabel("Active Realm Text", titleFloatGroup, "REALM I   •   THE RUINED ARCHIVE", 11.5f, amberGold, new Vector2(680f, 24f), new Vector2(0f, -90f));
             activeRealmBadgeText.characterSpacing = 5f;
 
             // Ultra-Minimal Single-Line Menu Stack (Zero cluttered sub-labels under buttons!)
@@ -765,7 +765,7 @@ namespace TheLightenRoad.Frontend
                 objectName: "Enter the Archive",
                 displayLabel: "ENTER THE ARCHIVE",
                 contextHint: "Awaken the lantern and step into the selected archive realm",
-                yPos: 58f,
+                yPos: 42f,
                 cameraPan: new Vector2(0f, 22f),
                 onClick: Play,
                 isPrimary: true);
@@ -775,7 +775,7 @@ namespace TheLightenRoad.Frontend
                 objectName: "Realms & Chapters",
                 displayLabel: "REALMS",
                 contextHint: "Select between The Ruined Archive, Flooded Mechanisms & Test Chamber",
-                yPos: 2f,
+                yPos: -12f,
                 cameraPan: new Vector2(-28f, 10f),
                 onClick: ShowRealms);
 
@@ -784,7 +784,7 @@ namespace TheLightenRoad.Frontend
                 objectName: "Settings",
                 displayLabel: "SETTINGS",
                 contextHint: "Configure audio mixer levels, display mode, V-Sync & motion",
-                yPos: -50f,
+                yPos: -66f,
                 cameraPan: new Vector2(28f, 4f),
                 onClick: ShowSettings);
 
@@ -793,7 +793,7 @@ namespace TheLightenRoad.Frontend
                 objectName: "Controls & Guide",
                 displayLabel: "CONTROLS",
                 contextHint: "View movement bindings, coyote jump, lantern flare & ember conduits",
-                yPos: -102f,
+                yPos: -120f,
                 cameraPan: new Vector2(-20f, -12f),
                 onClick: ShowControls);
 
@@ -802,7 +802,7 @@ namespace TheLightenRoad.Frontend
                 objectName: "Credits",
                 displayLabel: "CREDITS",
                 contextHint: "Meet the creators and soundscape artists behind The Lighten Road",
-                yPos: -154f,
+                yPos: -174f,
                 cameraPan: new Vector2(20f, -16f),
                 onClick: ShowCredits);
 
@@ -811,7 +811,7 @@ namespace TheLightenRoad.Frontend
                 objectName: "Leave the Light",
                 displayLabel: "EXIT",
                 contextHint: "Extinguish the lantern and return to desktop",
-                yPos: -206f,
+                yPos: -228f,
                 cameraPan: new Vector2(0f, -28f),
                 onClick: ShowQuit);
 
@@ -823,7 +823,7 @@ namespace TheLightenRoad.Frontend
                 12f,
                 moonlightSilver,
                 new Vector2(760f, 26f),
-                new Vector2(0f, -282f));
+                new Vector2(0f, -304f));
             contextWhisperText.characterSpacing = 2f;
         }
 
