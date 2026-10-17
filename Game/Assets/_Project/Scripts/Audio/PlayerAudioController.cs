@@ -40,7 +40,7 @@ namespace TheLightenRoad.Audio
             AttachToAllMotors();
         }
 
-        private static void AttachToAllMotors()
+        public static void AttachToAllMotors()
         {
             var motors = Object.FindObjectsByType<PlayerMotor2D>(FindObjectsSortMode.None);
             foreach (var m in motors)
@@ -52,29 +52,41 @@ namespace TheLightenRoad.Audio
             }
         }
 
+        public void EnsureReferences()
+        {
+            if (motor == null) motor = GetComponent<PlayerMotor2D>() ?? GetComponentInParent<PlayerMotor2D>() ?? GetComponentInChildren<PlayerMotor2D>();
+            if (stamina == null) stamina = GetComponent<PlayerStamina>() ?? GetComponentInParent<PlayerStamina>() ?? GetComponentInChildren<PlayerStamina>();
+            if (lantern == null) lantern = GetComponent<LanternController>() ?? GetComponentInParent<LanternController>() ?? GetComponentInChildren<LanternController>();
+        }
+
         private void Awake()
         {
-            if (motor == null) motor = GetComponent<PlayerMotor2D>();
-            if (stamina == null) stamina = GetComponent<PlayerStamina>();
-            if (lantern == null) lantern = GetComponent<LanternController>();
+            EnsureReferences();
         }
 
         private void OnEnable()
         {
+            EnsureReferences();
+
             if (motor != null)
             {
+                motor.OnJumped -= HandleJumped;
                 motor.OnJumped += HandleJumped;
+                motor.OnLanded -= HandleLanded;
                 motor.OnLanded += HandleLanded;
             }
 
             if (stamina != null)
             {
+                stamina.ExhaustionChanged -= HandleExhaustionChanged;
                 stamina.ExhaustionChanged += HandleExhaustionChanged;
             }
 
             if (lantern != null)
             {
+                lantern.FlareChanged -= HandleFlareChanged;
                 lantern.FlareChanged += HandleFlareChanged;
+                lantern.EmberBroken -= HandleEmberBroken;
                 lantern.EmberBroken += HandleEmberBroken;
             }
 
@@ -110,7 +122,11 @@ namespace TheLightenRoad.Audio
 
         public void TickFootsteps(float dt)
         {
-            if (motor == null) return;
+            if (motor == null)
+            {
+                EnsureReferences();
+                if (motor == null) return;
+            }
 
             bool isMovingOnGround = motor.IsGrounded && (Mathf.Abs(motor.HorizontalSpeed) > 0.15f || Mathf.Abs(motor.HorizontalInput) > 0.1f);
 
@@ -124,11 +140,11 @@ namespace TheLightenRoad.Audio
 
                     if (isSprinting)
                     {
-                        SoundEffectManager.Instance?.PlaySprintFootstep();
+                        SoundEffectManager.Instance.PlaySprintFootstep();
                     }
                     else
                     {
-                        SoundEffectManager.Instance?.PlayWalkFootstep();
+                        SoundEffectManager.Instance.PlayWalkFootstep();
                     }
                 }
             }
@@ -140,30 +156,30 @@ namespace TheLightenRoad.Audio
 
         private void HandleJumped()
         {
-            SoundEffectManager.Instance?.PlayJump();
+            SoundEffectManager.Instance.PlayJump();
         }
 
         private void HandleLanded(float impactSpeed)
         {
-            SoundEffectManager.Instance?.PlayLanding(impactSpeed);
+            SoundEffectManager.Instance.PlayLanding(impactSpeed);
         }
 
         private void HandleExhaustionChanged(bool isExhausted)
         {
-            SoundEffectManager.Instance?.SetExhaustionActive(isExhausted);
+            SoundEffectManager.Instance.SetExhaustionActive(isExhausted);
         }
 
         private void HandleFlareChanged(bool isFlared)
         {
             if (isFlared)
             {
-                SoundEffectManager.Instance?.PlayFlareIgnite();
+                SoundEffectManager.Instance.PlayFlareIgnite();
             }
         }
 
         private void HandleEmberBroken()
         {
-            SoundEffectManager.Instance?.PlayEmberBreak();
+            SoundEffectManager.Instance.PlayEmberBreak();
         }
     }
 }

@@ -1,11 +1,13 @@
 using TheLightenRoad.Lantern;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace TheLightenRoad.Audio
 {
     /// <summary>
     /// Central sound effect manager handling audio source pooling, organic pitch variation,
     /// seamless multi-channel playback, and exhaustion breath looping.
+    /// Auto-instantiates with full CC0 SFX library if missing from any scene.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SoundEffectManager : MonoBehaviour
@@ -18,8 +20,36 @@ namespace TheLightenRoad.Audio
                 if (instance == null)
                 {
                     instance = Object.FindAnyObjectByType<SoundEffectManager>();
+                    if (instance == null)
+                    {
+                        var go = new GameObject("Sound Effect Manager");
+                        instance = go.AddComponent<SoundEffectManager>();
+                        instance.EnsureClipsLoaded();
+                        instance.BuildPool();
+                        if (Application.isPlaying)
+                        {
+                            DontDestroyOnLoad(go);
+                        }
+                    }
                 }
                 return instance;
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoEnsureSoundEffectManager()
+        {
+            if (instance == null)
+            {
+                instance = Object.FindAnyObjectByType<SoundEffectManager>();
+                if (instance == null)
+                {
+                    var go = new GameObject("Sound Effect Manager");
+                    instance = go.AddComponent<SoundEffectManager>();
+                    instance.EnsureClipsLoaded();
+                    instance.BuildPool();
+                    DontDestroyOnLoad(go);
+                }
             }
         }
 
@@ -42,14 +72,14 @@ namespace TheLightenRoad.Audio
         [SerializeField] private AudioClip emberPickupClip;
 
         [Header("Volume Balances")]
-        [SerializeField, Range(0f, 1f)] private float masterSFXVolume = 0.85f;
-        [SerializeField, Range(0f, 1f)] private float footstepsVolume = 0.45f;
-        [SerializeField, Range(0f, 1f)] private float jumpVolume = 0.60f;
-        [SerializeField, Range(0f, 1f)] private float landingVolume = 0.75f;
-        [SerializeField, Range(0f, 1f)] private float flareVolume = 0.85f;
-        [SerializeField, Range(0f, 1f)] private float emberBreakVolume = 0.70f;
-        [SerializeField, Range(0f, 1f)] private float emberPickupVolume = 0.85f;
-        [SerializeField, Range(0f, 1f)] private float exhaustionVolume = 0.55f;
+        [SerializeField, Range(0f, 1f)] private float masterSFXVolume = 1.0f;
+        [SerializeField, Range(0f, 1f)] private float footstepsVolume = 0.75f;
+        [SerializeField, Range(0f, 1f)] private float jumpVolume = 0.85f;
+        [SerializeField, Range(0f, 1f)] private float landingVolume = 0.90f;
+        [SerializeField, Range(0f, 1f)] private float flareVolume = 0.90f;
+        [SerializeField, Range(0f, 1f)] private float emberBreakVolume = 0.85f;
+        [SerializeField, Range(0f, 1f)] private float emberPickupVolume = 0.90f;
+        [SerializeField, Range(0f, 1f)] private float exhaustionVolume = 0.65f;
 
         [Header("Pitch Natural Randomization")]
         [SerializeField, Range(0f, 0.2f)] private float pitchRandomRange = 0.06f;
@@ -111,7 +141,7 @@ namespace TheLightenRoad.Audio
 
         public void EnsureClipsLoaded()
         {
-            if (walkClips == null || walkClips.Length == 0)
+            if (walkClips == null || walkClips.Length == 0 || walkClips[0] == null)
             {
                 walkClips = new[]
                 {
@@ -121,7 +151,7 @@ namespace TheLightenRoad.Audio
                     Resources.Load<AudioClip>("Audio/SFX/Player/footstep_walk_04")
                 };
             }
-            if (sprintClips == null || sprintClips.Length == 0)
+            if (sprintClips == null || sprintClips.Length == 0 || sprintClips[0] == null)
             {
                 sprintClips = new[]
                 {
@@ -138,15 +168,76 @@ namespace TheLightenRoad.Audio
             if (flareIgniteClip == null) flareIgniteClip = Resources.Load<AudioClip>("Audio/SFX/Lantern/flare_ignite");
             if (emberBreakClip == null) emberBreakClip = Resources.Load<AudioClip>("Audio/SFX/Lantern/ember_break");
             if (emberPickupClip == null) emberPickupClip = Resources.Load<AudioClip>("Audio/SFX/Environment/ember_pickup");
+
+            if (exhaustionSource != null && exhaustionSource.clip == null && exhaustionBreathClip != null)
+            {
+                exhaustionSource.clip = exhaustionBreathClip;
+            }
         }
+
+        private float playerCheckTimer;
+        private float savedPreMuteVolume = 1.0f;
 
         private void Update()
         {
             TickExhaustion(Time.unscaledDeltaTime);
+            HandleSFXShortcuts();
+
+            playerCheckTimer -= Time.unscaledDeltaTime;
+            if (playerCheckTimer <= 0f)
+            {
+                playerCheckTimer = 2.0f;
+                PlayerAudioController.AttachToAllMotors();
+            }
+        }
+
+        private void HandleSFXShortcuts()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            if (kb.nKey.wasPressedThisFrame)
+            {
+                ToggleMute();
+            }
+            else if (kb.commaKey.wasPressedThisFrame)
+            {
+                AdjustVolume(-0.05f);
+            }
+            else if (kb.periodKey.wasPressedThisFrame)
+            {
+                AdjustVolume(0.05f);
+            }
+        }
+
+        public void ToggleMute()
+        {
+            if (masterSFXVolume > 0.001f)
+            {
+                savedPreMuteVolume = masterSFXVolume;
+                masterSFXVolume = 0f;
+                Debug.Log("[SoundEffectManager] SFX Muted.");
+            }
+            else
+            {
+                masterSFXVolume = savedPreMuteVolume > 0.001f ? savedPreMuteVolume : 1.0f;
+                Debug.Log($"[SoundEffectManager] SFX Unmuted ({masterSFXVolume * 100:F0}%).");
+            }
+        }
+
+        public void AdjustVolume(float delta)
+        {
+            masterSFXVolume = Mathf.Clamp01(masterSFXVolume + delta);
+            Debug.Log($"[SoundEffectManager] SFX Volume: {masterSFXVolume * 100:F0}%");
         }
 
         private void BuildPool()
         {
+            if (sourcePool != null && sourcePool.Length == PoolSize && sourcePool[0] != null)
+            {
+                return;
+            }
+
             sourcePool = new AudioSource[PoolSize];
             for (int i = 0; i < PoolSize; i++)
             {
@@ -159,14 +250,18 @@ namespace TheLightenRoad.Audio
                 sourcePool[i] = src;
             }
 
-            var exhGo = new GameObject("SFX_Exhaustion_Loop");
-            exhGo.transform.SetParent(transform);
-            exhaustionSource = exhGo.AddComponent<AudioSource>();
-            exhaustionSource.playOnAwake = false;
-            exhaustionSource.spatialBlend = 0f;
-            exhaustionSource.loop = true;
-            exhaustionSource.volume = 0f;
-            if (exhaustionBreathClip != null)
+            if (exhaustionSource == null)
+            {
+                var exhGo = new GameObject("SFX_Exhaustion_Loop");
+                exhGo.transform.SetParent(transform);
+                exhaustionSource = exhGo.AddComponent<AudioSource>();
+                exhaustionSource.playOnAwake = false;
+                exhaustionSource.spatialBlend = 0f;
+                exhaustionSource.loop = true;
+                exhaustionSource.volume = 0f;
+            }
+
+            if (exhaustionBreathClip != null && exhaustionSource.clip == null)
             {
                 exhaustionSource.clip = exhaustionBreathClip;
             }
@@ -207,6 +302,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayWalkFootstep()
         {
+            if (walkClips == null || walkClips.Length == 0 || walkClips[0] == null) EnsureClipsLoaded();
             if (walkClips == null || walkClips.Length == 0) return;
             AudioClip clip = walkClips[Random.Range(0, walkClips.Length)];
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
@@ -215,6 +311,7 @@ namespace TheLightenRoad.Audio
 
         public void PlaySprintFootstep()
         {
+            if (sprintClips == null || sprintClips.Length == 0 || sprintClips[0] == null) EnsureClipsLoaded();
             if (sprintClips == null || sprintClips.Length == 0) return;
             AudioClip clip = sprintClips[Random.Range(0, sprintClips.Length)];
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
@@ -223,6 +320,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayJump()
         {
+            if (jumpClip == null) EnsureClipsLoaded();
             if (jumpClip == null) return;
             float pitch = 1f + Random.Range(-pitchRandomRange * 0.5f, pitchRandomRange * 0.5f);
             PlayOneShot(jumpClip, jumpVolume, pitch);
@@ -230,6 +328,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayLanding(float impactSpeed)
         {
+            if (landingSoftClip == null || landingHardClip == null) EnsureClipsLoaded();
             bool isHard = Mathf.Abs(impactSpeed) > 10.5f;
             AudioClip clip = isHard ? landingHardClip : landingSoftClip;
             if (clip == null) clip = landingSoftClip ?? landingHardClip;
@@ -243,12 +342,14 @@ namespace TheLightenRoad.Audio
 
         public void PlayFlareIgnite()
         {
+            if (flareIgniteClip == null) EnsureClipsLoaded();
             if (flareIgniteClip == null) return;
             PlayOneShot(flareIgniteClip, flareVolume, 1.0f);
         }
 
         public void PlayEmberBreak()
         {
+            if (emberBreakClip == null) EnsureClipsLoaded();
             if (emberBreakClip == null) return;
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(emberBreakClip, emberBreakVolume, pitch);
@@ -256,6 +357,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayEmberPickup()
         {
+            if (emberPickupClip == null) EnsureClipsLoaded();
             if (emberPickupClip == null) return;
             PlayOneShot(emberPickupClip, emberPickupVolume, 1.0f);
         }

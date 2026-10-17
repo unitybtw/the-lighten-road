@@ -137,4 +137,48 @@ public sealed class SoundEffectManagerTests
 
         Object.Destroy(go);
     }
+
+    [Test]
+    public void AutoInstantiatesWhenInstanceAccessedWithoutSceneObject()
+    {
+        // Destroy existing test manager
+        if (sfxObject != null) Object.Destroy(sfxObject);
+        SoundEffectManager.ResetInstanceForTesting(null);
+
+        var autoInstance = SoundEffectManager.Instance;
+        Assert.That(autoInstance, Is.Not.Null);
+        Assert.That(autoInstance.gameObject.name, Is.EqualTo("Sound Effect Manager"));
+        Assert.That(autoInstance.WalkClips, Is.Not.Null);
+
+        Object.Destroy(autoInstance.gameObject);
+        SoundEffectManager.ResetInstanceForTesting(null);
+    }
+
+    [Test]
+    public void TogglesMuteAndAdjustsVolume()
+    {
+        sfxManager.MasterSFXVolume = 1.0f;
+        sfxManager.ToggleMute();
+        Assert.That(sfxManager.MasterSFXVolume, Is.EqualTo(0f));
+
+        sfxManager.ToggleMute();
+        Assert.That(sfxManager.MasterSFXVolume, Is.EqualTo(1.0f));
+
+        sfxManager.AdjustVolume(-0.2f);
+        Assert.That(sfxManager.MasterSFXVolume, Is.EqualTo(0.8f).Within(0.01f));
+    }
+
+    [Test]
+    public void AttachesToAllActiveMotors()
+    {
+        var motorGo = new GameObject("Test Motor For Attach");
+        var motor = motorGo.AddComponent<PlayerMotor2D>();
+
+        Assert.That(motorGo.GetComponent<PlayerAudioController>(), Is.Null);
+        PlayerAudioController.AttachToAllMotors();
+        Assert.That(motorGo.GetComponent<PlayerAudioController>(), Is.Not.Null);
+
+        Object.Destroy(motorGo);
+    }
 }
+
