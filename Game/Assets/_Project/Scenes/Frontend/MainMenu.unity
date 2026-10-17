@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &240110770
+--- !u!1 &508523341
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,117 +127,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 240110772}
-  - component: {fileID: 240110771}
-  m_Layer: 0
-  m_Name: The Lighten Road / Main Menu
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &240110771
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 240110770}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8325995984aec4d419bcb2916ea6b2fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.MainMenuController
-  font: {fileID: 11400000, guid: 573592807e4b646b89f432a844a0eaad, type: 2}
-  gameplayScene: Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity
---- !u!4 &240110772
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 240110770}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &496378399
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 496378401}
-  - component: {fileID: 496378400}
-  m_Layer: 0
-  m_Name: Sound Effect Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &496378400
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 496378399}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5de62183b6ca543c9b1a69e99a6c8539, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TheLightenRoad.Audio::TheLightenRoad.Audio.SoundEffectManager
-  walkClips: []
-  sprintClips: []
-  jumpClip: {fileID: 0}
-  landingSoftClip: {fileID: 0}
-  landingHardClip: {fileID: 0}
-  exhaustionBreathClip: {fileID: 0}
-  flareIgniteClip: {fileID: 0}
-  emberBreakClip: {fileID: 0}
-  emberPickupClip: {fileID: 0}
-  masterSFXVolume: 1
-  footstepsVolume: 0.75
-  jumpVolume: 0.85
-  landingVolume: 0.9
-  flareVolume: 0.9
-  emberBreakVolume: 0.85
-  emberPickupVolume: 0.9
-  exhaustionVolume: 0.65
-  pitchRandomRange: 0.06
---- !u!4 &496378401
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 496378399}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &579116952
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 579116955}
-  - component: {fileID: 579116954}
-  - component: {fileID: 579116953}
+  - component: {fileID: 508523344}
+  - component: {fileID: 508523343}
+  - component: {fileID: 508523342}
   m_Layer: 0
   m_Name: Menu Ambience
   m_TagString: Untagged
@@ -245,13 +137,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &579116953
+--- !u!114 &508523342
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 579116952}
+  m_GameObject: {fileID: 508523341}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 93bcf87f29d424307b52a243452a4350, type: 3}
@@ -263,13 +155,13 @@ MonoBehaviour:
   fadeOutDuration: 1.5
   playOnStart: 1
   loop: 1
---- !u!82 &579116954
+--- !u!82 &508523343
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 579116952}
+  m_GameObject: {fileID: 508523341}
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
@@ -360,13 +252,13 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!4 &579116955
+--- !u!4 &508523344
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 579116952}
+  m_GameObject: {fileID: 508523341}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -375,7 +267,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &796162089
+--- !u!1 &1293886200
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -383,9 +275,117 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 796162092}
-  - component: {fileID: 796162091}
-  - component: {fileID: 796162090}
+  - component: {fileID: 1293886202}
+  - component: {fileID: 1293886201}
+  m_Layer: 0
+  m_Name: The Lighten Road / Main Menu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1293886201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293886200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8325995984aec4d419bcb2916ea6b2fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.MainMenuController
+  font: {fileID: 11400000, guid: 573592807e4b646b89f432a844a0eaad, type: 2}
+  gameplayScene: Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity
+--- !u!4 &1293886202
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1293886200}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1630684501
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1630684503}
+  - component: {fileID: 1630684502}
+  m_Layer: 0
+  m_Name: Sound Effect Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1630684502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1630684501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5de62183b6ca543c9b1a69e99a6c8539, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Audio::TheLightenRoad.Audio.SoundEffectManager
+  walkClips: []
+  sprintClips: []
+  jumpClip: {fileID: 0}
+  landingSoftClip: {fileID: 0}
+  landingHardClip: {fileID: 0}
+  exhaustionBreathClip: {fileID: 0}
+  flareIgniteClip: {fileID: 0}
+  emberBreakClip: {fileID: 0}
+  emberPickupClip: {fileID: 0}
+  masterSFXVolume: 1
+  footstepsVolume: 0.75
+  jumpVolume: 0.85
+  landingVolume: 0.9
+  flareVolume: 0.9
+  emberBreakVolume: 0.85
+  emberPickupVolume: 0.9
+  exhaustionVolume: 0.65
+  pitchRandomRange: 0.06
+--- !u!4 &1630684503
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1630684501}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1813893418
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1813893421}
+  - component: {fileID: 1813893420}
+  - component: {fileID: 1813893419}
   m_Layer: 0
   m_Name: Menu Camera
   m_TagString: MainCamera
@@ -393,21 +393,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &796162090
+--- !u!81 &1813893419
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 796162089}
+  m_GameObject: {fileID: 1813893418}
   m_Enabled: 1
---- !u!20 &796162091
+--- !u!20 &1813893420
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 796162089}
+  m_GameObject: {fileID: 1813893418}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -452,13 +452,13 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!4 &796162092
+--- !u!4 &1813893421
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 796162089}
+  m_GameObject: {fileID: 1813893418}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -471,7 +471,7 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 796162092}
-  - {fileID: 579116955}
-  - {fileID: 496378401}
-  - {fileID: 240110772}
+  - {fileID: 1813893421}
+  - {fileID: 508523344}
+  - {fileID: 1630684503}
+  - {fileID: 1293886202}

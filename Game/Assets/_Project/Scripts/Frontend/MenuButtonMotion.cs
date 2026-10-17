@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace TheLightenRoad.Frontend
 {
     /// <summary>
-    /// Minimalist AAA menu item & interactive card motion controller.
-    /// Drives symmetrical filigree wing glide, rotating diamond tips, radial lantern bloom,
-    /// letter-spacing breathing, and stage surge callbacks.
+    /// Frameless Hollow-Knight / Ori style menu item motion controller.
+    /// Animates symmetrical glowing lantern-wing flourishes, soft radial ember aura,
+    /// letter-spacing expansion, and triggers live stage lantern surges & energy streams on focus.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MenuButtonMotion : MonoBehaviour,
@@ -22,19 +22,14 @@ namespace TheLightenRoad.Frontend
         IPointerUpHandler
     {
         public TMP_Text Text;
+        public TMP_Text SubtitleText;
         public Image SoftGlow;
-        public Image CardBorder;
         public RectTransform LeftWing;
         public RectTransform RightWing;
-        public RectTransform LeftDiamond;
-        public RectTransform RightDiamond;
         public CanvasGroup WingGroup;
         public Image UnderlineFiligree;
         public bool IsPrimaryAction;
-        public float BaseWingOffset = 135f;
-        public float BaseUnderlineWidth = 0f;
-        public float FocusedUnderlineWidth = 240f;
-        public string ContextHint;
+        public float BaseWingOffset = 145f;
         public Vector2 StageFocusCanvasPosition;
         public Vector2 StageCameraPanOffset;
         public Action<MenuButtonMotion> OnFocusedCallback;
@@ -44,12 +39,13 @@ namespace TheLightenRoad.Frontend
         private bool pressed;
         private float focusBlend;
         private float pressBlend;
-        private float spinAngle;
 
-        private static readonly Color IdleIvory = new Color32(222, 228, 240, 215);
-        private static readonly Color IdlePrimaryGold = new Color32(255, 204, 112, 255);
-        private static readonly Color FocusedRadiantIvory = new Color32(255, 250, 238, 255);
-        private static readonly Color FocusedAmberGold = new Color32(255, 190, 76, 255);
+        private static readonly Color IdleIvory = new Color32(226, 220, 206, 225);
+        private static readonly Color IdlePrimaryGold = new Color32(255, 206, 120, 255);
+        private static readonly Color FocusedRadiantIvory = new Color32(255, 248, 232, 255);
+        private static readonly Color FocusedAmberGold = new Color32(255, 186, 72, 255);
+        private static readonly Color IdleSubtle = new Color32(142, 152, 174, 175);
+        private static readonly Color FocusedSubtle = new Color32(236, 204, 148, 240);
 
         private void OnEnable()
         {
@@ -58,7 +54,7 @@ namespace TheLightenRoad.Frontend
             pressed = false;
             focusBlend = 0f;
             pressBlend = 0f;
-            ApplyVisuals();
+            ApplyVisuals(instant: true);
         }
 
         private void Update()
@@ -70,68 +66,63 @@ namespace TheLightenRoad.Frontend
             focusBlend = Mathf.MoveTowards(focusBlend, active ? 1f : 0f, dt * speed);
             pressBlend = Mathf.MoveTowards(pressBlend, pressed ? 1f : 0f, dt * 18f);
 
-            if (active && !MenuPreferences.ReducedMotion)
-            {
-                spinAngle += dt * 110f;
-            }
-
-            ApplyVisuals();
+            ApplyVisuals(instant: false);
         }
 
-        private void ApplyVisuals()
+        private void ApplyVisuals(bool instant)
         {
             float smooth = SmoothStep(focusBlend);
-            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.88f + 0.12f * Mathf.Sin(Time.unscaledTime * 4.5f));
+            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.90f + 0.10f * Mathf.Sin(Time.unscaledTime * 4.2f));
 
+            // 1. Typography scale, glow color & letter spacing expansion
             if (Text != null)
             {
                 Color baseCol = IsPrimaryAction ? IdlePrimaryGold : IdleIvory;
                 Color targetCol = IsPrimaryAction ? FocusedAmberGold : FocusedRadiantIvory;
                 Text.color = Color.Lerp(baseCol, targetCol, smooth);
-                Text.characterSpacing = Mathf.Lerp(IsPrimaryAction ? 8f : 6.5f, IsPrimaryAction ? 13f : 10.5f, smooth);
+                Text.characterSpacing = Mathf.Lerp(IsPrimaryAction ? 6.5f : 5.0f, IsPrimaryAction ? 10.5f : 8.5f, smooth);
 
-                float scale = Mathf.Lerp(1f, 1.07f, smooth) - pressBlend * 0.035f;
+                float scale = Mathf.Lerp(1f, 1.06f, smooth) - pressBlend * 0.03f;
                 Text.rectTransform.localScale = new Vector3(scale, scale, 1f);
             }
 
+            if (SubtitleText != null)
+            {
+                SubtitleText.color = Color.Lerp(IdleSubtle, FocusedSubtle, smooth);
+            }
+
+            // 2. Frameless Soft Radial Lantern Aura behind text
             if (SoftGlow != null)
             {
-                float baseAlpha = IsPrimaryAction ? 0.12f : 0f;
+                float baseAlpha = IsPrimaryAction ? 0.14f : 0f;
                 float targetAlpha = (IsPrimaryAction ? 0.38f : 0.28f) * pulse;
                 SoftGlow.color = new Color(1.0f, 0.66f, 0.20f, Mathf.Lerp(baseAlpha, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.84f, 1.14f, smooth);
+                float glowScale = Mathf.Lerp(0.82f, 1.12f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
-            if (CardBorder != null)
+            // 3. Symmetrical Left & Right Ornate Lantern Wings (◄── ◆   TEXT   ◆ ──►)
+            float wingSlide = MenuPreferences.ReducedMotion ? BaseWingOffset : Mathf.Lerp(BaseWingOffset - 26f, BaseWingOffset + 12f, smooth);
+            if (LeftWing != null)
             {
-                CardBorder.color = Color.Lerp(
-                    new Color(0.55f, 0.68f, 0.92f, 0.16f),
-                    new Color(1.0f, 0.74f, 0.28f, 0.75f),
-                    smooth);
+                LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
             }
-
-            float wingSlide = MenuPreferences.ReducedMotion
-                ? BaseWingOffset
-                : Mathf.Lerp(BaseWingOffset - 24f, BaseWingOffset + 14f, smooth);
-
-            if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
-            if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
-
-            if (LeftDiamond != null) LeftDiamond.localEulerAngles = new Vector3(0f, 0f, 45f + spinAngle);
-            if (RightDiamond != null) RightDiamond.localEulerAngles = new Vector3(0f, 0f, 45f - spinAngle);
-
+            if (RightWing != null)
+            {
+                RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
+            }
             if (WingGroup != null)
             {
                 WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 1f, smooth);
             }
 
+            // 4. Delicate Center-Out Filigree Underline
             if (UnderlineFiligree != null)
             {
                 var r = UnderlineFiligree.rectTransform;
-                float width = Mathf.Lerp(IsPrimaryAction ? Mathf.Max(90f, BaseUnderlineWidth) : BaseUnderlineWidth, FocusedUnderlineWidth, smooth);
-                r.sizeDelta = new Vector2(width, r.sizeDelta.y);
-                UnderlineFiligree.color = new Color(1.0f, 0.74f, 0.30f, Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 0.88f, smooth));
+                float width = Mathf.Lerp(IsPrimaryAction ? 120f : 0f, 280f, smooth);
+                r.sizeDelta = new Vector2(width, 2f);
+                UnderlineFiligree.color = new Color(1.0f, 0.74f, 0.30f, Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 0.85f, smooth));
             }
         }
 
@@ -168,9 +159,9 @@ namespace TheLightenRoad.Frontend
         public void OnPointerDown(PointerEventData eventData)
         {
             pressed = true;
-            if (Application.isPlaying && SoundEffectManager.HasInstance)
+            if (Application.isPlaying)
             {
-                SoundEffectManager.Instance.PlayEmberPickup();
+                SoundEffectManager.Instance?.PlayEmberPickup();
             }
         }
 
