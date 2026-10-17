@@ -329,3 +329,12 @@ The complete three-assembly run passed 79/81. The camera lead timing test passed
 ![Stamina instrument](previews/stamina-redesign.png)
 
 ![Exhausted reserve](previews/stamina-redesign-exhausted.png)
+
+
+## Checkpoint 15 — Animated main menu (2026-10-17)
+
+Added the approved dark archive / warm lantern direction with a 3.7-second skippable opening, restrained camera drift, ash, animated focus indicators and panel fades. Play, Settings, Credits and confirmed Quit work. Master / music / SFX levels, fullscreen and reduced motion are saved; a menu-owned service applies audio and HUD preferences after entering gameplay. The first build scene is now MainMenu, followed by MovementSandbox; SampleScene remains available.
+
+All three new Play Mode menu tests passed in Unity 6000.3.2f1 through Unity MCP. Actual Home and Settings views were inspected and the user approved the design. The asynchronous Play transition was checked against the actual gameplay scene. Standalone fullscreen, physical gamepad behavior and a standalone build were not verified. See the [menu notes and asset provenance](../../Game/Assets/_Project/Scenes/Frontend/README.md).
+
+Repository integrity check: four existing files in Interaction / Mechanisms (`EmberVein.cs`, `ElectrifiedWater.cs`, `RollingShelf.cs`, `SimpleLift.cs`) fail UTF-8 decoding, including in the pre-menu HEAD. Those ownership-protected files were not changed in this menu commit. All new menu assets passed the integrity checks.

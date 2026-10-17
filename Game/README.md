@@ -6,6 +6,10 @@ The shared Unity project uses the **Universal 2D** template in Unity **6000.3.2f
 
 Open this repository in Unity Hub and select `Game/`, or open this folder directly with Unity Hub using editor version `6000.3.2f1`.
 
+## Main menu
+
+Open `Assets/_Project/Scenes/Frontend/MainMenu.unity` for the animated opening, Play, Settings, Credits and Quit. It is now the first build scene. Settings persists audio, fullscreen and reduced-motion preferences; Play opens the current Ruined Archive prototype. See the [menu setup, art prompt and validation](Assets/_Project/Scenes/Frontend/README.md).
+
 ## Current playable prototype
 
 Open `Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity` and press Play. The scene now contains **The Ruined Archive**, a 72m prototype route with an optional upper office, three ember pickups, two rest checkpoints, floor spikes and two broken bridges. See the [level layout and asset notes](Assets/_Project/Scenes/Sandbox/Sirac/LevelMap/README.md).

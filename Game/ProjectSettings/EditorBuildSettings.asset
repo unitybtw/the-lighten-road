@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_Project/Scenes/Frontend/MainMenu.unity
+    guid: bd5fa5a661b7f42d2ae5e2a8cf4b9272
+  - enabled: 1
+    path: Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity
+    guid: 56cfa89026b334c188b181f64bee8570
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   m_configObjects:

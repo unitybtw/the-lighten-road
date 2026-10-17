@@ -1,0 +1,5 @@
+{
+  "name": "TheLightenRoad.Frontend.Editor",
+  "references": ["TheLightenRoad.Frontend", "TheLightenRoad.Audio"],
+  "includePlatforms": ["Editor"]
+}
