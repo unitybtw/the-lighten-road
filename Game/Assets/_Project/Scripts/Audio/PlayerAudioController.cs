@@ -141,13 +141,17 @@ namespace TheLightenRoad.Audio
                     bool isSprinting = motor.IsSprinting;
                     footstepTimer = isSprinting ? sprintInterval : walkInterval;
 
-                    if (isSprinting)
+                    var sfx = SoundEffectManager.Instance;
+                    if (sfx != null)
                     {
-                        SoundEffectManager.Instance.PlaySprintFootstep();
-                    }
-                    else
-                    {
-                        SoundEffectManager.Instance.PlayWalkFootstep();
+                        if (isSprinting)
+                        {
+                            sfx.PlaySprintFootstep();
+                        }
+                        else
+                        {
+                            sfx.PlayWalkFootstep();
+                        }
                     }
                 }
             }
@@ -159,30 +163,30 @@ namespace TheLightenRoad.Audio
 
         private void HandleJumped()
         {
-            SoundEffectManager.Instance.PlayJump();
+            SoundEffectManager.Instance?.PlayJump();
         }
 
         private void HandleLanded(float impactSpeed)
         {
-            SoundEffectManager.Instance.PlayLanding(impactSpeed);
+            SoundEffectManager.Instance?.PlayLanding(impactSpeed);
         }
 
         private void HandleExhaustionChanged(bool isExhausted)
         {
-            SoundEffectManager.Instance.SetExhaustionActive(isExhausted);
+            SoundEffectManager.Instance?.SetExhaustionActive(isExhausted);
         }
 
         private void HandleFlareChanged(bool isFlared)
         {
             if (isFlared)
             {
-                SoundEffectManager.Instance.PlayFlareIgnite();
+                SoundEffectManager.Instance?.PlayFlareIgnite();
             }
         }
 
         private void HandleEmberBroken()
         {
-            SoundEffectManager.Instance.PlayEmberBreak();
+            SoundEffectManager.Instance?.PlayEmberBreak();
         }
     }
 }

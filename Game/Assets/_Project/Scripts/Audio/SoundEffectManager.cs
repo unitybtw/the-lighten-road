@@ -17,13 +17,20 @@ namespace TheLightenRoad.Audio
 
         public static bool HasInstance => instance != null && !isApplicationQuitting;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            isApplicationQuitting = false;
+            instance = null;
+        }
+
         public static SoundEffectManager Instance
         {
             get
             {
                 if (isApplicationQuitting)
                 {
-                    return null;
+                    return instance;
                 }
 
                 if (instance == null)
@@ -124,9 +131,14 @@ namespace TheLightenRoad.Audio
 
         private void Awake()
         {
+            isApplicationQuitting = false;
             if (instance == null)
             {
                 instance = this;
+                if (Application.isPlaying && transform.parent == null)
+                {
+                    DontDestroyOnLoad(gameObject);
+                }
             }
             else if (instance != this)
             {

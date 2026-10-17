@@ -24,6 +24,12 @@ namespace TheLightenRoad.Audio
             }
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            instance = null;
+        }
+
         public static void ResetInstanceForTesting(BackgroundMusicManager testInstance = null)
         {
             instance = testInstance;
@@ -86,6 +92,10 @@ namespace TheLightenRoad.Audio
             if (instance == null)
             {
                 instance = this;
+                if (Application.isPlaying && transform.parent == null)
+                {
+                    DontDestroyOnLoad(gameObject);
+                }
             }
             else if (instance != this)
             {
