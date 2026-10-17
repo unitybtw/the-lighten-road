@@ -74,6 +74,7 @@ namespace TheLightenRoad.Player
         public Vector3 CurrentVisualScale => visualTransform != null ? visualTransform.localScale : Vector3.one;
         public Transform LanternTransform => lanternTransform;
         public float HorizontalInput => horizontalInput;
+        public float HorizontalSpeed => body != null ? body.linearVelocity.x : 0f;
         public Rigidbody2D Body => body;
 
         private void Awake()

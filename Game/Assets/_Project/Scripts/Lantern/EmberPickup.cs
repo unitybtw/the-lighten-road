@@ -268,6 +268,8 @@ namespace TheLightenRoad.Lantern
             }
         }
 
+        public static event System.Action EmberCollected;
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (collected)
@@ -280,6 +282,7 @@ namespace TheLightenRoad.Lantern
             fuel.AddFuel(fuelAmount);
 
             collected = true;
+            EmberCollected?.Invoke();
             Destroy(gameObject);
         }
     }

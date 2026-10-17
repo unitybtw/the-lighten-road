@@ -29,8 +29,16 @@ public sealed class RuinedArchiveRouteTests
         InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
         keyboard = InputSystem.AddDevice<Keyboard>();
 #if UNITY_EDITOR
-        scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
-            "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity", new LoadSceneParameters(LoadSceneMode.Additive));
+        var active = SceneManager.GetActiveScene();
+        if (active.path == "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity")
+        {
+            scene = active;
+        }
+        else
+        {
+            scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
+                "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity", new LoadSceneParameters(LoadSceneMode.Additive));
+        }
 #else
         Assert.Ignore("Authored scene integration runs in the Editor.");
         yield break;
@@ -49,7 +57,7 @@ public sealed class RuinedArchiveRouteTests
         if (keyboard != null) InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior = oldBackground;
         InputSystem.settings.editorInputBehaviorInPlayMode = oldEditorInput;
-        if (scene.IsValid() && scene.isLoaded) yield return SceneManager.UnloadSceneAsync(scene);
+        if (scene.IsValid() && scene.isLoaded && scene != SceneManager.GetActiveScene()) yield return SceneManager.UnloadSceneAsync(scene);
     }
 
     private IEnumerator WalkTo(float x)

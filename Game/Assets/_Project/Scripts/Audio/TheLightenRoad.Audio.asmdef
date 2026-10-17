@@ -1,5 +1,8 @@
 {
   "name": "TheLightenRoad.Audio",
   "rootNamespace": "TheLightenRoad.Audio",
-  "references": []
+  "references": [
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern"
+  ]
 }
