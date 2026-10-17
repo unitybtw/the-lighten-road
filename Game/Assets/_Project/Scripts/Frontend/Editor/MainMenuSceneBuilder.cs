@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TheLightenRoad.Audio;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -7,38 +10,122 @@ using UnityEngine.SceneManagement;
 
 namespace TheLightenRoad.Frontend.Editor
 {
+    /// <summary>
+    /// Creates and configures the redesigned MainMenu scene and registers all
+    /// selectable gameplay realms in EditorBuildSettings.
+    /// </summary>
     public static class MainMenuSceneBuilder
     {
         public const string ScenePath = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
-        [MenuItem("Tools/The Lighten Road/Create Main Menu")]
-        public static void Create()
+        private const string BackdropPath = "Assets/_Project/Art/Frontend/ArchiveMenuBackdrop.png";
+        private const string FontPath = "Assets/_Project/Resources/UI/MenuType.asset";
+
+        private static readonly string[] BuildScenePaths =
         {
-            if (EditorApplication.isPlaying) throw new System.InvalidOperationException("Stop Play Mode first.");
-            if (SceneManager.GetActiveScene().isDirty) throw new System.InvalidOperationException("Save the current scene first.");
-            if (AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null) throw new System.InvalidOperationException("The menu exists. Edit its scene directly.");
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var camera = new GameObject("Menu Camera", typeof(Camera), typeof(AudioListener));
-            camera.tag = "MainCamera";
-            var cam = camera.GetComponent<Camera>();
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = new Color32(9,12,11,255);
-            cam.orthographic = true;
-            camera.transform.position = new Vector3(0,0,-10);
-            // The painted environment and live UI glow are intentionally independent of gameplay lights.
-            var light = new GameObject("Menu key light", typeof(Light));
-            light.GetComponent<Light>().type = LightType.Directional;
-            light.GetComponent<Light>().intensity = 0.1f;
-            var music = new GameObject("Menu ambience", typeof(BackgroundMusicManager));
-            var root = new GameObject("The Lighten Road / Main Menu", typeof(MainMenuController));
-            var data = new SerializedObject(root.GetComponent<MainMenuController>());
-            data.FindProperty("backdrop").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/Art/Frontend/ArchiveMenuBackdrop.png");
-            data.ApplyModifiedPropertiesWithoutUndo();
+            ScenePath,
+            "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity",
+            "Assets/_Project/Scenes/Sandbox/Kemal/SceneKemal.unity",
+            "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity",
+            "Assets/Scenes/SampleScene.unity"
+        };
+
+        [MenuItem("Tools/The Lighten Road/Create Main Menu")]
+        public static void CreateFromMenu()
+        {
+            Create(forceOverwrite: true);
+        }
+
+        public static void Create(bool forceOverwrite = true)
+        {
+            if (!forceOverwrite && File.Exists(ScenePath))
+            {
+                EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                RegisterBuildScenes();
+                return;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(ScenePath) ?? "Assets/_Project/Scenes/Frontend");
+
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            // 1. Menu Camera
+            var cameraGo = new GameObject("Menu Camera");
+            cameraGo.tag = "MainCamera";
+            var camera = cameraGo.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.024f, 0.031f, 0.047f, 1f);
+            camera.orthographic = true;
+            camera.orthographicSize = 5f;
+            camera.nearClipPlane = -10f;
+            camera.farClipPlane = 100f;
+            cameraGo.AddComponent<AudioListener>();
+
+            // 2. Menu Ambience (Background Music)
+            var musicGo = new GameObject("Menu Ambience");
+            musicGo.AddComponent<BackgroundMusicManager>();
+
+            // 3. Sound Effect Manager (UI + Lantern Flare Ignition SFX)
+            var sfxGo = new GameObject("Sound Effect Manager");
+            sfxGo.AddComponent<SoundEffectManager>();
+
+            // 4. Main Menu Controller Root
+            var root = new GameObject("The Lighten Road / Main Menu");
+            var controller = root.AddComponent<MainMenuController>();
+
+            var serialized = new SerializedObject(controller);
+            var backdrop = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropPath);
+            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
+
+            if (backdrop != null)
+            {
+                serialized.FindProperty("backdrop").objectReferenceValue = backdrop;
+            }
+
+            if (font != null)
+            {
+                serialized.FindProperty("font").objectReferenceValue = font;
+            }
+
+            serialized.FindProperty("gameplayScene").stringValue = MainMenuController.DefaultGameplayScene;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
             EditorSceneManager.SaveScene(scene, ScenePath);
-            var existing = EditorBuildSettings.scenes.Where(s => s.path != ScenePath && s.path != MainMenuController.DefaultGameplayScene).ToList();
-            existing.Insert(0, new EditorBuildSettingsScene(MainMenuController.DefaultGameplayScene, true));
-            existing.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = existing.ToArray();
+            RegisterBuildScenes();
             AssetDatabase.SaveAssets();
+        }
+
+        private static void RegisterBuildScenes()
+        {
+            var scenes = EditorBuildSettings.scenes.ToList();
+
+            foreach (string path in BuildScenePaths)
+            {
+                if (!File.Exists(path))
+                {
+                    continue;
+                }
+
+                int existingIdx = scenes.FindIndex(s => s.path == path);
+                if (existingIdx >= 0)
+                {
+                    scenes[existingIdx].enabled = true;
+                }
+                else
+                {
+                    scenes.Add(new EditorBuildSettingsScene(path, true));
+                }
+            }
+
+            // Ensure MainMenu is first (index 0)
+            int menuIdx = scenes.FindIndex(s => s.path == ScenePath);
+            if (menuIdx > 0)
+            {
+                var menuScene = scenes[menuIdx];
+                scenes.RemoveAt(menuIdx);
+                scenes.Insert(0, menuScene);
+            }
+
+            EditorBuildSettings.scenes = scenes.ToArray();
         }
     }
 }

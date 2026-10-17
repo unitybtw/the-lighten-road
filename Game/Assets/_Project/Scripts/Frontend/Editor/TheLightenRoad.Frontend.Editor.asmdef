@@ -1,5 +1,9 @@
 {
   "name": "TheLightenRoad.Frontend.Editor",
-  "references": ["TheLightenRoad.Frontend", "TheLightenRoad.Audio"],
+  "references": [
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Audio",
+    "Unity.TextMeshPro"
+  ],
   "includePlatforms": ["Editor"]
 }
