@@ -180,5 +180,29 @@ public sealed class SoundEffectManagerTests
 
         Object.Destroy(motorGo);
     }
+
+    [UnityTest]
+    public IEnumerator RecoversGracefullyIfAudioSourcesAreDestroyed()
+    {
+        // Obtain a source first
+        var src = sfxManager.GetAvailableSource();
+        Assert.That(src, Is.Not.Null);
+
+        // Intentionally destroy all AudioSource components on the manager
+        var allSources = sfxManager.GetComponents<AudioSource>();
+        foreach (var s in allSources)
+        {
+            Object.Destroy(s);
+        }
+        yield return null; // wait 1 frame for Unity Object destruction to complete
+
+        // Verify that calling playback does NOT throw MissingReferenceException and self-heals
+        Assert.DoesNotThrow(() => sfxManager.PlayEmberPickup());
+        Assert.DoesNotThrow(() => sfxManager.PlayWalkFootstep());
+        Assert.DoesNotThrow(() => sfxManager.PlayJump());
+
+        var recoveredSrc = sfxManager.GetAvailableSource();
+        Assert.That(recoveredSrc, Is.Not.Null);
+    }
 }
 

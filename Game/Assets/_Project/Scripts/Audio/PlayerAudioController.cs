@@ -112,7 +112,10 @@ namespace TheLightenRoad.Audio
                 lantern.EmberBroken -= HandleEmberBroken;
             }
 
-            SoundEffectManager.Instance?.SetExhaustionActive(false);
+            if (SoundEffectManager.HasInstance)
+            {
+                SoundEffectManager.Instance?.SetExhaustionActive(false);
+            }
         }
 
         private void Update()

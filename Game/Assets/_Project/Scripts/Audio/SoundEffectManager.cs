@@ -13,14 +13,23 @@ namespace TheLightenRoad.Audio
     public sealed class SoundEffectManager : MonoBehaviour
     {
         private static SoundEffectManager instance;
+        private static bool isApplicationQuitting;
+
+        public static bool HasInstance => instance != null && !isApplicationQuitting;
+
         public static SoundEffectManager Instance
         {
             get
             {
+                if (isApplicationQuitting)
+                {
+                    return null;
+                }
+
                 if (instance == null)
                 {
                     instance = Object.FindAnyObjectByType<SoundEffectManager>();
-                    if (instance == null)
+                    if (instance == null && !isApplicationQuitting)
                     {
                         var go = new GameObject("Sound Effect Manager");
                         instance = go.AddComponent<SoundEffectManager>();
@@ -39,10 +48,12 @@ namespace TheLightenRoad.Audio
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoEnsureSoundEffectManager()
         {
+            if (isApplicationQuitting) return;
+
             if (instance == null)
             {
                 instance = Object.FindAnyObjectByType<SoundEffectManager>();
-                if (instance == null)
+                if (instance == null && !isApplicationQuitting)
                 {
                     var go = new GameObject("Sound Effect Manager");
                     instance = go.AddComponent<SoundEffectManager>();
@@ -55,7 +66,13 @@ namespace TheLightenRoad.Audio
 
         public static void ResetInstanceForTesting(SoundEffectManager testInstance = null)
         {
+            isApplicationQuitting = false;
             instance = testInstance;
+        }
+
+        private void OnApplicationQuit()
+        {
+            isApplicationQuitting = true;
         }
 
         [Header("Player Movement SFX")]
@@ -231,30 +248,20 @@ namespace TheLightenRoad.Audio
             Debug.Log($"[SoundEffectManager] SFX Volume: {masterSFXVolume * 100:F0}%");
         }
 
-        private void BuildPool()
+        private AudioSource CreatePoolSource()
         {
-            if (sourcePool != null && sourcePool.Length == PoolSize && sourcePool[0] != null)
-            {
-                return;
-            }
+            var src = gameObject.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.spatialBlend = 0f;
+            src.loop = false;
+            return src;
+        }
 
-            sourcePool = new AudioSource[PoolSize];
-            for (int i = 0; i < PoolSize; i++)
-            {
-                var sGo = new GameObject($"SFX_Source_{i}");
-                sGo.transform.SetParent(transform);
-                var src = sGo.AddComponent<AudioSource>();
-                src.playOnAwake = false;
-                src.spatialBlend = 0f;
-                src.loop = false;
-                sourcePool[i] = src;
-            }
-
+        public AudioSource EnsureExhaustionSource()
+        {
             if (exhaustionSource == null)
             {
-                var exhGo = new GameObject("SFX_Exhaustion_Loop");
-                exhGo.transform.SetParent(transform);
-                exhaustionSource = exhGo.AddComponent<AudioSource>();
+                exhaustionSource = gameObject.AddComponent<AudioSource>();
                 exhaustionSource.playOnAwake = false;
                 exhaustionSource.spatialBlend = 0f;
                 exhaustionSource.loop = true;
@@ -265,29 +272,79 @@ namespace TheLightenRoad.Audio
             {
                 exhaustionSource.clip = exhaustionBreathClip;
             }
+
+            return exhaustionSource;
+        }
+
+        private void BuildPool()
+        {
+            // Clean up legacy child sources if any exist
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                var child = transform.GetChild(i);
+                if (child.name.StartsWith("SFX_"))
+                {
+                    if (Application.isPlaying) Destroy(child.gameObject);
+                    else DestroyImmediate(child.gameObject);
+                }
+            }
+
+            if (sourcePool == null || sourcePool.Length != PoolSize)
+            {
+                sourcePool = new AudioSource[PoolSize];
+            }
+
+            for (int i = 0; i < PoolSize; i++)
+            {
+                if (sourcePool[i] == null)
+                {
+                    sourcePool[i] = CreatePoolSource();
+                }
+            }
+
+            EnsureExhaustionSource();
         }
 
         public AudioSource GetAvailableSource()
         {
-            if (sourcePool == null || sourcePool.Length == 0)
+            if (sourcePool == null || sourcePool.Length != PoolSize)
             {
                 BuildPool();
+            }
+
+            // Self-heal: ensure every pool slot has a valid, living AudioSource
+            for (int i = 0; i < PoolSize; i++)
+            {
+                if (sourcePool[i] == null)
+                {
+                    sourcePool[i] = CreatePoolSource();
+                }
             }
 
             for (int i = 0; i < sourcePool.Length; i++)
             {
                 int idx = (poolIndex + i) % sourcePool.Length;
-                if (!sourcePool[idx].isPlaying)
+                var candidate = sourcePool[idx];
+                if (candidate == null)
+                {
+                    candidate = sourcePool[idx] = CreatePoolSource();
+                }
+
+                if (!candidate.isPlaying)
                 {
                     poolIndex = (idx + 1) % sourcePool.Length;
-                    return sourcePool[idx];
+                    return candidate;
                 }
             }
 
             // If all busy, steal the oldest one
-            var src = sourcePool[poolIndex];
+            var fallback = sourcePool[poolIndex];
+            if (fallback == null)
+            {
+                fallback = sourcePool[poolIndex] = CreatePoolSource();
+            }
             poolIndex = (poolIndex + 1) % sourcePool.Length;
-            return src;
+            return fallback;
         }
 
         public void PlayOneShot(AudioClip clip, float volume = 1f, float pitch = 1f)
@@ -295,6 +352,8 @@ namespace TheLightenRoad.Audio
             if (clip == null) return;
 
             var src = GetAvailableSource();
+            if (src == null) return;
+
             src.pitch = pitch;
             src.volume = Mathf.Clamp01(volume * masterSFXVolume);
             src.PlayOneShot(clip);
@@ -371,16 +430,17 @@ namespace TheLightenRoad.Audio
         {
             targetExhaustionVol = active ? (exhaustionVolume * masterSFXVolume) : 0f;
 
-            if (active && exhaustionSource != null && !exhaustionSource.isPlaying)
+            var src = EnsureExhaustionSource();
+            if (active && src != null && !src.isPlaying)
             {
-                if (exhaustionSource.clip == null && exhaustionBreathClip != null)
+                if (src.clip == null && exhaustionBreathClip != null)
                 {
-                    exhaustionSource.clip = exhaustionBreathClip;
+                    src.clip = exhaustionBreathClip;
                 }
-                if (exhaustionSource.clip != null)
+                if (src.clip != null)
                 {
-                    exhaustionSource.volume = 0f;
-                    exhaustionSource.Play();
+                    src.volume = 0f;
+                    src.Play();
                 }
             }
         }
