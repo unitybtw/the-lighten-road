@@ -13,6 +13,14 @@ public sealed class BackgroundMusicManagerTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        var existing = Object.FindObjectsByType<BackgroundMusicManager>(FindObjectsSortMode.None);
+        foreach (var e in existing)
+        {
+            Object.Destroy(e.gameObject);
+        }
+        BackgroundMusicManager.ResetInstanceForTesting(null);
+        yield return null;
+
         // Generate a 1-second sine wave clip for testing
         testClip = AudioClip.Create("Test BGM", 44100, 1, 44100, false);
         float[] samples = new float[44100];
@@ -39,6 +47,7 @@ public sealed class BackgroundMusicManagerTests
         {
             Object.Destroy(testClip);
         }
+        BackgroundMusicManager.ResetInstanceForTesting(null);
         yield return null;
     }
 
@@ -104,5 +113,43 @@ public sealed class BackgroundMusicManagerTests
         musicManager.TickFade(0.25f);
 
         Assert.That(musicManager.CurrentVolume, Is.EqualTo(0.08f).Within(0.01f));
+    }
+
+    [Test]
+    public void LoadsDefaultMusicFromResourcesWhenUnassigned()
+    {
+        var go = new GameObject("Resource BGM Test");
+        var mgr = go.AddComponent<BackgroundMusicManager>();
+        mgr.EnsureAudioSource();
+
+        Assert.That(mgr.CurrentClip, Is.Not.Null, "BackgroundMusicManager must automatically resolve AmbientRuinsBGM from Resources.");
+        Object.Destroy(go);
+    }
+
+    [Test]
+    public void TogglesMuteAndRestoresPreviousVolume()
+    {
+        musicManager.Play(testClip, customFadeDuration: 0.05f);
+        musicManager.TickFade(0.1f);
+        Assert.That(musicManager.CurrentVolume, Is.GreaterThan(0.1f));
+
+        musicManager.ToggleMute();
+        musicManager.TickFade(0.5f);
+        Assert.That(musicManager.CurrentVolume, Is.EqualTo(0f).Within(0.01f));
+
+        musicManager.ToggleMute();
+        musicManager.TickFade(0.5f);
+        Assert.That(musicManager.CurrentVolume, Is.GreaterThan(0.1f));
+    }
+
+    [Test]
+    public void AdjustsVolumeWithinValidBounds()
+    {
+        float initial = musicManager.TargetVolume;
+        musicManager.AdjustVolume(0.1f);
+        Assert.That(musicManager.TargetVolume, Is.EqualTo(initial + 0.1f).Within(0.001f));
+
+        musicManager.AdjustVolume(-0.5f);
+        Assert.That(musicManager.TargetVolume, Is.GreaterThanOrEqualTo(0.05f));
     }
 }

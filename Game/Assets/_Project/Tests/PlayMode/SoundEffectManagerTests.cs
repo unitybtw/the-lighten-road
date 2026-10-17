@@ -15,6 +15,14 @@ public sealed class SoundEffectManagerTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        var existing = Object.FindObjectsByType<SoundEffectManager>(FindObjectsSortMode.None);
+        foreach (var e in existing)
+        {
+            Object.Destroy(e.gameObject);
+        }
+        SoundEffectManager.ResetInstanceForTesting(null);
+        yield return null;
+
         testClip = AudioClip.Create("Test SFX", 44100, 1, 44100, false);
         float[] samples = new float[44100];
         for (int i = 0; i < samples.Length; i++) samples[i] = Mathf.Sin(2f * Mathf.PI * 440f * i / 44100f);
@@ -43,6 +51,7 @@ public sealed class SoundEffectManagerTests
     {
         if (sfxObject != null) Object.Destroy(sfxObject);
         if (testClip != null) Object.Destroy(testClip);
+        SoundEffectManager.ResetInstanceForTesting(null);
         yield return null;
     }
 

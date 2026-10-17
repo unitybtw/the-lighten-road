@@ -18,14 +18,14 @@ namespace TheLightenRoad.Audio
                 if (instance == null)
                 {
                     instance = Object.FindAnyObjectByType<SoundEffectManager>();
-                    if (instance == null)
-                    {
-                        var go = new GameObject("Sound Effect Manager");
-                        instance = go.AddComponent<SoundEffectManager>();
-                    }
                 }
                 return instance;
             }
+        }
+
+        public static void ResetInstanceForTesting(SoundEffectManager testInstance = null)
+        {
+            instance = testInstance;
         }
 
         [Header("Player Movement SFX")]
@@ -77,12 +77,15 @@ namespace TheLightenRoad.Audio
 
         private void Awake()
         {
-            if (instance != null && instance != this)
+            if (instance == null)
+            {
+                instance = this;
+            }
+            else if (instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            instance = this;
 
             EnsureClipsLoaded();
             BuildPool();
