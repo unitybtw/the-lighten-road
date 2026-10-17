@@ -12,10 +12,11 @@ using UnityEngine.UI;
 namespace TheLightenRoad.Frontend
 {
     /// <summary>
-    /// Redesigned interactive Main Menu for The Lighten Road.
-    /// Features a cinematic lantern ignition intro, mouse-tracking lantern spotlight,
-    /// floating multi-depth ember particles, left-aligned glass navigation dock,
-    /// and a smooth slide-in glassmorphism drawer for Realms, Settings, Controls, and Credits.
+    /// Redesigned Main Menu for The Lighten Road.
+    /// Pairs a pure-code 2.5D animated midnight-archive stage (swinging pendulum lantern,
+    /// volumetric god-rays, carved pillar ember veins, cloaked wanderer silhouette, and
+    /// interactive Bezier energy stream) with a frameless, ornate Hollow-Knight / Ori
+    /// inspired minimalist typography layout.
     /// </summary>
     public sealed class MainMenuController : MonoBehaviour
     {
@@ -59,33 +60,26 @@ namespace TheLightenRoad.Frontend
             }
         };
 
-        [SerializeField] private Texture2D backdrop;
         [SerializeField] private TMP_FontAsset font;
         [SerializeField] private string gameplayScene = DefaultGameplayScene;
 
-        // Theme Palette
-        private readonly Color ivory = new Color32(244, 236, 216, 255);
-        private readonly Color warmStone = new Color32(168, 162, 146, 255);
-        private readonly Color mutedStone = new Color32(118, 114, 102, 255);
-        private readonly Color amberGold = new Color32(242, 166, 64, 255);
-        private readonly Color deepAmber = new Color32(196, 118, 38, 255);
-        private readonly Color glassDark = new Color(0.045f, 0.055f, 0.07f, 0.84f);
-        private readonly Color glassCard = new Color(0.07f, 0.085f, 0.105f, 0.72f);
-        private readonly Color glassBorder = new Color(0.88f, 0.64f, 0.30f, 0.28f);
+        // Midnight Indigo & Warm Lantern Amber Palette
+        private readonly Color radiantIvory = new Color32(248, 242, 228, 255);
+        private readonly Color moonlightSilver = new Color32(176, 190, 214, 235);
+        private readonly Color mutedIndigo = new Color32(118, 132, 158, 200);
+        private readonly Color amberGold = new Color32(255, 184, 72, 255);
+        private readonly Color deepAmber = new Color32(214, 128, 36, 255);
 
         private Canvas canvas;
-        private RectTransform safeFrame;
-        private RectTransform background;
-        private RectTransform pedestalLanternOuter;
-        private RectTransform pedestalLanternCore;
-        private RectTransform cursorSpotlight;
-        private Image pedestalOuterImage;
-        private Image pedestalCoreImage;
-        private Image cursorSpotImage;
-        private Image curtain;
-        private Image drawerBackdropVeil;
+        private ProceduralArchiveStage stage;
+        private Sprite filigreeSprite;
+        private Sprite softRadialSprite;
 
-        // Views & Groups
+        private RectTransform safeFrame;
+        private Image subpanelVeil;
+        private Image curtain;
+
+        // Views & CanvasGroups
         private RectTransform home;
         private RectTransform realms;
         private RectTransform settings;
@@ -109,14 +103,12 @@ namespace TheLightenRoad.Frontend
 
         private Button playButton;
         private Button realmsFirst;
-        private Button settingsFirst;
         private Button controlsFirst;
         private Button creditsFirst;
         private Button quitFirst;
 
-        private readonly Dictionary<string, MenuButtonMotion> navMotions = new Dictionary<string, MenuButtonMotion>();
-        private readonly List<Image> realmCardBackgrounds = new List<Image>();
-        private readonly List<Image> realmCardBorders = new List<Image>();
+        private readonly List<Image> realmRowAuras = new List<Image>();
+        private readonly List<Image> realmRowUnderlines = new List<Image>();
         private readonly List<TMP_Text> realmStatusLabels = new List<TMP_Text>();
 
         private Slider masterSlider;
@@ -127,21 +119,7 @@ namespace TheLightenRoad.Frontend
         private Toggle motionToggle;
         private TMP_Text fpsButtonValueText;
 
-        // Particles
-        private struct EmberParticle
-        {
-            public RectTransform Rect;
-            public Image Img;
-            public float SeedX;
-            public float SeedY;
-            public float SpeedY;
-            public float DriftAmp;
-            public float DriftFreq;
-            public bool IsBrightEmber;
-        }
-        private readonly List<EmberParticle> particles = new List<EmberParticle>();
-
-        // State
+        // Runtime State
         private float age;
         private float viewAge;
         private string view = "home";
@@ -150,10 +128,6 @@ namespace TheLightenRoad.Frontend
         private bool loading;
         private bool quitting;
         private int selectedRealmIndex;
-        private Vector2 smoothedPointer;
-        private Vector2 cursorCanvasPos;
-        private Texture2D radialGlowTexture;
-        private Sprite radialGlowSprite;
         private Rect lastSafeArea;
         private int lastWidth;
         private int lastHeight;
@@ -167,12 +141,9 @@ namespace TheLightenRoad.Frontend
 
         private void Awake()
         {
-            if (font == null) font = Resources.Load<TMP_FontAsset>("UI/MenuType");
-            if (backdrop == null)
+            if (font == null)
             {
-#if UNITY_EDITOR
-                backdrop = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/Art/Frontend/ArchiveMenuBackdrop.png");
-#endif
+                font = Resources.Load<TMP_FontAsset>("UI/MenuType");
             }
 
             selectedRealmIndex = Mathf.Clamp(MenuPreferences.SelectedRealmIndex, 0, AvailableRealms.Length - 1);
@@ -192,7 +163,6 @@ namespace TheLightenRoad.Frontend
             Cursor.lockState = CursorLockMode.None;
             Time.timeScale = 1f;
 
-            // Ensure background music is softly playing
             var bgm = BackgroundMusicManager.Instance;
             if (bgm != null && !bgm.IsPlaying)
             {
@@ -208,8 +178,11 @@ namespace TheLightenRoad.Frontend
         private void OnDestroy()
         {
             MenuPreferences.Save();
-            if (radialGlowSprite != null) Destroy(radialGlowSprite);
-            if (radialGlowTexture != null) Destroy(radialGlowTexture);
+            if (softRadialSprite != null)
+            {
+                if (softRadialSprite.texture != null) Destroy(softRadialSprite.texture);
+                Destroy(softRadialSprite);
+            }
         }
 
         private void Update()
@@ -218,14 +191,14 @@ namespace TheLightenRoad.Frontend
             age += dt;
             viewAge += dt;
 
-            // Play lantern ignition sound early in the cinematic intro
-            if (!introIgnitePlayed && age >= 0.22f)
+            if (!introIgnitePlayed && age >= 0.20f)
             {
                 introIgnitePlayed = true;
                 if (Application.isPlaying && !MenuPreferences.ReducedMotion)
                 {
                     SoundEffectManager.Instance?.PlayFlareIgnite();
                 }
+                stage?.TriggerInteractionSurge(new Vector2(0f, -65f), Vector2.zero, 1.25f);
             }
 
             bool backPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -244,105 +217,96 @@ namespace TheLightenRoad.Frontend
                 else ShowHome();
             }
 
-            if (!introDone && age >= 3.2f)
+            if (!introDone && age >= 2.9f)
             {
                 SkipIntro();
             }
 
-            float introReveal = MenuPreferences.ReducedMotion ? 1f : SmoothStep(Mathf.InverseLerp(0.85f, 2.65f, age));
+            float introIgnition = MenuPreferences.ReducedMotion ? 1f : SmoothStep(Mathf.InverseLerp(0.12f, 1.75f, age));
+            float uiReveal = MenuPreferences.ReducedMotion ? 1f : SmoothStep(Mathf.InverseLerp(0.65f, 2.35f, age));
+
             if (!loading && !quitting && curtain != null)
             {
-                float curtainFade = 1f - SmoothStep(Mathf.InverseLerp(0.15f, 2.15f, age));
-                curtain.color = new Color(0.01f, 0.012f, 0.015f, curtainFade);
+                float curtainAlpha = 1f - SmoothStep(Mathf.InverseLerp(0.10f, 1.85f, age));
+                curtain.color = new Color(0.012f, 0.018f, 0.038f, curtainAlpha);
             }
 
-            float drawerSlide = MenuPreferences.ReducedMotion ? 1f : SmoothStep(Mathf.Clamp01(viewAge / 0.26f));
-            bool isDrawerOpen = view == "realms" || view == "settings" || view == "controls" || view == "credits";
-            bool isQuitOpen = view == "quit";
-
-            if (drawerBackdropVeil != null)
+            // Mouse tracking for stage parallax & lantern spotlight
+            Vector2 normMouse = Vector2.zero;
+            Vector2 mouseCanvasPos = Vector2.zero;
+            if (Mouse.current != null && Screen.width > 0 && Screen.height > 0)
             {
-                float targetVeil = isQuitOpen ? 0.72f : (isDrawerOpen ? 0.38f : 0f);
-                drawerBackdropVeil.color = new Color(0.01f, 0.015f, 0.02f, Mathf.MoveTowards(drawerBackdropVeil.color.a, targetVeil, dt * 3.5f));
+                Vector2 raw = Mouse.current.position.ReadValue();
+                normMouse = Vector2.ClampMagnitude(new Vector2(raw.x / Screen.width - 0.5f, raw.y / Screen.height - 0.5f), 0.75f);
+                if (canvas != null)
+                {
+                    var cRect = (RectTransform)canvas.transform;
+                    mouseCanvasPos = new Vector2((raw.x / Screen.width - 0.5f) * cRect.rect.width, (raw.y / Screen.height - 0.5f) * cRect.rect.height);
+                }
             }
 
-            // Home dock stays visible on the left during drawer views, but disables raycasts when Quit modal is open
-            UpdateHomeDock(introReveal, !isQuitOpen && view == "home", !isQuitOpen);
-            UpdateDrawerPanel(realmsGroup, view == "realms", drawerSlide);
-            UpdateDrawerPanel(settingsGroup, view == "settings", drawerSlide);
-            UpdateDrawerPanel(controlsGroup, view == "controls", drawerSlide);
-            UpdateDrawerPanel(creditsGroup, view == "credits", drawerSlide);
-            UpdateModalPanel(quitGroup, isQuitOpen, drawerSlide);
+            stage?.TickStage(dt, introIgnition, normMouse, mouseCanvasPos, MenuPreferences.ReducedMotion);
+
+            // Ethereal Midnight Veil when a sub-view is open
+            bool isSubView = view != "home";
+            if (subpanelVeil != null)
+            {
+                float targetVeil = view == "quit" ? 0.84f : (isSubView ? 0.76f : 0f);
+                subpanelVeil.color = new Color(0.015f, 0.024f, 0.052f, Mathf.MoveTowards(subpanelVeil.color.a, targetVeil, dt * 4f));
+            }
+
+            float transitionProgress = MenuPreferences.ReducedMotion ? 1f : SmoothStep(Mathf.Clamp01(viewAge / 0.25f));
+            UpdateEtherealView(homeGroup, view == "home", uiReveal, transitionProgress, isHome: true);
+            UpdateEtherealView(realmsGroup, view == "realms", 1f, transitionProgress, isHome: false);
+            UpdateEtherealView(settingsGroup, view == "settings", 1f, transitionProgress, isHome: false);
+            UpdateEtherealView(controlsGroup, view == "controls", 1f, transitionProgress, isHome: false);
+            UpdateEtherealView(creditsGroup, view == "credits", 1f, transitionProgress, isHome: false);
+            UpdateEtherealView(quitGroup, view == "quit", 1f, transitionProgress, isHome: false);
 
             if (hintText != null)
             {
                 hintText.gameObject.SetActive(!introDone);
             }
 
-            UpdateNavHighlights();
-            AnimateAtmosphere(dt);
             UpdateSafeFrame();
         }
 
-        private void UpdateHomeDock(float reveal, bool isStrictlyHome, bool allowDockClicks)
-        {
-            if (homeGroup == null) return;
-            float targetAlpha = allowDockClicks ? reveal : reveal * 0.35f;
-            homeGroup.alpha = Mathf.MoveTowards(homeGroup.alpha, targetAlpha, Time.unscaledDeltaTime * 6f);
-            // Note: When a drawer is open, homeGroup.interactable is set to false so unit tests checking
-            // Safe area/Home interactable==false when Settings is open pass 100%, OR we keep navigation buttons interactive.
-            // Let's check: in MainMenuTests, `Assert.That(menu.Canvas.transform.Find("Safe area/Home").GetComponent<CanvasGroup>().interactable, Is.False);`
-            homeGroup.interactable = isStrictlyHome && introDone && !loading && !quitting;
-            homeGroup.blocksRaycasts = isStrictlyHome && !loading && !quitting;
-
-            var rect = (RectTransform)homeGroup.transform;
-            float slideX = MenuPreferences.ReducedMotion ? 0f : -28f * (1f - reveal);
-            rect.anchoredPosition = new Vector2(slideX, 0f);
-        }
-
-        private void UpdateDrawerPanel(CanvasGroup group, bool active, float progress)
+        private void UpdateEtherealView(CanvasGroup group, bool active, float masterReveal, float transition, bool isHome)
         {
             if (group == null) return;
-            group.alpha = Mathf.MoveTowards(group.alpha, active ? 1f : 0f, Time.unscaledDeltaTime * 6.5f);
+            float targetAlpha = active ? masterReveal : 0f;
+            group.alpha = Mathf.MoveTowards(group.alpha, targetAlpha, Time.unscaledDeltaTime * 6.5f);
             group.interactable = active && introDone && !loading && !quitting;
             group.blocksRaycasts = active && !loading && !quitting;
 
             var rect = (RectTransform)group.transform;
-            float slideOffset = MenuPreferences.ReducedMotion ? 0f : 42f * (1f - progress);
-            rect.anchoredPosition = new Vector2(slideOffset, 0f);
-        }
-
-        private void UpdateModalPanel(CanvasGroup group, bool active, float progress)
-        {
-            if (group == null) return;
-            group.alpha = Mathf.MoveTowards(group.alpha, active ? 1f : 0f, Time.unscaledDeltaTime * 7f);
-            group.interactable = active && introDone && !loading && !quitting;
-            group.blocksRaycasts = active && !loading && !quitting;
-
-            var rect = (RectTransform)group.transform;
-            float scale = MenuPreferences.ReducedMotion ? 1f : Mathf.Lerp(0.94f, 1f, progress);
-            rect.localScale = new Vector3(scale, scale, 1f);
-        }
-
-        private void UpdateNavHighlights()
-        {
-            foreach (var kvp in navMotions)
+            if (MenuPreferences.ReducedMotion)
             {
-                if (kvp.Value != null)
-                {
-                    kvp.Value.IsActiveTab = (kvp.Key == view);
-                }
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = Vector3.one;
+            }
+            else if (isHome)
+            {
+                float yOffset = -18f * (1f - masterReveal);
+                rect.anchoredPosition = new Vector2(0f, yOffset);
+            }
+            else
+            {
+                float yRise = -22f * (1f - transition);
+                float scale = Mathf.Lerp(0.96f, 1f, transition);
+                rect.anchoredPosition = new Vector2(0f, yRise);
+                rect.localScale = new Vector3(scale, scale, 1f);
             }
         }
 
         public void SkipIntro()
         {
-            age = Mathf.Max(age, 3.2f);
+            age = Mathf.Max(age, 3.0f);
             introDone = true;
             introIgnitePlayed = true;
             if (curtain != null && !loading && !quitting)
             {
-                curtain.color = new Color(0.01f, 0.012f, 0.015f, 0f);
+                curtain.color = new Color(0.012f, 0.018f, 0.038f, 0f);
             }
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null && playButton != null)
             {
@@ -350,24 +314,26 @@ namespace TheLightenRoad.Frontend
             }
         }
 
-        private void SetView(string nextView, Selectable firstSelectable)
+        private void SetView(string nextView, Selectable firstSelectable, Vector2 stageCameraFocus)
         {
             if (loading || quitting) return;
             MenuPreferences.Save();
             view = nextView;
             viewAge = 0f;
+            stage?.TriggerInteractionSurge(new Vector2(0f, 40f), stageCameraFocus, 0.9f);
+
             if (EventSystem.current != null && firstSelectable != null)
             {
                 EventSystem.current.SetSelectedGameObject(firstSelectable.gameObject);
             }
         }
 
-        public void ShowHome() => SetView("home", playButton);
-        public void ShowRealms() { RefreshRealmSelectionUI(); SetView("realms", realmsFirst); }
-        public void ShowSettings() { SyncSettingsUI(); SetView("settings", masterSlider); }
-        public void ShowControls() => SetView("controls", controlsFirst);
-        public void ShowCredits() => SetView("credits", creditsFirst);
-        public void ShowQuit() => SetView("quit", quitFirst);
+        public void ShowHome() => SetView("home", playButton, Vector2.zero);
+        public void ShowRealms() { RefreshRealmSelectionUI(); SetView("realms", realmsFirst, new Vector2(-28f, -14f)); }
+        public void ShowSettings() { SyncSettingsUI(); SetView("settings", masterSlider, new Vector2(24f, -18f)); }
+        public void ShowControls() => SetView("controls", controlsFirst, new Vector2(-18f, 16f));
+        public void ShowCredits() => SetView("credits", creditsFirst, new Vector2(18f, 16f));
+        public void ShowQuit() => SetView("quit", quitFirst, new Vector2(0f, -26f));
 
         public void SelectRealm(int index)
         {
@@ -376,6 +342,8 @@ namespace TheLightenRoad.Frontend
             gameplayScene = AvailableRealms[selectedRealmIndex].ScenePath;
             MenuPreferences.SetSelectedRealm(selectedRealmIndex);
             RefreshRealmSelectionUI();
+
+            stage?.TriggerInteractionSurge(new Vector2(0f, 120f - index * 140f), new Vector2(-20f, 10f - index * 10f), 1.1f);
 
             if (Application.isPlaying)
             {
@@ -388,28 +356,28 @@ namespace TheLightenRoad.Frontend
             if (activeRealmBadgeText != null && selectedRealmIndex >= 0 && selectedRealmIndex < AvailableRealms.Length)
             {
                 var r = AvailableRealms[selectedRealmIndex];
-                activeRealmBadgeText.text = $"SELECTED REALM: {r.Number} — {r.Title}";
+                activeRealmBadgeText.text = $"—   {r.Number}  :  {r.Title}   —";
             }
 
-            for (int i = 0; i < realmCardBackgrounds.Count; i++)
+            for (int i = 0; i < realmRowAuras.Count; i++)
             {
                 bool isSelected = (i == selectedRealmIndex);
-                if (realmCardBackgrounds[i] != null)
+                if (realmRowAuras[i] != null)
                 {
-                    realmCardBackgrounds[i].color = isSelected
-                        ? new Color(0.20f, 0.13f, 0.05f, 0.90f)
-                        : new Color(0.06f, 0.075f, 0.095f, 0.72f);
+                    realmRowAuras[i].color = isSelected
+                        ? new Color(1.0f, 0.68f, 0.22f, 0.26f)
+                        : new Color(0.55f, 0.68f, 0.90f, 0.04f);
                 }
-                if (realmCardBorders[i] != null)
+                if (realmRowUnderlines[i] != null)
                 {
-                    realmCardBorders[i].color = isSelected
-                        ? new Color(1.0f, 0.72f, 0.28f, 0.92f)
-                        : new Color(0.75f, 0.55f, 0.28f, 0.22f);
+                    realmRowUnderlines[i].color = isSelected
+                        ? new Color(1.0f, 0.74f, 0.28f, 0.85f)
+                        : new Color(0.55f, 0.68f, 0.90f, 0.16f);
                 }
                 if (realmStatusLabels[i] != null)
                 {
-                    realmStatusLabels[i].text = isSelected ? "● ACTIVE REALM" : "SELECT REALM";
-                    realmStatusLabels[i].color = isSelected ? amberGold : mutedStone;
+                    realmStatusLabels[i].text = isSelected ? "[ ACTIVE REALM ]" : "SELECT REALM";
+                    realmStatusLabels[i].color = isSelected ? amberGold : mutedIndigo;
                 }
             }
         }
@@ -434,6 +402,7 @@ namespace TheLightenRoad.Frontend
             loading = true;
             MenuPreferences.Save();
 
+            stage?.TriggerInteractionSurge(Vector2.zero, new Vector2(0f, 32f), 1.6f);
             if (Application.isPlaying)
             {
                 SoundEffectManager.Instance?.PlayFlareIgnite();
@@ -459,39 +428,47 @@ namespace TheLightenRoad.Frontend
             while (elapsed < 0.75f || operation.progress < 0.9f)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float progress = Mathf.Clamp01(Mathf.Min(elapsed / 0.70f, operation.progress / 0.9f));
+                float progress = Mathf.Clamp01(Mathf.Min(elapsed / 0.75f, operation.progress / 0.9f));
                 if (loadingBarFill != null)
                 {
                     loadingBarFill.rectTransform.anchorMax = new Vector2(progress, 1f);
                 }
                 if (curtain != null)
                 {
-                    curtain.color = new Color(0.01f, 0.012f, 0.015f, Mathf.Clamp01(elapsed / 0.65f));
+                    curtain.color = new Color(0.012f, 0.018f, 0.038f, SmoothStep(progress));
                 }
                 yield return null;
             }
 
+            if (curtain != null)
+            {
+                curtain.color = new Color(0.012f, 0.018f, 0.038f, 1f);
+            }
             operation.allowSceneActivation = true;
         }
 
         public void ConfirmQuit()
         {
             if (loading || quitting) return;
-            StartCoroutine(ExitGameRoutine());
+            StartCoroutine(QuitRoutine());
         }
 
-        private IEnumerator ExitGameRoutine()
+        private IEnumerator QuitRoutine()
         {
             quitting = true;
             MenuPreferences.Save();
-            for (float t = 0f; t < 0.40f; t += Time.unscaledDeltaTime)
+
+            float t = 0f;
+            while (t < 0.35f)
             {
+                t += Time.unscaledDeltaTime;
                 if (curtain != null)
                 {
-                    curtain.color = new Color(0.01f, 0.012f, 0.015f, t / 0.40f);
+                    curtain.color = new Color(0.01f, 0.015f, 0.03f, SmoothStep(t / 0.35f));
                 }
                 yield return null;
             }
+
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
@@ -499,33 +476,56 @@ namespace TheLightenRoad.Frontend
 #endif
         }
 
+        // =====================================================================
+        // SETTINGS CALLBACKS
+        // =====================================================================
+
         private void SyncSettingsUI()
         {
-            if (masterSlider == null) return;
-            masterSlider.SetValueWithoutNotify(MenuPreferences.Master);
-            musicSlider.SetValueWithoutNotify(MenuPreferences.Music);
-            effectsSlider.SetValueWithoutNotify(MenuPreferences.Effects);
-            fullscreenToggle.SetIsOnWithoutNotify(MenuPreferences.Fullscreen);
-            vsyncToggle.SetIsOnWithoutNotify(MenuPreferences.VSync);
-            motionToggle.SetIsOnWithoutNotify(MenuPreferences.ReducedMotion);
+            if (masterSlider != null) masterSlider.SetValueWithoutNotify(MenuPreferences.Master);
+            if (musicSlider != null) musicSlider.SetValueWithoutNotify(MenuPreferences.Music);
+            if (effectsSlider != null) effectsSlider.SetValueWithoutNotify(MenuPreferences.Effects);
+            if (fullscreenToggle != null) fullscreenToggle.SetIsOnWithoutNotify(MenuPreferences.Fullscreen);
+            if (vsyncToggle != null) vsyncToggle.SetIsOnWithoutNotify(MenuPreferences.VSync);
+            if (motionToggle != null) motionToggle.SetIsOnWithoutNotify(MenuPreferences.ReducedMotion);
 
-            foreach (var s in new[] { masterSlider, musicSlider, effectsSlider })
-            {
-                UpdateSliderPercentLabel(s);
-            }
+            if (masterSlider != null) UpdateSliderPercentLabel(masterSlider);
+            if (musicSlider != null) UpdateSliderPercentLabel(musicSlider);
+            if (effectsSlider != null) UpdateSliderPercentLabel(effectsSlider);
             UpdateSwitchVisual(fullscreenToggle);
             UpdateSwitchVisual(vsyncToggle);
             UpdateSwitchVisual(motionToggle);
-            UpdateFPSLabel();
+            UpdateFpsLabel();
         }
 
         private void OnAudioSliderChanged(float _)
         {
+            if (masterSlider == null || musicSlider == null || effectsSlider == null) return;
+            UpdateSliderPercentLabel(masterSlider);
+            UpdateSliderPercentLabel(musicSlider);
+            UpdateSliderPercentLabel(effectsSlider);
             MenuPreferences.SetAudio(masterSlider.value, musicSlider.value, effectsSlider.value);
-            foreach (var s in new[] { masterSlider, musicSlider, effectsSlider })
-            {
-                UpdateSliderPercentLabel(s);
-            }
+        }
+
+        private void OnFullscreenToggled(bool value)
+        {
+            MenuPreferences.SetFullscreen(value);
+            UpdateSwitchVisual(fullscreenToggle);
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+        }
+
+        private void OnVSyncToggled(bool value)
+        {
+            MenuPreferences.SetVSync(value);
+            UpdateSwitchVisual(vsyncToggle);
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+        }
+
+        private void OnReducedMotionToggled(bool value)
+        {
+            MenuPreferences.SetReducedMotion(value);
+            UpdateSwitchVisual(motionToggle);
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
         }
 
         private void CycleTargetFPS()
@@ -533,20 +533,22 @@ namespace TheLightenRoad.Frontend
             int current = MenuPreferences.TargetFPS;
             int next = current == 60 ? 120 : (current == 120 ? -1 : 60);
             MenuPreferences.SetTargetFPS(next);
-            UpdateFPSLabel();
+            UpdateFpsLabel();
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
         }
 
-        private void UpdateFPSLabel()
+        private void UpdateFpsLabel()
         {
             if (fpsButtonValueText == null) return;
             int fps = MenuPreferences.TargetFPS;
             fpsButtonValueText.text = fps <= 0 ? "UNLIMITED" : $"{fps} FPS";
         }
 
-        private void ResetSettingsToDefault()
+        public void ResetDefaults()
         {
             MenuPreferences.ResetToDefaults();
             SyncSettingsUI();
+            stage?.TriggerInteractionSurge(Vector2.zero, Vector2.zero, 1f);
             if (Application.isPlaying)
             {
                 SoundEffectManager.Instance?.PlayEmberPickup();
@@ -569,102 +571,14 @@ namespace TheLightenRoad.Frontend
             if (valNode != null && valNode.TryGetComponent<TMP_Text>(out var txt))
             {
                 txt.text = toggle.isOn ? "ON" : "OFF";
-                txt.color = toggle.isOn ? ivory : mutedStone;
+                txt.color = toggle.isOn ? amberGold : mutedIndigo;
             }
             var pillNode = toggle.transform.Find("Pill");
             if (pillNode != null && pillNode.TryGetComponent<Image>(out var pillImg))
             {
                 pillImg.color = toggle.isOn
-                    ? new Color(0.85f, 0.54f, 0.18f, 0.85f)
-                    : new Color(0.12f, 0.14f, 0.17f, 0.85f);
-            }
-        }
-
-        private void AnimateAtmosphere(float dt)
-        {
-            bool still = MenuPreferences.ReducedMotion;
-
-            // 1. Mouse position tracking (normalized -0.5..0.5 and canvas space)
-            Vector2 normMouse = Vector2.zero;
-            if (Mouse.current != null && Screen.width > 0 && Screen.height > 0)
-            {
-                Vector2 raw = Mouse.current.position.ReadValue();
-                normMouse = new Vector2(raw.x / Screen.width - 0.5f, raw.y / Screen.height - 0.5f);
-                normMouse = Vector2.ClampMagnitude(normMouse, 0.75f);
-
-                if (canvas != null)
-                {
-                    var canvasRect = (RectTransform)canvas.transform;
-                    cursorCanvasPos = new Vector2(
-                        (raw.x / Screen.width - 0.5f) * canvasRect.rect.width,
-                        (raw.y / Screen.height - 0.5f) * canvasRect.rect.height);
-                }
-            }
-
-            smoothedPointer = Vector2.Lerp(smoothedPointer, normMouse, 1f - Mathf.Exp(-dt * 3.2f));
-
-            // 2. Backdrop Parallax & Slow Cinematic Zoom
-            if (background != null)
-            {
-                float zoomIntro = still ? 1f : SmoothStep(Mathf.Clamp01(age / 4.0f));
-                background.localScale = Vector3.one * Mathf.Lerp(1.13f, 1.05f, zoomIntro);
-                background.anchoredPosition = still
-                    ? Vector2.zero
-                    : new Vector2(
-                        -smoothedPointer.x * 18f + Mathf.Sin(age * 0.12f) * 6f,
-                        -smoothedPointer.y * 11f + Mathf.Cos(age * 0.10f) * 4f);
-            }
-
-            // 3. Pedestal Lantern Breathing & Flicker
-            float ignition = SmoothStep(Mathf.InverseLerp(0.18f, 1.6f, age));
-            float flicker = still
-                ? 0.88f
-                : 0.85f + Mathf.Sin(age * 2.3f) * 0.08f + Mathf.Sin(age * 6.7f) * 0.04f + Mathf.Cos(age * 13.1f) * 0.02f;
-
-            if (pedestalOuterImage != null && pedestalLanternOuter != null)
-            {
-                pedestalOuterImage.color = new Color(0.92f, 0.52f, 0.15f, 0.22f * flicker * ignition);
-                float outerScale = still ? 1f : (1f + Mathf.Sin(age * 0.9f) * 0.04f);
-                pedestalLanternOuter.localScale = new Vector3(outerScale, outerScale, 1f);
-            }
-
-            if (pedestalCoreImage != null && pedestalLanternCore != null)
-            {
-                pedestalCoreImage.color = new Color(1.0f, 0.82f, 0.42f, 0.34f * flicker * ignition);
-                float coreScale = still ? 1f : (1f + Mathf.Sin(age * 3.1f) * 0.06f);
-                pedestalLanternCore.localScale = new Vector3(coreScale, coreScale, 1f);
-            }
-
-            // 4. Interactive Mouse-Following Lantern Spotlight
-            if (cursorSpotlight != null && cursorSpotImage != null)
-            {
-                cursorSpotlight.anchoredPosition = Vector2.Lerp(
-                    cursorSpotlight.anchoredPosition,
-                    cursorCanvasPos,
-                    1f - Mathf.Exp(-dt * 8f));
-                float spotPulse = still ? 0.10f : (0.11f + 0.02f * Mathf.Sin(age * 3.4f));
-                cursorSpotImage.color = new Color(0.96f, 0.62f, 0.22f, spotPulse * ignition);
-            }
-
-            // 5. Floating Ember & Ash Particles
-            for (int i = 0; i < particles.Count; i++)
-            {
-                var p = particles[i];
-                float y = Mathf.Repeat(p.SeedY + (still ? 0f : age * p.SpeedY), 1f);
-                float x = Mathf.Repeat(p.SeedX + (still ? 0f : Mathf.Sin(age * p.DriftFreq + i) * p.DriftAmp), 1f);
-                p.Rect.anchorMin = p.Rect.anchorMax = new Vector2(x, y);
-                p.Rect.anchoredPosition = Vector2.zero;
-
-                float lifeAlpha = Mathf.Sin(y * Mathf.PI);
-                if (p.IsBrightEmber)
-                {
-                    float sparkFlicker = 0.7f + 0.3f * Mathf.Sin(age * 5f + i * 2.1f);
-                    p.Img.color = new Color(1.0f, 0.65f, 0.20f, (still ? 0.18f : 0.48f * lifeAlpha * sparkFlicker) * ignition);
-                }
-                else
-                {
-                    p.Img.color = new Color(0.76f, 0.64f, 0.46f, (still ? 0.06f : 0.14f * lifeAlpha) * ignition);
-                }
+                    ? new Color(0.95f, 0.62f, 0.18f, 0.28f)
+                    : new Color(0.10f, 0.14f, 0.24f, 0.35f);
             }
         }
 
@@ -681,7 +595,7 @@ namespace TheLightenRoad.Frontend
         }
 
         // =====================================================================
-        // UI CONSTRUCTION
+        // UI & PROCEDURAL STAGE CONSTRUCTION
         // =====================================================================
 
         private void BuildUI()
@@ -699,99 +613,32 @@ namespace TheLightenRoad.Frontend
 
             var rootRect = (RectTransform)rootGo.transform;
 
-            // 1. Deep Obsidian Base & Backdrop Painting
-            CreateFullStretchImage("Obsidian Void", rootRect, new Color32(7, 9, 11, 255));
+            // 1. Pure-Code Procedural 2.5D Animated Stage (No static photos!)
+            stage = gameObject.AddComponent<ProceduralArchiveStage>();
+            stage.BuildStage(rootRect);
+            filigreeSprite = stage.CreateOrnateFiligreeSprite(512, 64);
+            softRadialSprite = CreateSoftRadialSprite(128);
 
-            background = CreateStretchRect("Archive Backdrop", rootRect);
-            background.pivot = Vector2.one * 0.5f;
-            var rawBackdrop = background.gameObject.AddComponent<RawImage>();
-            rawBackdrop.texture = backdrop;
-            rawBackdrop.color = Color.white;
-            rawBackdrop.raycastTarget = false;
-            if (backdrop != null && backdrop.height > 0)
-            {
-                var fitter = background.gameObject.AddComponent<AspectRatioFitter>();
-                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-                fitter.aspectRatio = (float)backdrop.width / backdrop.height;
-            }
+            // 2. Ethereal Sub-Panel Midnight Veil
+            subpanelVeil = CreateFullStretchImage("Ethereal Subpanel Veil", rootRect, Color.clear);
 
-            // 2. Procedural Radial Glow Sprite for Lanterns & Spotlight
-            radialGlowTexture = CreateRadialGlowTexture();
-            radialGlowSprite = Sprite.Create(
-                radialGlowTexture,
-                new Rect(0f, 0f, radialGlowTexture.width, radialGlowTexture.height),
-                Vector2.one * 0.5f,
-                100f);
-
-            // Pedestal Lantern Outer Spill & Inner Core
-            pedestalLanternOuter = CreateAnchoredRect("Pedestal Lantern Outer", background, new Vector2(780f, 660f), new Vector2(0.76f, 0.45f), Vector2.zero);
-            pedestalLanternOuter.pivot = Vector2.one * 0.5f;
-            pedestalOuterImage = pedestalLanternOuter.gameObject.AddComponent<Image>();
-            pedestalOuterImage.sprite = radialGlowSprite;
-            pedestalOuterImage.color = Color.clear;
-            pedestalOuterImage.raycastTarget = false;
-
-            pedestalLanternCore = CreateAnchoredRect("Pedestal Lantern Core", background, new Vector2(290f, 290f), new Vector2(0.76f, 0.45f), Vector2.zero);
-            pedestalLanternCore.pivot = Vector2.one * 0.5f;
-            pedestalCoreImage = pedestalLanternCore.gameObject.AddComponent<Image>();
-            pedestalCoreImage.sprite = radialGlowSprite;
-            pedestalCoreImage.color = Color.clear;
-            pedestalCoreImage.raycastTarget = false;
-
-            // 3. Multi-Depth Floating Embers & Ash Particles
-            var particleLayer = CreateStretchRect("Ember Particle Layer", rootRect);
-            for (int i = 0; i < 42; i++)
-            {
-                bool isBright = (i % 3 == 0);
-                float size = isBright ? (i % 2 == 0 ? 5.5f : 4f) : (i % 4 == 0 ? 3.5f : 2.2f);
-                var pRect = CreateAnchoredRect($"Ember_{i:00}", particleLayer, new Vector2(size, size), Vector2.zero, Vector2.zero);
-                pRect.pivot = Vector2.one * 0.5f;
-                var pImg = pRect.gameObject.AddComponent<Image>();
-                if (isBright) pImg.sprite = radialGlowSprite;
-                pImg.raycastTarget = false;
-
-                particles.Add(new EmberParticle
-                {
-                    Rect = pRect,
-                    Img = pImg,
-                    SeedX = Mathf.Repeat(i * 0.6180339f, 1f),
-                    SeedY = Mathf.Repeat(i * 0.381966f, 1f),
-                    SpeedY = isBright ? (0.018f + (i % 5) * 0.004f) : (0.010f + (i % 4) * 0.0025f),
-                    DriftAmp = isBright ? 0.018f : 0.009f,
-                    DriftFreq = 0.35f + (i % 6) * 0.08f,
-                    IsBrightEmber = isBright
-                });
-            }
-
-            // 4. Interactive Mouse-Following Lantern Spotlight
-            cursorSpotlight = CreateAnchoredRect("Cursor Lantern Spotlight", rootRect, new Vector2(560f, 560f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            cursorSpotlight.pivot = Vector2.one * 0.5f;
-            cursorSpotImage = cursorSpotlight.gameObject.AddComponent<Image>();
-            cursorSpotImage.sprite = radialGlowSprite;
-            cursorSpotImage.color = Color.clear;
-            cursorSpotImage.raycastTarget = false;
-
-            // 5. Left Vignette & Drawer Backdrop Veil
-            CreateFullStretchImage("Atmospheric Vignette", rootRect, new Color(0.01f, 0.015f, 0.02f, 0.28f));
-            drawerBackdropVeil = CreateFullStretchImage("Drawer Backdrop Veil", rootRect, Color.clear);
-
-            // 6. Safe Area Frame
+            // 3. Safe Area Container
             safeFrame = CreateStretchRect("Safe area", rootRect);
 
-            // 7. Create Views
-            home = CreateLeftDockPanel("Home", safeFrame, out homeGroup);
-            realms = CreateRightDrawerPanel("Realms", safeFrame, out realmsGroup);
-            settings = CreateRightDrawerPanel("Settings", safeFrame, out settingsGroup);
-            controls = CreateRightDrawerPanel("Controls", safeFrame, out controlsGroup);
-            credits = CreateRightDrawerPanel("Credits", safeFrame, out creditsGroup);
-            quit = CreateCenterModalPanel("Quit confirmation", safeFrame, out quitGroup);
+            // 4. Views (Frameless Center Stage Architecture)
+            home = CreateCenterStagePanel("Home", safeFrame, out homeGroup);
+            realms = CreateCenterStagePanel("Realms", safeFrame, out realmsGroup);
+            settings = CreateCenterStagePanel("Settings", safeFrame, out settingsGroup);
+            controls = CreateCenterStagePanel("Controls", safeFrame, out controlsGroup);
+            credits = CreateCenterStagePanel("Credits", safeFrame, out creditsGroup);
+            quit = CreateCenterStagePanel("Quit confirmation", safeFrame, out quitGroup);
 
-            BuildHomeDock();
-            BuildRealmsDrawer();
-            BuildSettingsDrawer();
-            BuildControlsDrawer();
-            BuildCreditsDrawer();
-            BuildQuitModal();
+            BuildFramelessHomeView();
+            BuildFramelessRealmsView();
+            BuildFramelessSettingsView();
+            BuildFramelessControlsView();
+            BuildFramelessCreditsView();
+            BuildFramelessQuitView();
 
             homeGroup.alpha = 0f;
             realmsGroup.alpha = 0f;
@@ -800,31 +647,30 @@ namespace TheLightenRoad.Frontend
             creditsGroup.alpha = 0f;
             quitGroup.alpha = 0f;
 
-            // 8. Footer Bar & Skip Hint
-            var footerBar = CreateAnchoredRect("Footer Bar", safeFrame, new Vector2(1720f, 36f), new Vector2(0f, 0f), new Vector2(96f, 28f));
-            var footerLeft = CreateLabel("Footer Brand", footerBar, "THE LIGHTEN ROAD   •   ATMOSPHERIC LANTERN PLATFORMER   •   2026", 11.5f, mutedStone, new Vector2(900f, 28f), new Vector2(0f, 0.5f), new Vector2(0f, 0f));
-            footerLeft.characterSpacing = 3.5f;
+            // 5. Delicate Whispered Footer & Intro Skip Prompt
+            var footer = CreateLabel("Footer Brand", safeFrame, "THE LIGHTEN ROAD   •   AN ATMOSPHERIC LANTERN JOURNEY", 11f, mutedIndigo, new Vector2(820f, 26f), new Vector2(0.5f, 0f), new Vector2(0f, 22f));
+            footer.rectTransform.pivot = new Vector2(0.5f, 0f);
+            footer.alignment = TextAlignmentOptions.Center;
+            footer.characterSpacing = 5f;
 
-            hintText = CreateLabel("Skip Hint", safeFrame, "PRESS [ENTER], [SPACE] OR CLICK TO SKIP INTRO", 11.5f, amberGold, new Vector2(620f, 30f), new Vector2(1f, 0f), new Vector2(-96f, 28f));
-            hintText.rectTransform.pivot = new Vector2(1f, 0f);
-            hintText.alignment = TextAlignmentOptions.Right;
-            hintText.characterSpacing = 3f;
+            hintText = CreateLabel("Skip Hint", safeFrame, "PRESS [ENTER], [SPACE] OR CLICK TO AWAKEN THE LANTERN", 11f, amberGold, new Vector2(680f, 26f), new Vector2(0.5f, 0f), new Vector2(0f, 52f));
+            hintText.rectTransform.pivot = new Vector2(0.5f, 0f);
+            hintText.alignment = TextAlignmentOptions.Center;
+            hintText.characterSpacing = 3.5f;
 
-            // 9. Cinematic Fade Curtain & Loading Overlay
-            curtain = CreateFullStretchImage("Cinematic Curtain", rootRect, new Color32(3, 4, 5, 255));
+            // 6. Cinematic Curtain & Loading Indicator
+            curtain = CreateFullStretchImage("Cinematic Curtain", rootRect, new Color(0.012f, 0.018f, 0.038f, 1f));
 
-            var loadRect = CreateAnchoredRect("Loading Container", rootRect, new Vector2(680f, 90f), new Vector2(0.5f, 0.12f), Vector2.zero);
-            loadRect.pivot = new Vector2(0.5f, 0.5f);
+            var loadRect = CreateAnchoredRect("Loading Container", rootRect, new Vector2(680f, 84f), new Vector2(0.5f, 0.14f), Vector2.zero);
             loadingContainer = loadRect.gameObject;
 
-            loadingText = CreateLabel("Loading Text", loadRect, "ENTERING THE ARCHIVE...", 15f, ivory, new Vector2(680f, 36f), new Vector2(0.5f, 1f), new Vector2(0f, -10f));
+            loadingText = CreateLabel("Loading Text", loadRect, "ENTERING THE ARCHIVE...", 14.5f, radiantIvory, new Vector2(680f, 34f), new Vector2(0.5f, 1f), new Vector2(0f, -8f));
             loadingText.rectTransform.pivot = new Vector2(0.5f, 1f);
             loadingText.alignment = TextAlignmentOptions.Center;
-            loadingText.characterSpacing = 5.5f;
+            loadingText.characterSpacing = 6f;
 
-            var barBg = CreateAnchoredRect("Loading Bar BG", loadRect, new Vector2(460f, 4f), new Vector2(0.5f, 0f), new Vector2(0f, 18f));
-            barBg.pivot = new Vector2(0.5f, 0f);
-            barBg.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.12f);
+            var barBg = CreateAnchoredRect("Loading Bar BG", loadRect, new Vector2(420f, 3f), new Vector2(0.5f, 0f), new Vector2(0f, 18f));
+            barBg.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.14f);
 
             var barFillRect = CreateStretchRect("Loading Bar Fill", barBg);
             barFillRect.anchorMax = new Vector2(0f, 1f);
@@ -833,7 +679,6 @@ namespace TheLightenRoad.Frontend
 
             loadingContainer.SetActive(false);
 
-            // 10. Ensure EventSystem
             if (FindAnyObjectByType<EventSystem>() == null)
             {
                 var esGo = new GameObject("Menu EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
@@ -843,562 +688,611 @@ namespace TheLightenRoad.Frontend
         }
 
         // =====================================================================
-        // LEFT DOCK (HOME & NAVIGATION)
+        // HOME VIEW: FRAMELESS HOLLOW-KNIGHT / ORI CENTERED LAYOUT
         // =====================================================================
 
-        private void BuildHomeDock()
+        private void BuildFramelessHomeView()
         {
-            // Glassmorphic Left Pillar Card
-            var dockCard = CreateAnchoredRect("Left Glass Pillar", home, new Vector2(520f, 910f), new Vector2(0f, 0.5f), new Vector2(0f, 0f));
-            dockCard.pivot = new Vector2(0f, 0.5f);
-            var dockBg = dockCard.gameObject.AddComponent<Image>();
-            dockBg.color = new Color(0.035f, 0.045f, 0.058f, 0.78f);
-            dockBg.raycastTarget = false;
+            // Soft Golden Aura behind the Monumental Title
+            var titleAura = CreateAnchoredRect("Title Soft Lantern Glow", home, new Vector2(980f, 320f), new Vector2(0.5f, 0.5f), new Vector2(0f, 275f));
+            var auraImg = titleAura.gameObject.AddComponent<Image>();
+            auraImg.sprite = softRadialSprite;
+            auraImg.color = new Color(1.0f, 0.64f, 0.18f, 0.16f);
+            auraImg.raycastTarget = false;
 
-            // Top & Left Golden Accent Borders
-            var topAccent = CreateAnchoredRect("Top Gold Border", dockCard, new Vector2(520f, 2f), new Vector2(0f, 1f), new Vector2(0f, -2f));
-            topAccent.gameObject.AddComponent<Image>().color = new Color(0.95f, 0.66f, 0.25f, 0.65f);
+            // Top Ornate Filigree Crest
+            var topCrest = CreateAnchoredRect("Top Ornate Crest", home, new Vector2(540f, 44f), new Vector2(0.5f, 0.5f), new Vector2(0f, 388f));
+            var topCrestImg = topCrest.gameObject.AddComponent<Image>();
+            topCrestImg.sprite = filigreeSprite;
+            topCrestImg.color = new Color(1.0f, 0.76f, 0.34f, 0.78f);
+            topCrestImg.raycastTarget = false;
 
-            var leftAccent = CreateAnchoredRect("Left Subtle Border", dockCard, new Vector2(1.5f, 910f), new Vector2(0f, 0f), Vector2.zero);
-            leftAccent.gameObject.AddComponent<Image>().color = new Color(0.95f, 0.66f, 0.25f, 0.24f);
+            // Whispered Eyebrow
+            var eyebrow = CreateLabel("Eyebrow", home, "SOME LIGHTS REFUSE TO DIE", 12.5f, moonlightSilver, new Vector2(720f, 28f), new Vector2(0.5f, 0.5f), new Vector2(0f, 348f));
+            eyebrow.rectTransform.pivot = Vector2.one * 0.5f;
+            eyebrow.alignment = TextAlignmentOptions.Center;
+            eyebrow.characterSpacing = 9f;
 
-            // Eyebrow Tag
-            var eyebrowDot = CreateAnchoredRect("Eyebrow Ember", dockCard, new Vector2(6f, 6f), new Vector2(0f, 1f), new Vector2(36f, -48f));
-            eyebrowDot.gameObject.AddComponent<Image>().color = amberGold;
-            eyebrowDot.localEulerAngles = new Vector3(0f, 0f, 45f);
+            // Monumental Center Title: THE LIGHTEN ROAD
+            var mainTitle = CreateLabel("Title Lighten Road", home, "THE LIGHTEN ROAD", 72f, radiantIvory, new Vector2(1320f, 96f), new Vector2(0.5f, 0.5f), new Vector2(0f, 272f));
+            mainTitle.rectTransform.pivot = Vector2.one * 0.5f;
+            mainTitle.alignment = TextAlignmentOptions.Center;
+            mainTitle.fontStyle = FontStyles.Bold;
+            mainTitle.characterSpacing = 11f;
 
-            var eyebrow = CreateLabel("Eyebrow", dockCard, "SOME LIGHTS REFUSE TO DIE", 11.5f, amberGold, new Vector2(440f, 24f), new Vector2(0f, 1f), new Vector2(52f, -56f));
-            eyebrow.characterSpacing = 5.5f;
+            // Lower Ornate Filigree Divider under Title
+            var midCrest = CreateAnchoredRect("Title Bottom Filigree", home, new Vector2(680f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, 202f));
+            var midCrestImg = midCrest.gameObject.AddComponent<Image>();
+            midCrestImg.sprite = filigreeSprite;
+            midCrestImg.color = amberGold;
+            midCrestImg.raycastTarget = false;
 
-            // Monumental Title Stack
-            var theLabel = CreateLabel("Title The", dockCard, "THE", 18f, warmStone, new Vector2(440f, 30f), new Vector2(0f, 1f), new Vector2(36f, -92f));
-            theLabel.characterSpacing = 14f;
+            // Frameless Active Realm Whisper
+            activeRealmBadgeText = CreateLabel("Active Realm Text", home, "—   REALM I  :  THE RUINED ARCHIVE   —", 13f, amberGold, new Vector2(820f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 160f));
+            activeRealmBadgeText.rectTransform.pivot = Vector2.one * 0.5f;
+            activeRealmBadgeText.alignment = TextAlignmentOptions.Center;
+            activeRealmBadgeText.characterSpacing = 4.5f;
 
-            var lightenLabel = CreateLabel("Title Lighten", dockCard, "LIGHTEN", 68f, ivory, new Vector2(460f, 82f), new Vector2(0f, 1f), new Vector2(32f, -166f));
-            lightenLabel.characterSpacing = 6f;
-            lightenLabel.fontStyle = FontStyles.Bold;
+            // Frameless Floating Menu Options (Centered over the animated midnight archive)
+            playButton = CreateFramelessMenuButton(
+                home,
+                "Enter the Archive",
+                "Awaken the lantern and step into the realm",
+                yPos: 54f,
+                cameraPan: new Vector2(0f, 22f),
+                onClick: Play,
+                isPrimary: true);
 
-            var roadLabel = CreateLabel("Title Road", dockCard, "ROAD", 68f, amberGold, new Vector2(460f, 82f), new Vector2(0f, 1f), new Vector2(32f, -234f));
-            roadLabel.characterSpacing = 16f;
-            roadLabel.fontStyle = FontStyles.Bold;
+            CreateFramelessMenuButton(
+                home,
+                "Realms & Chapters",
+                "Choose between Sirac Sandbox, Kemal Sandbox & Test Chamber",
+                yPos: -26f,
+                cameraPan: new Vector2(-28f, 10f),
+                onClick: ShowRealms);
 
-            // Active Realm Status Pill
-            var realmPill = CreateAnchoredRect("Active Realm Pill", dockCard, new Vector2(448f, 34f), new Vector2(0f, 1f), new Vector2(36f, -282f));
-            realmPill.gameObject.AddComponent<Image>().color = new Color(0.14f, 0.095f, 0.04f, 0.75f);
-            var pillBorder = CreateAnchoredRect("Pill Accent", realmPill, new Vector2(3f, 34f), new Vector2(0f, 0f), Vector2.zero);
-            pillBorder.gameObject.AddComponent<Image>().color = amberGold;
+            CreateFramelessMenuButton(
+                home,
+                "Settings",
+                "Audio mixer, display & motion preferences",
+                yPos: -98f,
+                cameraPan: new Vector2(28f, 4f),
+                onClick: ShowSettings);
 
-            activeRealmBadgeText = CreateLabel("Active Realm Text", realmPill, "SELECTED REALM: REALM I — THE RUINED ARCHIVE", 11f, ivory, new Vector2(420f, 34f), new Vector2(0f, 0f), new Vector2(14f, 0f));
-            activeRealmBadgeText.characterSpacing = 2f;
+            CreateFramelessMenuButton(
+                home,
+                "Controls & Guide",
+                "Movement, coyote jump, lantern flare & ember veins",
+                yPos: -170f,
+                cameraPan: new Vector2(-20f, -12f),
+                onClick: ShowControls);
 
-            // Navigation Buttons
-            playButton = CreateNavButton(dockCard, "home_play", "Enter the Archive", "Launch into the selected realm", "01", -358f, Play, isPrimary: true);
-            CreateNavButton(dockCard, "realms", "Realms & Chapters", "Choose sandbox or test chamber", "02", -442f, ShowRealms);
-            CreateNavButton(dockCard, "settings", "Settings", "Audio, display & motion tuning", "03", -526f, ShowSettings);
-            CreateNavButton(dockCard, "controls", "Controls & Guide", "Movement, lantern flare & bindings", "04", -610f, ShowControls);
-            CreateNavButton(dockCard, "credits", "Credits", "The team behind the light", "05", -694f, ShowCredits);
-            CreateNavButton(dockCard, "quit", "Leave the Light", "Extinguish lantern & exit to desktop", "06", -778f, ShowQuit);
+            CreateFramelessMenuButton(
+                home,
+                "Credits",
+                "The creators & soundscape of the archive",
+                yPos: -242f,
+                cameraPan: new Vector2(20f, -16f),
+                onClick: ShowCredits);
+
+            CreateFramelessMenuButton(
+                home,
+                "Leave the Light",
+                "Extinguish the lantern and exit to desktop",
+                yPos: -314f,
+                cameraPan: new Vector2(0f, -28f),
+                onClick: ShowQuit);
         }
 
-        private Button CreateNavButton(
+        private Button CreateFramelessMenuButton(
             RectTransform parent,
-            string key,
             string title,
             string subtitle,
-            string indexStr,
-            float topOffsetY,
+            float yPos,
+            Vector2 cameraPan,
             UnityEngine.Events.UnityAction onClick,
             bool isPrimary = false)
         {
-            var card = CreateAnchoredRect(title, parent, new Vector2(448f, 70f), new Vector2(0f, 1f), new Vector2(36f, topOffsetY));
-            var cardBg = card.gameObject.AddComponent<Image>();
-            cardBg.color = isPrimary ? new Color(0.18f, 0.11f, 0.05f, 0.82f) : glassCard;
+            var itemRect = CreateAnchoredRect(title, parent, new Vector2(640f, isPrimary ? 68f : 58f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
-            var button = card.gameObject.AddComponent<Button>();
-            button.targetGraphic = cardBg;
-            button.transition = Selectable.Transition.None;
-            button.onClick.AddListener(onClick);
+            // Invisible raycast hit graphic (no ugly box!)
+            var hitGraphic = itemRect.gameObject.AddComponent<Image>();
+            hitGraphic.color = Color.clear;
 
-            // Left Ember Bar
-            var emberBarRect = CreateAnchoredRect("Ember Bar", card, new Vector2(3.5f, isPrimary ? 32f : 14f), new Vector2(0f, 0.5f), new Vector2(0f, 0f));
-            emberBarRect.pivot = new Vector2(0f, 0.5f);
-            var emberBarImg = emberBarRect.gameObject.AddComponent<Image>();
-            emberBarImg.color = amberGold;
-            emberBarImg.raycastTarget = false;
+            // Soft radial lantern glow behind the text when focused
+            var glowRect = CreateAnchoredRect("Soft Lantern Aura", itemRect, new Vector2(520f, 92f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var glowImg = glowRect.gameObject.AddComponent<Image>();
+            glowImg.sprite = softRadialSprite;
+            glowImg.color = Color.clear;
+            glowImg.raycastTarget = false;
 
-            // Rotating Diamond Marker
-            var markerRect = CreateAnchoredRect("Diamond Marker", card, new Vector2(6f, 6f), new Vector2(0f, 0.5f), new Vector2(18f, 0f));
-            markerRect.pivot = Vector2.one * 0.5f;
-            var markerImg = markerRect.gameObject.AddComponent<Image>();
-            markerImg.color = amberGold;
-            markerImg.raycastTarget = false;
-            markerRect.localEulerAngles = new Vector3(0f, 0f, 45f);
+            // Symmetrical Procedural Graphic Wings (Filigree + Rotated Golden Diamond)
+            var wingContainer = CreateStretchRect("Ornate Wings", itemRect);
+            var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
+            wingGroup.alpha = isPrimary ? 0.35f : 0f;
+            wingGroup.blocksRaycasts = false;
 
-            // Caption Group
-            var captionGroup = CreateAnchoredRect("Caption Group", card, new Vector2(340f, 56f), new Vector2(0f, 0.5f), new Vector2(38f, 0f));
-            captionGroup.pivot = new Vector2(0f, 0.5f);
+            float wingOffset = Mathf.Max(155f, title.Length * 9.5f + 56f);
 
-            var titleTxt = CreateLabel("Title", captionGroup, title.ToUpperInvariant(), 18.5f, isPrimary ? amberGold : ivory, new Vector2(340f, 28f), new Vector2(0f, 1f), new Vector2(0f, -28f));
-            titleTxt.characterSpacing = 3.5f;
+            var leftWing = CreateOrnateWingGraphic("Left Wing", wingContainer, new Vector2(-wingOffset, 6f), isLeft: true);
+            var rightWing = CreateOrnateWingGraphic("Right Wing", wingContainer, new Vector2(wingOffset, 6f), isLeft: false);
+
+            // Center Title Typography
+            var titleTxt = CreateLabel("Title", itemRect, title.ToUpperInvariant(), isPrimary ? 26f : 21f, isPrimary ? amberGold : radiantIvory, new Vector2(580f, 34f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f));
+            titleTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            titleTxt.alignment = TextAlignmentOptions.Center;
             titleTxt.fontStyle = FontStyles.Bold;
+            titleTxt.characterSpacing = isPrimary ? 6.5f : 5f;
 
-            var subTxt = CreateLabel("Subtitle", captionGroup, subtitle, 11.5f, warmStone, new Vector2(340f, 22f), new Vector2(0f, 0f), new Vector2(0f, 4f));
-            subTxt.characterSpacing = 1f;
+            // Whispered Subtitle underneath
+            var subTxt = CreateLabel("Subtitle", itemRect, subtitle, 11.5f, moonlightSilver, new Vector2(580f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -15f));
+            subTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            subTxt.alignment = TextAlignmentOptions.Center;
+            subTxt.characterSpacing = 1.5f;
 
-            // Right Index Number
-            var indexTxt = CreateLabel("Index", card, indexStr, 12f, amberGold, new Vector2(42f, 28f), new Vector2(1f, 0.5f), new Vector2(-18f, 0f));
-            indexTxt.rectTransform.pivot = new Vector2(1f, 0.5f);
-            indexTxt.alignment = TextAlignmentOptions.Right;
-            indexTxt.characterSpacing = 2f;
+            // Center-out glowing filigree underline
+            var lineRect = CreateAnchoredRect("Underline Filigree", itemRect, new Vector2(0f, 2f), new Vector2(0.5f, 0.5f), new Vector2(0f, -4f));
+            var lineImg = lineRect.gameObject.AddComponent<Image>();
+            lineImg.sprite = filigreeSprite;
+            lineImg.color = Color.clear;
+            lineImg.raycastTarget = false;
 
-            // Bottom Sweep Rule
-            var ruleRect = CreateAnchoredRect("Sweep Rule", card, new Vector2(0f, 1.5f), new Vector2(0f, 0f), new Vector2(38f, 0f));
-            var ruleImg = ruleRect.gameObject.AddComponent<Image>();
-            ruleImg.color = amberGold;
-            ruleImg.raycastTarget = false;
+            var btn = itemRect.gameObject.AddComponent<Button>();
+            btn.targetGraphic = hitGraphic;
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(onClick);
 
-            var motion = card.gameObject.AddComponent<MenuButtonMotion>();
-            motion.Caption = captionGroup;
+            var motion = itemRect.gameObject.AddComponent<MenuButtonMotion>();
             motion.Text = titleTxt;
             motion.SubtitleText = subTxt;
-            motion.IndexText = indexTxt;
-            motion.CardBackground = cardBg;
-            motion.EmberBar = emberBarImg;
-            motion.Marker = markerImg;
-            motion.Rule = ruleImg;
+            motion.SoftGlow = glowImg;
+            motion.LeftWing = leftWing;
+            motion.RightWing = rightWing;
+            motion.WingGroup = wingGroup;
+            motion.UnderlineFiligree = lineImg;
             motion.IsPrimaryAction = isPrimary;
+            motion.BaseWingOffset = wingOffset;
+            motion.StageFocusCanvasPosition = new Vector2(0f, yPos);
+            motion.StageCameraPanOffset = cameraPan;
+            motion.OnFocusedCallback = OnMenuButtonFocused;
 
-            navMotions[key] = motion;
-            return button;
+            return btn;
+        }
+
+        private RectTransform CreateOrnateWingGraphic(string name, RectTransform parent, Vector2 pos, bool isLeft)
+        {
+            var wing = CreateAnchoredRect(name, parent, new Vector2(96f, 22f), new Vector2(0.5f, 0.5f), pos);
+
+            var stem = CreateAnchoredRect("Filigree Stem", wing, new Vector2(76f, 12f), new Vector2(0.5f, 0.5f), new Vector2(isLeft ? -8f : 8f, 0f));
+            var stemImg = stem.gameObject.AddComponent<Image>();
+            stemImg.sprite = filigreeSprite;
+            stemImg.color = amberGold;
+            stemImg.raycastTarget = false;
+
+            var diamond = CreateAnchoredRect("Diamond Tip", wing, new Vector2(8f, 8f), new Vector2(0.5f, 0.5f), new Vector2(isLeft ? 34f : -34f, 0f));
+            diamond.localEulerAngles = new Vector3(0f, 0f, 45f);
+            var diamondImg = diamond.gameObject.AddComponent<Image>();
+            diamondImg.color = radiantIvory;
+            diamondImg.raycastTarget = false;
+
+            return wing;
+        }
+
+        private void OnMenuButtonFocused(MenuButtonMotion motion)
+        {
+            if (stage != null && motion != null)
+            {
+                stage.TriggerInteractionSurge(motion.StageFocusCanvasPosition, motion.StageCameraPanOffset, 1.0f);
+            }
         }
 
         // =====================================================================
-        // DRAWER 1: REALMS & CHAPTERS (SCENE SELECTOR)
+        // SUB-VIEW 1: REALMS & CHAPTERS (FRAMELESS ORNATE SELECTOR)
         // =====================================================================
 
-        private void BuildRealmsDrawer()
+        private void BuildFramelessRealmsView()
         {
-            var container = CreateDrawerSurface(realms, "REALMS & CHAPTERS", "SELECT YOUR DESTINATION IN THE ARCHIVE");
+            var surface = CreateEtherealSubViewFrame(realms, "REALMS & CHAPTERS", "CHOOSE WHICH ARCHIVE REALM TO ILLUMINATE");
 
-            realmCardBackgrounds.Clear();
-            realmCardBorders.Clear();
+            realmRowAuras.Clear();
+            realmRowUnderlines.Clear();
             realmStatusLabels.Clear();
 
             for (int i = 0; i < AvailableRealms.Length; i++)
             {
                 int capturedIndex = i;
                 var r = AvailableRealms[i];
-                float cardY = -148f - i * 186f;
+                float yPos = 125f - i * 142f;
 
-                var card = CreateAnchoredRect($"Realm Card {i}", container, new Vector2(696f, 168f), new Vector2(0.5f, 1f), new Vector2(0f, cardY));
-                card.pivot = new Vector2(0.5f, 1f);
-                var bg = card.gameObject.AddComponent<Image>();
-                bg.color = glassCard;
-                realmCardBackgrounds.Add(bg);
+                var row = CreateAnchoredRect($"Realm Option {i}", surface, new Vector2(860f, 122f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
+                var hitImg = row.gameObject.AddComponent<Image>();
+                hitImg.color = Color.clear;
 
-                var btn = card.gameObject.AddComponent<Button>();
-                btn.targetGraphic = bg;
+                var auraRect = CreateAnchoredRect("Row Aura", row, new Vector2(860f, 130f), new Vector2(0.5f, 0.5f), Vector2.zero);
+                var auraImg = auraRect.gameObject.AddComponent<Image>();
+                auraImg.sprite = softRadialSprite;
+                auraImg.raycastTarget = false;
+                realmRowAuras.Add(auraImg);
+
+                var btn = row.gameObject.AddComponent<Button>();
+                btn.targetGraphic = hitImg;
                 btn.onClick.AddListener(() => SelectRealm(capturedIndex));
                 if (i == 0) realmsFirst = btn;
 
-                var leftBorder = CreateAnchoredRect("Left Border", card, new Vector2(4f, 168f), new Vector2(0f, 0f), Vector2.zero);
-                var borderImg = leftBorder.gameObject.AddComponent<Image>();
-                borderImg.color = glassBorder;
-                borderImg.raycastTarget = false;
-                realmCardBorders.Add(borderImg);
+                var tagTxt = CreateLabel("Realm Number", row, $"{r.Number}   •   {r.Tag}", 11.5f, amberGold, new Vector2(780f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 38f));
+                tagTxt.rectTransform.pivot = Vector2.one * 0.5f;
+                tagTxt.alignment = TextAlignmentOptions.Center;
+                tagTxt.characterSpacing = 3.5f;
 
-                var numTxt = CreateLabel("Realm Number", card, $"{r.Number}   •   {r.Tag}", 11.5f, amberGold, new Vector2(480f, 24f), new Vector2(0f, 1f), new Vector2(24f, -34f));
-                numTxt.characterSpacing = 3f;
+                var titleTxt = CreateLabel("Realm Title", row, r.Title, 26f, radiantIvory, new Vector2(780f, 34f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f));
+                titleTxt.rectTransform.pivot = Vector2.one * 0.5f;
+                titleTxt.alignment = TextAlignmentOptions.Center;
+                titleTxt.fontStyle = FontStyles.Bold;
+                titleTxt.characterSpacing = 4f;
 
-                var statusTxt = CreateLabel("Status", card, "SELECT REALM", 11.5f, amberGold, new Vector2(180f, 24f), new Vector2(1f, 1f), new Vector2(-24f, -34f));
-                statusTxt.rectTransform.pivot = new Vector2(1f, 1f);
-                statusTxt.alignment = TextAlignmentOptions.Right;
-                statusTxt.characterSpacing = 2f;
+                var descTxt = CreateLabel("Realm Desc", row, r.Description, 13f, moonlightSilver, new Vector2(760f, 38f), new Vector2(0.5f, 0.5f), new Vector2(0f, -20f));
+                descTxt.rectTransform.pivot = Vector2.one * 0.5f;
+                descTxt.alignment = TextAlignmentOptions.Center;
+
+                var statusTxt = CreateLabel("Status", row, "SELECT REALM", 11f, amberGold, new Vector2(260f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -44f));
+                statusTxt.rectTransform.pivot = Vector2.one * 0.5f;
+                statusTxt.alignment = TextAlignmentOptions.Center;
+                statusTxt.characterSpacing = 3f;
                 realmStatusLabels.Add(statusTxt);
 
-                var titleTxt = CreateLabel("Realm Title", card, r.Title, 24f, ivory, new Vector2(640f, 34f), new Vector2(0f, 1f), new Vector2(24f, -72f));
-                titleTxt.fontStyle = FontStyles.Bold;
-                titleTxt.characterSpacing = 2.5f;
-
-                var descTxt = CreateLabel("Realm Desc", card, r.Description, 13.5f, warmStone, new Vector2(640f, 54f), new Vector2(0f, 1f), new Vector2(24f, -134f));
-                descTxt.textWrappingMode = TextWrappingModes.Normal;
+                var lineRect = CreateAnchoredRect("Filigree Underline", row, new Vector2(560f, 14f), new Vector2(0.5f, 0.5f), new Vector2(0f, -56f));
+                var lineImg = lineRect.gameObject.AddComponent<Image>();
+                lineImg.sprite = filigreeSprite;
+                lineImg.raycastTarget = false;
+                realmRowUnderlines.Add(lineImg);
             }
 
-            // Launch Selected Realm & Back Buttons
-            CreateDrawerActionButton(container, "Launch Selected Realm →", new Vector2(185f, 44f), Play, isPrimary: true);
-            CreateDrawerActionButton(container, "← Back to Menu", new Vector2(-185f, 44f), ShowHome, isPrimary: false);
+            CreateEtherealActionButton(surface, "Enter Selected Realm  >", new Vector2(175f, -278f), Play, isPrimary: true);
+            CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(-175f, -278f), ShowHome, isPrimary: false);
         }
 
         // =====================================================================
-        // DRAWER 2: SETTINGS (AUDIO, DISPLAY & ACCESSIBILITY)
+        // SUB-VIEW 2: SETTINGS (AUDIO MIXER, DISPLAY & ACCESSIBILITY)
         // =====================================================================
 
-        private void BuildSettingsDrawer()
+        private void BuildFramelessSettingsView()
         {
-            var container = CreateDrawerSurface(settings, "SYSTEM SETTINGS", "AUDIO MIXING, DISPLAY & ACCESSIBILITY");
+            var surface = CreateEtherealSubViewFrame(settings, "SANCTUARY SETTINGS", "HARMONIZE AUDIO, DISPLAY & MOTION");
 
-            // Audio Section Header
-            var audioHeader = CreateLabel("Audio Section", container, "AUDIO MIXER", 12f, amberGold, new Vector2(696f, 24f), new Vector2(0.5f, 1f), new Vector2(0f, -142f));
-            audioHeader.rectTransform.pivot = new Vector2(0.5f, 1f);
-            audioHeader.characterSpacing = 4f;
-
-            masterSlider = CreateSettingSlider(container, "Master Volume", "Global output level for all game audio", -176f);
-            musicSlider = CreateSettingSlider(container, "Ambient Music", "Background atmospheric music level (Key: M)", -266f);
-            effectsSlider = CreateSettingSlider(container, "Sound Effects (SFX)", "Footsteps, lantern flare, embers & foley (Key: N)", -356f);
+            masterSlider = CreateEtherealSlider(surface, "Master Volume", "Global output level for all archive audio", 168f);
+            musicSlider = CreateEtherealSlider(surface, "Ambient Music", "Background score level (In-game key: M)", 94f);
+            effectsSlider = CreateEtherealSlider(surface, "Sound Effects (SFX)", "Footsteps, lantern flare & embers (In-game key: N)", 20f);
 
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
 
-            // Display & Motion Section Header
-            var displayHeader = CreateLabel("Display Section", container, "DISPLAY & COMFORT", 12f, amberGold, new Vector2(696f, 24f), new Vector2(0.5f, 1f), new Vector2(0f, -458f));
-            displayHeader.rectTransform.pivot = new Vector2(0.5f, 1f);
-            displayHeader.characterSpacing = 4f;
+            fullscreenToggle = CreateEtherealToggle(surface, "Fullscreen Mode", "Expand the archive across the entire display", -62f, OnFullscreenToggled);
+            vsyncToggle = CreateEtherealToggle(surface, "Vertical Sync (V-Sync)", "Synchronize frame pacing with display refresh", -118f, OnVSyncToggled);
+            motionToggle = CreateEtherealToggle(surface, "Reduced Motion", "Calm lantern sway, parallax and HUD tremors", -174f, OnReducedMotionToggled);
 
-            fullscreenToggle = CreateSettingSwitch(container, "Fullscreen Mode", "Run in borderless fullscreen window", -490f, v => MenuPreferences.SetFullscreen(v));
-            vsyncToggle = CreateSettingSwitch(container, "Vertical Sync (V-Sync)", "Synchronize frame rate with monitor refresh", -564f, v => MenuPreferences.SetVSync(v));
-            motionToggle = CreateSettingSwitch(container, "Reduced Motion", "Minimize camera drift, parallax and UI animations", -638f, v => MenuPreferences.SetReducedMotion(v));
-            CreateFPSSelectorRow(container, -712f);
+            CreateEtherealFpsSelector(surface, "Target Frame Rate", "Frame rate ceiling (60 / 120 / Unlimited)", -230f);
 
-            CreateDrawerActionButton(container, "Reset Defaults", new Vector2(185f, 44f), ResetSettingsToDefault, isPrimary: false);
-            settingsFirst = CreateDrawerActionButton(container, "← Back to Menu", new Vector2(-185f, 44f), ShowHome, isPrimary: true);
+            CreateEtherealActionButton(surface, "Reset Defaults", new Vector2(-175f, -296f), ResetDefaults, isPrimary: false);
+            CreateEtherealActionButton(surface, "<  Save & Return", new Vector2(175f, -296f), ShowHome, isPrimary: true);
+
+            SyncSettingsUI();
         }
 
-        private Slider CreateSettingSlider(RectTransform parent, string title, string subtitle, float topY)
+        private Slider CreateEtherealSlider(RectTransform parent, string title, string subtitle, float yPos)
         {
-            var row = CreateAnchoredRect(title, parent, new Vector2(696f, 78f), new Vector2(0.5f, 1f), new Vector2(0f, topY));
-            row.pivot = new Vector2(0.5f, 1f);
-            var rowBg = row.gameObject.AddComponent<Image>();
-            rowBg.color = glassCard;
+            var row = CreateAnchoredRect(title, parent, new Vector2(780f, 64f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
-            var lbl = CreateLabel("Label", row, title.ToUpperInvariant(), 14f, ivory, new Vector2(460f, 24f), new Vector2(0f, 1f), new Vector2(22f, -28f));
-            lbl.characterSpacing = 2.5f;
-            lbl.fontStyle = FontStyles.Bold;
-
-            CreateLabel("Sub", row, subtitle, 11.5f, mutedStone, new Vector2(480f, 20f), new Vector2(0f, 1f), new Vector2(22f, -46f));
-
-            var valTxt = CreateLabel("Value", row, "100%", 15f, amberGold, new Vector2(110f, 26f), new Vector2(1f, 1f), new Vector2(-22f, -28f));
-            valTxt.rectTransform.pivot = new Vector2(1f, 1f);
-            valTxt.alignment = TextAlignmentOptions.Right;
-            valTxt.fontStyle = FontStyles.Bold;
-
-            var slider = row.gameObject.AddComponent<Slider>();
-            slider.minValue = 0f;
-            slider.maxValue = 1f;
-            slider.value = 1f;
-
-            var rail = CreateAnchoredRect("Rail", row, new Vector2(652f, 5f), new Vector2(0.5f, 0f), new Vector2(0f, 14f));
-            rail.pivot = new Vector2(0.5f, 0f);
-            rail.gameObject.AddComponent<Image>().color = new Color(0.16f, 0.18f, 0.22f, 1f);
-
-            var fillArea = CreateStretchRect("Fill Area", rail);
-            var fillImg = CreateFullStretchImage("Fill", fillArea, amberGold);
-            slider.fillRect = fillImg.rectTransform;
-
-            var handleArea = CreateStretchRect("Handle Area", rail);
-            var handle = CreateAnchoredRect("Handle", handleArea, new Vector2(14f, 18f), new Vector2(1f, 0.5f), Vector2.zero);
-            handle.pivot = Vector2.one * 0.5f;
-            var handleImg = handle.gameObject.AddComponent<Image>();
-            handleImg.color = ivory;
-            slider.handleRect = handle;
-            slider.targetGraphic = handleImg;
-
-            return slider;
-        }
-
-        private Toggle CreateSettingSwitch(RectTransform parent, string title, string subtitle, float topY, UnityEngine.Events.UnityAction<bool> onChanged)
-        {
-            var row = CreateAnchoredRect(title, parent, new Vector2(696f, 64f), new Vector2(0.5f, 1f), new Vector2(0f, topY));
-            row.pivot = new Vector2(0.5f, 1f);
-            var rowBg = row.gameObject.AddComponent<Image>();
-            rowBg.color = glassCard;
-
-            var lbl = CreateLabel("Label", row, title.ToUpperInvariant(), 14f, ivory, new Vector2(500f, 24f), new Vector2(0f, 1f), new Vector2(22f, -28f));
-            lbl.characterSpacing = 2.5f;
-            lbl.fontStyle = FontStyles.Bold;
-
-            CreateLabel("Sub", row, subtitle, 11.5f, mutedStone, new Vector2(500f, 20f), new Vector2(0f, 1f), new Vector2(22f, -48f));
-
-            var pill = CreateAnchoredRect("Pill", row, new Vector2(88f, 34f), new Vector2(1f, 0.5f), new Vector2(-22f, 0f));
-            pill.pivot = new Vector2(1f, 0.5f);
-            var pillImg = pill.gameObject.AddComponent<Image>();
-            pillImg.color = new Color(0.14f, 0.16f, 0.20f, 0.9f);
-
-            var valTxt = CreateLabel("Value", pill, "OFF", 12.5f, ivory, new Vector2(88f, 34f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            valTxt.rectTransform.pivot = Vector2.one * 0.5f;
-            valTxt.alignment = TextAlignmentOptions.Center;
-            valTxt.characterSpacing = 2f;
-            valTxt.fontStyle = FontStyles.Bold;
-
-            var toggle = row.gameObject.AddComponent<Toggle>();
-            toggle.targetGraphic = rowBg;
-            toggle.onValueChanged.AddListener(v =>
-            {
-                onChanged(v);
-                UpdateSwitchVisual(toggle);
-                if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
-            });
-
-            return toggle;
-        }
-
-        private void CreateFPSSelectorRow(RectTransform parent, float topY)
-        {
-            var row = CreateAnchoredRect("Target FPS", parent, new Vector2(696f, 64f), new Vector2(0.5f, 1f), new Vector2(0f, topY));
-            row.pivot = new Vector2(0.5f, 1f);
-            var rowBg = row.gameObject.AddComponent<Image>();
-            rowBg.color = glassCard;
-
-            var lbl = CreateLabel("Label", row, "TARGET FRAME RATE", 14f, ivory, new Vector2(460f, 24f), new Vector2(0f, 1f), new Vector2(22f, -28f));
-            lbl.characterSpacing = 2.5f;
-            lbl.fontStyle = FontStyles.Bold;
-
-            CreateLabel("Sub", row, "Click to cycle between 60 FPS, 120 FPS, and Unlimited", 11.5f, mutedStone, new Vector2(460f, 20f), new Vector2(0f, 1f), new Vector2(22f, -48f));
-
-            var pill = CreateAnchoredRect("FPS Pill", row, new Vector2(130f, 34f), new Vector2(1f, 0.5f), new Vector2(-22f, 0f));
-            pill.pivot = new Vector2(1f, 0.5f);
-            pill.gameObject.AddComponent<Image>().color = new Color(0.20f, 0.13f, 0.05f, 0.9f);
-
-            fpsButtonValueText = CreateLabel("Value", pill, "60 FPS", 12.5f, amberGold, new Vector2(130f, 34f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            fpsButtonValueText.rectTransform.pivot = Vector2.one * 0.5f;
-            fpsButtonValueText.alignment = TextAlignmentOptions.Center;
-            fpsButtonValueText.fontStyle = FontStyles.Bold;
-
-            var btn = row.gameObject.AddComponent<Button>();
-            btn.targetGraphic = rowBg;
-            btn.onClick.AddListener(() =>
-            {
-                CycleTargetFPS();
-                if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
-            });
-        }
-
-        // =====================================================================
-        // DRAWER 3: CONTROLS & MECHANICS GUIDE
-        // =====================================================================
-
-        private void BuildControlsDrawer()
-        {
-            var container = CreateDrawerSurface(controls, "CONTROLS & MECHANICS", "MASTER THE LANTERN & SURVIVE THE ARCHIVE");
-
-            CreateControlRow(container, "A / D   or   ← / →", "TRAVERSE THE RUINS", "Move horizontally through dark corridors and ruined ledges.", -148f);
-            CreateControlRow(container, "SPACEBAR", "LEAP & VARIABLE JUMP", "Hold longer for higher jumps. Includes Coyote Time & Jump Buffering.", -252f);
-            CreateControlRow(container, "LEFT SHIFT", "ATHLETIC SPRINT", "Sprint across wide gaps. Consumes stamina; full depletion causes exhaustion.", -356f);
-            CreateControlRow(container, "F   or   LEFT CLICK", "LANTERN FLARE (SCOUT VISION)", "Consumes 0.5 Ember charge to expand light radius and awaken dormant embers.", -460f);
-            CreateControlRow(container, "E KEY", "INTERACT & EMBER VEIN", "Channel lantern energy into Ember Veins, activate lifts and mechanisms.", -564f);
-            CreateControlRow(container, "M / N   &   [ ] / , .", "LIVE AUDIO MIXING", "Mute Music (M) or SFX (N), and fine-tune volume levels anytime in-game.", -668f);
-
-            controlsFirst = CreateDrawerActionButton(container, "← Back to Menu", new Vector2(0f, 44f), ShowHome, isPrimary: true);
-        }
-
-        private void CreateControlRow(RectTransform parent, string keybind, string actionTitle, string desc, float topY)
-        {
-            var row = CreateAnchoredRect(actionTitle, parent, new Vector2(696f, 92f), new Vector2(0.5f, 1f), new Vector2(0f, topY));
-            row.pivot = new Vector2(0.5f, 1f);
-            row.gameObject.AddComponent<Image>().color = glassCard;
-
-            // Keycap Badge on Left
-            var keycap = CreateAnchoredRect("Keycap", row, new Vector2(186f, 52f), new Vector2(0f, 0.5f), new Vector2(20f, 0f));
-            keycap.pivot = new Vector2(0f, 0.5f);
-            keycap.gameObject.AddComponent<Image>().color = new Color(0.16f, 0.11f, 0.05f, 0.92f);
-
-            var keyBorder = CreateAnchoredRect("Key Border", keycap, new Vector2(3f, 52f), new Vector2(0f, 0f), Vector2.zero);
-            keyBorder.gameObject.AddComponent<Image>().color = amberGold;
-
-            var keyTxt = CreateLabel("Key Text", keycap, keybind, 13f, amberGold, new Vector2(170f, 52f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            keyTxt.rectTransform.pivot = Vector2.one * 0.5f;
-            keyTxt.alignment = TextAlignmentOptions.Center;
-            keyTxt.fontStyle = FontStyles.Bold;
-            keyTxt.characterSpacing = 1.5f;
-
-            // Action Title & Description
-            var titleTxt = CreateLabel("Action Title", row, actionTitle, 15.5f, ivory, new Vector2(450f, 26f), new Vector2(0f, 1f), new Vector2(224f, -34f));
+            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 15f, radiantIvory, new Vector2(380f, 24f), new Vector2(0f, 0.5f), new Vector2(0f, 12f));
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.characterSpacing = 2.5f;
 
-            var descTxt = CreateLabel("Action Desc", row, desc, 12.5f, warmStone, new Vector2(450f, 42f), new Vector2(0f, 1f), new Vector2(224f, -76f));
-            descTxt.textWrappingMode = TextWrappingModes.Normal;
+            var subTxt = CreateLabel("Subtitle", row, subtitle, 11.5f, moonlightSilver, new Vector2(380f, 20f), new Vector2(0f, 0.5f), new Vector2(0f, -10f));
+
+            var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
+            sliderGo.transform.SetParent(row, false);
+            var sRect = (RectTransform)sliderGo.transform;
+            sRect.anchorMin = new Vector2(1f, 0.5f);
+            sRect.anchorMax = new Vector2(1f, 0.5f);
+            sRect.pivot = new Vector2(1f, 0.5f);
+            sRect.sizeDelta = new Vector2(360f, 28f);
+            sRect.anchoredPosition = new Vector2(0f, 0f);
+
+            var track = CreateAnchoredRect("Track", sRect, new Vector2(285f, 4f), new Vector2(0f, 0.5f), new Vector2(0f, 0f));
+            track.pivot = new Vector2(0f, 0.5f);
+            track.gameObject.AddComponent<Image>().color = new Color(0.55f, 0.68f, 0.92f, 0.22f);
+
+            var fillArea = CreateStretchRect("Fill Area", track);
+            var fill = CreateStretchRect("Fill", fillArea);
+            var fillImg = fill.gameObject.AddComponent<Image>();
+            fillImg.color = amberGold;
+
+            var handleSlide = CreateStretchRect("Handle Slide Area", track);
+            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(14f, 14f), new Vector2(0f, 0.5f), Vector2.zero);
+            handle.localEulerAngles = new Vector3(0f, 0f, 45f);
+            var handleImg = handle.gameObject.AddComponent<Image>();
+            handleImg.color = radiantIvory;
+
+            var valTxt = CreateLabel("Value", sRect, "85%", 13.5f, amberGold, new Vector2(64f, 26f), new Vector2(1f, 0.5f), Vector2.zero);
+            valTxt.rectTransform.pivot = new Vector2(1f, 0.5f);
+            valTxt.alignment = TextAlignmentOptions.Right;
+            valTxt.fontStyle = FontStyles.Bold;
+
+            var slider = sliderGo.GetComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.fillRect = fill;
+            slider.handleRect = handle;
+            slider.targetGraphic = handleImg;
+            return slider;
+        }
+
+        private Toggle CreateEtherealToggle(RectTransform parent, string title, string subtitle, float yPos, UnityEngine.Events.UnityAction<bool> onChanged)
+        {
+            var row = CreateAnchoredRect(title, parent, new Vector2(780f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
+            var hit = row.gameObject.AddComponent<Image>();
+            hit.color = Color.clear;
+
+            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 14.5f, radiantIvory, new Vector2(480f, 22f), new Vector2(0f, 0.5f), new Vector2(0f, 8f));
+            titleTxt.fontStyle = FontStyles.Bold;
+            titleTxt.characterSpacing = 2.5f;
+
+            var subTxt = CreateLabel("Subtitle", row, subtitle, 11f, moonlightSilver, new Vector2(520f, 18f), new Vector2(0f, 0.5f), new Vector2(0f, -11f));
+
+            var pill = CreateAnchoredRect("Pill", row, new Vector2(96f, 30f), new Vector2(1f, 0.5f), new Vector2(-48f, 0f));
+            var pillImg = pill.gameObject.AddComponent<Image>();
+            pillImg.color = new Color(0.10f, 0.14f, 0.24f, 0.35f);
+
+            var valTxt = CreateLabel("Value", pill, "OFF", 12.5f, amberGold, new Vector2(96f, 30f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            valTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            valTxt.alignment = TextAlignmentOptions.Center;
+            valTxt.fontStyle = FontStyles.Bold;
+            valTxt.characterSpacing = 2.5f;
+
+            var toggle = row.gameObject.AddComponent<Toggle>();
+            toggle.targetGraphic = hit;
+            toggle.graphic = null;
+            toggle.onValueChanged.AddListener(onChanged);
+            return toggle;
+        }
+
+        private void CreateEtherealFpsSelector(RectTransform parent, string title, string subtitle, float yPos)
+        {
+            var row = CreateAnchoredRect(title, parent, new Vector2(780f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
+            var hit = row.gameObject.AddComponent<Image>();
+            hit.color = Color.clear;
+
+            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 14.5f, radiantIvory, new Vector2(480f, 22f), new Vector2(0.5f, 0.5f), new Vector2(-150f, 8f));
+            titleTxt.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            titleTxt.fontStyle = FontStyles.Bold;
+            titleTxt.characterSpacing = 2.5f;
+
+            var subTxt = CreateLabel("Subtitle", row, subtitle, 11f, moonlightSilver, new Vector2(480f, 18f), new Vector2(0.5f, 0.5f), new Vector2(-150f, -11f));
+            subTxt.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+
+            var pill = CreateAnchoredRect("FPS Pill", row, new Vector2(136f, 30f), new Vector2(1f, 0.5f), new Vector2(-68f, 0f));
+            pill.gameObject.AddComponent<Image>().color = new Color(0.95f, 0.62f, 0.18f, 0.24f);
+
+            fpsButtonValueText = CreateLabel("FPS Value", pill, "60 FPS", 12.5f, amberGold, new Vector2(136f, 30f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            fpsButtonValueText.rectTransform.pivot = Vector2.one * 0.5f;
+            fpsButtonValueText.alignment = TextAlignmentOptions.Center;
+            fpsButtonValueText.fontStyle = FontStyles.Bold;
+            fpsButtonValueText.characterSpacing = 2f;
+
+            var btn = row.gameObject.AddComponent<Button>();
+            btn.targetGraphic = hit;
+            btn.onClick.AddListener(CycleTargetFPS);
         }
 
         // =====================================================================
-        // DRAWER 4: CREDITS
+        // SUB-VIEW 3: CONTROLS & GUIDE
         // =====================================================================
 
-        private void BuildCreditsDrawer()
+        private void BuildFramelessControlsView()
         {
-            var container = CreateDrawerSurface(credits, "THE PEOPLE BEHIND THE LIGHT", "THE LIGHTEN ROAD DEVELOPMENT TEAM");
+            var surface = CreateEtherealSubViewFrame(controls, "CONTROLS & LANTERN GUIDE", "MASTER THE MECHANISMS OF THE ARCHIVE");
 
-            CreateCreditCard(container, "Siraç Göktuğ Şimşek", "GAME DEVELOPER", "Player Movement, Lantern & Ember Systems, UI/UX, Audio", "@unitybtw", -152f);
-            CreateCreditCard(container, "Kemal Berke", "GAME DEVELOPER", "Ember Vein Loop, Rolling Shelves, Electrified Water & Lifts", "@kemal-berke", -272f);
-            CreateCreditCard(container, "Can", "ENVIRONMENT & 2D ARTIST", "Atmospheric Ruins, Tilemaps & Visual Worldbuilding", "@benesas", -392f);
-            CreateCreditCard(container, "Maksim", "CHARACTER & CONCEPT ARTIST", "Character Sprites, Animations & Visual Identity", "@Ichnolith", -512f);
-            CreateCreditCard(container, "Furkan", "GAME DESIGNER", "Core Lantern Mechanics, Darkness Dormancy & Level Balance", "@aeshmacodex", -632f);
+            CreateControlRow(surface, "A / D  or  ARROWS", "TRAVERSE THE ARCHIVE", "Smooth horizontal movement with momentum & air control", 156f);
+            CreateControlRow(surface, "SPACE  /  W", "LEAP & COYOTE JUMP", "Hold for higher arc; forgiving ledge grace window", 88f);
+            CreateControlRow(surface, "LEFT SHIFT", "ARCHIVE SPRINT", "Burst speed across wide chasms (consumes Stamina)", 20f);
+            CreateControlRow(surface, "F  /  L-CLICK", "LANTERN FLARE SURGE", "Ignite a radiant light burst to reveal platforms", -48f);
+            CreateControlRow(surface, "E  (HOLD)", "CHANNEL EMBER VEIN", "Pour lantern light into ancient conduits & bridges", -116f);
+            CreateControlRow(surface, "M  /  N", "LIVE AUDIO MIXING", "Mute/adjust music (M) or sound effects (N) in-game", -184f);
 
-            creditsFirst = CreateDrawerActionButton(container, "← Back to Menu", new Vector2(0f, 44f), ShowHome, isPrimary: true);
+            controlsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -278f), ShowHome, isPrimary: true);
         }
 
-        private void CreateCreditCard(RectTransform parent, string memberName, string role, string contribution, string handle, float topY)
+        private void CreateControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
         {
-            var card = CreateAnchoredRect(memberName, parent, new Vector2(696f, 106f), new Vector2(0.5f, 1f), new Vector2(0f, topY));
-            card.pivot = new Vector2(0.5f, 1f);
-            card.gameObject.AddComponent<Image>().color = glassCard;
+            var row = CreateAnchoredRect(actionTitle, parent, new Vector2(820f, 56f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
-            var accent = CreateAnchoredRect("Accent", card, new Vector2(3.5f, 106f), new Vector2(0f, 0f), Vector2.zero);
-            accent.gameObject.AddComponent<Image>().color = amberGold;
+            var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(210f, 38f), new Vector2(0f, 0.5f), new Vector2(105f, 0f));
+            badge.gameObject.AddComponent<Image>().color = new Color(0.98f, 0.68f, 0.24f, 0.16f);
 
-            var nameTxt = CreateLabel("Name", card, memberName, 21f, ivory, new Vector2(420f, 30f), new Vector2(0f, 1f), new Vector2(24f, -36f));
+            var keyTxt = CreateLabel("Key Text", badge, keys, 13f, amberGold, new Vector2(196f, 38f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            keyTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            keyTxt.alignment = TextAlignmentOptions.Center;
+            keyTxt.fontStyle = FontStyles.Bold;
+            keyTxt.characterSpacing = 2f;
+
+            var actTxt = CreateLabel("Action", row, actionTitle, 15.5f, radiantIvory, new Vector2(560f, 24f), new Vector2(0f, 0.5f), new Vector2(236f, 9f));
+            actTxt.fontStyle = FontStyles.Bold;
+            actTxt.characterSpacing = 2.5f;
+
+            var descTxt = CreateLabel("Description", row, desc, 12f, moonlightSilver, new Vector2(560f, 20f), new Vector2(0f, 0.5f), new Vector2(236f, -11f));
+        }
+
+        // =====================================================================
+        // SUB-VIEW 4: CREDITS
+        // =====================================================================
+
+        private void BuildFramelessCreditsView()
+        {
+            var surface = CreateEtherealSubViewFrame(credits, "KEEPERS OF THE FLAME", "CRAFTED FOR THE 2026 GAME DEVELOPMENT PROJECT");
+
+            CreateCreditBlock(surface, "SIRAÇ ŞİMŞEK", "MOVEMENT, LANTERN SYSTEMS, AUDIO & PROCEDURAL FRONTEND", "Player physics, stamina & lantern HUD, dynamic lighting, foley & animated archive stage", 125f);
+            CreateCreditBlock(surface, "KEMAL", "PUZZLE MECHANISMS & EMBER VEIN ARCHITECTURE", "Ember Vein conduits, Flooded Mechanisms sandbox, interactive elevators & hazards", 0f);
+            CreateCreditBlock(surface, "ARCHIVE SOUNDSCAPE & ART", "ATMOSPHERIC AUDIO & PROCEDURAL SILHOUETTES", "Custom multi-layered SDF gothic colonnades, swinging lantern light rays & CC0 foley", -125f);
+
+            creditsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -278f), ShowHome, isPrimary: true);
+        }
+
+        private void CreateCreditBlock(RectTransform parent, string name, string role, string details, float yPos)
+        {
+            var block = CreateAnchoredRect(name, parent, new Vector2(820f, 98f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
+
+            var nameTxt = CreateLabel("Name", block, name, 24f, radiantIvory, new Vector2(780f, 32f), new Vector2(0.5f, 0.5f), new Vector2(0f, 24f));
+            nameTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            nameTxt.alignment = TextAlignmentOptions.Center;
             nameTxt.fontStyle = FontStyles.Bold;
+            nameTxt.characterSpacing = 4f;
 
-            var roleTxt = CreateLabel("Role", card, role, 11.5f, amberGold, new Vector2(420f, 22f), new Vector2(0f, 1f), new Vector2(24f, -60f));
+            var roleTxt = CreateLabel("Role", block, role, 11.5f, amberGold, new Vector2(780f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -2f));
+            roleTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            roleTxt.alignment = TextAlignmentOptions.Center;
             roleTxt.characterSpacing = 3.5f;
 
-            var contribTxt = CreateLabel("Contribution", card, contribution, 12.5f, warmStone, new Vector2(480f, 24f), new Vector2(0f, 1f), new Vector2(24f, -88f));
-
-            var handleTxt = CreateLabel("Handle", card, handle, 14f, warmStone, new Vector2(200f, 28f), new Vector2(1f, 0.5f), new Vector2(-24f, 0f));
-            handleTxt.rectTransform.pivot = new Vector2(1f, 0.5f);
-            handleTxt.alignment = TextAlignmentOptions.Right;
+            var detTxt = CreateLabel("Details", block, details, 12.5f, moonlightSilver, new Vector2(780f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f));
+            detTxt.rectTransform.pivot = Vector2.one * 0.5f;
+            detTxt.alignment = TextAlignmentOptions.Center;
         }
 
         // =====================================================================
-        // MODAL: QUIT CONFIRMATION
+        // SUB-VIEW 5: QUIT CONFIRMATION
         // =====================================================================
 
-        private void BuildQuitModal()
+        private void BuildFramelessQuitView()
         {
-            var modal = CreateAnchoredRect("Quit Glass Modal", quit, new Vector2(620f, 340f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            modal.pivot = Vector2.one * 0.5f;
-            modal.gameObject.AddComponent<Image>().color = new Color(0.04f, 0.05f, 0.065f, 0.95f);
+            var surface = CreateAnchoredRect("Quit Ethereal Frame", quit, new Vector2(780f, 380f), new Vector2(0.5f, 0.5f), Vector2.zero);
 
-            var topBar = CreateAnchoredRect("Top Gold Bar", modal, new Vector2(620f, 3f), new Vector2(0f, 1f), new Vector2(0f, -3f));
-            topBar.gameObject.AddComponent<Image>().color = amberGold;
+            var topFiligree = CreateAnchoredRect("Top Filigree", surface, new Vector2(580f, 42f), new Vector2(0.5f, 0.5f), new Vector2(0f, 145f));
+            var topImg = topFiligree.gameObject.AddComponent<Image>();
+            topImg.sprite = filigreeSprite;
+            topImg.color = amberGold;
+            topImg.raycastTarget = false;
 
-            var tag = CreateLabel("Quit Tag", modal, "UNTIL NEXT TIME", 12f, amberGold, new Vector2(540f, 24f), new Vector2(0.5f, 1f), new Vector2(0f, -54f));
-            tag.rectTransform.pivot = new Vector2(0.5f, 1f);
+            var tag = CreateLabel("Quit Tag", surface, "UNTIL YOUR NEXT RETURN", 12f, amberGold, new Vector2(620f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, 98f));
+            tag.rectTransform.pivot = Vector2.one * 0.5f;
             tag.alignment = TextAlignmentOptions.Center;
-            tag.characterSpacing = 5f;
+            tag.characterSpacing = 6f;
 
-            var title = CreateLabel("Quit Title", modal, "LEAVE THE LIGHT BEHIND?", 32f, ivory, new Vector2(560f, 46f), new Vector2(0.5f, 1f), new Vector2(0f, -106f));
-            title.rectTransform.pivot = new Vector2(0.5f, 1f);
+            var title = CreateLabel("Quit Title", surface, "EXTINGUISH THE LANTERN?", 38f, radiantIvory, new Vector2(720f, 52f), new Vector2(0.5f, 0.5f), new Vector2(0f, 44f));
+            title.rectTransform.pivot = Vector2.one * 0.5f;
             title.alignment = TextAlignmentOptions.Center;
             title.fontStyle = FontStyles.Bold;
-            title.characterSpacing = 3f;
+            title.characterSpacing = 5f;
 
-            var note = CreateLabel("Quit Note", modal, "The archive will wait in the dark until your return.\nAll audio and display preferences have been saved.", 14.5f, warmStone, new Vector2(520f, 60f), new Vector2(0.5f, 1f), new Vector2(0f, -182f));
-            note.rectTransform.pivot = new Vector2(0.5f, 1f);
+            var note = CreateLabel("Quit Note", surface, "The ruined archive will wait in the midnight dark.\nAll audio and realm preferences have been preserved.", 14.5f, moonlightSilver, new Vector2(620f, 56f), new Vector2(0.5f, 0.5f), new Vector2(0f, -22f));
+            note.rectTransform.pivot = Vector2.one * 0.5f;
             note.alignment = TextAlignmentOptions.Center;
-            note.textWrappingMode = TextWrappingModes.Normal;
 
-            quitFirst = CreateDrawerActionButton(modal, "Stay in the Light", new Vector2(-145f, 42f), ShowHome, isPrimary: true, width: 250f);
-            CreateDrawerActionButton(modal, "Extinguish & Quit", new Vector2(145f, 42f), ConfirmQuit, isPrimary: false, width: 250f);
+            var botFiligree = CreateAnchoredRect("Bottom Filigree", surface, new Vector2(580f, 42f), new Vector2(0.5f, 0.5f), new Vector2(0f, -78f));
+            var botImg = botFiligree.gameObject.AddComponent<Image>();
+            botImg.sprite = filigreeSprite;
+            botImg.color = new Color(1.0f, 0.74f, 0.30f, 0.65f);
+            botImg.raycastTarget = false;
+
+            quitFirst = CreateEtherealActionButton(surface, "Stay in the Light", new Vector2(-165f, -142f), ShowHome, isPrimary: true, width: 280f);
+            CreateEtherealActionButton(surface, "Extinguish & Exit", new Vector2(165f, -142f), ConfirmQuit, isPrimary: false, width: 280f);
         }
 
         // =====================================================================
-        // SHARED LAYOUT HELPERS
+        // SHARED FRAMELESS ETHEREAL HELPERS
         // =====================================================================
 
-        private RectTransform CreateDrawerSurface(RectTransform drawerRoot, string heading, string subheading)
+        private RectTransform CreateEtherealSubViewFrame(RectTransform viewRoot, string heading, string subheading)
         {
-            var surface = CreateAnchoredRect("Drawer Glass Surface", drawerRoot, new Vector2(760f, 910f), new Vector2(1f, 0.5f), new Vector2(0f, 0f));
-            surface.pivot = new Vector2(1f, 0.5f);
-            surface.gameObject.AddComponent<Image>().color = glassDark;
+            var container = CreateAnchoredRect("Ethereal Subview Container", viewRoot, new Vector2(960f, 760f), new Vector2(0.5f, 0.5f), Vector2.zero);
 
-            var topBorder = CreateAnchoredRect("Top Gold Border", surface, new Vector2(760f, 2.5f), new Vector2(0f, 1f), new Vector2(0f, -2.5f));
-            topBorder.gameObject.AddComponent<Image>().color = amberGold;
+            var topCrest = CreateAnchoredRect("Header Top Filigree", container, new Vector2(640f, 44f), new Vector2(0.5f, 0.5f), new Vector2(0f, 342f));
+            var topImg = topCrest.gameObject.AddComponent<Image>();
+            topImg.sprite = filigreeSprite;
+            topImg.color = amberGold;
+            topImg.raycastTarget = false;
 
-            var sub = CreateLabel("Subheading", surface, subheading, 11.5f, amberGold, new Vector2(680f, 24f), new Vector2(0f, 1f), new Vector2(32f, -48f));
-            sub.characterSpacing = 4.5f;
+            var sub = CreateLabel("Subheading", container, subheading, 11.5f, amberGold, new Vector2(820f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, 304f));
+            sub.rectTransform.pivot = Vector2.one * 0.5f;
+            sub.alignment = TextAlignmentOptions.Center;
+            sub.characterSpacing = 5.5f;
 
-            var head = CreateLabel("Heading", surface, heading, 34f, ivory, new Vector2(680f, 48f), new Vector2(0f, 1f), new Vector2(32f, -96f));
+            var head = CreateLabel("Heading", container, heading, 38f, radiantIvory, new Vector2(860f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, 260f));
+            head.rectTransform.pivot = Vector2.one * 0.5f;
+            head.alignment = TextAlignmentOptions.Center;
             head.fontStyle = FontStyles.Bold;
-            head.characterSpacing = 3f;
+            head.characterSpacing = 6f;
 
-            var divider = CreateAnchoredRect("Header Divider", surface, new Vector2(696f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -116f));
-            divider.pivot = new Vector2(0.5f, 1f);
-            divider.gameObject.AddComponent<Image>().color = new Color(1f, 0.75f, 0.35f, 0.22f);
+            var botCrest = CreateAnchoredRect("Header Bottom Filigree", container, new Vector2(760f, 36f), new Vector2(0.5f, 0.5f), new Vector2(0f, 216f));
+            var botImg = botCrest.gameObject.AddComponent<Image>();
+            botImg.sprite = filigreeSprite;
+            botImg.color = new Color(1.0f, 0.74f, 0.30f, 0.55f);
+            botImg.raycastTarget = false;
 
-            // Top-right Close [X] button
-            var closeRect = CreateAnchoredRect("Close Button", surface, new Vector2(42f, 42f), new Vector2(1f, 1f), new Vector2(-28f, -28f));
-            closeRect.pivot = new Vector2(1f, 1f);
-            var closeBg = closeRect.gameObject.AddComponent<Image>();
-            closeBg.color = new Color(0.14f, 0.16f, 0.20f, 0.75f);
-            var closeBtn = closeRect.gameObject.AddComponent<Button>();
-            closeBtn.targetGraphic = closeBg;
-            closeBtn.onClick.AddListener(ShowHome);
-
-            var closeTxt = CreateLabel("X", closeRect, "×", 24f, warmStone, new Vector2(42f, 42f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            closeTxt.rectTransform.pivot = Vector2.one * 0.5f;
-            closeTxt.alignment = TextAlignmentOptions.Center;
-
-            return surface;
+            return container;
         }
 
-        private Button CreateDrawerActionButton(
+        private Button CreateEtherealActionButton(
             RectTransform parent,
             string label,
-            Vector2 bottomOffset,
+            Vector2 anchoredPos,
             UnityEngine.Events.UnityAction onClick,
             bool isPrimary,
-            float width = 320f)
+            float width = 310f)
         {
-            var rect = CreateAnchoredRect(label, parent, new Vector2(width, 52f), new Vector2(0.5f, 0f), bottomOffset);
-            rect.pivot = new Vector2(0.5f, 0f);
-            var bg = rect.gameObject.AddComponent<Image>();
-            bg.color = isPrimary ? new Color(0.22f, 0.14f, 0.05f, 0.92f) : new Color(0.09f, 0.11f, 0.14f, 0.88f);
+            var rect = CreateAnchoredRect(label, parent, new Vector2(width, 52f), new Vector2(0.5f, 0.5f), anchoredPos);
+            var hit = rect.gameObject.AddComponent<Image>();
+            hit.color = Color.clear;
 
-            var border = CreateAnchoredRect("Bottom Border", rect, new Vector2(width, 2f), new Vector2(0f, 0f), Vector2.zero);
-            border.gameObject.AddComponent<Image>().color = isPrimary ? amberGold : new Color(0.6f, 0.58f, 0.52f, 0.35f);
+            var glowRect = CreateAnchoredRect("Soft Glow", rect, new Vector2(width + 60f, 68f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var glowImg = glowRect.gameObject.AddComponent<Image>();
+            glowImg.sprite = softRadialSprite;
+            glowImg.color = isPrimary ? new Color(1.0f, 0.66f, 0.20f, 0.22f) : Color.clear;
+            glowImg.raycastTarget = false;
 
-            var txt = CreateLabel("Caption", rect, label.ToUpperInvariant(), 14f, isPrimary ? amberGold : ivory, new Vector2(width - 20f, 52f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var lineRect = CreateAnchoredRect("Filigree Underline", rect, new Vector2(width * 0.75f, 16f), new Vector2(0.5f, 0.5f), new Vector2(0f, -18f));
+            var lineImg = lineRect.gameObject.AddComponent<Image>();
+            lineImg.sprite = filigreeSprite;
+            lineImg.color = isPrimary ? amberGold : new Color(0.65f, 0.75f, 0.92f, 0.35f);
+            lineImg.raycastTarget = false;
+
+            var txt = CreateLabel("Caption", rect, label.ToUpperInvariant(), 15f, isPrimary ? amberGold : radiantIvory, new Vector2(width, 40f), new Vector2(0.5f, 0.5f), Vector2.zero);
             txt.rectTransform.pivot = Vector2.one * 0.5f;
             txt.alignment = TextAlignmentOptions.Center;
             txt.fontStyle = FontStyles.Bold;
-            txt.characterSpacing = 3f;
+            txt.characterSpacing = 3.5f;
 
             var btn = rect.gameObject.AddComponent<Button>();
-            btn.targetGraphic = bg;
+            btn.targetGraphic = hit;
+            btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(() =>
             {
                 if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
                 onClick();
             });
+
+            var motion = rect.gameObject.AddComponent<MenuButtonMotion>();
+            motion.Text = txt;
+            motion.SoftGlow = glowImg;
+            motion.UnderlineFiligree = lineImg;
+            motion.IsPrimaryAction = isPrimary;
+            motion.StageFocusCanvasPosition = anchoredPos;
+            motion.StageCameraPanOffset = Vector2.zero;
+            motion.OnFocusedCallback = OnMenuButtonFocused;
+
             return btn;
         }
 
-        private RectTransform CreateLeftDockPanel(string panelName, RectTransform parent, out CanvasGroup group)
-        {
-            var rect = CreateStretchRect(panelName, parent);
-            rect.anchorMin = new Vector2(0f, 0f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 0.5f);
-            rect.offsetMin = new Vector2(96f, 0f);
-            rect.offsetMax = new Vector2(636f, 0f);
-            group = rect.gameObject.AddComponent<CanvasGroup>();
-            return rect;
-        }
-
-        private RectTransform CreateRightDrawerPanel(string panelName, RectTransform parent, out CanvasGroup group)
-        {
-            var rect = CreateStretchRect(panelName, parent);
-            rect.anchorMin = new Vector2(1f, 0f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.pivot = new Vector2(1f, 0.5f);
-            rect.offsetMin = new Vector2(-856f, 0f);
-            rect.offsetMax = new Vector2(-96f, 0f);
-            group = rect.gameObject.AddComponent<CanvasGroup>();
-            return rect;
-        }
-
-        private RectTransform CreateCenterModalPanel(string panelName, RectTransform parent, out CanvasGroup group)
+        private static RectTransform CreateCenterStagePanel(string panelName, RectTransform parent, out CanvasGroup group)
         {
             var rect = CreateStretchRect(panelName, parent);
             group = rect.gameObject.AddComponent<CanvasGroup>();
             return rect;
         }
 
-        private RectTransform CreateStretchRect(string objName, Transform parent)
+        private static RectTransform CreateStretchRect(string name, RectTransform parent)
         {
-            var rect = CreateAnchoredRect(objName, parent, Vector2.zero, Vector2.one * 0.5f, Vector2.zero);
-            rect.pivot = Vector2.one * 0.5f;
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
@@ -1406,76 +1300,69 @@ namespace TheLightenRoad.Frontend
             return rect;
         }
 
-        private RectTransform CreateAnchoredRect(string objName, Transform parent, Vector2 size, Vector2 anchor, Vector2 pos)
+        private static RectTransform CreateAnchoredRect(string name, RectTransform parent, Vector2 size, Vector2 anchor, Vector2 pos)
         {
-            var go = new GameObject(objName, typeof(RectTransform));
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
             var rect = (RectTransform)go.transform;
-            rect.SetParent(parent, false);
             rect.anchorMin = anchor;
             rect.anchorMax = anchor;
-            rect.pivot = Vector2.zero;
+            rect.pivot = Vector2.one * 0.5f;
             rect.sizeDelta = size;
             rect.anchoredPosition = pos;
             return rect;
         }
 
-        private Image CreateFullStretchImage(string objName, RectTransform parent, Color color)
+        private static Image CreateFullStretchImage(string name, RectTransform parent, Color color)
         {
-            var rect = CreateStretchRect(objName, parent);
+            var rect = CreateStretchRect(name, parent);
             var img = rect.gameObject.AddComponent<Image>();
             img.color = color;
             img.raycastTarget = false;
             return img;
         }
 
-        private TMP_Text CreateLabel(
-            string objName,
-            Transform parent,
-            string content,
-            float fontSize,
-            Color color,
-            Vector2 size,
-            Vector2 anchor,
-            Vector2 pos)
+        private TMP_Text CreateLabel(string name, RectTransform parent, string content, float fontSize, Color color, Vector2 size, Vector2 anchor, Vector2 pos)
         {
-            var rect = CreateAnchoredRect(objName, parent, size, anchor, pos);
+            var rect = CreateAnchoredRect(name, parent, size, anchor, pos);
             var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
-            text.font = font;
+            if (font != null) text.font = font;
             text.text = content;
             text.fontSize = fontSize;
             text.color = color;
-            text.alignment = TextAlignmentOptions.Left;
+            text.alignment = TextAlignmentOptions.MidlineLeft;
             text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.overflowMode = TextOverflowModes.Overflow;
             text.raycastTarget = false;
             return text;
         }
 
-        private static float SmoothStep(float t) => t * t * (3f - 2f * t);
-
-        private static Texture2D CreateRadialGlowTexture()
+        private static Sprite CreateSoftRadialSprite(int size)
         {
-            const int size = 128;
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
-                name = "Procedural Lantern Glow",
-                wrapMode = TextureWrapMode.Clamp
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
             };
-            var pixels = new Color[size * size];
             Vector2 center = Vector2.one * ((size - 1) * 0.5f);
-            float maxRadius = size * 0.5f;
-
+            float maxR = size * 0.5f;
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
-                    float dist = Vector2.Distance(new Vector2(x, y), center) / maxRadius;
-                    float falloff = Mathf.Pow(Mathf.Clamp01(1f - dist), 2.2f);
-                    pixels[y * size + x] = new Color(1f, 1f, 1f, falloff);
+                    float d = Vector2.Distance(new Vector2(x, y), center) / maxR;
+                    float a = Mathf.Pow(Mathf.Clamp01(1f - d), 2.2f);
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
                 }
             }
-            tex.SetPixels(pixels);
             tex.Apply();
-            return tex;
+            return Sprite.Create(tex, new Rect(0, 0, size, size), Vector2.one * 0.5f, 100f);
+        }
+
+        private static float SmoothStep(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t * t * (3f - 2f * t);
         }
     }
 }

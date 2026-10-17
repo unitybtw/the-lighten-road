@@ -31,7 +31,7 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
-        public IEnumerator AwakensInHomeView_AndBuildsInteractiveDockAndShowcase()
+        public IEnumerator AwakensInHomeView_AndBuildsProceduralArchiveStageAndFramelessUI()
         {
             yield return null;
 
@@ -42,12 +42,17 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(GameObject.Find("Controls & Guide"), Is.Not.Null);
             Assert.That(GameObject.Find("Credits"), Is.Not.Null);
             Assert.That(GameObject.Find("Leave the Light"), Is.Not.Null);
-            Assert.That(GameObject.Find("Cursor Lantern Spotlight"), Is.Not.Null);
-            Assert.That(GameObject.Find("Pedestal Lantern Core"), Is.Not.Null);
+
+            // Verify procedural 2.5D animated archive stage elements
+            Assert.That(GameObject.Find("Procedural Archive Stage"), Is.Not.Null);
+            Assert.That(GameObject.Find("Great Archive Lantern"), Is.Not.Null);
+            Assert.That(GameObject.Find("Cloaked Wanderer Silhouette"), Is.Not.Null);
+            Assert.That(GameObject.Find("Carved Ember Veins Glow"), Is.Not.Null);
+            Assert.That(GameObject.Find("Ember Vein Energy Tether"), Is.Not.Null);
         }
 
         [UnityTest]
-        public IEnumerator DrawerViews_SwitchCleanlyBetweenRealmsSettingsControlsAndCredits()
+        public IEnumerator SubViews_SwitchCleanlyBetweenRealmsSettingsControlsAndCredits()
         {
             yield return null;
             _menu.SkipIntro();
@@ -69,7 +74,7 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
-        public IEnumerator QuitModal_OpensAndCancelsBackToHome()
+        public IEnumerator QuitView_OpensAndCancelsBackToHome()
         {
             yield return null;
             _menu.SkipIntro();

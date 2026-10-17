@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using TheLightenRoad.Audio;
@@ -11,13 +10,12 @@ using UnityEngine.SceneManagement;
 namespace TheLightenRoad.Frontend.Editor
 {
     /// <summary>
-    /// Creates and configures the redesigned MainMenu scene and registers all
-    /// selectable gameplay realms in EditorBuildSettings.
+    /// Creates and configures the redesigned MainMenu scene (powered by ProceduralArchiveStage,
+    /// with zero static backdrop photos) and registers all selectable gameplay realms in EditorBuildSettings.
     /// </summary>
     public static class MainMenuSceneBuilder
     {
         public const string ScenePath = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
-        private const string BackdropPath = "Assets/_Project/Art/Frontend/ArchiveMenuBackdrop.png";
         private const string FontPath = "Assets/_Project/Resources/UI/MenuType.asset";
 
         private static readonly string[] BuildScenePaths =
@@ -48,12 +46,12 @@ namespace TheLightenRoad.Frontend.Editor
 
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            // 1. Menu Camera
+            // 1. Menu Camera (Deep Midnight Indigo Clear Color)
             var cameraGo = new GameObject("Menu Camera");
             cameraGo.tag = "MainCamera";
             var camera = cameraGo.AddComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.024f, 0.031f, 0.047f, 1f);
+            camera.backgroundColor = new Color(0.018f, 0.030f, 0.068f, 1f);
             camera.orthographic = true;
             camera.orthographicSize = 5f;
             camera.nearClipPlane = -10f;
@@ -73,14 +71,7 @@ namespace TheLightenRoad.Frontend.Editor
             var controller = root.AddComponent<MainMenuController>();
 
             var serialized = new SerializedObject(controller);
-            var backdrop = AssetDatabase.LoadAssetAtPath<Texture2D>(BackdropPath);
             var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
-
-            if (backdrop != null)
-            {
-                serialized.FindProperty("backdrop").objectReferenceValue = backdrop;
-            }
-
             if (font != null)
             {
                 serialized.FindProperty("font").objectReferenceValue = font;
@@ -116,7 +107,6 @@ namespace TheLightenRoad.Frontend.Editor
                 }
             }
 
-            // Ensure MainMenu is first (index 0)
             int menuIdx = scenes.FindIndex(s => s.path == ScenePath);
             if (menuIdx > 0)
             {

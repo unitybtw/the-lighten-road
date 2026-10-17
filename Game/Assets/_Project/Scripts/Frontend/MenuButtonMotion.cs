@@ -1,3 +1,4 @@
+using System;
 using TheLightenRoad.Audio;
 using TMPro;
 using UnityEngine;
@@ -7,47 +8,121 @@ using UnityEngine.UI;
 namespace TheLightenRoad.Frontend
 {
     /// <summary>
-    /// Drives interactive glass-card states, glowing ember bars, diamond markers,
-    /// micro-typography shifts, and tactile audio feedback for Main Menu buttons.
+    /// Frameless Hollow-Knight / Ori style menu item motion controller.
+    /// Animates symmetrical glowing lantern-wing flourishes, soft radial ember aura,
+    /// letter-spacing expansion, and triggers live stage lantern surges & energy streams on focus.
     /// </summary>
+    [DisallowMultipleComponent]
     public sealed class MenuButtonMotion : MonoBehaviour,
-        IPointerEnterHandler, IPointerExitHandler,
-        ISelectHandler, IDeselectHandler,
-        IPointerDownHandler, IPointerUpHandler,
-        IPointerClickHandler
+        IPointerEnterHandler,
+        IPointerExitHandler,
+        ISelectHandler,
+        IDeselectHandler,
+        IPointerDownHandler,
+        IPointerUpHandler
     {
-        public RectTransform Caption;
         public TMP_Text Text;
         public TMP_Text SubtitleText;
-        public TMP_Text IndexText;
-        public Image CardBackground;
-        public Image Rule;
-        public Image EmberBar;
-        public Image Marker;
+        public Image SoftGlow;
+        public RectTransform LeftWing;
+        public RectTransform RightWing;
+        public CanvasGroup WingGroup;
+        public Image UnderlineFiligree;
         public bool IsPrimaryAction;
-        public bool IsActiveTab;
-
-        public Color RestTextColor = new Color32(178, 172, 156, 255);
-        public Color ActiveTextColor = new Color32(248, 238, 214, 255);
-        public Color PrimaryTextColor = new Color32(255, 224, 166, 255);
-
-        public Color RestCardColor = new Color(0.06f, 0.075f, 0.09f, 0.62f);
-        public Color HoverCardColor = new Color(0.16f, 0.11f, 0.06f, 0.86f);
-        public Color PrimaryRestCardColor = new Color(0.18f, 0.11f, 0.05f, 0.78f);
-        public Color PrimaryHoverCardColor = new Color(0.28f, 0.17f, 0.07f, 0.94f);
+        public float BaseWingOffset = 145f;
+        public Vector2 StageFocusCanvasPosition;
+        public Vector2 StageCameraPanOffset;
+        public Action<MenuButtonMotion> OnFocusedCallback;
 
         private bool hovered;
         private bool selected;
         private bool pressed;
-        private float blend;
+        private float focusBlend;
         private float pressBlend;
-        private float baseCaptionX = 38f;
 
-        private void Start()
+        private static readonly Color IdleIvory = new Color32(226, 220, 206, 225);
+        private static readonly Color IdlePrimaryGold = new Color32(255, 206, 120, 255);
+        private static readonly Color FocusedRadiantIvory = new Color32(255, 248, 232, 255);
+        private static readonly Color FocusedAmberGold = new Color32(255, 186, 72, 255);
+        private static readonly Color IdleSubtle = new Color32(142, 152, 174, 175);
+        private static readonly Color FocusedSubtle = new Color32(236, 204, 148, 240);
+
+        private void OnEnable()
         {
-            if (Caption != null)
+            hovered = false;
+            selected = false;
+            pressed = false;
+            focusBlend = 0f;
+            pressBlend = 0f;
+            ApplyVisuals(instant: true);
+        }
+
+        private void Update()
+        {
+            bool active = hovered || selected;
+            float dt = Time.unscaledDeltaTime;
+            float speed = MenuPreferences.ReducedMotion ? 25f : 11f;
+
+            focusBlend = Mathf.MoveTowards(focusBlend, active ? 1f : 0f, dt * speed);
+            pressBlend = Mathf.MoveTowards(pressBlend, pressed ? 1f : 0f, dt * 18f);
+
+            ApplyVisuals(instant: false);
+        }
+
+        private void ApplyVisuals(bool instant)
+        {
+            float smooth = SmoothStep(focusBlend);
+            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.90f + 0.10f * Mathf.Sin(Time.unscaledTime * 4.2f));
+
+            // 1. Typography scale, glow color & letter spacing expansion
+            if (Text != null)
             {
-                baseCaptionX = Caption.anchoredPosition.x;
+                Color baseCol = IsPrimaryAction ? IdlePrimaryGold : IdleIvory;
+                Color targetCol = IsPrimaryAction ? FocusedAmberGold : FocusedRadiantIvory;
+                Text.color = Color.Lerp(baseCol, targetCol, smooth);
+                Text.characterSpacing = Mathf.Lerp(IsPrimaryAction ? 6.5f : 5.0f, IsPrimaryAction ? 10.5f : 8.5f, smooth);
+
+                float scale = Mathf.Lerp(1f, 1.06f, smooth) - pressBlend * 0.03f;
+                Text.rectTransform.localScale = new Vector3(scale, scale, 1f);
+            }
+
+            if (SubtitleText != null)
+            {
+                SubtitleText.color = Color.Lerp(IdleSubtle, FocusedSubtle, smooth);
+            }
+
+            // 2. Frameless Soft Radial Lantern Aura behind text
+            if (SoftGlow != null)
+            {
+                float baseAlpha = IsPrimaryAction ? 0.14f : 0f;
+                float targetAlpha = (IsPrimaryAction ? 0.38f : 0.28f) * pulse;
+                SoftGlow.color = new Color(1.0f, 0.66f, 0.20f, Mathf.Lerp(baseAlpha, targetAlpha, smooth));
+                float glowScale = Mathf.Lerp(0.82f, 1.12f, smooth);
+                SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
+            }
+
+            // 3. Symmetrical Left & Right Ornate Lantern Wings (◄── ◆   TEXT   ◆ ──►)
+            float wingSlide = MenuPreferences.ReducedMotion ? BaseWingOffset : Mathf.Lerp(BaseWingOffset - 26f, BaseWingOffset + 12f, smooth);
+            if (LeftWing != null)
+            {
+                LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
+            }
+            if (RightWing != null)
+            {
+                RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
+            }
+            if (WingGroup != null)
+            {
+                WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 1f, smooth);
+            }
+
+            // 4. Delicate Center-Out Filigree Underline
+            if (UnderlineFiligree != null)
+            {
+                var r = UnderlineFiligree.rectTransform;
+                float width = Mathf.Lerp(IsPrimaryAction ? 120f : 0f, 280f, smooth);
+                r.sizeDelta = new Vector2(width, 2f);
+                UnderlineFiligree.color = new Color(1.0f, 0.74f, 0.30f, Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 0.85f, smooth));
             }
         }
 
@@ -56,7 +131,7 @@ namespace TheLightenRoad.Frontend
             if (!hovered)
             {
                 hovered = true;
-                PlayHoverSound();
+                NotifyFocus();
             }
         }
 
@@ -71,7 +146,7 @@ namespace TheLightenRoad.Frontend
             if (!selected)
             {
                 selected = true;
-                PlayHoverSound();
+                NotifyFocus();
             }
         }
 
@@ -84,6 +159,10 @@ namespace TheLightenRoad.Frontend
         public void OnPointerDown(PointerEventData eventData)
         {
             pressed = true;
+            if (Application.isPlaying)
+            {
+                SoundEffectManager.Instance?.PlayEmberPickup();
+            }
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -91,134 +170,19 @@ namespace TheLightenRoad.Frontend
             pressed = false;
         }
 
-        public void OnPointerClick(PointerEventData eventData)
+        private void NotifyFocus()
         {
-            PlayClickSound();
-        }
-
-        private void OnDisable()
-        {
-            hovered = false;
-            selected = false;
-            pressed = false;
-            blend = IsActiveTab ? 1f : 0f;
-            pressBlend = 0f;
-            ApplyVisuals(0f);
-        }
-
-        private void Update()
-        {
-            float dt = Time.unscaledDeltaTime;
-            float target = (hovered || selected || IsActiveTab) ? 1f : 0f;
-            float pressTarget = pressed ? 1f : 0f;
-
-            if (MenuPreferences.ReducedMotion)
+            OnFocusedCallback?.Invoke(this);
+            if (Application.isPlaying && Time.timeSinceLevelLoad > 0.35f && SoundEffectManager.HasInstance)
             {
-                blend = target;
-                pressBlend = pressTarget;
-            }
-            else
-            {
-                blend = Mathf.MoveTowards(blend, target, dt * 7.5f);
-                pressBlend = Mathf.MoveTowards(pressBlend, pressTarget, dt * 14f);
-            }
-
-            ApplyVisuals(Time.unscaledTime);
-        }
-
-        private void ApplyVisuals(float time)
-        {
-            float smooth = blend * blend * (3f - 2f * blend);
-            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.9f + 0.1f * Mathf.Sin(time * 4.2f));
-
-            if (Caption != null)
-            {
-                float offset = 10f * smooth - 3f * pressBlend;
-                Caption.anchoredPosition = new Vector2(baseCaptionX + offset, Caption.anchoredPosition.y);
-            }
-
-            if (Text != null)
-            {
-                Color baseCol = IsPrimaryAction ? PrimaryTextColor : RestTextColor;
-                Text.color = Color.Lerp(baseCol, ActiveTextColor, smooth);
-            }
-
-            if (SubtitleText != null)
-            {
-                SubtitleText.color = Color.Lerp(
-                    new Color(0.58f, 0.56f, 0.50f, 0.75f),
-                    new Color(0.92f, 0.78f, 0.55f, 0.95f),
-                    smooth);
-            }
-
-            if (IndexText != null)
-            {
-                IndexText.color = Color.Lerp(
-                    new Color(0.68f, 0.52f, 0.28f, 0.55f),
-                    new Color(1.0f, 0.76f, 0.36f, 1.0f),
-                    smooth);
-            }
-
-            if (CardBackground != null)
-            {
-                Color cRest = IsPrimaryAction ? PrimaryRestCardColor : RestCardColor;
-                Color cHover = IsPrimaryAction ? PrimaryHoverCardColor : HoverCardColor;
-                CardBackground.color = Color.Lerp(cRest, cHover, smooth);
-            }
-
-            if (EmberBar != null)
-            {
-                float height = Mathf.Lerp(IsPrimaryAction ? 26f : 12f, 52f, smooth);
-                EmberBar.rectTransform.sizeDelta = new Vector2(Mathf.Lerp(3f, 4.5f, smooth), height);
-                EmberBar.color = Color.Lerp(
-                    new Color(0.75f, 0.48f, 0.18f, IsPrimaryAction ? 0.75f : 0.28f),
-                    new Color(1.0f, 0.68f, 0.24f, 1.0f * pulse),
-                    smooth);
-            }
-
-            if (Rule != null)
-            {
-                Rule.rectTransform.sizeDelta = new Vector2(Mathf.Lerp(0f, 360f, smooth), 1.5f);
-                Rule.color = new Color(0.95f, 0.65f, 0.25f, smooth * 0.85f);
-            }
-
-            if (Marker != null)
-            {
-                Marker.color = Color.Lerp(
-                    new Color(0.78f, 0.55f, 0.26f, 0.45f),
-                    new Color(1.0f, 0.76f, 0.32f, 1.0f),
-                    smooth);
-                float angle = MenuPreferences.ReducedMotion ? 45f : (45f + 90f * smooth);
-                Marker.rectTransform.localEulerAngles = new Vector3(0f, 0f, angle);
-                float scale = 1f + 0.28f * smooth - 0.12f * pressBlend;
-                Marker.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                SoundEffectManager.Instance.PlayWalkFootstep();
             }
         }
 
-        private void PlayHoverSound()
+        private static float SmoothStep(float t)
         {
-            if (!Application.isPlaying) return;
-            var sfx = SoundEffectManager.Instance;
-            if (sfx != null && sfx.WalkClips != null && sfx.WalkClips.Length > 0 && sfx.WalkClips[0] != null)
-            {
-                sfx.PlayOneShot(sfx.WalkClips[0], 0.22f, 1.35f);
-            }
-        }
-
-        private void PlayClickSound()
-        {
-            if (!Application.isPlaying) return;
-            var sfx = SoundEffectManager.Instance;
-            if (sfx == null) return;
-
-            if (IsPrimaryAction)
-            {
-                sfx.PlayFlareIgnite();
-            }
-            else
-            {
-                sfx.PlayEmberPickup();
-            }
+            t = Mathf.Clamp01(t);
+            return t * t * (3f - 2f * t);
         }
     }
 }
