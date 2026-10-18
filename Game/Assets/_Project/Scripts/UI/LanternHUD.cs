@@ -18,7 +18,7 @@ namespace TheLightenRoad.UI
 
         [Header("Layout — reference resolution 960x540")]
         [SerializeField] private Vector2 screenMargin = new Vector2(24f, 24f);
-        [SerializeField, Range(1, 5)] private int maxDisplaySlots = 5;
+        [SerializeField, Range(1, 3)] private int maxDisplaySlots = 3;
         [SerializeField] private TMP_FontAsset fontAsset;
 
         [Header("Ember art and sound — placeholders until artist delivery")]
@@ -141,7 +141,7 @@ namespace TheLightenRoad.UI
 
         private void Awake()
         {
-            maxDisplaySlots = Mathf.Clamp(maxDisplaySlots, 1, 5);
+            maxDisplaySlots = LanternFuel.MaxEmbers;
             BuildHierarchy();
             ApplyMinimalMode();
         }
@@ -369,7 +369,7 @@ namespace TheLightenRoad.UI
                 slots[i].Fill.color = next > 0 ? Color.white : Color.clear;
                 slots[i].Cracks.color = Color.clear;
             }
-            if (!target.HasActiveScout)
+            if (!target.HasActiveScout || target.Fuel.IsFull)
             {
                 lastBurningSlot = -1;
                 return;
@@ -379,13 +379,11 @@ namespace TheLightenRoad.UI
             Slot active = slots[index];
             active.Reaction = 0f;
             float progress = 1f - target.ScoutProgress;
-            active.Fill.sprite = target.ScoutIsSecondUse
-                ? (halfEmberArt != null ? halfEmberArt : PixelSprites.EmberHalf)
-                : (fullEmberArt != null ? fullEmberArt : PixelSprites.EmberFull);
-            Color soot = target.ScoutIsSecondUse ? new Color(0.15f, 0.15f, 0.15f, 0f) : new Color(0.62f, 0.48f, 0.33f, 1f);
+            active.Fill.sprite = fullEmberArt != null ? fullEmberArt : PixelSprites.EmberFull;
+            Color soot = new Color(0.15f, 0.15f, 0.15f, 0f);
             active.Fill.color = Color.Lerp(Color.white, soot, progress);
             active.Cracks.fillAmount = progress;
-            active.Cracks.color = new Color(0.09f, 0.07f, 0.05f, target.ScoutIsSecondUse ? progress : 0f);
+            active.Cracks.color = new Color(0.09f, 0.07f, 0.05f, Mathf.InverseLerp(0.4f, 1f, progress));
         }
 
         private void UpdateStatus(int charges)
@@ -394,7 +392,7 @@ namespace TheLightenRoad.UI
             keyLabel.text = target.ToggleFlareKey.ToString().ToUpperInvariant();
             modeLabel.text = active ? (target.IsDimming ? "DIMMING" : "FLARE ACTIVE") : charges <= 0 ? "NO EMBERS" : "FLARE";
             modeLabel.color = active ? Gold : Muted;
-            detailLabel.text = active ? (target.ScoutIsSecondUse ? "CRACKING" : "FADING") : "";
+            detailLabel.text = active ? (target.ScoutProgress < .6f ? "CRACKING" : "FADING") : "";
             detailLabel.color = Muted;
         }
 

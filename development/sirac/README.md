@@ -338,3 +338,11 @@ Added the approved dark archive / warm lantern direction with a 3.7-second skipp
 All three new Play Mode menu tests passed in Unity 6000.3.2f1 through Unity MCP. Actual Home and Settings views were inspected and the user approved the design. The asynchronous Play transition was checked against the actual gameplay scene. Standalone fullscreen, physical gamepad behavior and a standalone build were not verified. See the [menu notes and asset provenance](../../Game/Assets/_Project/Scenes/Frontend/README.md).
 
 Repository integrity check: four existing files in Interaction / Mechanisms (`EmberVein.cs`, `ElectrifiedWater.cs`, `RollingShelf.cs`, `SimpleLift.cs`) fail UTF-8 decoding, including in the pre-menu HEAD. Those ownership-protected files were not changed in this menu commit. All new menu assets passed the integrity checks.
+
+## Checkpoint 16 — Three-ember chamber rules (2026-10-18)
+
+Applied the updated developer contract and the owner's clarification that the player can carry at most three embers. Full-inventory pickups stay in the world. A Flare spends one whole ember permanently and animates its fade/crack in one use. Dim requires held fuel; more than three continuous seconds at zero held fuel causes Darkness death. Recovery cancels the timer. Chamber entry and respawn restore three embers, and the existing Siraç route checkpoint API now begins a chamber segment.
+
+Legacy two-charge APIs remain compatible with the mechanism owner. Kemal's scripts and scenes were inspected only. The [developer contract and integration review](../../docs/DEVELOPER-MECHANICS-2026-10-18.md) records waypoint patrol, gravity descent, shared multi-node state, full-lantern recovery safety, and world-state reset work still needed in that domain.
+
+Unity MCP Play Mode validation: 62/62 focused player/fuel/HUD/pickup/particle/audio tests passed, plus all 3/3 authored MovementSandbox route tests (65 passing cases across the two completed runs). The route test now uses a three-ember budget, leaves room for optional pickups, and refreshes held virtual keys across Editor focus changes. No gameplay movement or map geometry was adjusted. A prior run interrupted by script reload was discarded. Standalone and cross-owner circuit integration remain unverified.

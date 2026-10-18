@@ -66,12 +66,14 @@ public sealed class RuinedArchiveRouteTests
         float timeout = Time.time + 15f;
         while (motor.Body.position.x < x && Time.time < timeout)
         {
+            // Keep the simulated key held across Editor focus/device changes.
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
             Assert.That(player.State, Is.EqualTo(RespawnState.Alive), "Unexpected death at " + motor.Body.position);
             yield return null;
         }
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         yield return new WaitForSeconds(0.06f);
-        Assert.That(motor.Body.position.x, Is.GreaterThanOrEqualTo(x - 0.1f), "Blocked walking to " + x);
+        Assert.That(motor.Body.position.x, Is.GreaterThanOrEqualTo(x - 0.1f), "Blocked walking to " + x + " at " + motor.Body.position + " velocity=" + motor.Body.linearVelocity);
     }
 
     private IEnumerator SprintJumpTo(float x, float minFloor)
@@ -82,6 +84,7 @@ public sealed class RuinedArchiveRouteTests
         float timeout = Time.time + 1f;
         while (motor.Body.position.x < x && Time.time < timeout)
         {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
             Assert.That(player.State, Is.EqualTo(RespawnState.Alive), "Jump hit a hazard at " + motor.Body.position);
             yield return null;
         }
@@ -96,9 +99,9 @@ public sealed class RuinedArchiveRouteTests
     }
 
     [UnityTest]
-    public IEnumerator MainRouteReachesExitWithoutDeathOrFuelRequirement()
+    public IEnumerator MainRouteReachesExitWithThreeEmberChamberBudget()
     {
-        player.GetComponent<LanternFuel>().Initialize(0f, 10f);
+        player.GetComponent<LanternFuel>().ResetForChamber();
         int deaths = 0;
         player.OnPlayerDied += reason => deaths++;
         yield return WalkTo(1.3f);
@@ -122,6 +125,8 @@ public sealed class RuinedArchiveRouteTests
     [UnityTest]
     public IEnumerator OptionalUpperOfficeIsReachableWithCurrentJumpAndRewardsAnEmber()
     {
+        // Leave room for the route and office rewards under the three-ember cap.
+        player.GetComponent<LanternFuel>().Initialize(2f, 6f);
         yield return WalkTo(1.3f);
         yield return SprintJumpTo(3.1f, 0.9f);
         yield return SprintJumpTo(5.7f, 1.8f);

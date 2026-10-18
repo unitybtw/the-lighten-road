@@ -11,7 +11,7 @@ namespace TheLightenRoad.Lantern
     ///   an unnatural chemical reaction causes the crystal to flare up, emit warm light,
     ///   and become clearly visible to guide the player.
     /// - When the player leaves or Flare dims out, it cools back down into pure darkness.
-    /// - Embers are always collected on contact and added to player inventory.
+    /// - Embers remain in the world when the three-ember inventory is full.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public sealed class EmberPickup : MonoBehaviour
@@ -201,7 +201,7 @@ namespace TheLightenRoad.Lantern
                 cachedLantern = FindAnyObjectByType<LanternController>();
             }
 
-            if (cachedLantern == null || cachedLantern.LanternLight == null)
+            if (cachedLantern == null || cachedLantern.LanternLight == null || cachedLantern.LanternLight.intensity <= 0f)
             {
                 isIlluminated = false;
                 return;
@@ -270,20 +270,21 @@ namespace TheLightenRoad.Lantern
 
         public static event System.Action EmberCollected;
 
-        private void OnTriggerEnter2D(Collider2D other)
+        private void OnTriggerEnter2D(Collider2D other) => TryCollect(other.GetComponentInParent<LanternFuel>());
+
+        // A full lantern may spend an ember while still overlapping the pickup.
+        private void OnTriggerStay2D(Collider2D other) => TryCollect(other.GetComponentInParent<LanternFuel>());
+
+        public bool TryCollect(LanternFuel fuel)
         {
-            if (collected)
-                return;
-
-            var fuel = other.GetComponentInParent<LanternFuel>();
-            if (fuel == null)
-                return;
-
-            fuel.AddFuel(fuelAmount);
-
+            if (collected || fuel == null || fuelAmount <= 0f || fuel.Capacity - fuel.CurrentFuel < fuelAmount)
+                return false;
+            float accepted = fuel.AddFuel(fuelAmount);
+            if (accepted <= 0f) return false;
             collected = true;
             EmberCollected?.Invoke();
             Destroy(gameObject);
+            return true;
         }
     }
 }

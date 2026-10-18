@@ -6,24 +6,28 @@ namespace TheLightenRoad.Lantern
     /// <summary>
     /// Shared fuel and ember charge state.
     /// Each ember has 2 charges (Full = 2, Half = 1, Expended = 0).
-    /// Dim light is an infinite baseline resource; embers provide charges for Flare scouting
-    /// and machinery interaction.
+    /// The inventory holds at most three embers. Legacy charge APIs remain available
+    /// for mechanism compatibility: two charges always represent one whole ember.
     /// </summary>
     public sealed class LanternFuel : MonoBehaviour
     {
         [Header("Ember & Fuel Tuning")]
-        [SerializeField, Min(0.01f)] private float capacity = 10f; // 5 Embers = 10 charges max standard HUD
+        [SerializeField, Min(0.01f)] private float capacity = 6f; // Three embers, two legacy charges each
         [SerializeField, Min(0f)] private float startingFuel = 6f; // 3 Embers = 6 charges by default
         [SerializeField, Min(0f)] private float dimDrainPerSecond = 0f; // Infinite in Dim mode
         [SerializeField, Min(0f)] private float flareDrainPerSecond = 0f;
-        [SerializeField] private bool allowOverflowCapacity = true;
+        [SerializeField] private bool allowOverflowCapacity = false;
 
-        public float Capacity => capacity;
+        public const int MaxEmbers = 3;
+        public const int ChargesPerEmber = 2;
+        public const float ChamberFuel = MaxEmbers * ChargesPerEmber;
+        public float Capacity => ChamberFuel;
         public float CurrentFuel { get; private set; }
         public float NormalizedFuel => capacity > 0f ? CurrentFuel / capacity : 0f;
-        public bool IsFull => CurrentFuel >= capacity;
+        public bool IsFull => CurrentFuel >= ChamberFuel;
         public bool IsEmpty => CurrentFuel <= 0f;
-        public bool AllowOverflowCapacity { get => allowOverflowCapacity; set => allowOverflowCapacity = value; }
+        // Kept for older callers; overflow is forbidden by the current chamber rules.
+        public bool AllowOverflowCapacity { get => false; set => allowOverflowCapacity = false; }
 
         public float StartingFuel => startingFuel;
         public float DimDrainPerSecond => dimDrainPerSecond;
@@ -34,7 +38,7 @@ namespace TheLightenRoad.Lantern
         public int TotalEmbers => Mathf.CeilToInt(CurrentFuel / 2f);
         public int FullEmbers => Mathf.FloorToInt(CurrentFuel / 2f);
         public bool HasHalfEmber => (Mathf.RoundToInt(CurrentFuel) % 2) == 1;
-        public int OverflowEmbers => Mathf.Max(0, TotalEmbers - 5);
+        public int OverflowEmbers => 0;
 
         /// <summary>Raised when fuel changes. Arguments are current fuel and capacity.</summary>
         public event Action<float, float> FuelChanged;
@@ -43,7 +47,9 @@ namespace TheLightenRoad.Lantern
 
         private void Awake()
         {
-            CurrentFuel = Mathf.Clamp(startingFuel, 0f, capacity);
+            capacity = startingFuel = ChamberFuel;
+            allowOverflowCapacity = false;
+            CurrentFuel = ChamberFuel;
             FuelChanged?.Invoke(CurrentFuel, capacity);
             if (CurrentFuel <= 0f)
                 FuelDepleted?.Invoke();
@@ -69,14 +75,15 @@ namespace TheLightenRoad.Lantern
             return TrySpendFuel(1f);
         }
 
+        public bool TrySpendEmber() => TrySpendFuel(ChargesPerEmber);
+
+        public void ResetForChamber() => Initialize(ChamberFuel, ChamberFuel);
+
         public float AddFuel(float amount)
         {
             if (amount < 0f)
                 throw new ArgumentOutOfRangeException(nameof(amount), "Fuel recovery cannot be negative.");
 
-            // Never reject picking up embers: automatically expand capacity to hold inventory
-            if (allowOverflowCapacity && CurrentFuel + amount > capacity)
-                capacity = CurrentFuel + amount;
 
             float before = CurrentFuel;
             SetFuel(CurrentFuel + amount);
@@ -92,7 +99,8 @@ namespace TheLightenRoad.Lantern
         {
             if (maxCapacity <= 0f)
                 throw new ArgumentOutOfRangeException(nameof(maxCapacity), "Capacity must be positive.");
-            capacity = maxCapacity;
+            // Ignore old serialized/prototype capacities above the new hard limit.
+            capacity = ChamberFuel;
             SetFuel(current);
         }
 
@@ -112,7 +120,7 @@ namespace TheLightenRoad.Lantern
         private void SetFuel(float value)
         {
             float before = CurrentFuel;
-            CurrentFuel = Mathf.Clamp(value, 0f, capacity);
+            CurrentFuel = Mathf.Clamp(value, 0f, ChamberFuel);
             if (Mathf.Approximately(before, CurrentFuel))
                 return;
 

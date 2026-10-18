@@ -45,7 +45,7 @@ public sealed class LanternControllerTests
     }
 
     [Test]
-    public void ToggleFlareModeConsumesOneChargeAndSetsScoutTimer()
+    public void ToggleFlareModeConsumesOneWholeEmberAndSetsScoutTimer()
     {
         fuel.Initialize(6f, 10f);
 
@@ -53,7 +53,7 @@ public sealed class LanternControllerTests
         bool flared = controller.SetFlared(true);
         Assert.That(flared, Is.True);
         Assert.That(controller.IsFlared, Is.True);
-        Assert.That(fuel.TotalCharges, Is.EqualTo(5), "Activating Flare scout should consume 1 charge.");
+        Assert.That(fuel.TotalCharges, Is.EqualTo(4), "Activating Flare scout should consume 1 full ember (2 legacy charges).");
         Assert.That(controller.FlareTimer, Is.EqualTo(controller.FlareScoutDuration).Within(0.1f));
 
         bool dimmed = controller.SetFlared(false);
@@ -77,7 +77,7 @@ public sealed class LanternControllerTests
         Assert.That(controller.IsLowFuel, Is.False);
 
         fuel.Initialize(2f, 10f);
-        Assert.That(controller.IsLowFuel, Is.True);
+        Assert.That(controller.IsLowFuel, Is.False);
 
         fuel.Initialize(1f, 10f);
         Assert.That(controller.IsLowFuel, Is.True);
@@ -135,32 +135,26 @@ public sealed class LanternControllerTests
         controller.TickScout(controller.TransitionDuration);
         Assert.That(controller.FlareBlend, Is.Zero);
         Assert.That(controller.IsFlared, Is.False);
-        Assert.That(fuel.TotalCharges, Is.EqualTo(5));
+        Assert.That(fuel.TotalCharges, Is.EqualTo(4));
     }
 
     [Test]
-    public void FirstUseFadesToHalfAndLastChargeBreaksOnlyAfterSecondUseCompletes()
+    public void OneScoutBurnsOneWholeEmberAndBreaksOnce()
     {
-        fuel.Initialize(2f, 10f);
+        fuel.Initialize(2f, 6f);
         int breaks = 0;
         controller.EmberBroken += () => breaks++;
-        controller.SetFlared(true);
-        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(1f));
-        controller.TickScout(controller.FlareScoutDuration * 0.5f);
-        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(0.75f).Within(0.001f));
-        controller.TickScout(controller.FlareScoutDuration * 0.5f);
-        Assert.That(fuel.TotalCharges, Is.EqualTo(1));
-        Assert.That(breaks, Is.Zero);
         Assert.That(controller.SetFlared(true), Is.True);
-        Assert.That(fuel.IsEmpty, Is.True);
-        Assert.That(controller.IsFlared, Is.True, "The final reserved charge must still grant its full scout.");
-        controller.TickScout(controller.FlareScoutDuration * 0.5f);
-        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(0.25f).Within(0.001f));
+        Assert.That(fuel.TotalEmbers, Is.Zero);
+        controller.TickScout(controller.FlareScoutDuration * .5f);
+        Assert.That(controller.ScoutEmberLevel, Is.EqualTo(.5f).Within(.001f));
         Assert.That(breaks, Is.Zero);
         controller.TickScout(controller.FlareScoutDuration);
         controller.TickScout(controller.FlareScoutDuration);
         Assert.That(breaks, Is.EqualTo(1));
-        Assert.That(controller.HasActiveScout, Is.False);
+        Assert.That(controller.SetFlared(true), Is.False);
+        fuel.ResetForChamber();
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
     }
 
     [Test]
@@ -175,15 +169,15 @@ public sealed class LanternControllerTests
         Assert.That(controller.FlareBlend, Is.GreaterThan(0f).And.LessThan(1f));
         controller.TickScout(controller.TransitionDuration);
         Assert.That(controller.HasActiveScout, Is.False);
-        Assert.That(fuel.TotalCharges, Is.EqualTo(5));
-        Assert.That(controller.SetFlared(true), Is.True);
         Assert.That(fuel.TotalCharges, Is.EqualTo(4));
+        Assert.That(controller.SetFlared(true), Is.True);
+        Assert.That(fuel.TotalCharges, Is.EqualTo(2));
     }
 
     [Test]
     public void ResetCancelsBurnWithoutPlayingABreak()
     {
-        fuel.Initialize(1f, 10f);
+        fuel.Initialize(2f, 6f);
         int breaks = 0;
         controller.EmberBroken += () => breaks++;
         controller.SetFlared(true);
@@ -205,5 +199,16 @@ public sealed class LanternControllerTests
         InputSystem.settings.backgroundBehavior = originalBackgroundBehavior;
         InputSystem.settings.editorInputBehaviorInPlayMode = originalEditorInputBehavior;
         yield return null;
+    }
+    [Test]
+    public void EmptyLanternHasNoPassiveLightButRecoveryRestoresIt()
+    {
+        fuel.Initialize(0, 6);
+        controller.TickScout(0);
+        Assert.That(controller.LanternLight.intensity, Is.Zero);
+        fuel.AddEmbers(1);
+        controller.TickScout(0);
+        Assert.That(controller.LanternLight.intensity, Is.GreaterThan(0));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(1));
     }
 }

@@ -72,6 +72,10 @@ public sealed class PlayerRespawnTests
         fuel.TrySpendFuel(fuel.CurrentFuel);
         Assert.That(fuel.IsEmpty, Is.True);
 
+        // Exactly three seconds are allowed; death begins only after that.
+        respawnController.TickSurvival(3f);
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
+        respawnController.TickSurvival(.01f);
         yield return null;
 
         Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dying).Or.EqualTo(RespawnState.Dead));
@@ -128,6 +132,28 @@ public sealed class PlayerRespawnTests
         Assert.That(player.transform.position.y, Is.EqualTo(respawnController.SpawnPosition.y).Within(0.1f));
         Assert.That(fuel.CurrentFuel, Is.EqualTo(respawnController.RespawnFuelAmount).Within(0.1f));
 
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator RecoveryCancelsDarknessAndChamberEntryRestoresThreeEmbers()
+    {
+        fuel.TrySpendFuel(fuel.CurrentFuel);
+        respawnController.TickSurvival(2.9f);
+        fuel.AddEmbers(1);
+        Assert.That(respawnController.DarknessTimer, Is.Zero);
+        respawnController.TickSurvival(1f);
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
+        fuel.TrySpendFuel(fuel.CurrentFuel);
+        respawnController.TickSurvival(2f);
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
+        var chamberStart = new Vector3(4f, 1.5f, 0);
+        respawnController.BeginChamber(chamberStart);
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(respawnController.DarknessTimer, Is.Zero);
+        respawnController.Kill(DeathReason.Hazard);
+        respawnController.Respawn();
+        Assert.That(player.transform.position, Is.EqualTo(chamberStart));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
         yield return null;
     }
 }

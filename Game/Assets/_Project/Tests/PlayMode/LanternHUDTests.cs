@@ -44,13 +44,13 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void BuildsOverlayCanvasAndInitializes5EmberSlots()
+    public void BuildsOverlayCanvasAndInitializesThreeEmberSlots()
     {
         Step(0.1f);
         Assert.That(hud.Canvas, Is.Not.Null);
         Assert.That(hud.Canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceOverlay));
         Assert.That(hud.Target, Is.SameAs(controller));
-        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(5));
+        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(3));
     }
 
     [Test]
@@ -69,27 +69,18 @@ public sealed class LanternHUDTests
         Assert.That(hud.GetSlotSprite(2), Is.EqualTo(PixelSprites.EmberHalf));
         Assert.That(hud.GetSlotColor(2), Is.EqualTo(Color.white));
 
-        Assert.That(hud.GetSlotColor(3), Is.EqualTo(Color.clear));
-        Assert.That(hud.GetSlotColor(4), Is.EqualTo(Color.clear));
+        Assert.That(hud.GetSlotColor(3), Is.EqualTo(Color.clear)); // There is no fourth slot.
     }
 
     [Test]
-    public void DisplaysOverflowBadgeWhenEmbersExceed5()
+    public void InventoryCannotExposeMoreThanThreeIconsOrAnOverflowBadge()
     {
-        // 14 charges = 7 embers -> 5 displayed slots, +2 overflow badge
-        fuel.Initialize(14f, 14f);
-        Step(0.05f);
-        Assert.That(hud.OverflowText, Is.EqualTo("+2"));
-
-        // 18 charges = 9 embers -> 5 displayed slots, +4 overflow badge (designer Furkan's exact example)
         fuel.Initialize(18f, 18f);
-        Step(0.05f);
-        Assert.That(hud.OverflowText, Is.EqualTo("+4"));
-
-        // 10 charges = 5 embers -> exactly 5 displayed slots, no overflow badge
-        fuel.Initialize(10f, 10f);
-        Step(0.05f);
-        Assert.That(hud.OverflowText, Is.EqualTo(string.Empty));
+        Step(.05f);
+        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(3));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
+        Assert.That(hud.OverflowText, Is.Empty);
+        Assert.That(hud.GetSlotSprite(3), Is.Null);
     }
 
     [Test]
@@ -117,7 +108,7 @@ public sealed class LanternHUDTests
         fuel.Initialize(0f, 10f);
         Step(0.05f);
         Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 3; i++)
         {
             Assert.That(hud.GetSlotColor(i), Is.EqualTo(Color.clear));
         }
@@ -140,14 +131,13 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void SingleChargeGainIsNotMisreportedAsAFullEmber()
+    public void CollectingAtCapacityDoesNotInventPickupFeedback()
     {
-        Step(0.1f);
-        fuel.AddFuel(1f);
-        Step(0.05f);
-        Assert.That(hud.PickupText, Is.EqualTo("+1 CHARGE"));
-        Assert.That(hud.DisplayedCharges, Is.EqualTo(7));
-        Assert.That(hud.GetSlotSprite(3), Is.EqualTo(PixelSprites.EmberHalf));
+        Step(.1f);
+        fuel.AddEmbers(1);
+        Step(.05f);
+        Assert.That(hud.IsShowingPickup, Is.False);
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
     }
 
     [Test]
@@ -169,29 +159,19 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void EmberWearTracksTwoUsesAndBreaksOnceAtZero()
+    public void OneUseFadesCracksAndRemovesAWholeEmber()
     {
-        fuel.Initialize(2f, 10f);
-        Step(0.05f);
+        fuel.Initialize(2f, 6f);
+        Step(.05f);
         controller.SetFlared(true);
-        controller.TickScout(controller.FlareScoutDuration * 0.5f);
-        Step(0.05f);
-        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.75f).Within(0.001f));
+        Assert.That(fuel.TotalEmbers, Is.Zero);
+        controller.TickScout(controller.FlareScoutDuration * .5f);
+        Step(.05f);
+        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(.5f).Within(.001f));
         Assert.That(hud.GetSlotSprite(0), Is.SameAs(PixelSprites.EmberFull));
-        Assert.That(hud.GetSlotColor(0), Is.Not.EqualTo(Color.white));
-        Assert.That(hud.ActiveCrackAmount, Is.Zero);
+        Assert.That(hud.GetSlotCrackAlpha(0), Is.GreaterThan(0));
         controller.TickScout(controller.FlareScoutDuration);
-        Step(0.05f);
-        Assert.That(hud.GetSlotSprite(0), Is.SameAs(PixelSprites.EmberHalf));
-        Assert.That(hud.BreakFeedbackCount, Is.Zero);
-        controller.SetFlared(true);
-        controller.TickScout(controller.FlareScoutDuration * 0.5f);
-        Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
-        Assert.That(hud.GetSlotCrackAlpha(0), Is.GreaterThan(0f));
-        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.25f).Within(0.001f));
-        controller.TickScout(controller.FlareScoutDuration);
-        Step(0.7f);
+        Step(.7f);
         Assert.That(hud.GetSlotColor(0), Is.EqualTo(Color.clear));
         Assert.That(hud.BreakFeedbackCount, Is.EqualTo(1));
         Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
@@ -210,13 +190,14 @@ public sealed class LanternHUDTests
         Assert.That(controller.ScoutEmberIndex, Is.EqualTo(1));
         Assert.That(hud.GetSlotColor(0), Is.EqualTo(Color.white));
         Assert.That(hud.GetSlotColor(1), Is.Not.EqualTo(Color.white));
-        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.75f).Within(0.001f));
+        Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.5f).Within(0.001f));
         Assert.That(hud.PickupText, Is.EqualTo("+1 EMBER"));
     }
 
     [Test]
     public void DisablingHudHidesCanvasAndReenableDoesNotFakePickup()
     {
+        fuel.Initialize(4f, 6f);
         Step(0.1f);
         hud.enabled = false;
         Assert.That(hud.Canvas.enabled, Is.False);
@@ -224,18 +205,19 @@ public sealed class LanternHUDTests
         hud.enabled = true;
         Step(0.1f);
         Assert.That(hud.Canvas.enabled, Is.True);
-        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
         Assert.That(hud.IsShowingPickup, Is.False);
     }
 
     [Test]
     public void ReducedMotionKeepsInventoryAndPickupFeedbackReadable()
     {
+        fuel.Initialize(4f, 6f);
         hud.ReduceMotion = true;
         Step(0.1f);
         fuel.AddFuel(2f);
         Step(0.1f);
-        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
         Assert.That(hud.IsShowingPickup, Is.True);
         Assert.That(hud.PickupText, Is.EqualTo("+1 EMBER"));
         Assert.That(hud.Canvas.GetComponentInChildren<CanvasGroup>().alpha, Is.EqualTo(1f));
@@ -244,6 +226,7 @@ public sealed class LanternHUDTests
     [Test]
     public void RetargetingClearsPreviousInventoryFeedback()
     {
+        fuel.Initialize(4f, 6f);
         Step(0.1f);
         fuel.AddFuel(2f);
         Step(0.05f);
@@ -251,7 +234,7 @@ public sealed class LanternHUDTests
         hud.SetTarget(controller);
         Step(0.05f);
         Assert.That(hud.IsShowingPickup, Is.False);
-        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
     }
 
     [Test]

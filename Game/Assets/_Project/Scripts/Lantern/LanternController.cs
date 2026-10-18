@@ -7,9 +7,9 @@ namespace TheLightenRoad.Lantern
     /// <summary>
     /// Controls lantern illumination, Dim/Flare scout states, 2D dynamic shadows, and flame flicker.
     /// In accordance with Game Designer Furkan's feedback:
-    /// - Dim radius is 2.75 units (50% of old flare) with infinite light.
+    /// - Dim radius is 2.75 units (50% of old flare) while an ember is held.
     /// - Flare radius is 11.0 units (200% of old flare) acting as a powerful scout mode.
-    /// - Each scout use expends 1 charge from the player's ember inventory.
+    /// - Each scout use permanently expends 1 full ember from the player's ember inventory.
     /// </summary>
     [RequireComponent(typeof(LanternFuel))]
     public sealed class LanternController : MonoBehaviour
@@ -31,7 +31,7 @@ namespace TheLightenRoad.Lantern
         [SerializeField, Min(0.1f)] private float lowFuelPulseRate = 5f;
 
         [Header("Flare Scout Timing")]
-        [Tooltip("Duration in seconds that 1 ember charge keeps Flare scout light active.")]
+        [Tooltip("Duration in seconds that 1 full ember keeps Flare scout light active.")]
         [SerializeField, Min(1f)] private float flareScoutDuration = 6.0f;
         [SerializeField] private bool useTimedScoutMode = true;
 
@@ -71,7 +71,7 @@ namespace TheLightenRoad.Lantern
 
         /// <summary>Raised when the lantern switches between Dim (false) and Flare (true).</summary>
         public event System.Action<bool> FlareChanged;
-        /// <summary>Raised once after the second use finishes, never when the first use starts.</summary>
+        /// <summary>Raised once when a spent ember finishes its burn animation.</summary>
         public event System.Action EmberBroken;
 
         public bool IsFlared { get; private set; }
@@ -93,8 +93,9 @@ namespace TheLightenRoad.Lantern
         public bool IsDimming => releasing;
         public float ScoutProgress => activeScout ? 1f - burnProgress : 0f;
         public int ScoutEmberIndex => fuel != null ? fuel.TotalCharges / 2 : 0;
-        public bool ScoutIsSecondUse => scoutChargesBefore % 2 == 1;
-        public float ScoutEmberLevel => (ScoutIsSecondUse ? 0.5f : 1f) - 0.5f * burnProgress;
+        // A single scout now burns a whole stone, including its cracking phase.
+        public bool ScoutIsSecondUse => true;
+        public float ScoutEmberLevel => activeScout ? 1f - burnProgress : 0f;
         public bool EnableShadows { get => enableShadows; set { enableShadows = value; ApplyLight(); } }
         public float ShadowIntensity { get => shadowIntensity; set { shadowIntensity = value; ApplyLight(); } }
         public float ShadowSoftness { get => shadowSoftness; set { shadowSoftness = value; ApplyLight(); } }
@@ -105,6 +106,7 @@ namespace TheLightenRoad.Lantern
         private void Awake()
         {
             fuel = GetComponent<LanternFuel>();
+            useTimedScoutMode = true; // Migrate legacy scenes to the whole-ember scout contract.
             if (lanternLight == null)
                 lanternLight = GetComponentInChildren<Light2D>();
             keyboard = Keyboard.current;
@@ -166,13 +168,13 @@ namespace TheLightenRoad.Lantern
             if (flared)
             {
                 // An early release must finish before another charge can be reserved.
-                if (activeScout || fuel.CurrentFuel < (useTimedScoutMode ? 1f : 0.001f)) return false;
+                if (activeScout || fuel.CurrentFuel < LanternFuel.ChargesPerEmber) return false;
                 if (useTimedScoutMode)
                 {
                     scoutChargesBefore = fuel.TotalCharges;
                     reservingCharge = true;
                     bool spent;
-                    try { spent = fuel.TrySpendCharge(); }
+                    try { spent = fuel.TrySpendEmber(); }
                     finally { reservingCharge = false; }
                     if (!spent) return false;
                     scoutElapsed = burnProgress = releaseElapsed = 0f;
@@ -254,8 +256,10 @@ namespace TheLightenRoad.Lantern
                 flicker = 1f + noise * flickerIntensity;
             }
 
-            lanternLight.intensity = Mathf.Lerp(dimIntensity, flareIntensity, flareBlend) * pulse * flicker;
-            lanternLight.pointLightOuterRadius = Mathf.Lerp(dimRadius, flareRadius, flareBlend) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
+            float passiveIntensity = fuel != null && !fuel.IsEmpty ? dimIntensity : 0f;
+            float passiveRadius = passiveIntensity > 0f ? dimRadius : 0.001f;
+            lanternLight.intensity = Mathf.Lerp(passiveIntensity, flareIntensity, flareBlend) * pulse * flicker;
+            lanternLight.pointLightOuterRadius = Mathf.Lerp(passiveRadius, flareRadius, flareBlend) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
         }
 
         private void OnGUI()
@@ -268,7 +272,7 @@ namespace TheLightenRoad.Lantern
             var panel = new Rect(16f, 16f, width, height);
             GUI.Box(panel, string.Empty);
             GUI.Label(new Rect(28f, 20f, width - 20f, 20f),
-                $"[F] {(IsFlared ? "FLARE (SCOUT)" : "DIM (INFINITE)")} — Embers: {fuel.TotalEmbers} ({fuel.TotalCharges} charges)");
+                $"[F] {(IsFlared ? "FLARE (SCOUT)" : "DIM")} — Embers: {fuel.TotalEmbers} ({fuel.TotalCharges} charges)");
         }
     }
 }

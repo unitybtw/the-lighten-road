@@ -39,8 +39,10 @@ namespace TheLightenRoad.Player
         [SerializeField] private bool enableVoidKill = true;
         [SerializeField] private float voidKillY = -5.5f;
 
-        [Header("Darkness Death (Disabled by default: lantern baseline light is infinite)")]
-        [SerializeField] private bool killOnFuelDepleted;
+        [Header("Darkness survival — three seconds without an ember")]
+        [SerializeField] private bool killOnFuelDepleted = true;
+        public const float DarknessGraceSeconds = 3f;
+        private float darknessTimer;
 
         [Header("Timings & Input")]
         [Tooltip("Seconds the death screen remains visible before auto-respawning.")]
@@ -63,6 +65,7 @@ namespace TheLightenRoad.Player
         public float VoidKillY { get => voidKillY; set => voidKillY = value; }
         public float AutoRespawnDelay { get => autoRespawnDelay; set => autoRespawnDelay = value; }
         public float StateTimer => stateTimer;
+        public float DarknessTimer => darknessTimer;
         public float NormalizedDeathProgress => Mathf.Clamp01(stateTimer / Mathf.Max(0.001f, autoRespawnDelay));
 
         private void Awake()
@@ -78,6 +81,10 @@ namespace TheLightenRoad.Player
             if (followCamera == null)
                 followCamera = FindAnyObjectByType<FollowCamera2D>();
 
+            // These chamber rules override legacy serialized defaults.
+            killOnFuelDepleted = true;
+            respawnFuelAmount = LanternFuel.ChamberFuel;
+
             // Default spawn point to the starting position if not overridden
             if (spawnPosition == Vector3.zero && transform.position != Vector3.zero)
                 spawnPosition = transform.position;
@@ -86,13 +93,19 @@ namespace TheLightenRoad.Player
         private void OnEnable()
         {
             if (fuel != null)
+            {
                 fuel.FuelDepleted += HandleFuelDepleted;
+                fuel.FuelChanged += HandleFuelChanged;
+            }
         }
 
         private void OnDisable()
         {
             if (fuel != null)
+            {
                 fuel.FuelDepleted -= HandleFuelDepleted;
+                fuel.FuelChanged -= HandleFuelChanged;
+            }
         }
 
         private void Update()
@@ -103,6 +116,7 @@ namespace TheLightenRoad.Player
                 {
                     Kill(DeathReason.Void);
                 }
+                TickSurvival(Time.deltaTime);
                 return;
             }
 
@@ -169,6 +183,9 @@ namespace TheLightenRoad.Player
                 }
             }
 
+            // Death cancels scouting; a spent ember is never refunded.
+            if (lantern != null) lantern.ResetToDim();
+
             // Camera feedback
             if (followCamera != null)
                 followCamera.Shake(0.12f, 0.4f);
@@ -196,7 +213,8 @@ namespace TheLightenRoad.Player
 
             // Restore lantern fuel
             if (fuel != null)
-                fuel.Initialize(respawnFuelAmount, fuel.Capacity);
+                fuel.ResetForChamber();
+            darknessTimer = 0f;
 
             // Restore stamina
             if (stamina != null)
@@ -221,13 +239,40 @@ namespace TheLightenRoad.Player
 
         public void SetCheckpoint(Vector3 newSpawn)
         {
-            spawnPosition = newSpawn;
+            BeginChamber(newSpawn);
+        }
+
+        /// <summary>Existing prototype checkpoints mark the start of a new chamber segment.</summary>
+        public void BeginChamber(Vector3 start)
+        {
+            spawnPosition = start;
+            darknessTimer = 0f;
+            if (lantern != null) lantern.ResetToDim();
+            if (fuel != null) fuel.ResetForChamber();
+            if (stamina != null) stamina.ResetStamina();
+        }
+
+        public void TickSurvival(float deltaTime)
+        {
+            if (state != RespawnState.Alive) return;
+            if (fuel == null || !fuel.IsEmpty || !killOnFuelDepleted)
+            {
+                darknessTimer = 0f;
+                return;
+            }
+            darknessTimer += Mathf.Max(0f, deltaTime);
+            if (darknessTimer > DarknessGraceSeconds) Kill(DeathReason.Darkness);
+        }
+
+        private void HandleFuelChanged(float current, float capacity)
+        {
+            if (current > 0f) darknessTimer = 0f;
         }
 
         private void HandleFuelDepleted()
         {
-            if (killOnFuelDepleted)
-                Kill(DeathReason.Darkness);
+            // Start timing in Update rather than killing on the depletion event.
+            darknessTimer = 0f;
         }
     }
 }

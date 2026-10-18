@@ -26,16 +26,17 @@ public sealed class EmberPickupTests
 
         var fuel = player.GetComponent<LanternFuel>();
         Assert.That(fuel, Is.Not.Null);
-        // PlayerPrototype starts with 6 charges (3 full embers).
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
+        // Make room for one whole ember before the overlap is processed.
+        fuel.Initialize(4f, 6f);
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(4f));
 
         // Allow 2D physics trigger to register
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
         yield return null;
 
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(8f), "Charges must be incremented by 2 (1 ember).");
-        Assert.That(fuel.TotalEmbers, Is.EqualTo(4));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f), "Charges must be incremented by 2 (1 ember).");
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
         Assert.That(pickup == null, Is.True, "Ember pickup must be destroyed after collection.");
 #else
         Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
@@ -44,7 +45,7 @@ public sealed class EmberPickupTests
     }
 
     [UnityTest]
-    public IEnumerator AlwaysCollectsPickupAndAddsToInventoryEvenWhenFull()
+    public IEnumerator FullLanternLeavesPickupInWorldUntilThereIsRoom()
     {
 #if UNITY_EDITOR
         var playerPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -56,18 +57,23 @@ public sealed class EmberPickupTests
         player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
 
         var fuel = player.GetComponent<LanternFuel>();
-        fuel.Initialize(10f, 10f); // 5 Embers (fills the 5-slot HUD)
+        fuel.ResetForChamber(); // Three embers fill the hard-capped inventory.
         Assert.That(fuel.IsFull, Is.True);
 
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
         yield return null;
 
-        // Furkan's rule: pickups are ALWAYS collected and added to inventory (overflow expands to +1)
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(12f));
-        Assert.That(fuel.TotalEmbers, Is.EqualTo(6));
-        Assert.That(fuel.OverflowEmbers, Is.EqualTo(1));
-        Assert.That(pickup == null, Is.True, "Pickup must be collected into inventory even when slots are full.");
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(pickup != null, Is.True, "Full inventory must leave the pickup in the world.");
+        var ember = pickup.GetComponent<EmberPickup>();
+        Assert.That(ember.IsCollected, Is.False);
+        fuel.TrySpendEmber();
+        Assert.That(ember.TryCollect(fuel), Is.True);
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        yield return null;
+        Assert.That(pickup == null, Is.True);
 #else
         Assert.Ignore("This prefab integration test runs in Editor Play Mode.");
         yield break;

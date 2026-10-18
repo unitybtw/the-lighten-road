@@ -25,7 +25,7 @@ public sealed class LanternFuelTests
     [Test]
     public void InitializesWithDefaultCapacityAndStartingFuel()
     {
-        Assert.That(fuel.Capacity, Is.EqualTo(10f));
+        Assert.That(fuel.Capacity, Is.EqualTo(6f));
         Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
         Assert.That(fuel.TotalCharges, Is.EqualTo(6));
         Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
@@ -38,7 +38,7 @@ public sealed class LanternFuelTests
     public void InitializeSetsCurrentFuelAndCapacity()
     {
         fuel.Initialize(5f, 10f);
-        Assert.That(fuel.Capacity, Is.EqualTo(10f));
+        Assert.That(fuel.Capacity, Is.EqualTo(6f));
         Assert.That(fuel.CurrentFuel, Is.EqualTo(5f));
         Assert.That(fuel.TotalCharges, Is.EqualTo(5));
         Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
@@ -64,7 +64,7 @@ public sealed class LanternFuelTests
     }
 
     [Test]
-    public void TrySpendChargeDeductsOneCharge()
+    public void LegacyTrySpendChargeKeepsMechanismCompatibility()
     {
         fuel.Initialize(4f, 10f);
 
@@ -75,37 +75,35 @@ public sealed class LanternFuelTests
     }
 
     [Test]
-    public void AddEmbersAddsTwoChargesPerEmber()
+    public void AddEmbersCapsAtThreeAndNeverExpandsCapacity()
     {
         fuel.Initialize(4f, 10f);
-
         fuel.AddEmbers(2);
-        Assert.That(fuel.TotalCharges, Is.EqualTo(8));
-        Assert.That(fuel.TotalEmbers, Is.EqualTo(4));
+        Assert.That(fuel.TotalCharges, Is.EqualTo(6));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(fuel.Capacity, Is.EqualTo(6f));
     }
 
     [Test]
-    public void AllowOverflowCapacityExpandsInventoryWhenCollectingBeyondStandardHUD()
+    public void LegacyOverflowFlagCannotBypassThreeEmberLimit()
     {
-        fuel.Initialize(10f, 10f);
         fuel.AllowOverflowCapacity = true;
-
-        fuel.AddEmbers(2); // Adds 4 charges -> 14 charges (7 embers)
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(14f));
-        Assert.That(fuel.Capacity, Is.EqualTo(14f));
-        Assert.That(fuel.TotalEmbers, Is.EqualTo(7));
-        Assert.That(fuel.OverflowEmbers, Is.EqualTo(2));
+        fuel.Initialize(100f, 100f);
+        fuel.AddEmbers(2);
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
+        Assert.That(fuel.AllowOverflowCapacity, Is.False);
+        Assert.That(fuel.OverflowEmbers, Is.Zero);
     }
 
     [Test]
     public void BoundedCapacityCapsWhenOverflowIsDisabled()
     {
-        fuel.Initialize(8f, 10f);
+        fuel.Initialize(4f, 10f);
         fuel.AllowOverflowCapacity = false;
 
         float accepted = fuel.AddFuel(5f);
         Assert.That(accepted, Is.EqualTo(2f));
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(10f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
         Assert.That(fuel.IsFull, Is.True);
     }
 
@@ -141,11 +139,11 @@ public sealed class LanternFuelTests
 
         fuel.TrySpendFuel(2f);
         Assert.That(lastFuel, Is.EqualTo(3f));
-        Assert.That(lastCap, Is.EqualTo(10f));
+        Assert.That(lastCap, Is.EqualTo(6f));
 
         fuel.AddFuel(3f);
         Assert.That(lastFuel, Is.EqualTo(6f));
-        Assert.That(lastCap, Is.EqualTo(10f));
+        Assert.That(lastCap, Is.EqualTo(6f));
     }
 
     [Test]
@@ -173,5 +171,16 @@ public sealed class LanternFuelTests
 
         fuel.TickLanternDrain(flared: true, deltaTime: 1f);
         Assert.That(fuel.CurrentFuel, Is.EqualTo(4f));
+    }
+    [Test]
+    public void WholeEmberSpendAndChamberResetUseThreeStoneBudget()
+    {
+        Assert.That(fuel.TrySpendEmber(), Is.True);
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(2));
+        Assert.That(fuel.TrySpendEmber(), Is.True);
+        Assert.That(fuel.TrySpendEmber(), Is.True);
+        Assert.That(fuel.TrySpendEmber(), Is.False);
+        fuel.ResetForChamber();
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
     }
 }
