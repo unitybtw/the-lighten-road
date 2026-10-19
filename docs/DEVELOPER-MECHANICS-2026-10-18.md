@@ -1,6 +1,10 @@
 # Developer mechanics contract — 18 October 2026
 
-This update supersedes the older fuel, Flare and chamber-reset rules in the pre-production GDD. It records the team's supplied specification and the owner's subsequent clarification: **the lantern can carry at most three embers; excess pickups must remain in the world. There is no +1 / +2 overflow inventory.**
+This update supersedes the older fuel, Flare and chamber-reset rules in the pre-production GDD. It records the team's supplied specification and the owner's subsequent clarification: **Updated 19 October: the lantern can carry at most four embers, while chamber entry and respawn still restore three. Excess pickups remain in the world; there is no overflow inventory.**
+
+## Amendment — 19 October 2026
+
+The owner delegated the choice of a four- or five-ember maximum. Four was selected to allow one extra reserve without changing the three-ember chamber budget. The [Furkan tutorial prototype](../Game/Assets/_Project/Scenes/Sandbox/Sirac/FurkanPrototype/README.md) implements the supplied sketch in an isolated scene, including a shared two-node circuit, a four-stop shelf, full-inventory recovery safety and coordinated retry reset. Kemal's shared mechanism files remain unchanged.
 
 ## Resource rules
 
@@ -9,15 +13,15 @@ This update supersedes the older fuel, Flare and chamber-reset rules in the pre-
 - More than three continuous seconds at zero held embers causes Darkness death. Recovering any fuel cancels the countdown. Pausing gameplay pauses this timer.
 - F permanently spends one whole ember immediately and starts the timed, smoothly fading scout light. Turning Flare off early never refunds the ember. The three-second zero-inventory countdown also applies while the last spent ember's Flare is still animating.
 - E temporarily puts one ember into a circuit or retrieves that same ember. This is a reversible transfer, not a permanent spend.
-- Three inventory icons are available. A spent stone may fade and crack in an empty icon position during the scout animation, but is no longer held or spendable. Each whole stone finishes in one use; the former two-use half-ember design is superseded.
+- Four inventory icons are available. A spent stone may fade and crack in an empty icon position during the scout animation, but is no longer held or spendable. Each whole stone finishes in one use; the former two-use half-ember design is superseded.
 
 ## Current player implementation
 
-`LanternFuel` retains two internal charge units per ember so Kemal's existing two-charge mechanism API stays source-compatible. The inventory is capped at six units / three embers. `TrySpendEmber()` spends two units atomically. Old serialized capacities and overflow flags cannot increase this limit. `ResetForChamber()` restores three embers.
+`LanternFuel` retains two internal charge units per ember so Kemal's existing two-charge mechanism API stays source-compatible. The inventory is capped at eight units / four embers. `TrySpendEmber()` spends two units atomically. Old serialized capacities and overflow flags cannot increase this limit. `ResetForChamber()` restores three embers.
 
 `EmberPickup` rejects collection unless its complete reward fits and leaves the object available. Trigger-stay retries collection if the player spends an ember while still standing on it.
 
-`LanternController` spends one whole ember per timed scout and animates full-to-empty wear in a single use. `LanternHUD` always creates three slots, including when old scenes serialized five.
+`LanternController` spends one whole ember per timed scout and animates full-to-empty wear in a single use. `LanternHUD` always creates four slots, including when old scenes serialized five.
 
 `PlayerRespawnController` owns the darkness grace timer. `BeginChamber(start)` resets fuel, stamina and lantern presentation and records the next retry location. The existing Siraç prototype `SetCheckpoint` API now enters a chamber segment; existing route markers therefore serve as prototype chamber boundaries. Respawn restores the player's resources and position. The mechanism/world-state reset still requires coordination with the circuit owner; it is not implemented by these player changes.
 

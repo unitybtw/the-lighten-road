@@ -21,6 +21,7 @@ namespace TheLightenRoad.Frontend.Editor
         private static readonly string[] BuildScenePaths =
         {
             ScenePath,
+            MainMenuController.DefaultGameplayScene,
             "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity",
             "Assets/_Project/Scenes/Sandbox/Kemal/SceneKemal.unity",
             "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity",

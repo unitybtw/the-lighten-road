@@ -57,3 +57,8 @@ The `_Project` folders above have been created and Unity has generated their `.m
 Before Ember Vein integration, review the [developer task split](../docs/DEVELOPMENT_PLAN.md) and agree on final input bindings, fuel tuning, the lantern interface, and recovery rules. Coordinate edits to shared scenes, prefabs, packages, and project settings using [the collaboration guide](../docs/COLLABORATION.md).
 
 Unity-generated `Library/`, `Temp/`, logs, and local settings are excluded from Git.
+
+
+## Furkan tutorial / The First Light (2026-10-19)
+
+The main menu's first realm opens `Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity`. This playable blockout follows Furkan's two-chamber sketch: safe jump training, reception desk, compact pit, a two-node energy circuit, four-stop moving shelf and optional archive fragment. Carry up to four embers; chamber entry/respawn restores three. See the [prototype notes](Assets/_Project/Scenes/Sandbox/Sirac/FurkanPrototype/README.md) for scope, controls, ownership and validation.

@@ -20,7 +20,7 @@ namespace TheLightenRoad.Frontend
     /// </summary>
     public sealed class MainMenuController : MonoBehaviour
     {
-        public const string DefaultGameplayScene = "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity";
+        public const string DefaultGameplayScene = "Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity";
 
         [System.Serializable]
         public struct RealmOption
@@ -37,10 +37,10 @@ namespace TheLightenRoad.Frontend
             new RealmOption
             {
                 Number = "REALM I",
-                Title = "THE RUINED ARCHIVE",
-                Tag = "SIRAC SANDBOX  •  CORE EXPERIENCE",
-                Description = "Traverse the dark library ruins, manage stamina across wide chasms, and ignite your lantern flare to awaken dormant embers.",
-                ScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity"
+                Title = "THE FIRST LIGHT",
+                Tag = "FURKAN / TUTORIAL & BEGINNINGS",
+                Description = "Learn movement through the archive, scout the compact crossing, and power a shared circuit to reach an optional memory.",
+                ScenePath = DefaultGameplayScene
             },
             new RealmOption
             {

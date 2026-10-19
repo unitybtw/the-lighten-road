@@ -77,7 +77,7 @@ public sealed class LanternControllerTests
         Assert.That(controller.IsLowFuel, Is.False);
 
         fuel.Initialize(2f, 10f);
-        Assert.That(controller.IsLowFuel, Is.False);
+        Assert.That(controller.IsLowFuel, Is.True);
 
         fuel.Initialize(1f, 10f);
         Assert.That(controller.IsLowFuel, Is.True);

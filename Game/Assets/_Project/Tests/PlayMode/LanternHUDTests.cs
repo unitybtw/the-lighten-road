@@ -44,13 +44,13 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void BuildsOverlayCanvasAndInitializesThreeEmberSlots()
+    public void BuildsOverlayCanvasAndInitializesFourEmberSlots()
     {
         Step(0.1f);
         Assert.That(hud.Canvas, Is.Not.Null);
         Assert.That(hud.Canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceOverlay));
         Assert.That(hud.Target, Is.SameAs(controller));
-        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(3));
+        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(4));
     }
 
     [Test]
@@ -73,14 +73,14 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void InventoryCannotExposeMoreThanThreeIconsOrAnOverflowBadge()
+    public void InventoryCannotExposeMoreThanFourIconsOrAnOverflowBadge()
     {
         fuel.Initialize(18f, 18f);
         Step(.05f);
-        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(3));
-        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
+        Assert.That(hud.MaxDisplaySlots, Is.EqualTo(4));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
         Assert.That(hud.OverflowText, Is.Empty);
-        Assert.That(hud.GetSlotSprite(3), Is.Null);
+        Assert.That(hud.GetSlotSprite(4), Is.Null);
     }
 
     [Test]
@@ -108,7 +108,7 @@ public sealed class LanternHUDTests
         fuel.Initialize(0f, 10f);
         Step(0.05f);
         Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
             Assert.That(hud.GetSlotColor(i), Is.EqualTo(Color.clear));
         }
@@ -133,11 +133,13 @@ public sealed class LanternHUDTests
     [Test]
     public void CollectingAtCapacityDoesNotInventPickupFeedback()
     {
+        fuel.Initialize(8f,8f);
+        hud.SetTarget(controller); // Reset the setup inventory feedback before testing a rejected pickup.
         Step(.1f);
         fuel.AddEmbers(1);
         Step(.05f);
         Assert.That(hud.IsShowingPickup, Is.False);
-        Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(8));
     }
 
     [Test]

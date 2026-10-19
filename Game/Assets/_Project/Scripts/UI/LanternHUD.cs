@@ -18,7 +18,7 @@ namespace TheLightenRoad.UI
 
         [Header("Layout — reference resolution 960x540")]
         [SerializeField] private Vector2 screenMargin = new Vector2(24f, 24f);
-        [SerializeField, Range(1, 3)] private int maxDisplaySlots = 3;
+        [SerializeField, Range(1, 4)] private int maxDisplaySlots = 4;
         [SerializeField] private TMP_FontAsset fontAsset;
 
         [Header("Ember art and sound — placeholders until artist delivery")]

@@ -1,0 +1,1 @@
+{"name":"TheLightenRoad.Sirac.FurkanPrototype.Editor","references":["TheLightenRoad.Sirac.FurkanPrototype","TheLightenRoad.Player","TheLightenRoad.Lantern","TheLightenRoad.UI","TheLightenRoad.Audio","Unity.TextMeshPro","UnityEngine.UI","Unity.RenderPipelines.Universal.Runtime","Unity.RenderPipelines.Universal.2D.Runtime"],"includePlatforms":["Editor"]}

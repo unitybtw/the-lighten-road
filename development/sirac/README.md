@@ -346,3 +346,13 @@ Applied the updated developer contract and the owner's clarification that the pl
 Legacy two-charge APIs remain compatible with the mechanism owner. Kemal's scripts and scenes were inspected only. The [developer contract and integration review](../../docs/DEVELOPER-MECHANICS-2026-10-18.md) records waypoint patrol, gravity descent, shared multi-node state, full-lantern recovery safety, and world-state reset work still needed in that domain.
 
 Unity MCP Play Mode validation: 62/62 focused player/fuel/HUD/pickup/particle/audio tests passed, plus all 3/3 authored MovementSandbox route tests (65 passing cases across the two completed runs). The route test now uses a three-ember budget, leaves room for optional pickups, and refreshes held virtual keys across Editor focus changes. No gameplay movement or map geometry was adjusted. A prior run interrupted by script reload was discarded. Standalone and cross-owner circuit integration remain unverified.
+
+## Checkpoint 17 — Furkan's two-chamber tutorial and four-ember capacity (2026-10-19)
+
+Selected four as the carrying maximum, preserving three embers at chamber entry/respawn. The HUD now has four slots and no overflow. Created the editable `FurkanTutorial.unity` from Furkan's `design/levels/visual.png`: safe rising jump blocks, reception desk, a sealed chamber transition, compact stepping stones, two shared circuit nodes, four-stop shelf with one-second corner pauses and an optional upper archive fragment. The main menu's first realm opens this scene.
+
+Prototype circuit/platform code is isolated under `Sandbox/Sirac/FurkanPrototype`; Kemal's scripts/scenes were not modified. Full-lantern recovery refuses the transaction without losing the deposited ember. Death resets the local circuit, shelf, fragment and pickups alongside the three-ember budget. Platform carrier movement runs after the player motor, preserves relative walking and detaches for jumps.
+
+Combined Unity MCP Play Mode verification passed **76/76** (`e3ea7b85ff9e4660916a7ac1f9ef16d0`), including real keyboard movement through both chambers, riding the shelf to the far side, recovering the deposit, reaching the exit and jumping to the optional fragment. Existing core, UI, audio, menu and old-route cases also passed. This is a tested gameplay blockout; standalone/controller playtesting and final artist environment art remain separate work.
+
+![Furkan chamber two — gameplay blockout in scout light](previews/furkan-chamber.png)

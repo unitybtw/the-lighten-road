@@ -1,8 +1,8 @@
 # The Lighten Road — Game Design Document
 
-> **Mechanics update — 18 October 2026:** The [developer mechanics contract](DEVELOPER-MECHANICS-2026-10-18.md) supersedes this document's older fuel, Flare and chamber-reset rules. The lantern carries at most three embers; Flare spends one whole ember, Veins transfer one temporarily, and more than three seconds at zero embers causes Darkness death. See that contract for implementation status and cross-owner integration gaps.
+> **Mechanics update — 18 October 2026:** The [developer mechanics contract](DEVELOPER-MECHANICS-2026-10-18.md) supersedes this document's older fuel, Flare and chamber-reset rules. Updated 19 October: the lantern carries at most four embers and starts each chamber with three; Flare spends one whole ember, Veins transfer one temporarily, and more than three seconds at zero embers causes Darkness death. See that contract for implementation status and cross-owner integration gaps.
 
-**Version:** 0.2 · **Status:** Pre-production design · **Updated:** 2026-10-15
+**Version:** 0.3 · **Status:** Pre-production design · **Updated:** 2026-10-19
 
 This editable edition reorganizes the latest three-page [team GDD](The-Lighten-Road-GDD.pdf), including its core-loop diagram and Elemental Tetrad table. Gameplay descriptions are design intentions. Implementation milestones and open questions at the end are planning additions; they are not claims about an existing build.
 

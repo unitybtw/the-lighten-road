@@ -57,21 +57,21 @@ public sealed class EmberPickupTests
         player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
 
         var fuel = player.GetComponent<LanternFuel>();
-        fuel.ResetForChamber(); // Three embers fill the hard-capped inventory.
+        fuel.Initialize(8f,8f); // Fill the four-ember carrying capacity.
         Assert.That(fuel.IsFull, Is.True);
 
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
         yield return null;
 
-        Assert.That(fuel.CurrentFuel, Is.EqualTo(6f));
-        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(8f));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(4));
         Assert.That(pickup != null, Is.True, "Full inventory must leave the pickup in the world.");
         var ember = pickup.GetComponent<EmberPickup>();
         Assert.That(ember.IsCollected, Is.False);
         fuel.TrySpendEmber();
         Assert.That(ember.TryCollect(fuel), Is.True);
-        Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(4));
         yield return null;
         Assert.That(pickup == null, Is.True);
 #else

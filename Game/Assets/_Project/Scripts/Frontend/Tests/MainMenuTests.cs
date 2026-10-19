@@ -104,7 +104,7 @@ namespace TheLightenRoad.Frontend.Tests
 
             _menu.SelectRealm(0);
             Assert.That(_menu.SelectedRealmIndex, Is.EqualTo(0));
-            Assert.That(_menu.GameplayScene, Is.EqualTo("Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity"));
+            Assert.That(_menu.GameplayScene, Is.EqualTo(MainMenuController.DefaultGameplayScene));
         }
 
         [UnityTest]
