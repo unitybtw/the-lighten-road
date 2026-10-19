@@ -25,6 +25,28 @@ namespace TheLightenRoad.Player
         [SerializeField] private bool variableJumpHeight = true;
         [SerializeField, Range(0.1f, 1f)] private float jumpCutMultiplier = 0.5f;
 
+        [Header("Kinematics & Responsiveness")]
+        [Tooltip("Acceleration rate when moving from rest or increasing speed on the ground.")]
+        [SerializeField, Min(10f)] private float groundAcceleration = 70f;
+        [Tooltip("Deceleration rate when releasing input on the ground.")]
+        [SerializeField, Min(10f)] private float groundDeceleration = 75f;
+        [Tooltip("Snappy braking rate when reversing direction (skid turn).")]
+        [SerializeField, Min(10f)] private float skidTurnDeceleration = 90f;
+        [Tooltip("Airborne horizontal control acceleration.")]
+        [SerializeField, Min(10f)] private float airAcceleration = 45f;
+        [Tooltip("Airborne horizontal drag when no input is held.")]
+        [SerializeField, Min(10f)] private float airDeceleration = 25f;
+
+        [Header("Jump Physics & Apex Feel")]
+        [Tooltip("Reduces gravity near jump apex to create weightless hang-time and precise landing control.")]
+        [SerializeField] private bool enableApexHangTime = true;
+        [SerializeField, Range(0.2f, 1f)] private float apexGravityMultiplier = 0.65f;
+        [SerializeField, Range(0.5f, 3f)] private float apexVelocityThreshold = 1.4f;
+        [Tooltip("Slightly firmer gravity when descending for snappy platforming.")]
+        [SerializeField, Range(1f, 2f)] private float fallGravityMultiplier = 1.15f;
+        [Tooltip("Maximum downward fall speed to prevent disorienting plunges.")]
+        [SerializeField] private float terminalFallSpeed = -16f;
+
         [Header("Visual Juice & Polish")]
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private Transform visualTransform;
@@ -34,12 +56,23 @@ namespace TheLightenRoad.Player
         [SerializeField] private Vector2 landSquash = new Vector2(1.25f, 0.75f);
         [SerializeField, Min(1f)] private float squashRecoverySpeed = 9f;
 
+        [Header("Kinetic Visual Lean")]
+        [SerializeField] private bool enableKineticTilt = true;
+        [SerializeField, Range(0f, 10f)] private float maxRunTiltAngle = 3.2f;
+        [SerializeField, Range(0f, 5f)] private float maxWalkTiltAngle = 1.5f;
+        [SerializeField, Min(1f)] private float tiltRecoverySpeed = 30f;
+
+        [Header("Ledge Assist & Corner Correction")]
+        [SerializeField] private bool enableCornerCorrection = true;
+        [SerializeField, Range(0.01f, 0.2f)] private float cornerCorrectionDistance = 0.10f;
+
         [Header("Ground Detection")]
         [SerializeField, Min(0.001f)] private float groundCheckDistance = 0.06f;
         [SerializeField] private LayerMask groundLayers = ~0;
 
         private readonly RaycastHit2D[] groundHits = new RaycastHit2D[8];
         private Rigidbody2D body;
+        private CapsuleCollider2D capsuleCollider;
         private InputAction move;
         private InputAction jump;
         private InputAction sprint;
@@ -52,6 +85,8 @@ namespace TheLightenRoad.Player
         private Vector3 baseVisualScale = Vector3.one;
         private Vector2 squashScale = Vector2.one;
         private float previousVerticalVelocity;
+        private float baseGravityScale = 3f;
+        private float currentTilt;
 
         public event System.Action OnJumped;
         public event System.Action<float> OnLanded;
@@ -76,11 +111,19 @@ namespace TheLightenRoad.Player
         public float HorizontalInput => horizontalInput;
         public float HorizontalSpeed => body != null ? body.linearVelocity.x : 0f;
         public Rigidbody2D Body => body;
+        public float GroundAcceleration { get => groundAcceleration; set => groundAcceleration = value; }
+        public float GroundDeceleration { get => groundDeceleration; set => groundDeceleration = value; }
+        public bool EnableApexHangTime { get => enableApexHangTime; set => enableApexHangTime = value; }
+        public bool EnableKineticTilt { get => enableKineticTilt; set => enableKineticTilt = value; }
+        public bool EnableCornerCorrection { get => enableCornerCorrection; set => enableCornerCorrection = value; }
 
         private void Awake()
         {
             body = GetComponent<Rigidbody2D>();
             body.constraints |= RigidbodyConstraints2D.FreezeRotation;
+            body.interpolation = RigidbodyInterpolation2D.Interpolate;
+            baseGravityScale = body.gravityScale;
+            capsuleCollider = GetComponent<CapsuleCollider2D>();
 
             if (spriteRenderer == null)
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -155,6 +198,18 @@ namespace TheLightenRoad.Player
                     baseVisualScale.y * squashScale.y,
                     baseVisualScale.z);
             }
+
+            // Smooth kinetic tilt in the direction of motion
+            if (enableKineticTilt && visualTransform != null)
+            {
+                float targetTilt = 0f;
+                if (IsGrounded && Mathf.Abs(horizontalInput) > 0.05f)
+                {
+                    targetTilt = -horizontalInput * (IsRunning ? maxRunTiltAngle : maxWalkTiltAngle);
+                }
+                currentTilt = Mathf.MoveTowards(currentTilt, targetTilt, tiltRecoverySpeed * Time.deltaTime);
+                visualTransform.localRotation = Quaternion.Euler(0f, 0f, currentTilt);
+            }
         }
 
         private void FixedUpdate()
@@ -219,7 +274,27 @@ namespace TheLightenRoad.Player
 
             var velocity = body.linearVelocity;
             float currentMoveSpeed = IsRunning ? runSpeed : walkSpeed;
-            velocity.x = horizontalInput * currentMoveSpeed;
+            float targetSpeed = horizontalInput * currentMoveSpeed;
+
+            float accelRate;
+            if (Mathf.Abs(horizontalInput) > 0.01f)
+            {
+                if (IsGrounded)
+                {
+                    bool isReversing = Mathf.Abs(velocity.x) > 0.1f && Mathf.Sign(velocity.x) != Mathf.Sign(targetSpeed);
+                    accelRate = isReversing ? skidTurnDeceleration : groundAcceleration;
+                }
+                else
+                {
+                    accelRate = airAcceleration;
+                }
+            }
+            else
+            {
+                accelRate = IsGrounded ? groundDeceleration : airDeceleration;
+            }
+
+            velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accelRate * Time.fixedDeltaTime);
 
             // Execute jump if buffer is active AND player is either grounded or within coyote time
             if (jumpBufferTimer > 0f && (IsGrounded || coyoteTimer > 0f))
@@ -247,6 +322,39 @@ namespace TheLightenRoad.Player
                     velocity.y *= jumpCutMultiplier;
                 }
                 jumpReleased = false;
+            }
+
+            // Ledge corner correction when rising
+            if (enableCornerCorrection && velocity.y > 0.5f && capsuleCollider != null)
+            {
+                PerformCornerCorrection();
+            }
+
+            // Dynamic apex hang time & fall feel
+            if (enableApexHangTime && !IsGrounded)
+            {
+                if (Mathf.Abs(velocity.y) < apexVelocityThreshold)
+                {
+                    body.gravityScale = baseGravityScale * apexGravityMultiplier;
+                }
+                else if (velocity.y < -0.5f)
+                {
+                    body.gravityScale = baseGravityScale * fallGravityMultiplier;
+                }
+                else
+                {
+                    body.gravityScale = baseGravityScale;
+                }
+            }
+            else
+            {
+                body.gravityScale = baseGravityScale;
+            }
+
+            // Terminal fall speed clamp
+            if (velocity.y < terminalFallSpeed)
+            {
+                velocity.y = terminalFallSpeed;
             }
 
             body.linearVelocity = velocity;
@@ -298,6 +406,30 @@ namespace TheLightenRoad.Player
             return false;
         }
 
+        private void PerformCornerCorrection()
+        {
+            var bounds = capsuleCollider.bounds;
+            float rayLength = cornerCorrectionDistance + 0.05f;
+            Vector2 originCenter = new Vector2(bounds.center.x, bounds.max.y);
+            Vector2 originLeft = new Vector2(bounds.min.x + 0.04f, bounds.max.y);
+            Vector2 originRight = new Vector2(bounds.max.x - 0.04f, bounds.max.y);
+
+            RaycastHit2D hitCenter = Physics2D.Raycast(originCenter, Vector2.up, rayLength, groundLayers);
+            RaycastHit2D hitLeft = Physics2D.Raycast(originLeft, Vector2.up, rayLength, groundLayers);
+            RaycastHit2D hitRight = Physics2D.Raycast(originRight, Vector2.up, rayLength, groundLayers);
+
+            // If right edge hits but left and center are clear, nudge left around corner
+            if (hitRight.collider != null && hitLeft.collider == null && hitCenter.collider == null)
+            {
+                transform.position += Vector3.left * (cornerCorrectionDistance * 0.5f);
+            }
+            // If left edge hits but right and center are clear, nudge right around corner
+            else if (hitLeft.collider != null && hitRight.collider == null && hitCenter.collider == null)
+            {
+                transform.position += Vector3.right * (cornerCorrectionDistance * 0.5f);
+            }
+        }
+
         private void OnDisable()
         {
             move.Disable();
@@ -309,8 +441,13 @@ namespace TheLightenRoad.Player
             jumpReleased = false;
             IsGrounded = false;
             IsRunning = false;
+            currentTilt = 0f;
+            if (visualTransform != null) visualTransform.localRotation = Quaternion.identity;
             if (body != null)
+            {
+                body.gravityScale = baseGravityScale;
                 body.linearVelocity = new Vector2(0f, body.linearVelocity.y);
+            }
         }
 
         private void OnDestroy()

@@ -481,4 +481,34 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `TheLightenRoad.Frontend.PlayModeTests`: **10/10 passed**
      - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed**
 
+### Checkpoint 23: Fluid Kinematics, Rigidbody Interpolation & Jump Apex Feel
+
+1. **Rigidbody2D Interpolation (`RigidbodyInterpolation2D.Interpolate`):**
+   - Enabled `body.interpolation = RigidbodyInterpolation2D.Interpolate;` on the player in `PlayerMotor2D.Awake()`.
+   - Eliminates micro-stutters between physics ticks (50Hz) and display refresh rates (60Hz / 120Hz / 144Hz), providing silky-smooth camera tracking and character motion.
+
+2. **Organic Responsive Kinematics (Acceleration & Skid Turn):**
+   - Replaced instantaneous velocity snapping with an organic, razor-sharp kinematic curve:
+     - Ground acceleration: `70f` (full walk speed in ~0.045s, highly responsive).
+     - Ground deceleration: `75f` (stops in ~0.042s, honoring tight stop tests).
+     - Skid-turn braking: `90f` (crisp direction reversal when turning on a dime).
+     - Aerial control: `45f` acceleration / `25f` deceleration.
+
+3. **Jump Apex Hang-Time & Fall Mechanics:**
+   - At the apex of a jump (`Mathf.Abs(velocity.y) < 1.4f`), gravity scales to `0.65x`, giving a momentary weightless float that grants precision when navigating narrow platforms and stepping stones.
+   - During descent (`velocity.y < -0.5f`), gravity scales to `1.15x` for a snappy, satisfying landing.
+   - Terminal fall speed clamped at `-16f` to prevent disorienting plunges.
+
+4. **Ledge Corner Correction (Overhang Assist):**
+   - Implemented three-point raycasting across the top of the player's capsule collider when ascending (`velocity.y > 0.5f`).
+   - If one edge clips an overhang or ceiling corner while the center and opposite edge are free, the player is smoothly nudged horizontally around the corner (`0.10m` assist distance), eliminating frustrating edge bonks.
+
+5. **Kinetic Visual Lean (Body Tilt):**
+   - Added subtle procedural body tilt (`1.5°` walking / `3.2°` sprinting) in `PlayerMotor2D.Update()` that leans into the direction of motion and recovers smoothly upon stopping.
+
+6. **Validation:**
+   - `TheLightenRoad.Player.PlayModeTests`: **91/91 passed** (including all movement, sprint jump, camera follow, and stamina tests).
+   - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed** (full traversal, moving platform timing, and secret vault retrieval).
+
+
 
