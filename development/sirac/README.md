@@ -509,6 +509,28 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
 6. **Validation:**
    - `TheLightenRoad.Player.PlayModeTests`: **91/91 passed** (including all movement, sprint jump, camera follow, and stamina tests).
    - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed** (full traversal, moving platform timing, and secret vault retrieval).
+### Checkpoint 24: In-Game Pause Menu Redesign Inspired by Main Menu Ethereal Aesthetic
 
+1. **Visual Language & Aesthetic Alignment with `MainMenuController`:**
+   - Unified color palette: `RadiantIvory` (`#F8F2E4`), `MoonlightSilver` (`#B0BED6`), `MutedIndigo` (`#76849E`), `AmberGold` (`#FFB848`), and `DeepAmber` (`#D68024`) over a dark ethereal midnight-archive veil (`#03050A`, 90% opacity).
+   - Added procedural texture generators (`CreateOrnateFiligreeSprite` $512 \times 64$ and `CreateSoftRadialSprite` $128 \times 128$) for ornate crests, dividing lines, and warm lantern glow auras behind monumental titles.
+   - Loaded custom typography (`Resources.Load<TMP_FontAsset>("UI/MenuType")`) with monumental titles (`PAUSED`), whispered eyebrows (`— ARCHIVE TRAVERSAL SUSPENDED —`), dynamic chamber headers, and memento status badges.
 
+2. **Frameless Interactive Architecture & `MenuButtonMotion`:**
+   - Replaced generic solid-box buttons with frameless buttons styled after the Main Menu:
+     - Transparent raycast hit area without opaque frames.
+     - Symmetrical ornate procedural wings (filigree stem + 45° diamond crest tip) that glide outward on focus.
+     - Soft radial lantern glow aura expanding beneath focused text.
+     - Centered filigree underlines that expand smoothly on selection.
+     - Integrated `MenuButtonMotion` component for hover scaling, dynamic letter-spacing expansion, and audio clicks.
 
+3. **Sub-View Refinement (Sanctuary Settings & Controls Guide):**
+   - **Sanctuary Settings:** Ornate filigree crest headers, sleek slim sliders (`MasterSlider`, `MusicSlider`, `EffectsSlider`) with rotated diamond handles and dynamic percentage readouts, animated ON/OFF pill switch for `ReducedMotionToggle`, and ethereal back action button.
+   - **Controls & Lantern Guide:** Styled keycap badges (`A/D`, `SPACE/W`, `LEFT SHIFT`, `F`, `E`) with amber highlights and descriptive typography matching the Main Menu guide.
+
+4. **Testing & Preservation:**
+   - Preserved 100% hierarchy naming compatibility (`PauseCanvas`, `ModalContainer`, `MainPanel`, `SettingsPanel`, `ControlsPanel`, `ResumeButton`, `ControlsButton`, `SettingsButton`, `RestartButton`, `QuitButton`, `SettingsBackButton`, `ControlsBackButton`, `ChamberTitle`, `MementoBadge`).
+   - Automated PlayMode validation:
+     - `TheLightenRoad.Frontend.PlayModeTests`: **10/10 passed** (job `debec307e077478f8536bcb0d35c8b78`).
+     - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed** (job `a7ff3da09f1746ab9d3968908fd9c4f6`).
+   - Clean console, zero errors, zero warnings, zero leaks on unpause/destroy.
