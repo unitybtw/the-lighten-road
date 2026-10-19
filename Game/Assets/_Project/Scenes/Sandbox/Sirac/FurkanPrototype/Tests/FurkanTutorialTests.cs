@@ -2,6 +2,7 @@ using System.Collections;
 using System.Linq;
 using NUnit.Framework;
 using TheLightenRoad.Lantern;
+using TheLightenRoad.Lantern.Glyphs;
 using TheLightenRoad.Player;
 using TheLightenRoad.Sirac.FurkanPrototype;
 using UnityEngine;
@@ -149,5 +150,35 @@ public sealed class FurkanTutorialTests
         }
         InputSystem.QueueStateEvent(keyboard,new KeyboardState());
         Assert.That(level.HasMemento,Is.True,"Upper ledge must be reachable with the real jump.");
+    }
+    [UnityTest] public IEnumerator FlareRevealsCrossingRuneAndUpperSecretVaultPassage()
+    {
+        var glyphs = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<FlareGlyph>()).ToList();
+        Assert.That(glyphs.Count, Is.EqualTo(2), "Tutorial should contain the crossing guide rune and the vault seal.");
+
+        var crossingRune = glyphs.FirstOrDefault(g => g.name == "Glyph / Crossing Guide");
+        var vaultRune = glyphs.FirstOrDefault(g => g.name == "Glyph / Vault Seal");
+        Assert.That(crossingRune, Is.Not.Null);
+        Assert.That(vaultRune, Is.Not.Null);
+
+        var passage = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<SecretPassage>()).Single();
+        Assert.That(passage.IsOpen, Is.False, "Secret passage must start sealed.");
+
+        level.EnterSecondChamber(level.SecondSpawn);
+        level.Player.GetComponent<PlayerMotor2D>().Body.position = level.SecondSpawn;
+        yield return new WaitForSeconds(0.2f);
+
+        Assert.That(level.Player.GetComponent<LanternController>().SetFlared(true), Is.True);
+        yield return new WaitForSeconds(0.4f);
+
+        Assert.That(crossingRune.ChargeLevel, Is.GreaterThan(0.2f), "Crossing rune must charge from chamber 02 flare.");
+
+        vaultRune.ForceCharge(1f);
+        yield return new WaitForSeconds(0.1f);
+
+        Assert.That(passage.IsOpen, Is.True, "Vault rune charge must open the secret passage.");
+        var rewardEmber = passage.transform.parent.GetComponentInChildren<EmberPickup>(true);
+        Assert.That(rewardEmber, Is.Not.Null);
+        Assert.That(rewardEmber.gameObject.activeInHierarchy, Is.True, "Secret reward must be revealed.");
     }
 }

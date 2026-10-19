@@ -1,1 +1,1 @@
-{"name":"TheLightenRoad.Sirac.FurkanPrototype.Tests","references":["TheLightenRoad.Sirac.FurkanPrototype","TheLightenRoad.Player","TheLightenRoad.Lantern","Unity.InputSystem"],"optionalUnityReferences":["TestAssemblies"]}
+{"name":"TheLightenRoad.Sirac.FurkanPrototype.Tests","references":["TheLightenRoad.Sirac.FurkanPrototype","TheLightenRoad.Player","TheLightenRoad.Lantern","TheLightenRoad.Glyphs","Unity.InputSystem"],"optionalUnityReferences":["TestAssemblies"]}

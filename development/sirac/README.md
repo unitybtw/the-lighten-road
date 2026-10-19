@@ -370,3 +370,39 @@ The destination is a development route to the existing `ArchiveTestChamber`, not
 After suppressing the duplicate tutorial prompt, focused completion/tutorial job `b121873ed4ef4b3a99ea64c259a3df3c` passed **11/11**, 32.68s. Final Play Mode visual review confirmed the chapter card, empty legacy prompt, gated input and zero console errors. The screenshot below captures the actual Hold phase; its hold duration was extended only on a runtime profile clone for capture, without changing the saved timings.
 
 ![Chapter completion preview](previews/chamber-completion.png)
+
+## Checkpoint 19 — Flare Glyphs & Secret Runes (2026-10-19)
+
+Implemented the ancient Flare rune mechanic and secret passage system (`FlareGlyph` and `SecretPassage`), providing deep puzzle, hint, and secret-revealing gameplay tied directly to the player's 1-ember Flare scout pulse:
+
+1. **FlareGlyph Component (`TheLightenRoad.Lantern.Glyphs`):**
+   - Etched ruin symbols remain dormant in darkness and Dim light, but actively absorb illumination and charge when struck by the lantern's high-intensity Flare pulse within range (default 9.5m).
+   - Once charged, radiates luminescent light, plays a procedural harmonic resonance chime (`523.25Hz`, `659.25Hz`, `783.99Hz` triad) or custom audio clip, and displays optional translated ancient English inscriptions (fades in when approached).
+   - Lingers for a configurable duration (default 3.5s) after the Flare pulse departs before fading back to dormant, rewarding the player's permanent ember expenditure.
+   - Dispatches `OnChargeChanged`, `OnFullyCharged`, and `OnExtinguished` UnityEvents.
+   - Procedural runtime pixel-art rune generator (`GlyphSprites.cs`) generates crisp 16×16 directional indicators, Ember eye, Archive seal, Gateway runes, and Hidden cache symbols with zero external texture dependencies.
+   - Respects `MenuPreferences.ReducedMotion`.
+
+2. **SecretPassage Component:**
+   - Smoothly fades out collider and sprite renderer upon receiving `OnFullyCharged`, opening hidden shortcuts or secret alcoves with optional hidden ember/lore rewards.
+   - Configurable `stayOpenOnceDiscovered` or auto-resealing behavior.
+
+3. **Prefabs & Documentation:**
+   - `Game/Assets/_Project/Prefabs/FlareGlyph.prefab` and `Game/Assets/_Project/Prefabs/SecretPassage.prefab` pre-assembled for level design.
+   - Full documentation and usage guide in `Game/Assets/_Project/Scripts/Lantern/Glyphs/README.md`.
+
+4. **Integration into FurkanTutorial (`FurkanTutorial.unity`):**
+   - Directly integrated two thematic runes based on Furkan's design sketch (`design/levels/visual.png`):
+     - `Glyph / Crossing Guide` (EmberEye) etched above Stepping Stone A at x=20.65, y=3.6, fulfilling the sketch's "FLARE / LIGHT CAN'T SEE THIS" eye symbol by lighting up the chasm and revealing guidance upon flaring.
+     - `Secret Archive Vault`: Upper ledge extension (x=36.8, y=6.5) sealed behind `Secret Stone Wall` (`SecretPassage`). Flaring near `Glyph / Vault Seal` (HiddenCache, x=35.3, y=7.4) dissolves the wall and unlocks a bonus ember cache (fulfilling the sketch's top-right "COLLECTIBLE" detour).
+   - **Atmospheric Darkness & Dust Motes:**
+     - Removed 3D directional light and zeroed out washed-out global ambient light (`Archive ambient`, intensity=0), restoring true pitch-black darkness to the ruins so the lantern, wall sconces, flare, and glyphs cast deep, dramatic light pools.
+     - Added `Ambient Dust Motes` (`DustMotesAtmosphere`) spanning both chambers (48m × 12m, 140 max particles, soft circular motes with Perlin noise turbulence) drifting in the air and catching the light.
+   - Builder automation updated in `FurkanPrototypeBuilder.cs` (`BuildGlyphsAndSecrets`, ambient and dust setup).
+
+5. **Validation:**
+   - Unity 6000.3.2f1 PlayMode test suites:
+     - `TheLightenRoad.Glyphs.Tests`: **7/7 passed** (job `8a0bb8e7330244949df99c108fc4a444`).
+     - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **7/7 passed** (job `bfbd34d277a743779b0a235847a89bf5`), including the new automated test `FlareRevealsCrossingRuneAndUpperSecretVaultPassage` alongside real traversal, platform freeze, and collectible retrieval.
+     - `TheLightenRoad.Completion.Tests`: **5/5 passed** (job `4b48428c5b76497992b553a39c9883ad`).
+   - Console logs clean with zero errors. Kemal's boundaries and all existing player mechanics remain untouched.

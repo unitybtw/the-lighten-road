@@ -9,9 +9,9 @@ Based on Furkan's [Tutorial / First Chamber sketch](https://raw.githubuserconten
 The design preserves the sketch's order and learning goals:
 
 1. **Chamber 01 / Tutorial:** safe scenic floor, two rising jump blocks, a raised reception landing and a static fallen desk. Walking and normal jumping are sufficient; sprinting is optional.
-2. **Chamber 02 / Beginnings:** entry restores three embers and closes the return shutter; a compact pit uses two stepping stones. A distant ember is outside the initial Dim radius and can be spotted with Flare before approaching.
+2. **Chamber 02 / Beginnings:** entry restores three embers and closes the return shutter; a compact pit uses two stepping stones. A crossing guidance glyph (`Glyph / Crossing Guide`) etched above stepping stone A ignites with radiant cyan light under Flare, revealing an ancient inscription and illuminating the crossing below (directly reflecting the sketch's "FLARE / LIGHT CAN'T SEE THIS" eye symbol). A distant ember is outside the initial Dim radius and can be spotted with Flare before approaching.
 3. **Shared Vein circuit:** node A deposits one ember and powers the moving archive shelf. Node B recovers that same ember and freezes the shelf at its exact location. Four waypoints loop in the annotated order, with a one-second stop at every corner.
-4. **Optional upper route:** jump from the upper platform stop to recover an archive fragment. Taking this detour is optional; the main exit remains on the far landing.
+4. **Optional upper route & secret vault:** jump from the upper platform stop to recover an archive fragment. Right next to this ledge, a hidden archive vault is sealed behind a secret stone partition (`SecretPassage`). Flaring near the ancient vault seal glyph (`Glyph / Vault Seal`) charges the rune, opens the secret partition and reveals a bonus ember cache (fulfilling the sketch's top-right "COLLECTIBLE" path). Taking this detour is optional; the main exit remains on the far landing.
 
 Distances are adapted to the existing player's real walk speed and jump height. The first blocks rise 0.9m and 1.8m, reception is at 2.4m, the moving shelf spans four stops, and the optional ledge is at 6.7m. The complete footprint is approximately 44m. Scene objects are named by their role and can be moved normally in Unity.
 

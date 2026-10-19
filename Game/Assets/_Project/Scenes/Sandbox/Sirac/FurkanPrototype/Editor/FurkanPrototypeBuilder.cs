@@ -2,10 +2,12 @@ using System;
 using System.Linq;
 using TheLightenRoad.Audio;
 using TheLightenRoad.Lantern;
+using TheLightenRoad.Lantern.Glyphs;
 using TheLightenRoad.Player;
 using TheLightenRoad.UI;
 using TMPro;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -41,13 +43,15 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
             var camera=cameraGo.GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=4.5f;camera.backgroundColor=new Color(.025f,.037f,.039f);camera.clearFlags=CameraClearFlags.SolidColor;cameraGo.transform.position=new Vector3(.5f,2.4f,-10);
             cameraGo.GetComponent<FollowCamera2D>().SetTarget(player.transform,true);
             var followData=new SerializedObject(cameraGo.GetComponent<FollowCamera2D>());followData.FindProperty("enableBounds").boolValue=true;followData.FindProperty("boundsMin").vector2Value=new Vector2(3.5f,2.9f);followData.FindProperty("boundsMax").vector2Value=new Vector2(38f,5.1f);followData.ApplyModifiedPropertiesWithoutUndo();
-            var sky=new GameObject("Main directional light",typeof(Light));sky.GetComponent<Light>().type=LightType.Directional;sky.GetComponent<Light>().intensity=.05f;
-            var ambient=new GameObject("Archive ambient",typeof(Light2D)).GetComponent<Light2D>();ambient.lightType=Light2D.LightType.Global;ambient.intensity=.22f;ambient.color=new Color(.56f,.65f,.62f);
+            var ambient=new GameObject("Archive ambient",typeof(Light2D)).GetComponent<Light2D>();ambient.lightType=Light2D.LightType.Global;ambient.intensity=0f;ambient.color=Color.black;
+            var dustGo=new GameObject("Ambient Dust Motes");dustGo.transform.SetParent(root,false);dustGo.transform.position=new Vector3(20f,4f,0f);
+            var dust=dustGo.AddComponent<TheLightenRoad.Effects.DustMotesAtmosphere>();
+            var dustSo=new SerializedObject(dust);dustSo.FindProperty("areaSize").vector2Value=new Vector2(48f,12f);dustSo.FindProperty("maxParticles").intValue=140;dustSo.FindProperty("emissionRate").floatValue=12f;dustSo.FindProperty("moteColor").colorValue=new Color(1f,0.95f,0.82f,0.5f);dustSo.ApplyModifiedPropertiesWithoutUndo();
             new GameObject("Archive ambience").AddComponent<BackgroundMusicManager>();
             var hud=new GameObject("Lantern HUD").AddComponent<LanternHUD>();hud.SetTarget(player.GetComponent<LanternController>());
             new GameObject("Stamina HUD").AddComponent<StaminaHUD>().SetTarget(player.GetComponent<PlayerStamina>());
             new GameObject("Death overlay").AddComponent<DeathScreenOverlay>().SetTarget(director.Player);
-            BuildArchitecture();BuildPuzzle();BuildPrompts();
+            BuildArchitecture();BuildPuzzle();BuildGlyphsAndSecrets();BuildPrompts();
             CompletionSetup.Install();
             EditorSceneManager.SaveScene(scene,ScenePath);
             var scenes=EditorBuildSettings.scenes.ToList();
@@ -125,6 +129,94 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
             director.Memento=memory.AddComponent<ArchiveMemento>();director.Memento.Director=director;
             Quad("Fragment seam",32.45f,7.15f,.22f,.035f,Iron,4).transform.SetParent(memory.transform,true);
             Label("OPTIONAL / ARCHIVE FRAGMENT",32.45f,7.95f,5,.16f);
+        }
+        private static void BuildGlyphsAndSecrets()
+        {
+            var glyphPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/FlareGlyph.prefab");
+            var passagePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/SecretPassage.prefab");
+            var emberPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/EmberPickup.prefab");
+
+            // 1. Crossing Guide Rune (above Stepping Stone A, matching Furkan's diagram)
+            var rune1Go = (GameObject)PrefabUtility.InstantiatePrefab(glyphPrefab, root);
+            rune1Go.name = "Glyph / Crossing Guide";
+            rune1Go.transform.position = new Vector3(20.65f, 3.6f, 0f);
+            var rune1 = rune1Go.GetComponent<FlareGlyph>();
+            var so1 = new SerializedObject(rune1);
+            so1.FindProperty("glyphType").enumValueIndex = (int)GlyphType.EmberEye;
+            so1.FindProperty("glowColor").colorValue = new Color(0.31f, 0.95f, 0.82f, 1f);
+            so1.FindProperty("activationDistance").floatValue = 9.5f;
+            so1.FindProperty("lingerDuration").floatValue = 4.0f;
+            so1.FindProperty("inscriptionText").stringValue = "Focus the flame; ancient eyes guide your stride.";
+            so1.FindProperty("inscriptionReadDistance").floatValue = 5.0f;
+            so1.ApplyModifiedPropertiesWithoutUndo();
+
+            // 2. Secret Vault on the upper ledge
+            var vaultGo = new GameObject("Secret Archive Vault");
+            vaultGo.transform.SetParent(root, false);
+
+            var ledgeGo = new GameObject("Secret ledge", typeof(SpriteRenderer), typeof(BoxCollider2D));
+            ledgeGo.transform.SetParent(vaultGo.transform, false);
+            ledgeGo.transform.position = new Vector3(36.8f, 6.5f, 0f);
+            ledgeGo.transform.localScale = new Vector3(2.6f, 0.4f, 1f);
+            var ledgeSr = ledgeGo.GetComponent<SpriteRenderer>();
+            ledgeSr.sprite = sprite;
+            ledgeSr.sharedMaterial = lit;
+            ledgeSr.color = Stone;
+            ledgeSr.sortingOrder = 0;
+
+            var ledgeLip = new GameObject("Ledge lip", typeof(SpriteRenderer));
+            ledgeLip.transform.SetParent(ledgeGo.transform, false);
+            ledgeLip.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            ledgeLip.transform.localScale = new Vector3(1f, 0.15f, 1f);
+            var lipSr = ledgeLip.GetComponent<SpriteRenderer>();
+            lipSr.sprite = sprite;
+            lipSr.sharedMaterial = lit;
+            lipSr.color = Edge;
+            lipSr.sortingOrder = 1;
+
+            var passageGo = (GameObject)PrefabUtility.InstantiatePrefab(passagePrefab, vaultGo.transform);
+            passageGo.name = "Secret Stone Wall";
+            passageGo.transform.position = new Vector3(36.2f, 7.4f, 0f);
+            passageGo.transform.localScale = new Vector3(0.5f, 1.4f, 1f);
+            var passageSr = passageGo.GetComponent<SpriteRenderer>();
+            passageSr.sprite = sprite;
+            passageSr.sharedMaterial = lit;
+            passageSr.color = new Color(0.28f, 0.31f, 0.29f, 0.95f);
+            passageSr.sortingOrder = 2;
+            var passageBox = passageGo.GetComponent<BoxCollider2D>();
+            passageBox.size = new Vector2(1f, 1f);
+
+            var passageComp = passageGo.GetComponent<SecretPassage>();
+            var rewardRoot = new GameObject("Vault Reward");
+            rewardRoot.transform.SetParent(vaultGo.transform, false);
+            rewardRoot.transform.position = new Vector3(37.4f, 7.3f, 0f);
+            var secretEmber = (GameObject)PrefabUtility.InstantiatePrefab(emberPrefab, rewardRoot.transform);
+            secretEmber.name = "Secret Cache Ember";
+            secretEmber.transform.localPosition = Vector3.zero;
+
+            var passageSo = new SerializedObject(passageComp);
+            passageSo.FindProperty("wallCollider").objectReferenceValue = passageBox;
+            passageSo.FindProperty("wallRenderer").objectReferenceValue = passageSr;
+            passageSo.FindProperty("secretReward").objectReferenceValue = rewardRoot;
+            passageSo.FindProperty("stayOpenOnceDiscovered").boolValue = true;
+            passageSo.FindProperty("fadeDuration").floatValue = 0.85f;
+            passageSo.ApplyModifiedPropertiesWithoutUndo();
+
+            var rune2Go = (GameObject)PrefabUtility.InstantiatePrefab(glyphPrefab, vaultGo.transform);
+            rune2Go.name = "Glyph / Vault Seal";
+            rune2Go.transform.position = new Vector3(35.3f, 7.4f, 0f);
+            var rune2 = rune2Go.GetComponent<FlareGlyph>();
+
+            var so2 = new SerializedObject(rune2);
+            so2.FindProperty("glyphType").enumValueIndex = (int)GlyphType.HiddenCache;
+            so2.FindProperty("glowColor").colorValue = new Color(1f, 0.82f, 0.38f, 1f);
+            so2.FindProperty("activationDistance").floatValue = 8.0f;
+            so2.FindProperty("lingerDuration").floatValue = 4.5f;
+            so2.FindProperty("inscriptionText").stringValue = "The archive yields its secret ember to those who flare.";
+            so2.FindProperty("inscriptionReadDistance").floatValue = 4.5f;
+            so2.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(rune2.OnFullyCharged, passageComp.Open);
         }
         private static ArchiveCircuitNode Node(string title,float x,float y)
         {
