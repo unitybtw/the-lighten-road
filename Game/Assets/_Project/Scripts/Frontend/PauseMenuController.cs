@@ -62,6 +62,7 @@ namespace TheLightenRoad.Frontend
 
         public static void ResetStaticStateForTesting()
         {
+            Time.timeScale = 1f;
             if (Instance != null && Instance.gameObject != null)
             {
                 DestroyImmediate(Instance.gameObject);
@@ -69,6 +70,29 @@ namespace TheLightenRoad.Frontend
             Instance = null;
             IsPaused = false;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ResetEngineStateOnPlay()
+        {
+            Time.timeScale = 1f;
+            IsPaused = false;
+        }
+
+#if UNITY_EDITOR
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void RegisterEditorPlayModeWatchdog()
+        {
+            UnityEditor.EditorApplication.playModeStateChanged += state =>
+            {
+                if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode ||
+                    state == UnityEditor.PlayModeStateChange.EnteredPlayMode)
+                {
+                    Time.timeScale = 1f;
+                    IsPaused = false;
+                }
+            };
+        }
+#endif
 
         private void Awake()
         {
@@ -82,12 +106,24 @@ namespace TheLightenRoad.Frontend
             }
             Instance = this;
 
+            Time.timeScale = 1f;
+            IsPaused = false;
+
             EnsureEventSystem();
             BuildUIHierarchy();
         }
 
+        private void OnEnable()
+        {
+            if (!IsPaused)
+            {
+                Time.timeScale = 1f;
+            }
+        }
+
         private void OnDestroy()
         {
+            Time.timeScale = 1f;
             if (IsPaused)
             {
                 Resume();
@@ -139,7 +175,7 @@ namespace TheLightenRoad.Frontend
             if (IsPaused) return;
             IsPaused = true;
 
-            previousTimeScale = Time.timeScale;
+            previousTimeScale = Time.timeScale <= 0f ? 1f : Time.timeScale;
             Time.timeScale = 0f;
 
             SuspendPlayerInput(true);
@@ -420,6 +456,7 @@ namespace TheLightenRoad.Frontend
             BuildControlsPanel(modal.transform);
 
             ShowMainView();
+            currentView = "none";
         }
 
         private void BuildMainPanel(Transform parent)

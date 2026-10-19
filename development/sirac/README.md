@@ -459,3 +459,26 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `TheLightenRoad.Completion.Tests`: **5/5 passed** (job `c965e21647a5419ca92b6567ac79b891`).
    - Clean console, zero errors, and Kemal's folder boundaries strictly respected.
 
+### Checkpoint 22: TimeScale Freeze & Movement Lock Root-Cause Resolution
+
+1. **Root Cause Analysis:**
+   - In `ProjectSettings/TimeManager.asset`, `m_TimeScale` had become serialized as `0`, causing Unity to initialize the engine with `Time.timeScale = 0` whenever entering PlayMode.
+   - When `Time.timeScale == 0`, Unity's physics engine (`FixedUpdate`) never executes, preventing `PlayerMotor2D` from updating `linearVelocity`, evaluating ground checks, or advancing the Rigidbody2D simulation. The player was completely unable to walk, sprint, or jump, and the scene appeared entirely frozen.
+   - Stopping PlayMode in the Unity Editor did not reset `Time.timeScale` back to 1.0, leaving the editor sticky-paused.
+
+2. **Multi-Layer Defensive Architecture:**
+   - **`TimeManager.asset`:** Restored `m_TimeScale: 1` as the baseline project setting.
+   - **`RuntimeInitializeOnLoadMethod` (`PauseMenuController.cs`):** Registered `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]` to guarantee `Time.timeScale = 1f;` and `IsPaused = false;` execute before any scene loads in both editor and player builds.
+   - **Unity Editor PlayMode Watchdog (`PauseMenuController.cs`):** Registered `[UnityEditor.InitializeOnLoadMethod]` listening to `EditorApplication.playModeStateChanged`. Whenever entering or exiting PlayMode in the editor, `Time.timeScale = 1f` is automatically enforced.
+   - **Lifecycle Guards (`PauseMenuController.cs`):** `Awake()`, `OnEnable()`, `OnDestroy()`, and `ResetStaticStateForTesting()` now ensure `Time.timeScale = 1f;` if unpaused.
+   - **Pause Guard:** In `PauseMenuController.Pause()`, `previousTimeScale = Time.timeScale <= 0f ? 1f : Time.timeScale;` ensures resuming always restores normal speed even if pause was somehow invoked at zero timescale.
+   - **`FurkanLevelDirector.cs`:** Added `Time.timeScale = 1f;` across `Awake()`, `Start()`, and `Restart()`.
+
+3. **Validation & Verification:**
+   - PlayMode live verification confirmed: `isPlaying=True`, `timeScale=1`, `MotorEnabled=True`, `Grounded=True`, with active physics simulation.
+   - Exiting PlayMode confirmed: editor returns to `timeScale=1` immediately via watchdog.
+   - Automated PlayMode tests passed 100%:
+     - `TheLightenRoad.Frontend.PlayModeTests`: **10/10 passed**
+     - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed**
+
+

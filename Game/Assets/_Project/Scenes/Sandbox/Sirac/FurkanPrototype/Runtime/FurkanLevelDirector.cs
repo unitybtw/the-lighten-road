@@ -25,8 +25,13 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         public ChamberCompletionSequence Completion;
         private Vector3[] pickupPositions;
         private float promptTime;
+        private void Awake()
+        {
+            Time.timeScale = 1f;
+        }
         private void Start()
         {
+            Time.timeScale = 1f;
             pickupPositions=new Vector3[PickupRoot.childCount];
             for(int i=0;i<pickupPositions.Length;i++)pickupPositions[i]=PickupRoot.GetChild(i).position;
             Player.OnPlayerRespawned+=ResetAttempt;
@@ -89,6 +94,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         }
         public void Restart()
         {
+            Time.timeScale = 1f;
             Chamber=1;if(ReturnShutter!=null)ReturnShutter.SetActive(false);
             foreach(var trigger in GetComponentsInChildren<ArchiveTutorialTrigger>(true))trigger.ResetTrigger();
             Player.BeginChamber(FirstSpawn);
