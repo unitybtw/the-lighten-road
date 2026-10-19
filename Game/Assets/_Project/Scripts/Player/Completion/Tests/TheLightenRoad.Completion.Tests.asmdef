@@ -1,0 +1,5 @@
+{
+  "name": "TheLightenRoad.Completion.Tests",
+  "references": ["TheLightenRoad.Completion", "TheLightenRoad.Player", "TheLightenRoad.Lantern", "TheLightenRoad.Sirac.FurkanPrototype"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

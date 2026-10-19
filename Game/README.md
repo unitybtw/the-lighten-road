@@ -62,3 +62,7 @@ Unity-generated `Library/`, `Temp/`, logs, and local settings are excluded from 
 ## Furkan tutorial / The First Light (2026-10-19)
 
 The main menu's first realm opens `Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity`. This playable blockout follows Furkan's two-chamber sketch: safe jump training, reception desk, compact pit, a two-node energy circuit, four-stop moving shelf and optional archive fragment. Carry up to four embers; chamber entry/respawn restores three. See the [prototype notes](Assets/_Project/Scenes/Sandbox/Sirac/FurkanPrototype/README.md) for scope, controls, ownership and validation.
+
+### Reusable exit sequence
+
+The First Light tutorial exit now fades into the existing archive test chamber with a warm light reveal, chapter card and original chime. Reuse `Assets/_Project/Prefabs/ChamberExit.prefab` and assign a per-chapter completion profile/scene or local checkpoint; see the [setup guide](Assets/_Project/Scripts/Player/Completion/README.md).

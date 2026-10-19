@@ -161,3 +161,7 @@ If time runs short, cut the entire laboratory zone and its advanced science-fict
 ## 12. Source and change policy
 
 The latest supplied PDF is preserved at [The-Lighten-Road-GDD.pdf](The-Lighten-Road-GDD.pdf). This Markdown document is the working design. Update it when the team makes a decision, and distinguish planned behavior from behavior verified in a playable build.
+
+### Prototype implementation — chamber completion (19 October 2026)
+
+The tutorial exit now celebrates completion with a warm light wave, a short chime and minimal chapter text, then fades into the existing archive test chamber. A reusable exit prefab and configurable presentation profile support future chapter scenes or same-scene checkpoints. This demonstrates progression feedback; the destination remains a development level rather than an approved next story chapter. See [completion setup](../Game/Assets/_Project/Scripts/Player/Completion/README.md).

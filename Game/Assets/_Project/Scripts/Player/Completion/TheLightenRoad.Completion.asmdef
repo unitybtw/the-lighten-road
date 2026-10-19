@@ -1,0 +1,4 @@
+{
+  "name": "TheLightenRoad.Completion",
+  "references": ["TheLightenRoad.Player", "TheLightenRoad.Lantern", "TheLightenRoad.Audio", "TheLightenRoad.Frontend", "Unity.TextMeshPro", "UnityEngine.UI", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Universal.2D.Runtime"]
+}

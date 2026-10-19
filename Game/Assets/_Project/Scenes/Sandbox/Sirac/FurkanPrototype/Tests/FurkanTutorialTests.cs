@@ -122,7 +122,15 @@ public sealed class FurkanTutorialTests
         yield return Move(36.2f,true);
         Assert.That(level.Circuit.TryTransfer(fuel),Is.True);
         Assert.That(fuel.TotalEmbers,Is.EqualTo(held));
-        yield return Move(40.6f);
+        // The authored exit now takes control and leaves this scene. Stop issuing movement
+        // as soon as the exit starts instead of walking through a completed scene's boundary.
+        float exitTimeout=Time.time+5f;
+        while(!level.IsComplete && Time.time<exitTimeout)
+        {
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.D));
+            yield return null;
+        }
+        InputSystem.QueueStateEvent(keyboard,new KeyboardState());
         Assert.That(level.IsComplete,Is.True);
     }
     [UnityTest] public IEnumerator UpperPlatformDetourCanReachTheOptionalMemory()

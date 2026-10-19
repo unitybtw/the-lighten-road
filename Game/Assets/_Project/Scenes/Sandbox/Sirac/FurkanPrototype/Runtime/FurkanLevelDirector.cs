@@ -1,5 +1,6 @@
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
+using TheLightenRoad.Player.Completion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,6 +22,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         public int Chamber {get;private set;} = 1;
         public bool IsComplete {get;private set;}
         public bool HasMemento;
+        public ChamberCompletionSequence Completion;
         private Vector3[] pickupPositions;
         private float promptTime;
         private void Start()
@@ -33,6 +35,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         private void OnDestroy(){if(Player!=null)Player.OnPlayerRespawned-=ResetAttempt;}
         private void Update()
         {
+            if(Completion!=null && Completion.IsRunning)return;
             var k=Keyboard.current;
             if(k!=null && k.backspaceKey.wasPressedThisFrame)Restart();
             if(Player.State!=RespawnState.Alive)return;
@@ -62,10 +65,22 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             if(ReturnShutter!=null)ReturnShutter.SetActive(true);
             Show("CHAMBER 02 / BEGINNINGS\nScout the compact crossing. F spends one ember to reveal the dark ahead.",9f);
         }
-        public void Complete(){IsComplete=true;Show("THE ARCHIVE OPENS\n"+(HasMemento?"Memory recovered. ":"")+"Both chambers complete. BACKSPACE to begin again.",15f);}
+        public void Complete()
+        {
+            if(IsComplete)return;
+            if(Completion!=null && !Completion.IsRunning && !Completion.TryBegin(Player))return;
+            IsComplete=true;
+            if(Completion!=null)
+            {
+                promptTime=0;
+                if(Prompt!=null)Prompt.text="";
+            }
+            else Show("THE ARCHIVE OPENS\n"+(HasMemento?"Memory recovered. ":"")+"Both chambers complete.",15f);
+        }
         public void ResetAttempt()
         {
             Circuit.ResetCircuit();HasMemento=false;IsComplete=false;
+            if(Completion!=null)Completion.ResetCompletion();
             if(Memento!=null)Memento.gameObject.SetActive(true);
             if(pickupPositions==null)return;
             foreach(Transform item in PickupRoot){item.gameObject.SetActive(false);Destroy(item.gameObject);}

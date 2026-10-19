@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5479480dba3384a6b8eda4a394a90040, type: 3}
+  m_Name: FirstLightCompletion
+  m_EditorClassIdentifier: TheLightenRoad.Completion::TheLightenRoad.Player.Completion.ChamberCompletionProfile
+  Eyebrow: CHAMBER COMPLETE
+  Title: THE FIRST LIGHT
+  Subtitle: A little light survives.
+  Font: {fileID: 11400000, guid: a40db5897e38549498d36e22adb38c86, type: 2}
+  LightColor: {r: 1, g: 0.7, b: 0.34, a: 1}
+  LightRadius: 13
+  LightIntensity: 1.15
+  RevealSeconds: 1.15
+  HoldSeconds: 1.45
+  FadeOutSeconds: 0.8
+  FadeInSeconds: 0.9
+  CompletionSound: {fileID: 8300000, guid: bdd57f209e81b4ac0adbda86af576f33, type: 3}
+  SoundVolume: 0.65

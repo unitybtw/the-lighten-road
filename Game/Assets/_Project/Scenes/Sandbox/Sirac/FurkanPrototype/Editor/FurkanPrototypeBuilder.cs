@@ -48,6 +48,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
             new GameObject("Stamina HUD").AddComponent<StaminaHUD>().SetTarget(player.GetComponent<PlayerStamina>());
             new GameObject("Death overlay").AddComponent<DeathScreenOverlay>().SetTarget(director.Player);
             BuildArchitecture();BuildPuzzle();BuildPrompts();
+            CompletionSetup.Install();
             EditorSceneManager.SaveScene(scene,ScenePath);
             var scenes=EditorBuildSettings.scenes.ToList();
             if(!scenes.Any(s=>s.path==ScenePath))scenes.Add(new EditorBuildSettingsScene(ScenePath,true));

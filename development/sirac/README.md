@@ -356,3 +356,17 @@ Prototype circuit/platform code is isolated under `Sandbox/Sirac/FurkanPrototype
 Combined Unity MCP Play Mode verification passed **76/76** (`e3ea7b85ff9e4660916a7ac1f9ef16d0`), including real keyboard movement through both chambers, riding the shelf to the far side, recovering the deposit, reaching the exit and jumping to the optional fragment. Existing core, UI, audio, menu and old-route cases also passed. This is a tested gameplay blockout; standalone/controller playtesting and final artist environment art remain separate work.
 
 ![Furkan chamber two — gameplay blockout in scout light](previews/furkan-chamber.png)
+
+## Checkpoint 18 — reusable chamber completion (19 October 2026)
+
+Implemented a dedicated `ChamberExit` prefab and `ChamberCompletionProfile` asset. The tutorial exit now marks completion, spreads warm 2D light with a subtle expanding ring, presents minimal chapter typography and an original 2.7s chime, fades to an opaque curtain, loads the existing archive test scene and fades back in. Destination scene/checkpoint, typography, light, timings and sound are configurable; UnityEvents support other room logic. Reduced Motion and existing Master/Effects volumes apply.
+
+The sequence gates only the local player's movement, lantern input, survival and physics, restores their original states on cancellation/disable, rejects duplicate/simultaneous exits and invalid destinations, and cleans up its temporary persistent root after scene travel. Global game speed is unchanged. The tutorial suppresses its old completion prompt while the new card is visible. No Kemal-owned files or mechanisms were modified.
+
+Validation: Unity 6000.3.2f1, combined PlayMode job `1711017a7d114903bead3487ce9db6fc`: **81/81 passed**, 79.28s. This includes five new completion tests covering real exit-trigger scene loading/cleanup, cancellation, event ordering/opaque curtain, paused-time operation, local checkpoint reset and invalid destinations, alongside the existing lantern/HUD/respawn/menu/route suites. The old route test now stops movement when the exit takes control. Cross-scene test teardown restores an empty host so later additive level fixtures do not overlap loaded gameplay geometry or global lights. An initial checkpoint assertion was corrected to avoid the authored chamber-boundary trigger overriding that test checkpoint. These failures were repaired before the passing run.
+
+The destination is a development route to the existing `ArchiveTestChamber`, not an approved new story chapter. No standalone build or device playback claim is made. Setup: [reusable completion](../../Game/Assets/_Project/Scripts/Player/Completion/README.md).
+
+After suppressing the duplicate tutorial prompt, focused completion/tutorial job `b121873ed4ef4b3a99ea64c259a3df3c` passed **11/11**, 32.68s. Final Play Mode visual review confirmed the chapter card, empty legacy prompt, gated input and zero console errors. The screenshot below captures the actual Hold phase; its hold duration was extended only on a runtime profile clone for capture, without changing the saved timings.
+
+![Chapter completion preview](previews/chamber-completion.png)

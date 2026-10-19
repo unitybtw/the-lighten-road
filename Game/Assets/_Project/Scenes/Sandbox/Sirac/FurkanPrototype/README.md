@@ -36,3 +36,7 @@ A / D or arrows: move. Space: jump. Shift: optional sprint. F: spend an ember to
 Validation results are recorded after the Unity Play Mode tests. Tests exercise real movement through the jump tutorial, compact crossing and moving platform, along with node resource conservation, frozen positions, retry state and the optional collectible. A standalone build and physical controller playtest are separate validation steps.
 
 Unity MCP / Unity 6000.3.2f1: **76/76 Play Mode tests passed** in the completed combined run `e3ea7b85ff9e4660916a7ac1f9ef16d0` (77.53 seconds of test execution). Six tests cover this new scene: shared-node conservation/full-inventory rejection, exact freeze, chamber retry, real tutorial traversal, compact crossing + platform ride + exit, and the reachable optional fragment. The remaining cases cover fuel/HUD/pickup/respawn, particles, audio, menu routing and the existing MovementSandbox route. Earlier development failures were corrected before this final run. No standalone build was produced.
+
+## Exit presentation
+
+The exit at x=40.5 uses `ChamberExit.prefab` with the `FirstLightCompletion` profile. It marks this tutorial complete, reveals a warm light wave/title, plays the arrival chime and fades into the existing `ArchiveTestChamber` prototype. Edit the instance's Destination Scene for another chapter. See [reusable completion setup](../../../../Scripts/Player/Completion/README.md).
