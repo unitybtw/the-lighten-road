@@ -108,6 +108,16 @@ namespace TheLightenRoad.Frontend
             {
                 if (!IsPaused)
                 {
+                    var completions = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+                    foreach (var comp in completions)
+                    {
+                        if (comp.GetType().Name == "ChamberCompletionSequence")
+                        {
+                            var prop = comp.GetType().GetProperty("IsRunning");
+                            if (prop != null && (bool)prop.GetValue(comp)) return;
+                        }
+                    }
+
                     Pause();
                 }
                 else
@@ -202,11 +212,16 @@ namespace TheLightenRoad.Frontend
             {
                 if (d.GetType().Name == "FurkanLevelDirector")
                 {
+                    var restartMethod = d.GetType().GetMethod("Restart");
+                    if (restartMethod != null)
+                    {
+                        restartMethod.Invoke(d, null);
+                        return;
+                    }
                     var resetMethod = d.GetType().GetMethod("ResetAttempt");
                     if (resetMethod != null)
                     {
                         resetMethod.Invoke(d, null);
-                        return;
                     }
                 }
             }
@@ -228,7 +243,14 @@ namespace TheLightenRoad.Frontend
             Time.timeScale = 1f;
             IsPaused = false;
             yield return null;
-            SceneManager.LoadScene(MainMenuScenePath);
+            if (Application.CanStreamedLevelBeLoaded(MainMenuScenePath))
+            {
+                SceneManager.LoadScene(MainMenuScenePath);
+            }
+            else
+            {
+                SceneManager.LoadScene("MainMenu");
+            }
         }
 
         private void SuspendPlayerInput(bool suspend)

@@ -24,6 +24,7 @@ public sealed class ArchiveTestChamberTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        Time.timeScale = 1f;
         background = InputSystem.settings.backgroundBehavior;
         editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
         InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
@@ -46,6 +47,7 @@ public sealed class ArchiveTestChamberTests
     [UnityTearDown]
     public IEnumerator TearDown()
     {
+        Time.timeScale = 1f;
         if (keyboard != null) InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior = background;
         InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;

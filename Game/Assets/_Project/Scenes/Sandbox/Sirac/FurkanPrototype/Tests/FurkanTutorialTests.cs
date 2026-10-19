@@ -183,4 +183,18 @@ public sealed class FurkanTutorialTests
         Assert.That(rewardEmber, Is.Not.Null);
         Assert.That(rewardEmber.gameObject.activeInHierarchy, Is.True, "Secret reward must be revealed.");
     }
+    [UnityTest] public IEnumerator PauseMenuCanPauseAndResumeInFurkanTutorial()
+    {
+        var pause = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<TheLightenRoad.Frontend.PauseMenuController>()).FirstOrDefault();
+        Assert.That(pause, Is.Not.Null, "FurkanTutorial scene must have PauseMenuController installed.");
+        pause.Pause();
+        Assert.That(TheLightenRoad.Frontend.PauseMenuController.IsPaused, Is.True);
+        Assert.That(Time.timeScale, Is.Zero);
+        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled, Is.False);
+        pause.Resume();
+        Assert.That(TheLightenRoad.Frontend.PauseMenuController.IsPaused, Is.False);
+        Assert.That(Time.timeScale, Is.EqualTo(1f));
+        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled, Is.True);
+        yield return null;
+    }
 }

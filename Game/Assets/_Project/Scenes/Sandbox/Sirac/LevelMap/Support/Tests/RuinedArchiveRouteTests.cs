@@ -23,6 +23,7 @@ public sealed class RuinedArchiveRouteTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        Time.timeScale = 1f;
         oldBackground = InputSystem.settings.backgroundBehavior;
         oldEditorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
         InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
@@ -54,6 +55,7 @@ public sealed class RuinedArchiveRouteTests
     [UnityTearDown]
     public IEnumerator TearDown()
     {
+        Time.timeScale = 1f;
         if (keyboard != null) InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior = oldBackground;
         InputSystem.settings.editorInputBehaviorInPlayMode = oldEditorInput;

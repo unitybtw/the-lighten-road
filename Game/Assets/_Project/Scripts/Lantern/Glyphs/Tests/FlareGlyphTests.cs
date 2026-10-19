@@ -18,6 +18,7 @@ namespace TheLightenRoad.Lantern.Glyphs.Tests
         [SetUp]
         public void Setup()
         {
+            Time.timeScale = 1f;
             playerObject = new GameObject("TestPlayer");
             fuel = playerObject.AddComponent<LanternFuel>();
             fuel.ResetForChamber(); // Gives 3 embers (6 charges)
@@ -32,6 +33,7 @@ namespace TheLightenRoad.Lantern.Glyphs.Tests
         [TearDown]
         public void Teardown()
         {
+            Time.timeScale = 1f;
             if (playerObject != null) Object.DestroyImmediate(playerObject);
             if (glyphObject != null) Object.DestroyImmediate(glyphObject);
         }

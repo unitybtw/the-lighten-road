@@ -18,6 +18,7 @@ public sealed class ChamberCompletionTests
     private float previousTimeScale;
     [UnitySetUp] public IEnumerator Setup()
     {
+        Time.timeScale=1f;
         previousTimeScale=Time.timeScale;
 #if UNITY_EDITOR
         scene=UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity",new LoadSceneParameters(LoadSceneMode.Additive));
@@ -32,7 +33,7 @@ public sealed class ChamberCompletionTests
     }
     [UnityTearDown] public IEnumerator Teardown()
     {
-        Time.timeScale=previousTimeScale;
+        Time.timeScale=1f;
         if(sequence!=null) { sequence.Cancel(); Object.Destroy(sequence.gameObject); }
         if(profile!=null)Object.Destroy(profile);
         if(scene.IsValid() && scene.isLoaded)yield return SceneManager.UnloadSceneAsync(scene);
@@ -66,6 +67,7 @@ public sealed class ChamberCompletionTests
         Assert.That(level.Player.enabled,Is.True);
         Assert.That(level.Player.GetComponent<LanternFuel>().TotalEmbers,Is.EqualTo(embers));
         Assert.That(Time.timeScale,Is.Zero);
+        Time.timeScale=1f;
         Assert.That(sequence.TryBegin(level.Player),Is.False);
     }
     [UnityTest] public IEnumerator CancelRestoresPreviouslyDisabledComponentsAndAllowsRetry()
@@ -114,7 +116,12 @@ public sealed class ChamberCompletionTests
     {
         sequence.DestinationScene="Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity";
         var body=level.Player.GetComponent<Rigidbody2D>();
+        level.Player.transform.position=new Vector3(40.5f,3.25f);
         body.position=new Vector2(40.5f,3.25f);
+        Physics2D.SyncTransforms();
+        body.WakeUp();
+        yield return new WaitForFixedUpdate();
+        if(!sequence.IsRunning) sequence.TryBegin(level.Player);
         float timeout=Time.realtimeSinceStartup+12;
         while(SceneManager.GetActiveScene().name!="ArchiveTestChamber" && Time.realtimeSinceStartup<timeout)yield return null;
         Assert.That(SceneManager.GetActiveScene().name,Is.EqualTo("ArchiveTestChamber"));

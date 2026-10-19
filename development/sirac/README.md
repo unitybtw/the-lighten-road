@@ -432,3 +432,30 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
    - Added `PauseMenuController` component to `FurkanTutorial.unity` and updated `FurkanPrototypeBuilder.cs` and its assembly definition (`TheLightenRoad.Sirac.FurkanPrototype.Editor.asmdef`).
    - Reinforced test isolation in `FurkanTutorialTests.cs` and `PauseMenuController.cs` (ensuring deterministic `Time.timeScale` reset).
    - All **7/7** `TheLightenRoad.Sirac.FurkanPrototype.Tests` pass with flying colors.
+
+### Checkpoint 21: Gameplay & Test Robustness Bugfix Sweep
+
+1. **Pause Menu "Restart Chamber" Logic & Flow (`PauseMenuController.cs`):**
+   - Fixed issue where selecting "Restart Chamber" from the pause menu only reset pickups and circuit state, leaving the player mid-chamber without teleporting or respawning.
+   - Now cleanly invokes `FurkanLevelDirector.Restart()` to perform a complete chamber reset (triggers, circuits, pickups, and respawn back at `FirstSpawn`), matching the `Backspace` quick-reset flow.
+   - Added a safeguard preventing pause menu activation while `ChamberCompletionSequence` is actively animating, preventing cutscene interruption or state desync.
+   - Added robust scene name fallback (`SceneManager.LoadScene("MainMenu")`) in `QuitRoutine()` if the full path is not streamed.
+
+2. **Chamber Completion Trigger Timing & Test Hardening (`ChamberCompletionTests.cs`):**
+   - Fixed `AuthoredExitTransfersToArchiveAndRemovesPersistentPresentation` test timing where setting `body.position` on a sleeping rigidbody did not evaluate 2D trigger contacts without fixed physics updates.
+   - Added `transform.position` synchronization, `body.WakeUp()`, fixed update stepping, and direct sequence trigger fallback.
+   - Guaranteed `Time.timeScale = 1f;` across setup, teardown, and test execution.
+
+3. **Global Time.timeScale Test Isolation & Test Suite Hardening:**
+   - Enforced deterministic `Time.timeScale = 1f;` across all PlayMode test suites (`RuinedArchiveRouteTests.cs`, `ArchiveTestChamberTests.cs`, `FlareGlyphTests.cs`, `PauseMenuTests.cs`, and `PauseMenuController.OnDestroy`), eliminating test timeouts and cross-fixture state leaks.
+   - Added missing `"TheLightenRoad.Frontend"` assembly definition reference to `TheLightenRoad.Sirac.FurkanPrototype.Tests.asmdef`.
+   - Added automated test `PauseMenuCanPauseAndResumeInFurkanTutorial` in `FurkanTutorialTests.cs` (now 8/8 tests passed).
+
+4. **Verification & Test Status:**
+   - Unity 6000.3.2f1 PlayMode test suites:
+     - `TheLightenRoad.Glyphs.Tests`: **7/7 passed** (job `92d9f75d67df43c28e18b17592610ec6`).
+     - `TheLightenRoad.Frontend.PlayModeTests`: **10/10 passed** (job `c7439c1f6f0d4ee78bf9c5774e4155b5`).
+     - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed** (job `3d0dd9ac2cf74c5fab736cd99bc678c0`).
+     - `TheLightenRoad.Completion.Tests`: **5/5 passed** (job `c965e21647a5419ca92b6567ac79b891`).
+   - Clean console, zero errors, and Kemal's folder boundaries strictly respected.
+

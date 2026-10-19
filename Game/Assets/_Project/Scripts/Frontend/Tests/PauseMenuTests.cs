@@ -34,6 +34,7 @@ namespace TheLightenRoad.Frontend.Tests
                 Object.DestroyImmediate(host);
             }
             PauseMenuController.ResetStaticStateForTesting();
+            Time.timeScale = 1f;
         }
 
         [UnityTest]
