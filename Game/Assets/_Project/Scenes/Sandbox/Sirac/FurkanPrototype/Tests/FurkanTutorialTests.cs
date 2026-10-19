@@ -20,6 +20,7 @@ public sealed class FurkanTutorialTests
     private InputSettings.EditorInputBehaviorInPlayMode oldEditor;
     [UnitySetUp] public IEnumerator SetUp()
     {
+        Time.timeScale=1f;
         oldBackground=InputSystem.settings.backgroundBehavior;oldEditor=InputSystem.settings.editorInputBehaviorInPlayMode;
         InputSystem.settings.backgroundBehavior=InputSettings.BackgroundBehavior.IgnoreFocus;
         InputSystem.settings.editorInputBehaviorInPlayMode=InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
@@ -33,6 +34,7 @@ public sealed class FurkanTutorialTests
     }
     [UnityTearDown] public IEnumerator TearDown()
     {
+        Time.timeScale=1f;
         if(keyboard!=null)InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior=oldBackground;InputSystem.settings.editorInputBehaviorInPlayMode=oldEditor;
         if(scene.IsValid()&&scene.isLoaded)yield return SceneManager.UnloadSceneAsync(scene);

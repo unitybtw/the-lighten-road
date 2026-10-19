@@ -51,6 +51,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
             var hud=new GameObject("Lantern HUD").AddComponent<LanternHUD>();hud.SetTarget(player.GetComponent<LanternController>());
             new GameObject("Stamina HUD").AddComponent<StaminaHUD>().SetTarget(player.GetComponent<PlayerStamina>());
             new GameObject("Death overlay").AddComponent<DeathScreenOverlay>().SetTarget(director.Player);
+            new GameObject("Pause Menu").AddComponent<TheLightenRoad.Frontend.PauseMenuController>();
             BuildArchitecture();BuildPuzzle();BuildGlyphsAndSecrets();BuildPrompts();
             CompletionSetup.Install();
             EditorSceneManager.SaveScene(scene,ScenePath);

@@ -12,7 +12,8 @@
     "Unity.RenderPipelines.Universal.2D.Runtime",
     "TheLightenRoad.Completion",
     "TheLightenRoad.Glyphs",
-    "TheLightenRoad.Effects"
+    "TheLightenRoad.Effects",
+    "TheLightenRoad.Frontend"
   ],
   "includePlatforms": [
     "Editor"

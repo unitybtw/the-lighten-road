@@ -1,5 +1,5 @@
 {
   "name": "TheLightenRoad.Frontend.PlayModeTests",
-  "references": ["TheLightenRoad.Frontend", "TheLightenRoad.Audio", "UnityEngine.UI", "Unity.TextMeshPro"],
+  "references": ["TheLightenRoad.Frontend", "TheLightenRoad.Audio", "TheLightenRoad.Player", "TheLightenRoad.Lantern", "UnityEngine.UI", "Unity.TextMeshPro", "Unity.InputSystem"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

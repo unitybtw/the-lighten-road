@@ -406,3 +406,29 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **7/7 passed** (job `bfbd34d277a743779b0a235847a89bf5`), including the new automated test `FlareRevealsCrossingRuneAndUpperSecretVaultPassage` alongside real traversal, platform freeze, and collectible retrieval.
      - `TheLightenRoad.Completion.Tests`: **5/5 passed** (job `4b48428c5b76497992b553a39c9883ad`).
    - Console logs clean with zero errors. Kemal's boundaries and all existing player mechanics remain untouched.
+
+### Checkpoint 20: In-Game Pause Menu & Game Loop UX Integration
+
+1. **PauseMenuController Implementation (`Game/Assets/_Project/Scripts/Frontend/PauseMenuController.cs`):**
+   - In-game pause modal invoked via keyboard `Escape` / `P` or gamepad `Start` button.
+   - Safely freezes simulation (`Time.timeScale = 0`) and suspends player movement (`PlayerMotor2D`), linear velocity, and lantern inputs (`LanternController`), preventing unintentional deaths or ember expenditures while paused. Restores original component states upon resume.
+   - Multi-view UI architecture built with soft-glass dark backdrop (`#0a0f12`, alpha 0.90):
+     - **Main View:** Displays current chamber title (e.g. `CHAMBER 01-02 / FIRST LIGHT`), archive memento/lore discovery status, and navigation buttons: `RESUME`, `CONTROLS & INPUT`, `SETTINGS & AUDIO`, `RESTART CHAMBER`, and `QUIT TO MAIN MENU`.
+     - **Settings View:** Full live audio synchronization with `MenuPreferences` (Master, Music, SFX sliders) and `ReducedMotion` toggle. Automatically persists user preferences via `PlayerPrefs`.
+     - **Controls & Actions View:** Comprehensive player input guide covering Walk (`A`/`D`/Arrows), Jump (`Space`), Sprint (`Shift`), Flare (`F`), Circuit Deposit/Recovery (`E`), Pause (`ESC`/`P`), and Quick Reset (`Backspace`).
+     - **Chamber Restart & Main Menu Transition:** Safely resets level state via `FurkanLevelDirector.ResetAttempt()` or `PlayerRespawnController`, or transitions smoothly back to `MainMenu.unity`.
+   - Procedural dual-tone harmonic chimes for menu open/close events (`520Hz` / `392Hz`).
+
+2. **Automated PlayMode Test Suite (`Game/Assets/_Project/Scripts/Frontend/Tests/PauseMenuTests.cs`):**
+   - 5 comprehensive automated tests covering:
+     - `PauseMenu_AwakensAndBuildsFullUIHierarchy`
+     - `PauseMenu_PausesAndResumesTimeScaleCorrectly`
+     - `PauseMenu_SubViewsSwitchCleanly`
+     - `PauseMenu_SuspendsAndRestoresPlayerMotor`
+     - `PauseMenu_SettingsSyncsWithMenuPreferences`
+   - Verified 100% test pass rate (**10/10** across `TheLightenRoad.Frontend.PlayModeTests`).
+
+3. **Level & Builder Integration:**
+   - Added `PauseMenuController` component to `FurkanTutorial.unity` and updated `FurkanPrototypeBuilder.cs` and its assembly definition (`TheLightenRoad.Sirac.FurkanPrototype.Editor.asmdef`).
+   - Reinforced test isolation in `FurkanTutorialTests.cs` and `PauseMenuController.cs` (ensuring deterministic `Time.timeScale` reset).
+   - All **7/7** `TheLightenRoad.Sirac.FurkanPrototype.Tests` pass with flying colors.
