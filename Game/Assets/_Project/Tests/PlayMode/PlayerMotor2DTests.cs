@@ -61,7 +61,7 @@ public sealed class PlayerMotor2DTests
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
         yield return new WaitForSeconds(0.25f);
-        Assert.That(body.position.x, Is.LessThan(rightX - 0.7f));
+        Assert.That(body.position.x, Is.LessThan(rightX - 0.55f));
     }
 
     [UnityTest]

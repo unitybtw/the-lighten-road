@@ -1,0 +1,25 @@
+{
+  "name": "TheLightenRoad.Relays.Tests",
+  "rootNamespace": "TheLightenRoad.Lantern.Relays.Tests",
+  "references": [
+    "TheLightenRoad.Relays",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Audio",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

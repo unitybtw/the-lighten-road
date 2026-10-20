@@ -113,6 +113,12 @@ namespace TheLightenRoad.Audio
         [Header("Environment Props SFX")]
         [SerializeField] private AudioClip[] chainClinkClips;
         [SerializeField, Range(0f, 1f)] private float chainClinkVolume = 0.65f;
+        [SerializeField] private AudioClip crystalChargeClip;
+        [SerializeField] private AudioClip crystalActivateClip;
+        [SerializeField] private AudioClip gateOpenClip;
+        [SerializeField] private AudioClip gateCloseClip;
+        [SerializeField, Range(0f, 1f)] private float crystalVolume = 0.75f;
+        [SerializeField, Range(0f, 1f)] private float gateVolume = 0.85f;
 
         [Header("Volume Balances")]
         [SerializeField, Range(0f, 1f)] private float masterSFXVolume = 1.0f;
@@ -313,6 +319,10 @@ namespace TheLightenRoad.Audio
                     };
                 }
             }
+            if (crystalChargeClip == null) crystalChargeClip = Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_charge");
+            if (crystalActivateClip == null) crystalActivateClip = Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_activate");
+            if (gateOpenClip == null) gateOpenClip = Resources.Load<AudioClip>("Audio/SFX/Environment/gate_open");
+            if (gateCloseClip == null) gateCloseClip = Resources.Load<AudioClip>("Audio/SFX/Environment/gate_close");
         }
 
         private float playerCheckTimer;
@@ -711,6 +721,45 @@ namespace TheLightenRoad.Audio
             {
                 float pitch = 1.0f + Random.Range(-pitchRandomRange, pitchRandomRange);
                 PlayOneShot(clip, chainClinkVolume * Mathf.Clamp01(volumeScale), pitch);
+            }
+        }
+
+        public void PlayCrystalCharge(float pitchScale = 1.0f, float volumeScale = 1.0f)
+        {
+            if (crystalChargeClip == null) EnsureClipsLoaded();
+            if (crystalChargeClip != null)
+            {
+                PlayOneShot(crystalChargeClip, crystalVolume * Mathf.Clamp01(volumeScale), pitchScale);
+            }
+        }
+
+        public void PlayCrystalActivate(float volumeScale = 1.0f)
+        {
+            if (crystalActivateClip == null) EnsureClipsLoaded();
+            if (crystalActivateClip != null)
+            {
+                float pitch = 1.0f + Random.Range(-pitchRandomRange * 0.5f, pitchRandomRange * 0.5f);
+                PlayOneShot(crystalActivateClip, crystalVolume * Mathf.Clamp01(volumeScale), pitch);
+            }
+        }
+
+        public void PlayGateOpen(float volumeScale = 1.0f)
+        {
+            if (gateOpenClip == null) EnsureClipsLoaded();
+            if (gateOpenClip != null)
+            {
+                float pitch = 1.0f + Random.Range(-pitchRandomRange, pitchRandomRange);
+                PlayOneShot(gateOpenClip, gateVolume * Mathf.Clamp01(volumeScale), pitch);
+            }
+        }
+
+        public void PlayGateClose(float volumeScale = 1.0f)
+        {
+            if (gateCloseClip == null) EnsureClipsLoaded();
+            if (gateCloseClip != null)
+            {
+                float pitch = 1.0f + Random.Range(-pitchRandomRange, pitchRandomRange);
+                PlayOneShot(gateCloseClip, gateVolume * Mathf.Clamp01(volumeScale), pitch);
             }
         }
 
