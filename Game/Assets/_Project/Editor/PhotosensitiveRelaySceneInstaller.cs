@@ -10,13 +10,15 @@ namespace TheLightenRoad.Lantern.Relays.Editor
     {
         private const string RelayPrefabPath = "Assets/_Project/Prefabs/PhotosensitiveRelay.prefab";
         private const string GatePrefabPath = "Assets/_Project/Prefabs/ArchiveGate.prefab";
-        private const string ScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity";
+        private const string ChamberScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity";
+        private const string TutorialScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity";
 
-        [MenuItem("Tools/Relays/Build Prefabs and Install to Chamber")]
-        public static void BuildPrefabsAndInstall()
+        [MenuItem("Tools/Relays/Build Prefabs and Install Everywhere")]
+        public static void BuildPrefabsAndInstallEverywhere()
         {
             BuildPrefabs();
             InstallToChamber();
+            InstallToTutorial();
         }
 
         [MenuItem("Tools/Relays/Build Prefabs")]
@@ -48,12 +50,12 @@ namespace TheLightenRoad.Lantern.Relays.Editor
         public static void InstallToChamber()
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            bool needReopen = activeScene.path != ScenePath;
+            bool needReopen = activeScene.path != ChamberScenePath;
 
             UnityEngine.SceneManagement.Scene scene;
             if (needReopen)
             {
-                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                scene = EditorSceneManager.OpenScene(ChamberScenePath, OpenSceneMode.Single);
             }
             else
             {
@@ -125,6 +127,72 @@ namespace TheLightenRoad.Lantern.Relays.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log("[Relays] Successfully installed Photosensitive Relay and Archive Gate into ArchiveTestChamber!");
+        }
+
+        [MenuItem("Tools/Relays/Install to Furkan Tutorial")]
+        public static void InstallToTutorial()
+        {
+            var activeScene = EditorSceneManager.GetActiveScene();
+            bool needReopen = activeScene.path != TutorialScenePath;
+
+            UnityEngine.SceneManagement.Scene scene;
+            if (needReopen)
+            {
+                scene = EditorSceneManager.OpenScene(TutorialScenePath, OpenSceneMode.Single);
+            }
+            else
+            {
+                scene = activeScene;
+            }
+
+            var root = GameObject.Find("FURKAN / TUTORIAL AND BEGINNINGS");
+            if (root == null)
+            {
+                Debug.LogError("[Relays] Could not find root object in FurkanTutorial!");
+                return;
+            }
+
+            // Remove previous instances if any
+            var existingRelay = root.transform.Find("PhotosensitiveRelay_Arrival");
+            if (existingRelay != null) Object.DestroyImmediate(existingRelay.gameObject);
+
+            var existingGate = root.transform.Find("ArchiveGate_ArrivalVault");
+            if (existingGate != null) Object.DestroyImmediate(existingGate.gameObject);
+
+            // Load prefabs
+            var relayPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RelayPrefabPath);
+            var gatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GatePrefabPath);
+
+            if (relayPrefab == null || gatePrefab == null)
+            {
+                BuildPrefabs();
+                relayPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RelayPrefabPath);
+                gatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GatePrefabPath);
+            }
+
+            // Instantiate Gate at west wall alcove (x = -1.8, y = 0.0)
+            var gateInstance = (GameObject)PrefabUtility.InstantiatePrefab(gatePrefab, root.transform);
+            gateInstance.name = "ArchiveGate_ArrivalVault";
+            gateInstance.transform.position = new Vector3(-1.8f, 0.0f, 0f);
+            var gateComp = gateInstance.GetComponent<ArchiveGate2D>();
+
+            // Instantiate Relay 1m left of spawn (x = -0.5, y = 0.0)
+            var relayInstance = (GameObject)PrefabUtility.InstantiatePrefab(relayPrefab, root.transform);
+            relayInstance.name = "PhotosensitiveRelay_Arrival";
+            relayInstance.transform.position = new Vector3(-0.5f, 0.0f, 0f);
+            var relayComp = relayInstance.GetComponent<PhotosensitiveRelay2D>();
+            relayComp.Mode = RelayMode.Timed;
+            relayComp.LingerDuration = 6.0f;
+
+            // Connect Gate to Relay
+            if (gateComp != null)
+            {
+                gateComp.Relay = relayComp;
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[Relays] Successfully installed Photosensitive Relay and Archive Gate into FurkanTutorial!");
         }
     }
 }

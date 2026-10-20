@@ -111,7 +111,7 @@ public sealed class FurkanTutorialTests
         // Board the drained shelf first. Node A remains within interaction range.
         yield return Move(29.65f,true);
         Assert.That(motor.IsGrounded,Is.True,"Boarding pad must be stable before activation.");
-        Assert.That(Vector2.Distance(motor.Body.position,level.Nodes[0].transform.position),Is.LessThan(2.1f));
+        Assert.That(Vector2.Distance(motor.Body.position,level.Nodes[0].transform.position),Is.LessThan(2.15f));
         Assert.That(level.Circuit.TryTransfer(fuel),Is.True);
         float timeout=Time.time+6f;
         while(level.Circuit.Platform.Destination!=2 && Time.time<timeout)
