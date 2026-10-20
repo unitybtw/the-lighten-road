@@ -5,6 +5,7 @@
     "TheLightenRoad.Player",
     "TheLightenRoad.Lantern",
     "TheLightenRoad.Completion",
+    "TheLightenRoad.Frontend",
     "TheLightenRoad.UI",
     "Unity.InputSystem",
     "UnityEngine.UI",

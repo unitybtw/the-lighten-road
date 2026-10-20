@@ -1,3 +1,4 @@
+using TheLightenRoad.Frontend;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using TheLightenRoad.Player.Completion;
@@ -54,7 +55,14 @@ namespace TheLightenRoad.Sirac.TestChamber
             for (int i = 0; i < pickupPositions.Length; i++)
                 pickupPositions[i] = pickupRoot.GetChild(i).position;
             BuildNote();
+            SpawnChamberWhispers();
             ShowNote("ARCHIVE / TEST CHAMBER", "A/D Move   SPACE Jump   F Flare   BACKSPACE Restart", 6f);
+        }
+
+        private void SpawnChamberWhispers()
+        {
+            DiegeticWhisper.Spawn(new Vector3(2.5f, 1.2f, 0f), "A / D", "TRAVERSE THE ARCHIVE", WhisperAction.Move, "tc_move", transform);
+            DiegeticWhisper.Spawn(new Vector3(21.5f, 1.8f, 0f), "F", "HARNESS FLARE ACROSS THE VOID", WhisperAction.Flare, "tc_flare", transform);
         }
 
         private void Update()
