@@ -595,3 +595,37 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `TheLightenRoad.Sirac.TestChamber.Tests`: **3/3 passed** (including full deathless traversal)
      - `FurkanTutorialTests`: **8/8 passed**
    - Zero compilation errors, zero warnings, zero GUI bloat.
+
+### Checkpoint 27: Dynamic Surface & Foley Audio System and In-World Diegetic Guidance Whispers
+
+1. **Dynamic Multi-Surface & Foley Audio Architecture (`SoundEffectManager.cs` & `PlayerAudioController.cs`):**
+   - **Acoustic Surface Classification (`SurfaceType` & `SurfaceAudioTypeProvider.cs`):**
+     - Classification across `Stone`, `Wood`, `Metal`, `Ethereal`, and `Water`.
+     - Direct surface discovery via `SurfaceAudioTypeProvider` component, plus robust hierarchy name/tag heuristics (`"shelf"`, `"crate"` ➔ `Wood`, `"gate"`, `"grid"` ➔ `Metal`, `"crystal"`, `"ethereal"` ➔ `Ethereal`, etc.).
+     - Automatically integrated `SurfaceAudioTypeProvider.Ethereal` on all `EtherealPlatform2D` surfaces.
+   - **Dynamic Procedural Audio Synthesis:**
+     - High-fidelity multi-harmonic synthesis for all missing audio banks (Stone, Wood hollow clatter, Metal ringing overtones, Ethereal celestial bells, Water splash).
+     - New foley sounds: soothing ember exhale on Flare extinguish (`PlayFlareExtinguish`), directional skid-turn pivot friction (`PlaySkidScuff`), and high-fall air draft breeze (`PlayAirDraft`).
+   - **Motor Ground Collider Caching (`PlayerMotor2D.GroundCollider`):**
+     - Exposed active ground collider on `PlayerMotor2D` with zero additional raycast overhead.
+
+2. **In-World Diegetic Guidance Whispers (`DiegeticWhisper.cs`):**
+   - **Visual & Atmospheric Polish:**
+     - World-space floating glyphs rendered via `RenderMode.WorldSpace` Canvas with unscaled harmonic wave bobbing (`Mathf.Sin(Time.time * 2.2f) * 0.08m`).
+     - Soft radial lantern glow aura in warm amber (`#FFB848`), ornate runic bracket keycaps, and radiant ivory typography (`#F8F2E4`).
+   - **Proximity & Action-Triggered Shimmering Dissolution:**
+     - Gently fades into visibility when the player approaches within detection radius (`triggerRadius = 4.2m`).
+     - Listens for player actions (`Jump`, `Flare`, `Sprint`, `Interact`, `Move`, `ProximityOnly`).
+     - Upon fulfillment, plays a radiant burst dissolution (`scale 1.0x -> 1.35x`, alpha fade) accompanied by celestial chime audio, seamlessly retiring from view.
+     - Optional persistent memory via `PlayerPrefs` (`TLR_Whisper_{id}`).
+
+3. **Automated Verification:**
+   - `SurfaceAudioTests.cs`: 4 PlayMode tests verifying surface audio bank synthesis, multi-surface playback, provider detection, flare extinguish, and foley ticking.
+   - `DiegeticWhisperTests.cs`: 5 PlayMode tests verifying world-space canvas initialization, proximity fade-in/fade-out, jump action dissolution, flare action dissolution, and persistent completion memory.
+   - Regression validation across existing suites:
+     - `TheLightenRoad.Frontend.Tests`: **16/16 passed**
+     - `SoundEffectManagerTests`: **8/8 passed**
+     - `TheLightenRoad.Glyphs.Tests`: **13/13 passed**
+     - `FurkanTutorialTests`: **8/8 passed**
+     - `ArchiveTestChamberTests`: **3/3 passed**
+   - Zero compilation errors, zero warnings, zero GUI bloat.

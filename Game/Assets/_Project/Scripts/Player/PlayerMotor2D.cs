@@ -92,6 +92,7 @@ namespace TheLightenRoad.Player
         public event System.Action<float> OnLanded;
 
         public bool IsGrounded { get; private set; }
+        public Collider2D GroundCollider { get; private set; }
         public int FacingDirection => facingDirection;
         public float WalkSpeed { get => walkSpeed; set => walkSpeed = value; }
         public float RunSpeed { get => runSpeed; set => runSpeed = value; }
@@ -393,7 +394,10 @@ namespace TheLightenRoad.Player
         private bool CheckGrounded()
         {
             if (body.linearVelocity.y > 0.05f)
+            {
+                GroundCollider = null;
                 return false;
+            }
 
             var filter = new ContactFilter2D { useTriggers = false };
             filter.SetLayerMask(groundLayers);
@@ -401,8 +405,12 @@ namespace TheLightenRoad.Player
             for (int i = 0; i < count; i++)
             {
                 if (groundHits[i].normal.y >= 0.65f)
+                {
+                    GroundCollider = groundHits[i].collider;
                     return true;
+                }
             }
+            GroundCollider = null;
             return false;
         }
 
@@ -452,6 +460,7 @@ namespace TheLightenRoad.Player
             coyoteTimer = 0f;
             jumpReleased = false;
             IsGrounded = false;
+            GroundCollider = null;
             IsRunning = false;
             currentTilt = 0f;
             if (visualTransform != null) visualTransform.localRotation = Quaternion.identity;

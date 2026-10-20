@@ -23,9 +23,58 @@ namespace TheLightenRoad.Audio
         [SerializeField, Min(0.1f)] private float sprintInterval = 0.28f;
 
         private float footstepTimer;
+        private float skidCooldown;
+        private float airDraftCooldown;
 
         public float WalkInterval { get => walkInterval; set => walkInterval = value; }
         public float SprintInterval { get => sprintInterval; set => sprintInterval = value; }
+
+        public SurfaceType GetCurrentSurface()
+        {
+            if (motor == null) return SurfaceType.Stone;
+            var col = motor.GroundCollider;
+            if (col == null) return SurfaceType.Stone;
+
+            var provider = col.GetComponent<SurfaceAudioTypeProvider>() 
+                           ?? col.GetComponentInParent<SurfaceAudioTypeProvider>()
+                           ?? col.GetComponentInChildren<SurfaceAudioTypeProvider>();
+            if (provider != null) return provider.SurfaceType;
+
+            string colName = col.gameObject.name.ToLowerInvariant();
+            string parentName = col.transform.parent != null ? col.transform.parent.gameObject.name.ToLowerInvariant() : "";
+
+            if (colName.Contains("ethereal") || parentName.Contains("ethereal") ||
+                colName.Contains("crystal") || parentName.Contains("crystal") ||
+                colName.Contains("glyph") || parentName.Contains("glyph"))
+            {
+                return SurfaceType.Ethereal;
+            }
+
+            if (colName.Contains("shelf") || parentName.Contains("shelf") ||
+                colName.Contains("wood") || parentName.Contains("wood") ||
+                colName.Contains("crate") || parentName.Contains("crate") ||
+                colName.Contains("timber") || parentName.Contains("timber"))
+            {
+                return SurfaceType.Wood;
+            }
+
+            if (colName.Contains("metal") || parentName.Contains("metal") ||
+                colName.Contains("iron") || parentName.Contains("iron") ||
+                colName.Contains("grid") || parentName.Contains("grid") ||
+                colName.Contains("circuit") || parentName.Contains("circuit") ||
+                colName.Contains("gate") || parentName.Contains("gate"))
+            {
+                return SurfaceType.Metal;
+            }
+
+            if (colName.Contains("water") || parentName.Contains("water") ||
+                colName.Contains("flood") || parentName.Contains("puddle"))
+            {
+                return SurfaceType.Water;
+            }
+
+            return SurfaceType.Stone;
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoAttachToActivePlayers()
@@ -121,6 +170,37 @@ namespace TheLightenRoad.Audio
         private void Update()
         {
             TickFootsteps(Time.deltaTime);
+            TickFoley(Time.deltaTime);
+        }
+
+        public void TickFoley(float dt)
+        {
+            if (motor == null) return;
+
+            // Skid scuff on rapid directional turn
+            if (motor.IsGrounded && Mathf.Abs(motor.HorizontalSpeed) > 1.8f)
+            {
+                if (Mathf.Abs(motor.HorizontalInput) > 0.15f && Mathf.Sign(motor.HorizontalInput) != Mathf.Sign(motor.HorizontalSpeed))
+                {
+                    if (skidCooldown <= 0f)
+                    {
+                        skidCooldown = 0.35f;
+                        SoundEffectManager.Instance?.PlaySkidScuff(GetCurrentSurface());
+                    }
+                }
+            }
+            if (skidCooldown > 0f) skidCooldown -= dt;
+
+            // Air draft on high-speed fall
+            if (!motor.IsGrounded && motor.Body != null && motor.Body.linearVelocity.y < -7.0f)
+            {
+                if (airDraftCooldown <= 0f)
+                {
+                    airDraftCooldown = 0.9f;
+                    SoundEffectManager.Instance?.PlayAirDraft();
+                }
+            }
+            if (airDraftCooldown > 0f) airDraftCooldown -= dt;
         }
 
         public void TickFootsteps(float dt)
@@ -144,13 +224,14 @@ namespace TheLightenRoad.Audio
                     var sfx = SoundEffectManager.Instance;
                     if (sfx != null)
                     {
+                        var surface = GetCurrentSurface();
                         if (isSprinting)
                         {
-                            sfx.PlaySprintFootstep();
+                            sfx.PlaySprintFootstep(surface);
                         }
                         else
                         {
-                            sfx.PlayWalkFootstep();
+                            sfx.PlayWalkFootstep(surface);
                         }
                     }
                 }
@@ -163,12 +244,14 @@ namespace TheLightenRoad.Audio
 
         private void HandleJumped()
         {
-            SoundEffectManager.Instance?.PlayJump();
+            var surface = GetCurrentSurface();
+            SoundEffectManager.Instance?.PlayJump(surface);
         }
 
         private void HandleLanded(float impactSpeed)
         {
-            SoundEffectManager.Instance?.PlayLanding(impactSpeed);
+            var surface = GetCurrentSurface();
+            SoundEffectManager.Instance?.PlayLanding(impactSpeed, surface);
         }
 
         private void HandleExhaustionChanged(bool isExhausted)
@@ -181,6 +264,10 @@ namespace TheLightenRoad.Audio
             if (isFlared)
             {
                 SoundEffectManager.Instance?.PlayFlareIgnite();
+            }
+            else
+            {
+                SoundEffectManager.Instance?.PlayFlareExtinguish();
             }
         }
 

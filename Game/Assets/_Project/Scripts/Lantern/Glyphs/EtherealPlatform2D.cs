@@ -275,6 +275,13 @@ namespace TheLightenRoad.Lantern.Glyphs
             boxCollider.size = platformSize;
             boxCollider.enabled = isSolid;
 
+            var surfaceProvider = GetComponent<SurfaceAudioTypeProvider>();
+            if (surfaceProvider == null)
+            {
+                surfaceProvider = gameObject.AddComponent<SurfaceAudioTypeProvider>();
+                surfaceProvider.SurfaceType = SurfaceType.Ethereal;
+            }
+
             if (useOneWayPlatform)
             {
                 boxCollider.usedByEffector = true;

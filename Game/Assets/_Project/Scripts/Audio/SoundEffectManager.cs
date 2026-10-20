@@ -90,10 +90,25 @@ namespace TheLightenRoad.Audio
         [SerializeField] private AudioClip landingHardClip;
         [SerializeField] private AudioClip exhaustionBreathClip;
 
+        [Header("Surface Multi-Channel SFX")]
+        [SerializeField] private AudioClip[] woodWalkClips;
+        [SerializeField] private AudioClip[] woodSprintClips;
+        [SerializeField] private AudioClip[] metalWalkClips;
+        [SerializeField] private AudioClip[] metalSprintClips;
+        [SerializeField] private AudioClip[] etherealWalkClips;
+        [SerializeField] private AudioClip[] etherealSprintClips;
+        [SerializeField] private AudioClip[] waterWalkClips;
+        [SerializeField] private AudioClip[] waterSprintClips;
+
         [Header("Lantern & Ember SFX")]
         [SerializeField] private AudioClip flareIgniteClip;
+        [SerializeField] private AudioClip flareExtinguishClip;
         [SerializeField] private AudioClip emberBreakClip;
         [SerializeField] private AudioClip emberPickupClip;
+
+        [Header("Foley & Movement Foley")]
+        [SerializeField] private AudioClip skidScuffClip;
+        [SerializeField] private AudioClip airDraftClip;
 
         [Header("Volume Balances")]
         [SerializeField, Range(0f, 1f)] private float masterSFXVolume = 1.0f;
@@ -125,9 +140,20 @@ namespace TheLightenRoad.Audio
         public AudioClip LandingSoftClip => landingSoftClip;
         public AudioClip LandingHardClip => landingHardClip;
         public AudioClip FlareIgniteClip => flareIgniteClip;
+        public AudioClip FlareExtinguishClip => flareExtinguishClip;
         public AudioClip EmberBreakClip => emberBreakClip;
         public AudioClip EmberPickupClip => emberPickupClip;
         public AudioClip ExhaustionBreathClip => exhaustionBreathClip;
+        public AudioClip[] WoodWalkClips => woodWalkClips;
+        public AudioClip[] WoodSprintClips => woodSprintClips;
+        public AudioClip[] MetalWalkClips => metalWalkClips;
+        public AudioClip[] MetalSprintClips => metalSprintClips;
+        public AudioClip[] EtherealWalkClips => etherealWalkClips;
+        public AudioClip[] EtherealSprintClips => etherealSprintClips;
+        public AudioClip[] WaterWalkClips => waterWalkClips;
+        public AudioClip[] WaterSprintClips => waterSprintClips;
+        public AudioClip SkidScuffClip => skidScuffClip;
+        public AudioClip AirDraftClip => airDraftClip;
 
         private void Awake()
         {
@@ -201,6 +227,69 @@ namespace TheLightenRoad.Audio
             if (exhaustionSource != null && exhaustionSource.clip == null && exhaustionBreathClip != null)
             {
                 exhaustionSource.clip = exhaustionBreathClip;
+            }
+
+            if (woodWalkClips == null || woodWalkClips.Length == 0 || woodWalkClips[0] == null)
+            {
+                woodWalkClips = GenerateStepBank("Wood", SurfaceType.Wood, false);
+            }
+            if (woodSprintClips == null || woodSprintClips.Length == 0 || woodSprintClips[0] == null)
+            {
+                woodSprintClips = GenerateStepBank("Wood", SurfaceType.Wood, true);
+            }
+            if (metalWalkClips == null || metalWalkClips.Length == 0 || metalWalkClips[0] == null)
+            {
+                metalWalkClips = GenerateStepBank("Metal", SurfaceType.Metal, false);
+            }
+            if (metalSprintClips == null || metalSprintClips.Length == 0 || metalSprintClips[0] == null)
+            {
+                metalSprintClips = GenerateStepBank("Metal", SurfaceType.Metal, true);
+            }
+            if (etherealWalkClips == null || etherealWalkClips.Length == 0 || etherealWalkClips[0] == null)
+            {
+                etherealWalkClips = GenerateStepBank("Ethereal", SurfaceType.Ethereal, false);
+            }
+            if (etherealSprintClips == null || etherealSprintClips.Length == 0 || etherealSprintClips[0] == null)
+            {
+                etherealSprintClips = GenerateStepBank("Ethereal", SurfaceType.Ethereal, true);
+            }
+            if (waterWalkClips == null || waterWalkClips.Length == 0 || waterWalkClips[0] == null)
+            {
+                waterWalkClips = GenerateStepBank("Water", SurfaceType.Water, false);
+            }
+            if (waterSprintClips == null || waterSprintClips.Length == 0 || waterSprintClips[0] == null)
+            {
+                waterSprintClips = GenerateStepBank("Water", SurfaceType.Water, true);
+            }
+            if (flareExtinguishClip == null)
+            {
+                flareExtinguishClip = CreateProceduralClip("Flare_Extinguish", 0.32f, t =>
+                {
+                    float decay = Mathf.Exp(-10f * t);
+                    float whoosh = Mathf.Sin(2f * Mathf.PI * (180f - t * 240f) * t) * 0.6f 
+                                 + Mathf.Sin(2f * Mathf.PI * 90f * t) * 0.4f;
+                    return whoosh * decay;
+                });
+            }
+            if (skidScuffClip == null)
+            {
+                skidScuffClip = CreateProceduralClip("Skid_Scuff", 0.09f, t =>
+                {
+                    float decay = Mathf.Exp(-42f * t);
+                    float rasp = Mathf.Sin(2f * Mathf.PI * 320f * t) * 0.6f 
+                               + Mathf.Sin(2f * Mathf.PI * 740f * t) * 0.4f;
+                    return rasp * decay;
+                });
+            }
+            if (airDraftClip == null)
+            {
+                airDraftClip = CreateProceduralClip("Air_Draft", 0.42f, t =>
+                {
+                    float env = Mathf.Sin(Mathf.PI * (t / 0.42f));
+                    float breeze = Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.4f 
+                                 + Mathf.Sin(2f * Mathf.PI * 65f * t) * 0.6f;
+                    return breeze * env;
+                });
             }
         }
 
@@ -371,35 +460,140 @@ namespace TheLightenRoad.Audio
             src.PlayOneShot(clip);
         }
 
-        public void PlayWalkFootstep()
+        private static AudioClip CreateProceduralClip(string name, float duration, System.Func<float, float> waveFunc)
         {
-            if (walkClips == null || walkClips.Length == 0 || walkClips[0] == null) EnsureClipsLoaded();
-            if (walkClips == null || walkClips.Length == 0) return;
-            AudioClip clip = walkClips[Random.Range(0, walkClips.Length)];
+            int sampleRate = 44100;
+            int totalSamples = Mathf.Max(1, (int)(duration * sampleRate));
+            var clip = AudioClip.Create(name, totalSamples, 1, sampleRate, false);
+            float[] data = new float[totalSamples];
+            for (int i = 0; i < totalSamples; i++)
+            {
+                float t = (float)i / sampleRate;
+                data[i] = Mathf.Clamp(waveFunc(t), -1f, 1f);
+            }
+            clip.SetData(data, 0);
+            return clip;
+        }
+
+        private static AudioClip[] GenerateStepBank(string prefix, SurfaceType surface, bool isSprint)
+        {
+            var bank = new AudioClip[4];
+            float dur = isSprint ? 0.12f : 0.15f;
+            for (int i = 0; i < 4; i++)
+            {
+                float pitchMod = 1f + (i - 1.5f) * 0.08f;
+                string clipName = $"{prefix}_{surface}_{(isSprint ? "Sprint" : "Walk")}_{i + 1}";
+                bank[i] = CreateProceduralClip(clipName, dur, t =>
+                {
+                    switch (surface)
+                    {
+                        case SurfaceType.Wood:
+                        {
+                            float decay = Mathf.Exp(-24f * t);
+                            float freq = (210f + i * 15f) * pitchMod;
+                            float tone = Mathf.Sin(2f * Mathf.PI * freq * t) * 0.8f + Mathf.Sin(2f * Mathf.PI * freq * 2f * t) * 0.35f;
+                            float knock = Mathf.Sin(2f * Mathf.PI * 110f * t) * 0.4f;
+                            return (tone + knock) * decay;
+                        }
+                        case SurfaceType.Metal:
+                        {
+                            float decay = Mathf.Exp(-28f * t);
+                            float freq = (1200f + i * 60f) * pitchMod;
+                            float ring = Mathf.Sin(2f * Mathf.PI * freq * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * freq * 2.1f * t) * 0.4f;
+                            float click = Mathf.Sin(2f * Mathf.PI * 3400f * t) * 0.2f * Mathf.Exp(-90f * t);
+                            return (ring + click) * decay;
+                        }
+                        case SurfaceType.Ethereal:
+                        {
+                            float decay = Mathf.Exp(-14f * t);
+                            float f1 = (880f + i * 40f) * pitchMod;
+                            float f2 = f1 * 1.5f;
+                            float f3 = f1 * 2f;
+                            float tone = Mathf.Sin(2f * Mathf.PI * f1 * t) * 0.5f 
+                                       + Mathf.Sin(2f * Mathf.PI * f2 * t) * 0.35f 
+                                       + Mathf.Sin(2f * Mathf.PI * f3 * t) * 0.2f;
+                            return tone * decay;
+                        }
+                        case SurfaceType.Water:
+                        {
+                            float decay = Mathf.Exp(-20f * t);
+                            float splash = Mathf.Sin(2f * Mathf.PI * (500f + i * 50f) * t) * 0.4f + Mathf.Sin(2f * Mathf.PI * 1800f * t) * 0.3f;
+                            float plop = Mathf.Sin(2f * Mathf.PI * (280f - t * 500f) * t) * 0.5f;
+                            return (splash + plop) * decay;
+                        }
+                        default:
+                        {
+                            float decay = Mathf.Exp(-36f * t);
+                            float freq = (520f + i * 30f) * pitchMod;
+                            float tone = Mathf.Sin(2f * Mathf.PI * freq * t) * 0.7f + Mathf.Sin(2f * Mathf.PI * freq * 1.9f * t) * 0.3f;
+                            return tone * decay;
+                        }
+                    }
+                });
+            }
+            return bank;
+        }
+
+        private AudioClip[] GetWalkClipsForSurface(SurfaceType surface)
+        {
+            switch (surface)
+            {
+                case SurfaceType.Wood: return (woodWalkClips != null && woodWalkClips.Length > 0) ? woodWalkClips : walkClips;
+                case SurfaceType.Metal: return (metalWalkClips != null && metalWalkClips.Length > 0) ? metalWalkClips : walkClips;
+                case SurfaceType.Ethereal: return (etherealWalkClips != null && etherealWalkClips.Length > 0) ? etherealWalkClips : walkClips;
+                case SurfaceType.Water: return (waterWalkClips != null && waterWalkClips.Length > 0) ? waterWalkClips : walkClips;
+                default: return walkClips;
+            }
+        }
+
+        private AudioClip[] GetSprintClipsForSurface(SurfaceType surface)
+        {
+            switch (surface)
+            {
+                case SurfaceType.Wood: return (woodSprintClips != null && woodSprintClips.Length > 0) ? woodSprintClips : sprintClips;
+                case SurfaceType.Metal: return (metalSprintClips != null && metalSprintClips.Length > 0) ? metalSprintClips : sprintClips;
+                case SurfaceType.Ethereal: return (etherealSprintClips != null && etherealSprintClips.Length > 0) ? etherealSprintClips : sprintClips;
+                case SurfaceType.Water: return (waterSprintClips != null && waterSprintClips.Length > 0) ? waterSprintClips : sprintClips;
+                default: return sprintClips;
+            }
+        }
+
+        public void PlayWalkFootstep(SurfaceType surface = SurfaceType.Stone)
+        {
+            EnsureClipsLoaded();
+            var bank = GetWalkClipsForSurface(surface);
+            if (bank == null || bank.Length == 0 || bank[0] == null) bank = walkClips;
+            if (bank == null || bank.Length == 0) return;
+
+            AudioClip clip = bank[Random.Range(0, bank.Length)];
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(clip, footstepsVolume, pitch);
         }
 
-        public void PlaySprintFootstep()
+        public void PlaySprintFootstep(SurfaceType surface = SurfaceType.Stone)
         {
-            if (sprintClips == null || sprintClips.Length == 0 || sprintClips[0] == null) EnsureClipsLoaded();
-            if (sprintClips == null || sprintClips.Length == 0) return;
-            AudioClip clip = sprintClips[Random.Range(0, sprintClips.Length)];
+            EnsureClipsLoaded();
+            var bank = GetSprintClipsForSurface(surface);
+            if (bank == null || bank.Length == 0 || bank[0] == null) bank = sprintClips;
+            if (bank == null || bank.Length == 0) return;
+
+            AudioClip clip = bank[Random.Range(0, bank.Length)];
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(clip, footstepsVolume * 1.25f, pitch);
         }
 
-        public void PlayJump()
+        public void PlayJump(SurfaceType surface = SurfaceType.Stone)
         {
             if (jumpClip == null) EnsureClipsLoaded();
             if (jumpClip == null) return;
-            float pitch = 1f + Random.Range(-pitchRandomRange * 0.5f, pitchRandomRange * 0.5f);
+            float pitchMod = surface == SurfaceType.Ethereal ? 1.15f : (surface == SurfaceType.Metal ? 1.08f : 1.0f);
+            float pitch = pitchMod + Random.Range(-pitchRandomRange * 0.5f, pitchRandomRange * 0.5f);
             PlayOneShot(jumpClip, jumpVolume, pitch);
         }
 
-        public void PlayLanding(float impactSpeed)
+        public void PlayLanding(float impactSpeed, SurfaceType surface = SurfaceType.Stone)
         {
-            if (landingSoftClip == null || landingHardClip == null) EnsureClipsLoaded();
+            EnsureClipsLoaded();
             bool isHard = Mathf.Abs(impactSpeed) > 10.5f;
             AudioClip clip = isHard ? landingHardClip : landingSoftClip;
             if (clip == null) clip = landingSoftClip ?? landingHardClip;
@@ -407,8 +601,36 @@ namespace TheLightenRoad.Audio
 
             float speedFactor = Mathf.Clamp01(Mathf.Abs(impactSpeed) / 14f);
             float vol = landingVolume * Mathf.Lerp(0.5f, 1.2f, speedFactor);
-            float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
+            float pitchMod = surface == SurfaceType.Ethereal ? 1.2f : (surface == SurfaceType.Wood ? 0.9f : 1.0f);
+            float pitch = pitchMod + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(clip, vol, pitch);
+
+            if (surface == SurfaceType.Ethereal && etherealWalkClips != null && etherealWalkClips.Length > 0)
+            {
+                PlayOneShot(etherealWalkClips[0], vol * 0.7f, 1.3f);
+            }
+        }
+
+        public void PlayFlareExtinguish()
+        {
+            if (flareExtinguishClip == null) EnsureClipsLoaded();
+            if (flareExtinguishClip == null) return;
+            PlayOneShot(flareExtinguishClip, flareVolume * 0.75f, 1.0f);
+        }
+
+        public void PlaySkidScuff(SurfaceType surface = SurfaceType.Stone)
+        {
+            if (skidScuffClip == null) EnsureClipsLoaded();
+            if (skidScuffClip == null) return;
+            float pitchMod = surface == SurfaceType.Metal ? 1.25f : (surface == SurfaceType.Wood ? 0.85f : 1.0f);
+            PlayOneShot(skidScuffClip, footstepsVolume * 0.8f, pitchMod);
+        }
+
+        public void PlayAirDraft()
+        {
+            if (airDraftClip == null) EnsureClipsLoaded();
+            if (airDraftClip == null) return;
+            PlayOneShot(airDraftClip, 0.45f, 1.0f);
         }
 
         public void PlayFlareIgnite()
@@ -496,6 +718,36 @@ namespace TheLightenRoad.Audio
             if (exhaustionSource != null && breath != null)
             {
                 exhaustionSource.clip = breath;
+            }
+        }
+
+        public void ConfigureSurfaceClips(
+            SurfaceType surface,
+            AudioClip[] walks,
+            AudioClip[] sprints)
+        {
+            switch (surface)
+            {
+                case SurfaceType.Wood:
+                    woodWalkClips = walks;
+                    woodSprintClips = sprints;
+                    break;
+                case SurfaceType.Metal:
+                    metalWalkClips = walks;
+                    metalSprintClips = sprints;
+                    break;
+                case SurfaceType.Ethereal:
+                    etherealWalkClips = walks;
+                    etherealSprintClips = sprints;
+                    break;
+                case SurfaceType.Water:
+                    waterWalkClips = walks;
+                    waterSprintClips = sprints;
+                    break;
+                default:
+                    walkClips = walks;
+                    sprintClips = sprints;
+                    break;
             }
         }
     }
