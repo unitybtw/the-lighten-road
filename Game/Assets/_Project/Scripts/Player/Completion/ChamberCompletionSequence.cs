@@ -73,6 +73,7 @@ namespace TheLightenRoad.Player.Completion
 
         private IEnumerator Play()
         {
+            string completedScene = SceneManager.GetActiveScene().name;
             Phase = "Reveal";
             Started.Invoke();
             if (sound.clip != null) sound.Play();
@@ -117,6 +118,11 @@ namespace TheLightenRoad.Player.Completion
             IsRunning = false;
             HasCompleted = true;
             Phase = "Complete";
+
+            if (completedScene.Contains("Furkan")) MenuPreferences.SetRealmCompleted(0, true);
+            else if (completedScene.Contains("Kemal")) MenuPreferences.SetRealmCompleted(1, true);
+            else if (completedScene.Contains("ArchiveTest")) MenuPreferences.SetRealmCompleted(2, true);
+
             loading = false;
             routine = null;
             if (active == this) active = null;
@@ -233,12 +239,50 @@ namespace TheLightenRoad.Player.Completion
             var diamond = Image("Ember seal", card.transform, Profile.LightColor);
             diamond.rectTransform.sizeDelta = new Vector2(5, 5); diamond.rectTransform.anchoredPosition = new Vector2(0, -32);
             diamond.rectTransform.localRotation = Quaternion.Euler(0, 0, 45);
+
+            bool? memento = CheckSceneMemento();
+            if (memento.HasValue)
+            {
+                if (memento.Value)
+                    Text("✦   ARCHIVE MEMENTO RECOVERED   ✦", card.transform, -102f, 13f, new Color(.98f, .86f, .52f, .95f), 3.5f);
+                else
+                    Text("◇   ARCHIVE MEMENTO UNFOUND   ◇", card.transform, -102f, 13f, new Color(.62f, .68f, .75f, .62f), 3.5f);
+            }
+
             // The curtain must draw above the caption to conceal the scene swap completely.
             curtain.transform.SetAsLastSibling();
             sound = presentation.AddComponent<AudioSource>();
             sound.playOnAwake = false; sound.spatialBlend = 0f;
             sound.clip = Profile.CompletionSound;
             sound.volume = Profile.SoundVolume * SoundEffectManager.Instance.MasterSFXVolume;
+        }
+
+        private static bool? CheckSceneMemento()
+        {
+            try
+            {
+                var behaviours = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+                foreach (var mb in behaviours)
+                {
+                    if (mb == null) continue;
+                    var type = mb.GetType();
+                    var field = type.GetField("HasMemento", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (field != null && field.FieldType == typeof(bool))
+                    {
+                        return (bool)field.GetValue(mb);
+                    }
+                    var prop = type.GetProperty("HasMemento", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    if (prop != null && prop.PropertyType == typeof(bool))
+                    {
+                        return (bool)prop.GetValue(mb, null);
+                    }
+                }
+            }
+            catch (System.Exception)
+            {
+                // Fallback gracefully
+            }
+            return null;
         }
 
         private void ApplyReveal(float t)

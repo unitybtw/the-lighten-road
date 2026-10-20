@@ -138,6 +138,7 @@ namespace TheLightenRoad.Frontend
         public bool IsLoading => loading;
         public string GameplayScene => gameplayScene;
         public int SelectedRealmIndex => selectedRealmIndex;
+        public TMP_Text ActiveRealmBadgeText => activeRealmBadgeText;
 
         private void Awake()
         {
@@ -356,28 +357,40 @@ namespace TheLightenRoad.Frontend
             if (activeRealmBadgeText != null && selectedRealmIndex >= 0 && selectedRealmIndex < AvailableRealms.Length)
             {
                 var r = AvailableRealms[selectedRealmIndex];
-                activeRealmBadgeText.text = $"—   {r.Number}  :  {r.Title}   —";
+                bool activeDone = MenuPreferences.IsRealmCompleted(selectedRealmIndex);
+                activeRealmBadgeText.text = activeDone
+                    ? $"—   {r.Number}  :  {r.Title}  [✦ CONQUERED]   —"
+                    : $"—   {r.Number}  :  {r.Title}   —";
             }
 
             for (int i = 0; i < realmRowAuras.Count; i++)
             {
                 bool isSelected = (i == selectedRealmIndex);
+                bool isCompleted = MenuPreferences.IsRealmCompleted(i);
                 if (realmRowAuras[i] != null)
                 {
                     realmRowAuras[i].color = isSelected
                         ? new Color(1.0f, 0.68f, 0.22f, 0.26f)
-                        : new Color(0.55f, 0.68f, 0.90f, 0.04f);
+                        : (isCompleted ? new Color(0.95f, 0.78f, 0.42f, 0.08f) : new Color(0.55f, 0.68f, 0.90f, 0.04f));
                 }
                 if (realmRowUnderlines[i] != null)
                 {
                     realmRowUnderlines[i].color = isSelected
                         ? new Color(1.0f, 0.74f, 0.28f, 0.85f)
-                        : new Color(0.55f, 0.68f, 0.90f, 0.16f);
+                        : (isCompleted ? new Color(0.95f, 0.78f, 0.42f, 0.35f) : new Color(0.55f, 0.68f, 0.90f, 0.16f));
                 }
                 if (realmStatusLabels[i] != null)
                 {
-                    realmStatusLabels[i].text = isSelected ? "[ ACTIVE REALM ]" : "SELECT REALM";
-                    realmStatusLabels[i].color = isSelected ? amberGold : mutedIndigo;
+                    if (isSelected)
+                    {
+                        realmStatusLabels[i].text = isCompleted ? "[ ACTIVE REALM • CONQUERED ✦ ]" : "[ ACTIVE REALM ]";
+                        realmStatusLabels[i].color = amberGold;
+                    }
+                    else
+                    {
+                        realmStatusLabels[i].text = isCompleted ? "[ CONQUERED ✦ ]" : "SELECT REALM";
+                        realmStatusLabels[i].color = isCompleted ? radiantIvory : mutedIndigo;
+                    }
                 }
             }
         }

@@ -85,7 +85,8 @@ public sealed class ArchiveTestChamberTests
                     .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
 
                 // Release Space between presses even if a short overhead collision ends a jump early.
-                if (motor.IsGrounded && jumpHold <= 0f && !spaceHeld && (obstacle || gapEdge))
+                bool isBlackoutCrate = position.x > 35.0f && position.x < 37.5f;
+                if (motor.IsGrounded && jumpHold <= 0f && !spaceHeld && (obstacle || (gapEdge && !isBlackoutCrate)))
                 {
                     jumpHold = gapEdge ? 0.55f : 0.35f;
                 }

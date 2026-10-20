@@ -27,15 +27,15 @@ namespace TheLightenRoad.Player
 
         [Header("Kinematics & Responsiveness")]
         [Tooltip("Acceleration rate when moving from rest or increasing speed on the ground.")]
-        [SerializeField, Min(10f)] private float groundAcceleration = 70f;
+        [SerializeField, Min(10f)] private float groundAcceleration = 120f;
         [Tooltip("Deceleration rate when releasing input on the ground.")]
-        [SerializeField, Min(10f)] private float groundDeceleration = 75f;
+        [SerializeField, Min(10f)] private float groundDeceleration = 90f;
         [Tooltip("Snappy braking rate when reversing direction (skid turn).")]
-        [SerializeField, Min(10f)] private float skidTurnDeceleration = 90f;
+        [SerializeField, Min(10f)] private float skidTurnDeceleration = 120f;
         [Tooltip("Airborne horizontal control acceleration.")]
-        [SerializeField, Min(10f)] private float airAcceleration = 45f;
+        [SerializeField, Min(10f)] private float airAcceleration = 80f;
         [Tooltip("Airborne horizontal drag when no input is held.")]
-        [SerializeField, Min(10f)] private float airDeceleration = 25f;
+        [SerializeField, Min(10f)] private float airDeceleration = 30f;
 
         [Header("Jump Physics & Apex Feel")]
         [Tooltip("Reduces gravity near jump apex to create weightless hang-time and precise landing control.")]
@@ -43,7 +43,7 @@ namespace TheLightenRoad.Player
         [SerializeField, Range(0.2f, 1f)] private float apexGravityMultiplier = 0.65f;
         [SerializeField, Range(0.5f, 3f)] private float apexVelocityThreshold = 1.4f;
         [Tooltip("Slightly firmer gravity when descending for snappy platforming.")]
-        [SerializeField, Range(1f, 2f)] private float fallGravityMultiplier = 1.15f;
+        [SerializeField, Range(1f, 2f)] private float fallGravityMultiplier = 1.0f;
         [Tooltip("Maximum downward fall speed to prevent disorienting plunges.")]
         [SerializeField] private float terminalFallSpeed = -16f;
 
@@ -414,20 +414,32 @@ namespace TheLightenRoad.Player
             Vector2 originLeft = new Vector2(bounds.min.x + 0.04f, bounds.max.y);
             Vector2 originRight = new Vector2(bounds.max.x - 0.04f, bounds.max.y);
 
-            RaycastHit2D hitCenter = Physics2D.Raycast(originCenter, Vector2.up, rayLength, groundLayers);
-            RaycastHit2D hitLeft = Physics2D.Raycast(originLeft, Vector2.up, rayLength, groundLayers);
-            RaycastHit2D hitRight = Physics2D.Raycast(originRight, Vector2.up, rayLength, groundLayers);
+            var hitCenter = GetSolidCeilingHit(originCenter, rayLength);
+            var hitLeft = GetSolidCeilingHit(originLeft, rayLength);
+            var hitRight = GetSolidCeilingHit(originRight, rayLength);
 
-            // If right edge hits but left and center are clear, nudge left around corner
-            if (hitRight.collider != null && hitLeft.collider == null && hitCenter.collider == null)
+            // If right edge hits solid ceiling but left and center are clear, nudge left around corner
+            if (hitRight != null && hitLeft == null && hitCenter == null)
             {
                 transform.position += Vector3.left * (cornerCorrectionDistance * 0.5f);
             }
-            // If left edge hits but right and center are clear, nudge right around corner
-            else if (hitLeft.collider != null && hitRight.collider == null && hitCenter.collider == null)
+            // If left edge hits solid ceiling but right and center are clear, nudge right around corner
+            else if (hitLeft != null && hitRight == null && hitCenter == null)
             {
                 transform.position += Vector3.right * (cornerCorrectionDistance * 0.5f);
             }
+        }
+
+        private Collider2D GetSolidCeilingHit(Vector2 origin, float length)
+        {
+            var hits = Physics2D.RaycastAll(origin, Vector2.up, length, groundLayers);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var col = hits[i].collider;
+                if (col != null && !col.isTrigger && col.gameObject != gameObject)
+                    return col;
+            }
+            return null;
         }
 
         private void OnDisable()

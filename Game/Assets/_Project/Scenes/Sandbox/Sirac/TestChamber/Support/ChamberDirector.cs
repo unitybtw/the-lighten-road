@@ -1,5 +1,6 @@
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
+using TheLightenRoad.Player.Completion;
 using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
@@ -16,6 +17,8 @@ namespace TheLightenRoad.Sirac.TestChamber
         [SerializeField] private GameObject pickupPrefab;
         [SerializeField] private Vector3 startPosition;
         [SerializeField] private TMP_FontAsset fontAsset;
+        [SerializeField] private bool triggerCompletionSequence = true;
+        [SerializeField] private ChamberCompletionSequence completionSequence;
 
         private Vector3[] pickupPositions;
         private ChamberMarker[] markers;
@@ -28,6 +31,12 @@ namespace TheLightenRoad.Sirac.TestChamber
         public PlayerRespawnController Player => player;
         public int CheckpointIndex => checkpointIndex;
         public bool IsComplete { get; private set; }
+        public ChamberCompletionSequence CompletionSequence => completionSequence;
+        public bool TriggerCompletionSequenceEnabled
+        {
+            get => triggerCompletionSequence;
+            set => triggerCompletionSequence = value;
+        }
 
         public void Configure(PlayerRespawnController target, Transform pickups, GameObject template, Vector3 start, TMP_FontAsset typography)
         {
@@ -72,12 +81,48 @@ namespace TheLightenRoad.Sirac.TestChamber
             {
                 IsComplete = true;
                 marker.SetActivated(true);
-                ShowNote("TEST ROUTE COMPLETE", "BACKSPACE to restart the route and restore all ember pickups.", 8f);
+                ShowNote("TEST ROUTE COMPLETE", "BACKSPACE to restart the route or return to the Grand Archive.", 8f);
+
+                if (triggerCompletionSequence && player != null)
+                {
+                    TriggerCompletion();
+                }
             }
             else
             {
                 marker.SetActivated(true);
                 ShowNote(marker.Title, marker.Hint);
+            }
+        }
+
+        public void TriggerCompletion()
+        {
+            if (completionSequence == null)
+            {
+                completionSequence = GetComponent<ChamberCompletionSequence>();
+                if (completionSequence == null)
+                {
+                    completionSequence = gameObject.AddComponent<ChamberCompletionSequence>();
+                    var profile = ScriptableObject.CreateInstance<ChamberCompletionProfile>();
+                    profile.Eyebrow = "CHAMBER CONQUERED";
+                    profile.Title = "ARCHIVE TEST CHAMBER";
+                    profile.Subtitle = "ALL PROTOCOL TESTS EXECUTED AND MASTERED";
+                    profile.Font = fontAsset;
+                    profile.LightColor = new Color(1f, 0.74f, 0.35f);
+                    profile.LightRadius = 12f;
+                    profile.LightIntensity = 1.4f;
+                    profile.RevealSeconds = 1.1f;
+                    profile.HoldSeconds = 1.3f;
+                    profile.FadeOutSeconds = 0.8f;
+                    profile.FadeInSeconds = 0.8f;
+                    completionSequence.Profile = profile;
+                    completionSequence.DestinationScene = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
+                }
+            }
+
+            if (!completionSequence.IsRunning && player != null)
+            {
+                completionSequence.TryBegin(player);
             }
         }
 

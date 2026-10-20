@@ -100,6 +100,14 @@ namespace TheLightenRoad.Frontend
             PlayerPrefs.SetInt(Prefix + "SelectedRealm", Mathf.Max(0, index));
         }
 
+        public static bool IsRealmCompleted(int index) => PlayerPrefs.GetInt(Prefix + "RealmCompleted." + index, 0) == 1;
+
+        public static void SetRealmCompleted(int index, bool completed = true)
+        {
+            PlayerPrefs.SetInt(Prefix + "RealmCompleted." + index, completed ? 1 : 0);
+            Save();
+        }
+
         public static void ResetToDefaults()
         {
             SetAudio(0.85f, 0.85f, 1.0f);
@@ -107,6 +115,10 @@ namespace TheLightenRoad.Frontend
             SetFullscreen(true);
             SetVSync(true);
             SetTargetFPS(60);
+            for (int i = 0; i < 5; i++)
+            {
+                PlayerPrefs.DeleteKey(Prefix + "RealmCompleted." + i);
+            }
             Save();
         }
 

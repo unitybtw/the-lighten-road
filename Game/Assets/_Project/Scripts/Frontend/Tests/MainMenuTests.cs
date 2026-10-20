@@ -131,5 +131,37 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(MenuPreferences.Effects, Is.EqualTo(0.80f).Within(0.01f));
             Assert.That(AudioListener.volume, Is.EqualTo(0.62f).Within(0.01f));
         }
+
+        [UnityTest]
+        public IEnumerator ConqueredRealms_DisplayBadgesAndRetainStatus()
+        {
+            yield return null;
+            _menu.SkipIntro();
+
+            MenuPreferences.SetRealmCompleted(0, true);
+            MenuPreferences.SetRealmCompleted(2, true);
+
+            _menu.ShowRealms();
+            _menu.SelectRealm(0);
+
+            var activeBadge = _menu.ActiveRealmBadgeText;
+            Assert.That(activeBadge, Is.Not.Null);
+            Assert.That(activeBadge.text, Does.Contain("[✦ CONQUERED]"));
+
+            var statusLabels = _menu.GetComponentsInChildren<TMPro.TMP_Text>();
+            bool foundConqueredActive = false;
+            bool foundConqueredInactive = false;
+            foreach (var label in statusLabels)
+            {
+                if (label.text.Contains("[ ACTIVE REALM • CONQUERED ✦ ]")) foundConqueredActive = true;
+                if (label.text.Contains("[ CONQUERED ✦ ]")) foundConqueredInactive = true;
+            }
+            Assert.That(foundConqueredActive, Is.True, "Active conquered realm must have active conquered label.");
+            Assert.That(foundConqueredInactive, Is.True, "Other conquered realm must show conquered label.");
+
+            MenuPreferences.ResetToDefaults();
+            Assert.That(MenuPreferences.IsRealmCompleted(0), Is.False);
+            Assert.That(MenuPreferences.IsRealmCompleted(2), Is.False);
+        }
     }
 }

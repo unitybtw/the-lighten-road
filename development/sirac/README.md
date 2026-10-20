@@ -554,3 +554,44 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `TheLightenRoad.Frontend.Tests`: **10/10 passed** (including `PauseMenuTests` and `MainMenuTests`).
      - `FurkanTutorialTests`: **8/8 passed** (including `PauseMenuCanPauseAndResumeInFurkanTutorial` and full chamber progression).
    - Exit code: 0, 0 compiler errors, 0 lingering processes.
+
+### Checkpoint 26: Light-Solidified Ethereal Platforms & Complete Campaign Game Loop Progression
+
+1. **Light-Solidified Ethereal / Shadow Platforms (`EtherealPlatform2D.cs`):**
+   - **Tri-State Dynamic Lifecycle:**
+     - `Dormant / Ethereal`: Faint pulsing cyan-tinted translucent glyph ghosting (`alpha ~0.18f`), passable without physical collision (`isTrigger = true` or `collider.enabled = false`).
+     - `Solidified / Active`: When illuminated by lantern light (configurable sensing distance: Dim `3.4m`, Flare `8.5m`), immediately crystallizes into a physical collision surface with crisp diamond edges, solid rune carvings, and a procedural crystalline chime (`AudioSource`).
+     - `Decaying Grace Period`: When the lantern steps out of range, the platform does not vanish instantly; it flickers with amber distress harmonics during a grace duration (`0.65s`), granting the player ample reaction time to leap or adjust footing before dissolving back into ethereal mist.
+   - **Visual & Audio Polish:**
+     - Procedural multi-sliced runic slate texture (`CreatePlatformSprite`) with carved glowing runes and edge bevels.
+     - Optional one-way platform effector support (`PlatformEffector2D`), allowing seamless upward jumping and downward pass-through.
+   - **Automated Verification:**
+     - `EtherealPlatformTests.cs`: 13 automated PlayMode tests covering light distance thresholds, Dim/Flare activation, decay timer buffering, collider state toggles, and audio trigger safeguards.
+
+2. **Full Campaign Game Loop & Scene Progression (`MainMenu` ➔ `FurkanTutorial` ➔ `ArchiveTestChamber` ➔ `MainMenu`):**
+   - **Persistent Realm Conquest Tracking (`MenuPreferences.cs`):**
+     - Implemented `IsRealmCompleted(int index)` and `SetRealmCompleted(int index, bool completed)` backed by `PlayerPrefs` (`TheLightenRoad_RealmCompleted_{index}`).
+     - Integrated with `ResetToDefaults()` to safely clear all campaign progress.
+   - **Chamber Victory & Memento Recognition (`ChamberCompletionSequence.cs`):**
+     - Dynamically captures active scene origin upon launch and automatically registers realm completion in `MenuPreferences`.
+     - Uses reflection (`CheckSceneMemento`) to detect chamber mementos (`HasMemento`) without introducing circular assembly references.
+     - Displays `✦ ARCHIVE MEMENTO RECOVERED ✦` or `◇ ARCHIVE MEMENTO UNFOUND ◇` directly on the ethereal completion card.
+   - **Test Chamber Victory Flow (`ChamberDirector.cs`):**
+     - Integrated `ChamberCompletionSequence` into the archive exit portal trigger, smoothly celebrating player triumph and returning them to `MainMenu.unity`.
+   - **Main Menu Realm Selection Polish (`MainMenuController.cs`):**
+     - Conquered chambers dynamically display radiant amber badges (`[ ACTIVE REALM • CONQUERED ✦ ]` / `[ CONQUERED ✦ ]`) with golden decorative underlines in the realm selector.
+
+3. **Kinematics & Level Traversal Calibration (`PlayerMotor2D.cs` & `ArchiveTestChamberTests.cs`):**
+   - Fixed ceiling corner correction (`PerformCornerCorrection`) to ignore trigger colliders (`!col.isTrigger`), preventing false nudges when jumping near hazard triggers or zone markers.
+   - Retuned jump fall gravity scale to `1.0f` to prevent steep downward trajectory truncating jump arcs across wide trench spans.
+   - Calibrated responsive acceleration (`groundAcceleration = 120f`, `airAcceleration = 80f`).
+   - Calibrated test bot navigation in `ArchiveTestChamberTests` to smoothly hop down elevated crate ledges without mistaking drops for bottomless trenches.
+
+4. **Automated Test Validation:**
+   - Unity 6000.3.2f1 Headless CLI execution (`-batchmode -nographics`):
+     - `TheLightenRoad.Glyphs.Tests`: **13/13 passed**
+     - `TheLightenRoad.Frontend.Tests`: **11/11 passed**
+     - `TheLightenRoad.Completion.Tests`: **5/5 passed**
+     - `TheLightenRoad.Sirac.TestChamber.Tests`: **3/3 passed** (including full deathless traversal)
+     - `FurkanTutorialTests`: **8/8 passed**
+   - Zero compilation errors, zero warnings, zero GUI bloat.
