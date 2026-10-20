@@ -83,12 +83,21 @@ namespace TheLightenRoad.Effects
 
         private void Awake()
         {
+            InitializeHierarchy();
+        }
+
+        public void InitializeHierarchy()
+        {
             SetupPivot();
             if (autoBuildVisuals)
             {
                 BuildVisualHierarchy();
             }
             EnsureTriggerCollider();
+            if (lampLight == null)
+            {
+                lampLight = GetComponentInChildren<Light2D>();
+            }
         }
 
         private void OnEnable()

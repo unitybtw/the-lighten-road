@@ -150,8 +150,8 @@ namespace TheLightenRoad.Sirac.Editor
                 "ARCHIVE ACCESS", "End of test route", 3.5f);
 
             foreach (var position in new[] {
-                new Vector3(9.5f, 2.6f), new Vector3(26.7f, 0.6f),
-                new Vector3(46.5f, 1.25f) })
+                new Vector3(-2.0f, 1.0f), new Vector3(9.5f, 2.6f),
+                new Vector3(26.7f, 0.6f) })
             {
                 var pickup = (GameObject)PrefabUtility.InstantiatePrefab(pickupPrefab, pickups);
                 pickup.transform.position = position;
