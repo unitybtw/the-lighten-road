@@ -148,6 +148,8 @@ public sealed class EmberPickupTests
             "Assets/_Project/Prefabs/EmberPickup.prefab");
 
         player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+        var motor = player.GetComponent<TheLightenRoad.Player.PlayerMotor2D>();
+        if (motor != null) motor.enabled = false;
         var rb = player.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -197,6 +199,8 @@ public sealed class EmberPickupTests
             "Assets/_Project/Prefabs/EmberPickup.prefab");
 
         player = Object.Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+        var motor = player.GetComponent<TheLightenRoad.Player.PlayerMotor2D>();
+        if (motor != null) motor.enabled = false;
         var rb = player.GetComponent<Rigidbody2D>();
         if (rb != null)
         {

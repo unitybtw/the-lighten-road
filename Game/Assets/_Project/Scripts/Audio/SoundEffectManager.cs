@@ -231,35 +231,35 @@ namespace TheLightenRoad.Audio
 
             if (woodWalkClips == null || woodWalkClips.Length == 0 || woodWalkClips[0] == null)
             {
-                woodWalkClips = GenerateStepBank("Wood", SurfaceType.Wood, false);
+                woodWalkClips = LoadSurfaceBank("Wood", "footstep_wood_walk", SurfaceType.Wood, false);
             }
             if (woodSprintClips == null || woodSprintClips.Length == 0 || woodSprintClips[0] == null)
             {
-                woodSprintClips = GenerateStepBank("Wood", SurfaceType.Wood, true);
+                woodSprintClips = LoadSurfaceBank("Wood", "footstep_wood_sprint", SurfaceType.Wood, true);
             }
             if (metalWalkClips == null || metalWalkClips.Length == 0 || metalWalkClips[0] == null)
             {
-                metalWalkClips = GenerateStepBank("Metal", SurfaceType.Metal, false);
+                metalWalkClips = LoadSurfaceBank("Metal", "footstep_metal_walk", SurfaceType.Metal, false);
             }
             if (metalSprintClips == null || metalSprintClips.Length == 0 || metalSprintClips[0] == null)
             {
-                metalSprintClips = GenerateStepBank("Metal", SurfaceType.Metal, true);
+                metalSprintClips = LoadSurfaceBank("Metal", "footstep_metal_sprint", SurfaceType.Metal, true);
             }
             if (etherealWalkClips == null || etherealWalkClips.Length == 0 || etherealWalkClips[0] == null)
             {
-                etherealWalkClips = GenerateStepBank("Ethereal", SurfaceType.Ethereal, false);
+                etherealWalkClips = LoadSurfaceBank("Ethereal", "footstep_ethereal_walk", SurfaceType.Ethereal, false);
             }
             if (etherealSprintClips == null || etherealSprintClips.Length == 0 || etherealSprintClips[0] == null)
             {
-                etherealSprintClips = GenerateStepBank("Ethereal", SurfaceType.Ethereal, true);
+                etherealSprintClips = LoadSurfaceBank("Ethereal", "footstep_ethereal_sprint", SurfaceType.Ethereal, true);
             }
             if (waterWalkClips == null || waterWalkClips.Length == 0 || waterWalkClips[0] == null)
             {
-                waterWalkClips = GenerateStepBank("Water", SurfaceType.Water, false);
+                waterWalkClips = LoadSurfaceBank("Water", "footstep_water_walk", SurfaceType.Water, false);
             }
             if (waterSprintClips == null || waterSprintClips.Length == 0 || waterSprintClips[0] == null)
             {
-                waterSprintClips = GenerateStepBank("Water", SurfaceType.Water, true);
+                waterSprintClips = LoadSurfaceBank("Water", "footstep_water_sprint", SurfaceType.Water, true);
             }
             if (flareExtinguishClip == null)
             {
@@ -473,6 +473,29 @@ namespace TheLightenRoad.Audio
             }
             clip.SetData(data, 0);
             return clip;
+        }
+
+        private static AudioClip[] LoadSurfaceBank(string folder, string filePrefix, SurfaceType surface, bool isSprint)
+        {
+            var loaded = new AudioClip[4];
+            bool anyMissing = false;
+            for (int i = 0; i < 4; i++)
+            {
+                string path = $"Audio/SFX/Surfaces/{folder}/{filePrefix}_{i + 1:D2}";
+                loaded[i] = Resources.Load<AudioClip>(path);
+                if (loaded[i] == null)
+                {
+                    anyMissing = true;
+                }
+            }
+
+            if (anyMissing)
+            {
+                // Fallback to procedural generation if resources not loaded (e.g. headless unit tests without asset database)
+                return GenerateStepBank(folder, surface, isSprint);
+            }
+
+            return loaded;
         }
 
         private static AudioClip[] GenerateStepBank(string prefix, SurfaceType surface, bool isSprint)

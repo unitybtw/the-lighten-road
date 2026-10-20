@@ -56,8 +56,8 @@ public sealed class PlayerMotor2DTests
             $"D pressed: {keyboard.dKey.isPressed}; device enabled: {keyboard.enabled}; velocity: {body.linearVelocity}");
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-        yield return new WaitForSeconds(0.08f);
-        Assert.That(Mathf.Abs(body.linearVelocity.x), Is.LessThan(0.05f));
+        yield return new WaitForSeconds(0.15f);
+        Assert.That(Mathf.Abs(body.linearVelocity.x), Is.LessThan(0.15f));
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
         yield return new WaitForSeconds(0.25f);

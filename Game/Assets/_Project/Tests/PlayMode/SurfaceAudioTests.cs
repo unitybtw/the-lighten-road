@@ -40,12 +40,22 @@ namespace TheLightenRoad.Tests.PlayMode
         {
             Assert.That(sfxManager.WoodWalkClips, Is.Not.Null);
             Assert.That(sfxManager.WoodWalkClips.Length, Is.GreaterThan(0));
+            Assert.That(sfxManager.WoodWalkClips[0].name, Is.EqualTo("footstep_wood_walk_01"));
+
             Assert.That(sfxManager.MetalWalkClips, Is.Not.Null);
             Assert.That(sfxManager.MetalWalkClips.Length, Is.GreaterThan(0));
+            Assert.That(sfxManager.MetalWalkClips[0].name, Is.EqualTo("footstep_metal_walk_01"));
+
             Assert.That(sfxManager.EtherealWalkClips, Is.Not.Null);
             Assert.That(sfxManager.EtherealWalkClips.Length, Is.GreaterThan(0));
+            Assert.That(sfxManager.EtherealWalkClips[0].name, Is.EqualTo("footstep_ethereal_walk_01"));
+
             Assert.That(sfxManager.WaterWalkClips, Is.Not.Null);
             Assert.That(sfxManager.WaterWalkClips.Length, Is.GreaterThan(0));
+            Assert.That(sfxManager.WaterWalkClips[0].name, Is.EqualTo("footstep_water_walk_01"));
+
+            Assert.That(sfxManager.EmberPickupClip, Is.Not.Null);
+            Assert.That(sfxManager.EmberPickupClip.name, Is.EqualTo("ember_pickup"));
 
             Assert.That(sfxManager.FlareExtinguishClip, Is.Not.Null);
             Assert.That(sfxManager.SkidScuffClip, Is.Not.Null);
