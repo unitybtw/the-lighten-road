@@ -65,6 +65,14 @@ namespace TheLightenRoad.Frontend
         private Button settingsBackButton;
         private Button controlsBackButton;
 
+        private RectTransform modalRect;
+        private RectTransform titleGlowRect;
+        private CanvasGroup mainPanelGroup;
+        private CanvasGroup settingsPanelGroup;
+        private CanvasGroup controlsPanelGroup;
+        private Coroutine transitionRoutine;
+        private Coroutine subViewRoutine;
+
         private Sprite filigreeSprite;
         private Sprite softRadialSprite;
 
@@ -150,6 +158,16 @@ namespace TheLightenRoad.Frontend
         private void OnDestroy()
         {
             Time.timeScale = 1f;
+            if (transitionRoutine != null)
+            {
+                StopCoroutine(transitionRoutine);
+                transitionRoutine = null;
+            }
+            if (subViewRoutine != null)
+            {
+                StopCoroutine(subViewRoutine);
+                subViewRoutine = null;
+            }
             if (IsPaused)
             {
                 Resume();
@@ -220,15 +238,29 @@ namespace TheLightenRoad.Frontend
             UpdateChamberInfo();
             ShowMainView();
 
+            if (transitionRoutine != null)
+            {
+                StopCoroutine(transitionRoutine);
+                transitionRoutine = null;
+            }
+
             if (canvasGroup != null)
             {
-                canvasGroup.alpha = 1f;
                 canvasGroup.interactable = true;
                 canvasGroup.blocksRaycasts = true;
             }
 
             PlaySound(pauseOpenSound, 520f, 392f);
             OnPauseToggled.Invoke(true);
+
+            if (isActiveAndEnabled)
+            {
+                transitionRoutine = StartCoroutine(AnimateOpenRoutine());
+            }
+            else
+            {
+                SetOpenVisualState(1f);
+            }
 
             if (EventSystem.current != null && resumeButton != null)
             {
@@ -247,13 +279,27 @@ namespace TheLightenRoad.Frontend
             currentView = "none";
             if (canvasGroup != null)
             {
-                canvasGroup.alpha = 0f;
                 canvasGroup.interactable = false;
                 canvasGroup.blocksRaycasts = false;
             }
 
             PlaySound(pauseCloseSound, 392f, 520f);
             OnPauseToggled.Invoke(false);
+
+            if (transitionRoutine != null)
+            {
+                StopCoroutine(transitionRoutine);
+                transitionRoutine = null;
+            }
+
+            if (isActiveAndEnabled)
+            {
+                transitionRoutine = StartCoroutine(AnimateCloseRoutine());
+            }
+            else
+            {
+                SetClosedVisualState();
+            }
         }
 
         public void ShowMainView()
@@ -263,6 +309,7 @@ namespace TheLightenRoad.Frontend
             if (settingsPanel != null) settingsPanel.SetActive(false);
             if (controlsPanel != null) controlsPanel.SetActive(false);
             UpdateChamberInfo();
+            AnimateSubView(mainPanelGroup);
 
             if (EventSystem.current != null && resumeButton != null)
             {
@@ -277,6 +324,7 @@ namespace TheLightenRoad.Frontend
             if (settingsPanel != null) settingsPanel.SetActive(true);
             if (controlsPanel != null) controlsPanel.SetActive(false);
             SyncSettingsValues();
+            AnimateSubView(settingsPanelGroup);
 
             if (EventSystem.current != null && masterSlider != null)
             {
@@ -290,6 +338,7 @@ namespace TheLightenRoad.Frontend
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(false);
             if (controlsPanel != null) controlsPanel.SetActive(true);
+            AnimateSubView(controlsPanelGroup);
 
             if (EventSystem.current != null && controlsBackButton != null)
             {
@@ -548,6 +597,7 @@ namespace TheLightenRoad.Frontend
             mRect.pivot = new Vector2(0.5f, 0.5f);
             mRect.sizeDelta = new Vector2(880f, 820f);
             mRect.anchoredPosition = Vector2.zero;
+            modalRect = mRect;
 
             // Soft Radial Lantern Glow behind Title
             var titleGlow = CreateAnchoredRect("Title Soft Lantern Glow", modal.transform, new Vector2(740f, 220f), new Vector2(0.5f, 0.5f), new Vector2(0f, 305f));
@@ -555,6 +605,7 @@ namespace TheLightenRoad.Frontend
             glowImg.sprite = softRadialSprite;
             glowImg.color = new Color(1.0f, 0.64f, 0.18f, 0.16f);
             glowImg.raycastTarget = false;
+            titleGlowRect = titleGlow;
 
             // Top Ornate Filigree Crest
             var topCrest = CreateAnchoredRect("Top Ornate Crest", modal.transform, new Vector2(460f, 36f), new Vector2(0.5f, 0.5f), new Vector2(0f, 375f));
@@ -601,8 +652,9 @@ namespace TheLightenRoad.Frontend
 
         private void BuildMainPanel(Transform parent)
         {
-            mainPanel = new GameObject("MainPanel", typeof(RectTransform));
+            mainPanel = new GameObject("MainPanel", typeof(RectTransform), typeof(CanvasGroup));
             mainPanel.transform.SetParent(parent, false);
+            mainPanelGroup = mainPanel.GetComponent<CanvasGroup>();
             var r = mainPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.sizeDelta = new Vector2(640f, 420f);
@@ -620,8 +672,9 @@ namespace TheLightenRoad.Frontend
 
         private void BuildSettingsPanel(Transform parent)
         {
-            settingsPanel = new GameObject("SettingsPanel", typeof(RectTransform));
+            settingsPanel = new GameObject("SettingsPanel", typeof(RectTransform), typeof(CanvasGroup));
             settingsPanel.transform.SetParent(parent, false);
+            settingsPanelGroup = settingsPanel.GetComponent<CanvasGroup>();
             var r = settingsPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.sizeDelta = new Vector2(760f, 440f);
@@ -675,8 +728,9 @@ namespace TheLightenRoad.Frontend
 
         private void BuildControlsPanel(Transform parent)
         {
-            controlsPanel = new GameObject("ControlsPanel", typeof(RectTransform));
+            controlsPanel = new GameObject("ControlsPanel", typeof(RectTransform), typeof(CanvasGroup));
             controlsPanel.transform.SetParent(parent, false);
+            controlsPanelGroup = controlsPanel.GetComponent<CanvasGroup>();
             var r = controlsPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.sizeDelta = new Vector2(760f, 440f);
@@ -1102,6 +1156,133 @@ namespace TheLightenRoad.Frontend
             var clip = AudioClip.Create("PauseChime", samples, 1, sampleRate, false);
             clip.SetData(data, 0);
             return clip;
+        }
+
+        private void AnimateSubView(CanvasGroup targetGroup)
+        {
+            if (targetGroup == null) return;
+            if (subViewRoutine != null)
+            {
+                StopCoroutine(subViewRoutine);
+                subViewRoutine = null;
+            }
+            if (isActiveAndEnabled)
+            {
+                subViewRoutine = StartCoroutine(SubViewFadeRoutine(targetGroup));
+            }
+            else
+            {
+                targetGroup.alpha = 1f;
+            }
+        }
+
+        private IEnumerator SubViewFadeRoutine(CanvasGroup group)
+        {
+            float duration = MenuPreferences.ReducedMotion ? 0.04f : 0.12f;
+            float elapsed = 0f;
+            group.alpha = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                group.alpha = EaseOutCubic(t);
+                yield return null;
+            }
+
+            group.alpha = 1f;
+            subViewRoutine = null;
+        }
+
+        private IEnumerator AnimateOpenRoutine()
+        {
+            float duration = MenuPreferences.ReducedMotion ? 0.05f : 0.22f;
+            float elapsed = 0f;
+
+            SetOpenVisualState(0f);
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                SetOpenVisualState(t);
+                yield return null;
+            }
+
+            SetOpenVisualState(1f);
+            transitionRoutine = null;
+        }
+
+        private IEnumerator AnimateCloseRoutine()
+        {
+            float duration = MenuPreferences.ReducedMotion ? 0.04f : 0.14f;
+            float elapsed = 0f;
+            float startAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float smooth = EaseInCubic(t);
+
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, smooth);
+                }
+                if (modalRect != null)
+                {
+                    float scale = Mathf.Lerp(1.0f, 0.95f, smooth);
+                    modalRect.localScale = new Vector3(scale, scale, 1f);
+                    modalRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(0f, -14f, smooth));
+                }
+                yield return null;
+            }
+
+            SetClosedVisualState();
+            transitionRoutine = null;
+        }
+
+        private void SetOpenVisualState(float t)
+        {
+            float smooth = EaseOutCubic(t);
+            if (canvasGroup != null) canvasGroup.alpha = smooth;
+            if (modalRect != null)
+            {
+                float scale = Mathf.Lerp(0.92f, 1.0f, smooth);
+                modalRect.localScale = new Vector3(scale, scale, 1f);
+                modalRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-24f, 0f, smooth));
+            }
+            if (titleGlowRect != null)
+            {
+                float glowScale = Mathf.Lerp(0.70f, 1.0f, smooth);
+                titleGlowRect.localScale = new Vector3(glowScale, glowScale, 1f);
+            }
+        }
+
+        private void SetClosedVisualState()
+        {
+            if (canvasGroup != null) canvasGroup.alpha = 0f;
+            if (modalRect != null)
+            {
+                modalRect.localScale = Vector3.one;
+                modalRect.anchoredPosition = Vector2.zero;
+            }
+            if (titleGlowRect != null)
+            {
+                titleGlowRect.localScale = Vector3.one;
+            }
+        }
+
+        private static float EaseOutCubic(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return 1f - Mathf.Pow(1f - t, 3f);
+        }
+
+        private static float EaseInCubic(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t * t * t;
         }
     }
 }

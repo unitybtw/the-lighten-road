@@ -534,3 +534,23 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `TheLightenRoad.Frontend.PlayModeTests`: **10/10 passed** (job `debec307e077478f8536bcb0d35c8b78`).
      - `TheLightenRoad.Sirac.FurkanPrototype.Tests`: **8/8 passed** (job `a7ff3da09f1746ab9d3968908fd9c4f6`).
    - Clean console, zero errors, zero warnings, zero leaks on unpause/destroy.
+
+### Checkpoint 25: Smooth Pause Menu Transition Animation & Headless Unity CLI Workflow
+
+1. **Silky Smooth Unscaled Pause Animation (`PauseMenuController.cs`):**
+   - Eliminated instantaneous snapping ("tak diye gelme") when pressing ESC / Gamepad Start.
+   - Designed unscaled cubic easing transitions (`EaseOutCubic`, `EaseInCubic`) that run fluidly while `Time.timeScale == 0f`:
+     - **Open Transition (~0.22s):** Fullscreen veil and canvas alpha fade in (`0 -> 1`), central modal smoothly glides upward (`-24px -> 0px`), scales from `0.92x -> 1.0x`, and radial lantern glow aura expands from `0.70x -> 1.0x`.
+     - **Close Transition (~0.14s):** Graceful dissipation (`1.0x -> 0.95x`, downward settle `0px -> -14px`, alpha `1 -> 0`), immediately restoring inputs and unscaling time so traversal feels instant and responsive.
+     - **Sub-View Crossfade (~0.12s):** Smooth alpha fade on `MainPanel`, `SettingsPanel`, and `ControlsPanel` (`CanvasGroup`) when navigating between main pause, sanctuary settings, and controls guide.
+     - **Accessibility:** Full `MenuPreferences.ReducedMotion` support with ultra-fast (`0.04s - 0.05s`) calming transitions without spatial displacement.
+
+2. **Headless Unity CLI Architecture (`-batchmode -nographics`):**
+   - Transitioned testing and validation exclusively to headless command-line interface (`/Applications/Unity/Hub/Editor/6000.3.2f1/Unity.app/Contents/MacOS/Unity -batchmode -nographics`).
+   - Zero open editor GUI windows or background Unity app instances on the host system, keeping CPU, GPU, and RAM usage minimal.
+
+3. **Validation & Automated Verification:**
+   - Unity CLI PlayMode batch test execution:
+     - `TheLightenRoad.Frontend.Tests`: **10/10 passed** (including `PauseMenuTests` and `MainMenuTests`).
+     - `FurkanTutorialTests`: **8/8 passed** (including `PauseMenuCanPauseAndResumeInFurkanTutorial` and full chamber progression).
+   - Exit code: 0, 0 compiler errors, 0 lingering processes.
