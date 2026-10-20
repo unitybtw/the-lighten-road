@@ -110,6 +110,10 @@ namespace TheLightenRoad.Audio
         [SerializeField] private AudioClip skidScuffClip;
         [SerializeField] private AudioClip airDraftClip;
 
+        [Header("Environment Props SFX")]
+        [SerializeField] private AudioClip[] chainClinkClips;
+        [SerializeField, Range(0f, 1f)] private float chainClinkVolume = 0.65f;
+
         [Header("Volume Balances")]
         [SerializeField, Range(0f, 1f)] private float masterSFXVolume = 1.0f;
         [SerializeField, Range(0f, 1f)] private float footstepsVolume = 0.75f;
@@ -154,6 +158,7 @@ namespace TheLightenRoad.Audio
         public AudioClip[] WaterSprintClips => waterSprintClips;
         public AudioClip SkidScuffClip => skidScuffClip;
         public AudioClip AirDraftClip => airDraftClip;
+        public AudioClip[] ChainClinkClips => chainClinkClips;
 
         private void Awake()
         {
@@ -290,6 +295,23 @@ namespace TheLightenRoad.Audio
                                  + Mathf.Sin(2f * Mathf.PI * 65f * t) * 0.6f;
                     return breeze * env;
                 });
+            }
+            if (chainClinkClips == null || chainClinkClips.Length == 0 || chainClinkClips[0] == null)
+            {
+                var c1 = Resources.Load<AudioClip>("Audio/SFX/Environment/chain_clink_01");
+                var c2 = Resources.Load<AudioClip>("Audio/SFX/Environment/chain_clink_02");
+                if (c1 != null && c2 != null)
+                {
+                    chainClinkClips = new[] { c1, c2 };
+                }
+                else
+                {
+                    chainClinkClips = new[]
+                    {
+                        CreateProceduralClip("Chain_Clink_1", 0.15f, t => Mathf.Sin(2f * Mathf.PI * 1800f * t) * Mathf.Exp(-35f * t) * 0.4f),
+                        CreateProceduralClip("Chain_Clink_2", 0.18f, t => Mathf.Sin(2f * Mathf.PI * 2200f * t) * Mathf.Exp(-40f * t) * 0.4f)
+                    };
+                }
             }
         }
 
@@ -676,6 +698,20 @@ namespace TheLightenRoad.Audio
             if (emberPickupClip == null) EnsureClipsLoaded();
             if (emberPickupClip == null) return;
             PlayOneShot(emberPickupClip, emberPickupVolume, 1.0f);
+        }
+
+        public void PlayChainClink(float volumeScale = 1.0f)
+        {
+            if (chainClinkClips == null || chainClinkClips.Length == 0) EnsureClipsLoaded();
+            if (chainClinkClips == null || chainClinkClips.Length == 0) return;
+
+            int idx = Random.Range(0, chainClinkClips.Length);
+            var clip = chainClinkClips[idx];
+            if (clip != null)
+            {
+                float pitch = 1.0f + Random.Range(-pitchRandomRange, pitchRandomRange);
+                PlayOneShot(clip, chainClinkVolume * Mathf.Clamp01(volumeScale), pitch);
+            }
         }
 
         private void HandleEmberPickupCollected()

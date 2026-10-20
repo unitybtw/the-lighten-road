@@ -71,6 +71,8 @@ namespace TheLightenRoad.Lantern
 
         /// <summary>Raised when the lantern switches between Dim (false) and Flare (true).</summary>
         public event System.Action<bool> FlareChanged;
+        /// <summary>Raised globally when any lantern switches between Dim and Flare.</summary>
+        public static event System.Action<LanternController, bool> AnyFlareChanged;
         /// <summary>Raised once when a spent ember finishes its burn animation.</summary>
         public event System.Action EmberBroken;
 
@@ -194,6 +196,7 @@ namespace TheLightenRoad.Lantern
             }
             IsFlared = flared;
             FlareChanged?.Invoke(IsFlared);
+            AnyFlareChanged?.Invoke(this, IsFlared);
             ApplyLight();
             return true;
         }
@@ -207,7 +210,11 @@ namespace TheLightenRoad.Lantern
             burnProgress = 1f;
             bool changed = IsFlared;
             IsFlared = false;
-            if (changed) FlareChanged?.Invoke(false);
+            if (changed)
+            {
+                FlareChanged?.Invoke(false);
+                AnyFlareChanged?.Invoke(this, false);
+            }
             if (broken) EmberBroken?.Invoke();
         }
 
@@ -217,7 +224,11 @@ namespace TheLightenRoad.Lantern
             bool changed = IsFlared;
             IsFlared = activeScout = releasing = false;
             flareTimer = flareBlend = burnProgress = 0f;
-            if (changed) FlareChanged?.Invoke(false);
+            if (changed)
+            {
+                FlareChanged?.Invoke(false);
+                AnyFlareChanged?.Invoke(this, false);
+            }
             ApplyLight();
         }
 

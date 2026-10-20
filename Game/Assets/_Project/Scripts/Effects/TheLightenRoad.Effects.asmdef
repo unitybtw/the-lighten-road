@@ -4,6 +4,7 @@
   "references": [
     "TheLightenRoad.Player",
     "TheLightenRoad.Lantern",
+    "TheLightenRoad.Audio",
     "Unity.RenderPipelines.Universal.Runtime",
     "Unity.RenderPipelines.Universal.2D.Runtime"
   ]
