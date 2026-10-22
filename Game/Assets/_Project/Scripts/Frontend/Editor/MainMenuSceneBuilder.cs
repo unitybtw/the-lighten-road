@@ -78,6 +78,24 @@ namespace TheLightenRoad.Frontend.Editor
                 serialized.FindProperty("font").objectReferenceValue = font;
             }
 
+            var charSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Characters/Character_Light_Stand.png");
+            if (charSprite != null)
+            {
+                serialized.FindProperty("characterSprite").objectReferenceValue = charSprite;
+            }
+
+            var lampSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Sprites/HangingCageLamp.png");
+            if (lampSprite != null)
+            {
+                serialized.FindProperty("hangingLampSprite").objectReferenceValue = lampSprite;
+            }
+
+            var chainSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Sprites/ChainLink.png");
+            if (chainSprite != null)
+            {
+                serialized.FindProperty("chainLinkSprite").objectReferenceValue = chainSprite;
+            }
+
             serialized.FindProperty("gameplayScene").stringValue = MainMenuController.DefaultGameplayScene;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
