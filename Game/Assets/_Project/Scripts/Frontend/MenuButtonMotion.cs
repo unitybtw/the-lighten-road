@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace TheLightenRoad.Frontend
 {
     /// <summary>
-    /// Frameless Hollow-Knight / Ori style menu item motion controller.
-    /// Animates symmetrical glowing lantern-wing flourishes, soft radial ember aura,
-    /// letter-spacing expansion, and triggers live stage lantern surges & energy streams on focus.
+    /// Frameless menu item motion controller.
+    /// Supports both left-aligned vertical menu items with an animated pixel-art Flame Cursor
+    /// and lantern glow, as well as centered sub-view action buttons.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MenuButtonMotion : MonoBehaviour,
@@ -24,11 +24,15 @@ namespace TheLightenRoad.Frontend
         public TMP_Text Text;
         public TMP_Text SubtitleText;
         public Image SoftGlow;
+        public RectTransform FlameCursorRect;
+        public Image FlameCursorImage;
+        public Image FlameCursorHalo;
         public RectTransform LeftWing;
         public RectTransform RightWing;
         public CanvasGroup WingGroup;
         public Image UnderlineFiligree;
         public bool IsPrimaryAction;
+        public bool LeftAlignedItem;
         public float BaseWingOffset = 145f;
         public Vector2 StageFocusCanvasPosition;
         public Vector2 StageCameraPanOffset;
@@ -39,16 +43,38 @@ namespace TheLightenRoad.Frontend
         private bool pressed;
         private float focusBlend;
         private float pressBlend;
+        private Vector2 baseTextAnchoredPos;
+        private Vector2 baseSubAnchoredPos;
+        private Vector2 baseFlameAnchoredPos;
+        private bool capturedBasePositions;
 
-        private static readonly Color IdleIvory = new Color32(226, 220, 206, 225);
-        private static readonly Color IdlePrimaryGold = new Color32(255, 206, 120, 255);
-        private static readonly Color FocusedRadiantIvory = new Color32(255, 248, 232, 255);
-        private static readonly Color FocusedAmberGold = new Color32(255, 186, 72, 255);
-        private static readonly Color IdleSubtle = new Color32(142, 152, 174, 175);
-        private static readonly Color FocusedSubtle = new Color32(236, 204, 148, 240);
+        private static readonly Color IdleIvory = new Color32(204, 214, 228, 220);
+        private static readonly Color IdlePrimaryGold = new Color32(245, 185, 85, 245);
+        private static readonly Color FocusedRadiantIvory = new Color32(255, 255, 255, 255);
+        private static readonly Color FocusedAmberGold = new Color32(255, 204, 96, 255);
+        private static readonly Color IdleSubtle = new Color32(128, 138, 156, 175);
+        private static readonly Color FocusedSubtle = new Color32(215, 225, 240, 230);
+
+        public void InitializeBasePositions(Vector2 textPos, Vector2 subPos, Vector2 flamePos)
+        {
+            baseTextAnchoredPos = textPos;
+            baseSubAnchoredPos = subPos;
+            baseFlameAnchoredPos = flamePos;
+            capturedBasePositions = true;
+        }
+
+        private void CaptureBasePositionsIfNeeded()
+        {
+            if (capturedBasePositions) return;
+            capturedBasePositions = true;
+            if (Text != null) baseTextAnchoredPos = Text.rectTransform.anchoredPosition;
+            if (SubtitleText != null) baseSubAnchoredPos = SubtitleText.rectTransform.anchoredPosition;
+            if (FlameCursorRect != null) baseFlameAnchoredPos = FlameCursorRect.anchoredPosition;
+        }
 
         private void OnEnable()
         {
+            CaptureBasePositionsIfNeeded();
             hovered = false;
             selected = false;
             pressed = false;
@@ -59,6 +85,7 @@ namespace TheLightenRoad.Frontend
 
         private void Update()
         {
+            CaptureBasePositionsIfNeeded();
             bool active = hovered || selected;
             float dt = Time.unscaledDeltaTime;
             float speed = MenuPreferences.ReducedMotion ? 25f : 11f;
@@ -72,57 +99,85 @@ namespace TheLightenRoad.Frontend
         private void ApplyVisuals(bool instant)
         {
             float smooth = SmoothStep(focusBlend);
-            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.90f + 0.10f * Mathf.Sin(Time.unscaledTime * 4.2f));
+            float t = Time.unscaledTime;
+            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.90f + 0.10f * Mathf.Sin(t * 4.5f));
 
-            // 1. Typography scale, glow color & letter spacing expansion
+            // 1. Typography scale, horizontal slide, lantern glow color & letter spacing
             if (Text != null)
             {
                 Color baseCol = IsPrimaryAction ? IdlePrimaryGold : IdleIvory;
                 Color targetCol = IsPrimaryAction ? FocusedAmberGold : FocusedRadiantIvory;
                 Text.color = Color.Lerp(baseCol, targetCol, smooth);
-                Text.characterSpacing = Mathf.Lerp(IsPrimaryAction ? 6.5f : 5.0f, IsPrimaryAction ? 10.5f : 8.5f, smooth);
+                Text.characterSpacing = Mathf.Lerp(IsPrimaryAction ? 6.0f : 4.5f, IsPrimaryAction ? 9.5f : 7.5f, smooth);
 
-                float scale = Mathf.Lerp(1f, 1.06f, smooth) - pressBlend * 0.03f;
+                float scale = Mathf.Lerp(1f, 1.045f, smooth) - pressBlend * 0.025f;
                 Text.rectTransform.localScale = new Vector3(scale, scale, 1f);
+
+                if (LeftAlignedItem)
+                {
+                    float slideX = MenuPreferences.ReducedMotion ? 0f : Mathf.Lerp(0f, 12f, smooth);
+                    Text.rectTransform.anchoredPosition = baseTextAnchoredPos + new Vector2(slideX, 0f);
+                }
             }
 
             if (SubtitleText != null)
             {
                 SubtitleText.color = Color.Lerp(IdleSubtle, FocusedSubtle, smooth);
+                if (LeftAlignedItem)
+                {
+                    float slideX = MenuPreferences.ReducedMotion ? 0f : Mathf.Lerp(0f, 12f, smooth);
+                    SubtitleText.rectTransform.anchoredPosition = baseSubAnchoredPos + new Vector2(slideX, 0f);
+                }
             }
 
-            // 2. Frameless Soft Radial Lantern Aura behind text
+            // 2. Animated Pixel-Art Flame Cursor on Left of Active Item
+            if (FlameCursorRect != null)
+            {
+                float idleVisibility = IsPrimaryAction ? 0.35f : 0f;
+                float cursorVis = Mathf.Lerp(idleVisibility, 1f, smooth);
+                float bobY = MenuPreferences.ReducedMotion ? 0f : Mathf.Sin(t * 5.2f) * 3.0f * smooth;
+                float flickerY = MenuPreferences.ReducedMotion ? 1f : (0.92f + 0.14f * Mathf.Sin(t * 9.5f));
+                float flickerX = MenuPreferences.ReducedMotion ? 1f : (0.94f + 0.10f * Mathf.Cos(t * 7.1f));
+
+                FlameCursorRect.anchoredPosition = baseFlameAnchoredPos + new Vector2(Mathf.Lerp(-6f, 2f, smooth), bobY);
+                float baseScale = Mathf.Lerp(IsPrimaryAction ? 0.78f : 0.35f, 1.12f, smooth);
+                FlameCursorRect.localScale = new Vector3(baseScale * flickerX, baseScale * flickerY, 1f);
+
+                if (FlameCursorImage != null)
+                {
+                    Color flameCol = Color.Lerp(new Color(1.0f, 0.72f, 0.28f, cursorVis), new Color(1.0f, 0.94f, 0.74f, cursorVis), smooth);
+                    FlameCursorImage.color = flameCol;
+                }
+                if (FlameCursorHalo != null)
+                {
+                    FlameCursorHalo.color = new Color(1.0f, 0.66f, 0.18f, cursorVis * 0.55f * pulse);
+                }
+            }
+
+            // 3. Soft Radial Lantern Aura behind text
             if (SoftGlow != null)
             {
                 float baseAlpha = IsPrimaryAction ? 0.14f : 0f;
-                float targetAlpha = (IsPrimaryAction ? 0.38f : 0.28f) * pulse;
+                float targetAlpha = (IsPrimaryAction ? 0.40f : 0.30f) * pulse;
                 SoftGlow.color = new Color(1.0f, 0.66f, 0.20f, Mathf.Lerp(baseAlpha, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.82f, 1.12f, smooth);
+                float glowScale = Mathf.Lerp(0.84f, 1.10f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
-            // 3. Symmetrical Left & Right Ornate Lantern Wings (◄── ◆   TEXT   ◆ ──►)
+            // 4. Optional Symmetrical Wings (used on sub-views if present)
             float wingSlide = MenuPreferences.ReducedMotion ? BaseWingOffset : Mathf.Lerp(BaseWingOffset - 26f, BaseWingOffset + 12f, smooth);
-            if (LeftWing != null)
-            {
-                LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
-            }
-            if (RightWing != null)
-            {
-                RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
-            }
-            if (WingGroup != null)
-            {
-                WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 1f, smooth);
-            }
+            if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
+            if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
+            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 1f, smooth);
 
-            // 4. Delicate Center-Out Filigree Underline
+            // 5. Glowing Ember Filigree Underline
             if (UnderlineFiligree != null)
             {
                 var r = UnderlineFiligree.rectTransform;
-                float width = Mathf.Lerp(IsPrimaryAction ? 120f : 0f, 280f, smooth);
+                float targetW = LeftAlignedItem ? 320f : 280f;
+                float width = Mathf.Lerp(IsPrimaryAction ? 140f : 0f, targetW, smooth);
                 r.sizeDelta = new Vector2(width, 2f);
-                UnderlineFiligree.color = new Color(1.0f, 0.74f, 0.30f, Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 0.85f, smooth));
+                UnderlineFiligree.color = new Color(1.0f, 0.74f, 0.30f, Mathf.Lerp(IsPrimaryAction ? 0.38f : 0f, 0.88f, smooth));
             }
         }
 
