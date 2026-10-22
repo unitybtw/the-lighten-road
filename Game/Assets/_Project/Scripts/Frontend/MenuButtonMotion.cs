@@ -120,6 +120,12 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
+            if (!LeftAlignedItem && transform is RectTransform selfRect)
+            {
+                float btnScale = MenuPreferences.ReducedMotion ? 1f : (Mathf.Lerp(1f, 1.032f, smooth) - pressBlend * 0.025f);
+                selfRect.localScale = new Vector3(btnScale, btnScale, 1f);
+            }
+
             if (SubtitleText != null)
             {
                 SubtitleText.color = Color.Lerp(IdleSubtle, FocusedSubtle, smooth);

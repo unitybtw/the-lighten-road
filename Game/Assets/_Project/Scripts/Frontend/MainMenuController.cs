@@ -142,6 +142,8 @@ namespace TheLightenRoad.Frontend
         private readonly List<Image> realmRowUnderlines = new List<Image>();
         private readonly List<TMP_Text> realmStatusLabels = new List<TMP_Text>();
         private readonly List<Image> realmRowBackgrounds = new List<Image>();
+        private readonly List<InteractiveCardMotion> realmCardMotions = new List<InteractiveCardMotion>();
+        private readonly List<InteractiveCardMotion> creditCardMotions = new List<InteractiveCardMotion>();
 
         private Slider masterSlider;
         private Slider musicSlider;
@@ -346,6 +348,12 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
+            if (activeRealmBadgeText != null)
+            {
+                float badgePulse = MenuPreferences.ReducedMotion ? 1f : (0.80f + 0.20f * Mathf.Sin(age * 2.2f));
+                activeRealmBadgeText.color = new Color(amberGold.r, amberGold.g, amberGold.b, badgePulse);
+            }
+
             if (hintText != null)
             {
                 hintText.gameObject.SetActive(!introDone);
@@ -376,9 +384,12 @@ namespace TheLightenRoad.Frontend
             }
             else
             {
-                float yRise = -22f * (1f - transition);
-                float scale = Mathf.Lerp(0.96f, 1f, transition);
-                rect.anchoredPosition = new Vector2(0f, yRise);
+                // Smooth ease-out cubic for ethereal entrance & gentle midnight ambient float
+                float ease = 1f - Mathf.Pow(1f - transition, 3f);
+                float yRise = -18f * (1f - ease);
+                float scale = Mathf.Lerp(0.95f, 1f, ease);
+                float ambientFloat = (active && transition >= 0.96f) ? Mathf.Sin(viewAge * 1.6f) * 2.2f : 0f;
+                rect.anchoredPosition = new Vector2(0f, yRise + ambientFloat);
                 rect.localScale = new Vector3(scale, scale, 1f);
             }
         }
@@ -476,6 +487,10 @@ namespace TheLightenRoad.Frontend
                 if (i < realmRowBackgrounds.Count && realmRowBackgrounds[i] != null)
                 {
                     realmRowBackgrounds[i].sprite = isSelected ? roundedCardActiveSprite : roundedCardNormalSprite;
+                }
+                if (i < realmCardMotions.Count && realmCardMotions[i] != null)
+                {
+                    realmCardMotions[i].IsSelected = isSelected;
                 }
                 if (realmStatusLabels[i] != null)
                 {
@@ -742,16 +757,16 @@ namespace TheLightenRoad.Frontend
             filigreeSprite = stage.CreateOrnateFiligreeSprite(512, 64);
             softRadialSprite = CreateSoftRadialSprite(128);
 
-            // Procedural 9-Slice Rounded Glass Sprites (Smooth, Anti-Aliased 12-16px Corners with 1px Ethereal Contour)
-            roundedContainerSprite = Create9SliceRoundedSprite(64, 18f, 1.2f, new Color(0.016f, 0.024f, 0.045f, 0.88f), new Color(0.85f, 0.75f, 0.55f, 0.35f), 22);
-            roundedCardNormalSprite = Create9SliceRoundedSprite(64, 14f, 1.0f, new Color(0.022f, 0.034f, 0.060f, 0.65f), new Color(0.65f, 0.72f, 0.88f, 0.28f), 18);
-            roundedCardActiveSprite = Create9SliceRoundedSprite(64, 14f, 1.4f, new Color(0.045f, 0.052f, 0.078f, 0.82f), new Color(1.0f, 0.78f, 0.32f, 0.88f), 18);
-            roundedButtonNormalSprite = Create9SliceRoundedSprite(48, 12f, 1.0f, new Color(0.030f, 0.045f, 0.080f, 0.75f), new Color(0.68f, 0.76f, 0.90f, 0.32f), 15);
-            roundedButtonPrimarySprite = Create9SliceRoundedSprite(48, 12f, 1.2f, new Color(0.045f, 0.058f, 0.095f, 0.82f), new Color(1.0f, 0.75f, 0.30f, 0.75f), 15);
-            roundedPillSprite = Create9SliceRoundedSprite(32, 15f, 1.0f, new Color(0.035f, 0.050f, 0.090f, 0.88f), new Color(0.90f, 0.78f, 0.50f, 0.45f), 15);
-            roundedRowSprite = Create9SliceRoundedSprite(48, 10f, 1.0f, new Color(0.020f, 0.030f, 0.055f, 0.50f), new Color(0.55f, 0.65f, 0.80f, 0.16f), 14);
-            roundedTrackSprite = Create9SliceRoundedSprite(16, 4f, 0.8f, new Color(0.12f, 0.16f, 0.25f, 0.65f), new Color(0.40f, 0.50f, 0.65f, 0.30f), 6);
-            roundedFillSprite = Create9SliceRoundedSprite(16, 4f, 0f, amberGold, amberGold, 6);
+            // Procedural 9-Slice Rounded Glass Sprites (Ultra-Smooth 20-28px Curvature & Full Stadium Pill Buttons)
+            roundedContainerSprite = Create9SliceRoundedSprite(96, 28f, 1.2f, new Color(0.016f, 0.024f, 0.045f, 0.88f), new Color(0.85f, 0.75f, 0.55f, 0.35f), 32);
+            roundedCardNormalSprite = Create9SliceRoundedSprite(80, 24f, 1.0f, new Color(0.022f, 0.034f, 0.060f, 0.68f), new Color(0.65f, 0.72f, 0.88f, 0.28f), 28);
+            roundedCardActiveSprite = Create9SliceRoundedSprite(80, 24f, 1.5f, new Color(0.045f, 0.052f, 0.078f, 0.85f), new Color(1.0f, 0.78f, 0.32f, 0.90f), 28);
+            roundedButtonNormalSprite = Create9SliceRoundedSprite(52, 23.5f, 1.0f, new Color(0.030f, 0.045f, 0.080f, 0.78f), new Color(0.68f, 0.76f, 0.90f, 0.35f), 23);
+            roundedButtonPrimarySprite = Create9SliceRoundedSprite(52, 23.5f, 1.2f, new Color(0.045f, 0.058f, 0.095f, 0.85f), new Color(1.0f, 0.75f, 0.30f, 0.80f), 23);
+            roundedPillSprite = Create9SliceRoundedSprite(48, 18f, 1.0f, new Color(0.035f, 0.050f, 0.090f, 0.88f), new Color(0.90f, 0.78f, 0.50f, 0.45f), 20);
+            roundedRowSprite = Create9SliceRoundedSprite(64, 20f, 1.0f, new Color(0.020f, 0.030f, 0.055f, 0.52f), new Color(0.55f, 0.65f, 0.80f, 0.18f), 24);
+            roundedTrackSprite = Create9SliceRoundedSprite(24, 6f, 0.8f, new Color(0.12f, 0.16f, 0.25f, 0.65f), new Color(0.40f, 0.50f, 0.65f, 0.30f), 8);
+            roundedFillSprite = Create9SliceRoundedSprite(24, 6f, 0f, amberGold, amberGold, 8);
 
             topFiligreeSprite = Resources.Load<Sprite>("UI/HollowKnight_TopFiligree");
             bottomCrestSprite = Resources.Load<Sprite>("UI/HollowKnight_BottomCrest");
@@ -1057,6 +1072,7 @@ namespace TheLightenRoad.Frontend
             realmRowUnderlines.Clear();
             realmStatusLabels.Clear();
             realmRowBackgrounds.Clear();
+            realmCardMotions.Clear();
 
             for (int i = 0; i < AvailableRealms.Length; i++)
             {
@@ -1108,6 +1124,19 @@ namespace TheLightenRoad.Frontend
                 lineImg.sprite = filigreeSprite;
                 lineImg.raycastTarget = false;
                 realmRowUnderlines.Add(lineImg);
+
+                var cardMotion = row.gameObject.AddComponent<InteractiveCardMotion>();
+                cardMotion.CardBackground = cardBg;
+                cardMotion.CardAura = auraImg;
+                cardMotion.TitleText = titleTxt;
+                cardMotion.StatusBadgeText = statusTxt;
+                cardMotion.UnderlineFiligree = lineImg;
+                cardMotion.IsSelected = (i == selectedRealmIndex);
+                cardMotion.OnFocusedCallback = (cm) =>
+                {
+                    stage?.TriggerInteractionSurge(new Vector2(0f, yPos), new Vector2(-15f, 5f - capturedIndex * 6f), 0.75f);
+                };
+                realmCardMotions.Add(cardMotion);
             }
 
             CreateEtherealActionButton(surface, "Enter Selected Realm  >", new Vector2(175f, -278f), Play, isPrimary: true);
@@ -1311,6 +1340,7 @@ namespace TheLightenRoad.Frontend
         private void BuildFramelessCreditsView()
         {
             var surface = CreateEtherealSubViewFrame(credits, "KEEPERS OF THE FLAME", "CRAFTED FOR THE 2026 GAME DEVELOPMENT PROJECT");
+            creditCardMotions.Clear();
 
             CreateCreditBlock(surface, "SIRAÇ ŞİMŞEK", "MOVEMENT, LANTERN SYSTEMS, AUDIO & PROCEDURAL FRONTEND", "Player physics, stamina & lantern HUD, dynamic lighting, foley & animated archive stage", 125f);
             CreateCreditBlock(surface, "KEMAL", "PUZZLE MECHANISMS & EMBER VEIN ARCHITECTURE", "Ember Vein conduits, Flooded Mechanisms sandbox, interactive elevators & hazards", 0f);
@@ -1341,6 +1371,12 @@ namespace TheLightenRoad.Frontend
             var detTxt = CreateLabel("Details", block, details, 11.5f, moonlightSilver, new Vector2(780f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f));
             detTxt.rectTransform.pivot = Vector2.one * 0.5f;
             detTxt.alignment = TextAlignmentOptions.Center;
+
+            var cardMotion = block.gameObject.AddComponent<InteractiveCardMotion>();
+            cardMotion.CardBackground = blockBg;
+            cardMotion.TitleText = nameTxt;
+            cardMotion.StatusBadgeText = roleTxt;
+            creditCardMotions.Add(cardMotion);
         }
 
         // =====================================================================

@@ -371,7 +371,6 @@ namespace TheLightenRoad.Frontend
             pendulumBoost = Mathf.Clamp(pendulumBoost + 2.4f * boost, -6f, 6f);
             targetButtonCanvasPos = buttonCanvasPosition;
             targetCameraOffset = cameraPanTarget;
-            hasActiveButtonTarget = true;
         }
 
         public void SetCameraFocus(Vector2 cameraPanTarget)
