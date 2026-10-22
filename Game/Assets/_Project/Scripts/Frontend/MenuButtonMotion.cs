@@ -48,10 +48,10 @@ namespace TheLightenRoad.Frontend
         private Vector2 baseFlameAnchoredPos;
         private bool capturedBasePositions;
 
-        private static readonly Color IdleIvory = new Color32(204, 214, 228, 220);
-        private static readonly Color IdlePrimaryGold = new Color32(245, 185, 85, 245);
+        private static readonly Color IdleIvory = new Color32(180, 192, 208, 175);
+        private static readonly Color IdlePrimaryGold = new Color32(235, 195, 120, 215);
         private static readonly Color FocusedRadiantIvory = new Color32(255, 255, 255, 255);
-        private static readonly Color FocusedAmberGold = new Color32(255, 204, 96, 255);
+        private static readonly Color FocusedAmberGold = new Color32(255, 225, 140, 255);
         private static readonly Color IdleSubtle = new Color32(128, 138, 156, 175);
         private static readonly Color FocusedSubtle = new Color32(215, 225, 240, 230);
 
@@ -154,21 +154,23 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // 3. Soft Radial Lantern Aura behind text
+            // 3. Delicate Warm Candlelight Radiance behind text (only when focused/hovered)
             if (SoftGlow != null)
             {
-                float baseAlpha = IsPrimaryAction ? 0.14f : 0f;
-                float targetAlpha = (IsPrimaryAction ? 0.40f : 0.30f) * pulse;
-                SoftGlow.color = new Color(1.0f, 0.66f, 0.20f, Mathf.Lerp(baseAlpha, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.84f, 1.10f, smooth);
+                float targetAlpha = (IsPrimaryAction ? 0.16f : 0.12f) * pulse;
+                SoftGlow.color = new Color(1.0f, 0.82f, 0.45f, Mathf.Lerp(0f, targetAlpha, smooth));
+                float glowScale = Mathf.Lerp(0.88f, 1.04f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
-            // 4. Optional Symmetrical Wings (used on sub-views if present)
-            float wingSlide = MenuPreferences.ReducedMotion ? BaseWingOffset : Mathf.Lerp(BaseWingOffset - 26f, BaseWingOffset + 12f, smooth);
+            // 4. Symmetrical Wings (used for Hollow Knight / Lighten Road button selection pointers)
+            float breathing = (smooth > 0.1f && !MenuPreferences.ReducedMotion) ? Mathf.Sin(t * 3.5f) * 2.5f : 0f;
+            float wingSlide = MenuPreferences.ReducedMotion
+                ? BaseWingOffset
+                : Mathf.Lerp(BaseWingOffset + 14f, BaseWingOffset, smooth) + breathing;
             if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
-            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.35f : 0f, 1f, smooth);
+            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(0f, 1f, smooth);
 
             // 5. Glowing Ember Filigree Underline
             if (UnderlineFiligree != null)

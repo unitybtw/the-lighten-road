@@ -39,15 +39,8 @@ namespace TheLightenRoad.Frontend
 
         private readonly List<RectTransform> godRays = new List<RectTransform>();
         private readonly List<Image> godRayImages = new List<Image>();
-
-        private struct TetherNode
-        {
-            public RectTransform Rect;
-            public Image Img;
-            public float Phase;
-            public float BaseSize;
-        }
-        private readonly List<TetherNode> tetherNodes = new List<TetherNode>();
+        private readonly List<RectTransform> topGodRays = new List<RectTransform>();
+        private readonly List<Image> topGodRayImages = new List<Image>();
 
         private struct EmberMote
         {
@@ -120,6 +113,26 @@ namespace TheLightenRoad.Frontend
             cameraRig = CreateStretchRect("Stage Camera Rig", stageRoot);
             cameraRig.localScale = Vector3.one * 1.05f;
 
+            // Top-Down Volumetric Divine Light Rays (Hollow Knight / Ethereal Sanctum Style)
+            var topRayPivot = CreateAnchoredRect("Top Volumetric Light Source", cameraRig, new Vector2(100f, 100f), new Vector2(0.5f, 1.05f), Vector2.zero);
+            topRayPivot.pivot = new Vector2(0.5f, 0.5f);
+            topGodRays.Clear();
+            topGodRayImages.Clear();
+            float[] topAngles = { -16f, -10f, -4f, 4f, 10f, 16f };
+            float[] topWidths = { 260f, 340f, 400f, 400f, 340f, 260f };
+            for (int i = 0; i < topAngles.Length; i++)
+            {
+                var rayRect = CreateAnchoredRect($"TopGodRay_{i}", topRayPivot, new Vector2(topWidths[i], 1300f), new Vector2(0.5f, 0.5f), Vector2.zero);
+                rayRect.pivot = new Vector2(0.5f, 0.02f);
+                rayRect.localEulerAngles = new Vector3(0f, 0f, 180f + topAngles[i]);
+                var rayImg = rayRect.gameObject.AddComponent<Image>();
+                rayImg.sprite = lightRaySprite;
+                rayImg.color = new Color(1.0f, 0.88f, 0.65f, 0f);
+                rayImg.raycastTarget = false;
+                topGodRays.Add(rayRect);
+                topGodRayImages.Add(rayImg);
+            }
+
             // 2. Far 2D Parallax Layer (0.22x): Pixel-Art Archive Bookshelves & Pointed Stone Arches
             farVaultLayer = CreateAnchoredRect("Far Gothic Colonnade", cameraRig, new Vector2(2240f, 1180f), new Vector2(0.5f, 0.5f), Vector2.zero);
             farVaultImage = farVaultLayer.gameObject.AddComponent<Image>();
@@ -150,20 +163,17 @@ namespace TheLightenRoad.Frontend
             // Secondary hanging ceiling lamps in the background vault
             BuildCeilingLamps(cameraRig);
 
-            // 4. Interactive Ember Stream (From Character's Lantern -> Active Menu Item)
-            BuildEnergyTether(cameraRig);
-
-            // 5. Foreground 2D Layer (1.0x): Stone Ledge, Hero Character & Primary Great Archive Lantern
+            // 4. Foreground 2D Layer (1.0x): Stone Ledge, Hero Character & Primary Great Archive Lantern
             BuildForegroundWanderer(cameraRig);
 
-            // 6. Multi-Depth Floating Embers & Sparks Field
+            // 5. Multi-Depth Floating Embers & Sparks Field
             BuildEmberField(stageRoot);
 
-            // 7. Subtle Mouse Lantern Spotlight
-            cursorLanternRect = CreateAnchoredRect("Mouse Lantern Spotlight", stageRoot, new Vector2(420f, 420f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            // 6. Subtle Mouse Lantern Spotlight
+            cursorLanternRect = CreateAnchoredRect("Mouse Lantern Spotlight", stageRoot, new Vector2(320f, 320f), new Vector2(0.5f, 0.5f), Vector2.zero);
             cursorLanternGlow = cursorLanternRect.gameObject.AddComponent<Image>();
             cursorLanternGlow.sprite = radialGlowSprite;
-            cursorLanternGlow.color = new Color(1.0f, 0.68f, 0.24f, 0.08f);
+            cursorLanternGlow.color = new Color(1.0f, 0.78f, 0.40f, 0.04f);
             cursorLanternGlow.raycastTarget = false;
         }
 
@@ -207,10 +217,10 @@ namespace TheLightenRoad.Frontend
             var lampHead = CreateAnchoredRect("Ceiling Lamp Head", ceilingLampPivot, new Vector2(68f, 92f), new Vector2(0.5f, 1f), new Vector2(0f, -92f));
             lampHead.pivot = new Vector2(0.5f, 0.88f);
 
-            var lampGlow = CreateAnchoredRect("Ceiling Lamp Glow", lampHead, new Vector2(260f, 260f), new Vector2(0.5f, 0.45f), Vector2.zero);
+            var lampGlow = CreateAnchoredRect("Ceiling Lamp Glow", lampHead, new Vector2(140f, 140f), new Vector2(0.5f, 0.45f), Vector2.zero);
             var lampGlowImg = lampGlow.gameObject.AddComponent<Image>();
             lampGlowImg.sprite = radialGlowSprite;
-            lampGlowImg.color = new Color(1.0f, 0.68f, 0.22f, 0.22f);
+            lampGlowImg.color = new Color(1.0f, 0.74f, 0.32f, 0.08f);
             lampGlowImg.raycastTarget = false;
 
             var lampCage = lampHead.gameObject.AddComponent<Image>();
@@ -233,40 +243,16 @@ namespace TheLightenRoad.Frontend
             }
             var farLampHead = CreateAnchoredRect("Far Lamp Head", farCeilingLampPivot, new Vector2(52f, 72f), new Vector2(0.5f, 1f), new Vector2(0f, -56f));
             farLampHead.pivot = new Vector2(0.5f, 0.88f);
-            var farGlow = CreateAnchoredRect("Far Lamp Glow", farLampHead, new Vector2(180f, 180f), new Vector2(0.5f, 0.45f), Vector2.zero);
+            var farGlow = CreateAnchoredRect("Far Lamp Glow", farLampHead, new Vector2(100f, 100f), new Vector2(0.5f, 0.45f), Vector2.zero);
             var farGlowImg = farGlow.gameObject.AddComponent<Image>();
             farGlowImg.sprite = radialGlowSprite;
-            farGlowImg.color = new Color(1.0f, 0.64f, 0.20f, 0.16f);
+            farGlowImg.color = new Color(1.0f, 0.70f, 0.30f, 0.06f);
             farGlowImg.raycastTarget = false;
             var farCageImg = farLampHead.gameObject.AddComponent<Image>();
             farCageImg.sprite = lanternCageSprite;
             farCageImg.preserveAspect = true;
             farCageImg.color = new Color(0.65f, 0.60f, 0.54f, 0.75f);
             farCageImg.raycastTarget = false;
-        }
-
-        private void BuildEnergyTether(RectTransform parent)
-        {
-            var tetherContainer = CreateStretchRect("Ember Vein Energy Tether", parent);
-            const int nodeCount = 18;
-            for (int i = 0; i < nodeCount; i++)
-            {
-                float norm = i / (float)(nodeCount - 1);
-                float size = Mathf.Lerp(14f, 7f, norm);
-                var nRect = CreateAnchoredRect($"VeinNode_{i:00}", tetherContainer, new Vector2(size, size), new Vector2(0.5f, 0.5f), Vector2.zero);
-                var nImg = nRect.gameObject.AddComponent<Image>();
-                nImg.sprite = (i % 2 == 0 && PixelSprites.Spark != null) ? PixelSprites.Spark : radialGlowSprite;
-                nImg.color = Color.clear;
-                nImg.raycastTarget = false;
-
-                tetherNodes.Add(new TetherNode
-                {
-                    Rect = nRect,
-                    Img = nImg,
-                    Phase = norm,
-                    BaseSize = size
-                });
-            }
         }
 
         private void BuildForegroundWanderer(RectTransform parent)
@@ -294,60 +280,60 @@ namespace TheLightenRoad.Frontend
             wandererLanternRect.pivot = new Vector2(0.5f, 0.5f);
 
             // 1. Soft Warm Golden Backlight behind character so silhouette is crisp
-            var backlightRect = CreateAnchoredRect("Character Backlight Aura", wandererLanternRect, new Vector2(720f, 720f), new Vector2(0.5f, 0.5f), new Vector2(-60f, -40f));
+            var backlightRect = CreateAnchoredRect("Character Backlight Aura", wandererLanternRect, new Vector2(320f, 320f), new Vector2(0.5f, 0.5f), new Vector2(-35f, -20f));
             characterBacklightHalo = backlightRect.gameObject.AddComponent<Image>();
             characterBacklightHalo.sprite = radialGlowSprite;
-            characterBacklightHalo.color = new Color(1.0f, 0.64f, 0.20f, 0f);
+            characterBacklightHalo.color = new Color(1.0f, 0.74f, 0.35f, 0f);
             characterBacklightHalo.raycastTarget = false;
 
-            // 2. Volumetric God Rays radiating from the lantern into the dark archive
+            // 2. Volumetric God Rays radiating from the lantern into the dark archive (localized around wanderer)
             godRays.Clear();
             godRayImages.Clear();
-            float[] rayAngles = { -65f, -38f, -12f, 16f, 44f };
-            float[] rayWidths = { 240f, 320f, 360f, 300f, 220f };
+            float[] rayAngles = { -30f, -12f, 8f, 28f, 46f };
+            float[] rayWidths = { 150f, 190f, 210f, 170f, 130f };
             for (int i = 0; i < rayAngles.Length; i++)
             {
-                var rayRect = CreateAnchoredRect($"VolumetricGodRay_{i}", wandererLanternRect, new Vector2(rayWidths[i], 1100f), new Vector2(0.5f, 0.5f), Vector2.zero);
+                var rayRect = CreateAnchoredRect($"VolumetricGodRay_{i}", wandererLanternRect, new Vector2(rayWidths[i], 560f), new Vector2(0.5f, 0.5f), Vector2.zero);
                 rayRect.pivot = new Vector2(0.5f, 0.02f);
                 rayRect.localEulerAngles = new Vector3(0f, 0f, rayAngles[i]);
                 var rayImg = rayRect.gameObject.AddComponent<Image>();
                 rayImg.sprite = lightRaySprite;
-                rayImg.color = new Color(1.0f, 0.74f, 0.30f, 0f);
+                rayImg.color = new Color(1.0f, 0.84f, 0.54f, 0f);
                 rayImg.raycastTarget = false;
                 godRays.Add(rayRect);
                 godRayImages.Add(rayImg);
             }
 
             // 3. Opening Ignition Shockwave Ring (expands dramatically when lamp ignites)
-            var shockwaveRect = CreateAnchoredRect("Ignition Shockwave Ring", wandererLanternRect, new Vector2(850f, 850f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var shockwaveRect = CreateAnchoredRect("Ignition Shockwave Ring", wandererLanternRect, new Vector2(380f, 380f), new Vector2(0.5f, 0.5f), Vector2.zero);
             lanternIgnitionShockwave = shockwaveRect.gameObject.AddComponent<Image>();
             lanternIgnitionShockwave.sprite = shockwaveRingSprite;
             lanternIgnitionShockwave.color = new Color(1.0f, 0.82f, 0.40f, 0f);
             lanternIgnitionShockwave.raycastTarget = false;
 
             // 4. Wide Atmospheric Lantern Ambient Illumination Bloom
-            var outerHaloRect = CreateAnchoredRect("Hero Lantern Ambient Bloom", wandererLanternRect, new Vector2(1150f, 1150f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var outerHaloRect = CreateAnchoredRect("Hero Lantern Ambient Bloom", wandererLanternRect, new Vector2(440f, 440f), new Vector2(0.5f, 0.5f), Vector2.zero);
             wandererOuterHalo = outerHaloRect.gameObject.AddComponent<Image>();
             wandererOuterHalo.sprite = radialGlowSprite;
-            wandererOuterHalo.color = new Color(1.0f, 0.60f, 0.16f, 0f);
+            wandererOuterHalo.color = new Color(1.0f, 0.76f, 0.38f, 0f);
             wandererOuterHalo.raycastTarget = false;
 
             // 5. Warm Amber Mid Radiance
-            var midHaloRect = CreateAnchoredRect("Hero Lantern Mid Radiance", wandererLanternRect, new Vector2(460f, 460f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var midHaloRect = CreateAnchoredRect("Hero Lantern Mid Radiance", wandererLanternRect, new Vector2(200f, 200f), new Vector2(0.5f, 0.5f), Vector2.zero);
             wandererMidHalo = midHaloRect.gameObject.AddComponent<Image>();
             wandererMidHalo.sprite = radialGlowSprite;
-            wandererMidHalo.color = new Color(1.0f, 0.78f, 0.32f, 0f);
+            wandererMidHalo.color = new Color(1.0f, 0.82f, 0.45f, 0f);
             wandererMidHalo.raycastTarget = false;
 
             // 6. Bright Golden-White Inner Flare
-            var innerFlareRect = CreateAnchoredRect("Hero Lantern Inner Flare", wandererLanternRect, new Vector2(170f, 170f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var innerFlareRect = CreateAnchoredRect("Hero Lantern Inner Flare", wandererLanternRect, new Vector2(80f, 80f), new Vector2(0.5f, 0.5f), Vector2.zero);
             wandererInnerFlare = innerFlareRect.gameObject.AddComponent<Image>();
             wandererInnerFlare.sprite = radialGlowSprite;
-            wandererInnerFlare.color = new Color(1.0f, 0.96f, 0.78f, 0f);
+            wandererInnerFlare.color = new Color(1.0f, 0.96f, 0.82f, 0f);
             wandererInnerFlare.raycastTarget = false;
 
             // 7. Crisp Pixel-Art Flame Core in Lantern Glass
-            var smallFlameRect = CreateAnchoredRect("Wanderer Lantern Core", wandererLanternRect, new Vector2(30f, 36f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var smallFlameRect = CreateAnchoredRect("Wanderer Lantern Core", wandererLanternRect, new Vector2(26f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero);
             wandererFlame = smallFlameRect.gameObject.AddComponent<Image>();
             wandererFlame.sprite = PixelSprites.Flame != null ? PixelSprites.Flame : diamondSparkSprite;
             wandererFlame.color = new Color(1.0f, 0.95f, 0.76f, 0f);
@@ -467,8 +453,8 @@ namespace TheLightenRoad.Frontend
                 float shockwaveT = Mathf.InverseLerp(0.18f, 0.85f, introIgnition);
                 if (shockwaveT > 0f && shockwaveT < 1f && !reducedMotion)
                 {
-                    float waveScale = Mathf.Lerp(0.08f, 2.2f, shockwaveT);
-                    float waveAlpha = Mathf.Sin(shockwaveT * Mathf.PI) * 0.75f;
+                    float waveScale = Mathf.Lerp(0.10f, 1.6f, shockwaveT);
+                    float waveAlpha = Mathf.Sin(shockwaveT * Mathf.PI) * 0.40f;
                     lanternIgnitionShockwave.rectTransform.localScale = new Vector3(waveScale, waveScale, 1f);
                     lanternIgnitionShockwave.color = new Color(1.0f, 0.84f, 0.42f, waveAlpha);
                 }
@@ -478,37 +464,37 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // Character Backlight Halo
+            // Character Backlight Halo (Subtle rim light around wanderer)
             if (characterBacklightHalo != null)
             {
-                float backAlpha = Mathf.Clamp01((0.30f + surgeIntensity * 0.18f + zoomGlowBoost * 0.4f) * totalMasterLight);
-                characterBacklightHalo.color = new Color(1.0f, 0.64f, 0.20f, backAlpha);
+                float backAlpha = Mathf.Clamp01((0.07f + surgeIntensity * 0.04f + zoomGlowBoost * 0.25f) * totalMasterLight);
+                characterBacklightHalo.color = new Color(1.0f, 0.74f, 0.35f, backAlpha);
             }
 
-            // Ambient Wide Bloom (expands outward on opening)
+            // Ambient Wide Bloom (Soft, localized warm aura)
             if (wandererOuterHalo != null)
             {
-                float outerAlpha = Mathf.Clamp01((0.26f + surgeIntensity * 0.20f + zoomGlowBoost * 0.5f) * totalMasterLight);
-                wandererOuterHalo.color = new Color(1.0f, 0.60f, 0.16f, outerAlpha);
-                float bloomScale = Mathf.Lerp(0.25f, 1.0f, bloomExpansion) + (reducedMotion ? 0f : Mathf.Sin(time * 2.0f) * 0.03f) + surgeIntensity * 0.14f + zoomGlowBoost * 0.7f;
+                float outerAlpha = Mathf.Clamp01((0.08f + surgeIntensity * 0.04f + zoomGlowBoost * 0.30f) * totalMasterLight);
+                wandererOuterHalo.color = new Color(1.0f, 0.76f, 0.38f, outerAlpha);
+                float bloomScale = Mathf.Lerp(0.35f, 1.0f, bloomExpansion) + (reducedMotion ? 0f : Mathf.Sin(time * 2.0f) * 0.02f) + surgeIntensity * 0.06f + zoomGlowBoost * 0.4f;
                 wandererOuterHalo.rectTransform.localScale = new Vector3(bloomScale, bloomScale, 1f);
             }
 
             // Mid Warm Amber Radiance
             if (wandererMidHalo != null)
             {
-                float midAlpha = Mathf.Clamp01((0.55f + surgeIntensity * 0.28f + zoomGlowBoost * 0.6f) * totalMasterLight);
-                wandererMidHalo.color = new Color(1.0f, 0.78f, 0.32f, midAlpha);
-                float midScale = Mathf.Lerp(0.35f, 1.0f, bloomExpansion) + surgeIntensity * 0.20f + zoomGlowBoost * 0.9f;
+                float midAlpha = Mathf.Clamp01((0.20f + surgeIntensity * 0.08f + zoomGlowBoost * 0.40f) * totalMasterLight);
+                wandererMidHalo.color = new Color(1.0f, 0.82f, 0.45f, midAlpha);
+                float midScale = Mathf.Lerp(0.40f, 1.0f, bloomExpansion) + surgeIntensity * 0.10f + zoomGlowBoost * 0.5f;
                 wandererMidHalo.rectTransform.localScale = new Vector3(midScale, midScale, 1f);
             }
 
             // Inner Bright Flare
             if (wandererInnerFlare != null)
             {
-                float innerAlpha = Mathf.Clamp01((0.82f + sparkBurst * 0.35f + surgeIntensity * 0.25f + zoomGlowBoost * 0.5f) * introIgnition);
-                wandererInnerFlare.color = new Color(1.0f, 0.96f, 0.78f, innerAlpha);
-                float innerScale = 1f + sparkBurst * 0.45f + surgeIntensity * 0.25f;
+                float innerAlpha = Mathf.Clamp01((0.45f + sparkBurst * 0.18f + surgeIntensity * 0.12f + zoomGlowBoost * 0.30f) * introIgnition);
+                wandererInnerFlare.color = new Color(1.0f, 0.96f, 0.82f, innerAlpha);
+                float innerScale = 1f + sparkBurst * 0.20f + surgeIntensity * 0.12f;
                 wandererInnerFlare.rectTransform.localScale = new Vector3(innerScale, innerScale, 1f);
             }
 
@@ -522,12 +508,20 @@ namespace TheLightenRoad.Frontend
                 wandererFlame.color = new Color(1.0f, 0.95f, 0.76f, flameAlpha);
             }
 
-            // Volumetric God Rays (open up and sweep with the lantern light)
+            // Volumetric God Rays (localized delicate cone of dust rays around wanderer pedestal)
             for (int i = 0; i < godRays.Count; i++)
             {
-                float rayWave = reducedMotion ? 1f : (0.75f + 0.25f * Mathf.Sin(time * 1.5f + i * 1.2f));
-                float rayAlpha = Mathf.Clamp01((0.08f + sparkBurst * 0.10f + surgeIntensity * 0.06f) * rayWave * bloomExpansion);
-                godRayImages[i].color = new Color(1.0f, 0.74f, 0.30f, rayAlpha);
+                float rayWave = reducedMotion ? 1f : (0.80f + 0.20f * Mathf.Sin(time * 1.5f + i * 1.2f));
+                float rayAlpha = Mathf.Clamp01((0.022f + surgeIntensity * 0.012f) * rayWave * bloomExpansion);
+                godRayImages[i].color = new Color(1.0f, 0.84f, 0.54f, rayAlpha);
+            }
+
+            // Top-Down Volumetric Divine Light Rays
+            for (int i = 0; i < topGodRays.Count; i++)
+            {
+                float rayWave = reducedMotion ? 1f : (0.75f + 0.25f * Mathf.Sin(time * 1.3f + i * 1.1f));
+                float rayAlpha = Mathf.Clamp01((0.030f + surgeIntensity * 0.015f) * rayWave * bloomExpansion);
+                topGodRayImages[i].color = new Color(0.95f, 0.90f, 0.80f, rayAlpha);
             }
 
             // 4. Carved Pillar Ember Veins Pulse
@@ -545,10 +539,7 @@ namespace TheLightenRoad.Frontend
                 wandererBodyRect.localScale = new Vector3(1f, breathY, 1f);
             }
 
-            // 6. Interactive Ember Stream (Flows from Lantern to Active Menu Item)
-            UpdateEnergyTether(introIgnition, reducedMotion, lanternCanvasPos);
-
-            // 7. Multi-Depth 2D Pixel Ember & Ash Field
+            // 6. Multi-Depth 2D Pixel Ember & Ash Field
             float speedMult = 1f + surgeIntensity * 0.9f;
             for (int i = 0; i < embers.Count; i++)
             {
@@ -591,36 +582,6 @@ namespace TheLightenRoad.Frontend
                 }
             }
             return new Vector2(465f, -60f);
-        }
-
-        private void UpdateEnergyTether(float introIgnition, bool reducedMotion, Vector2 startPos)
-        {
-            if (!hasActiveButtonTarget || tetherNodes.Count == 0) return;
-
-            Vector2 endPos = currentButtonCanvasPos;
-            Vector2 controlPos = (startPos + endPos) * 0.5f + new Vector2(0f, 85f);
-
-            float streamVisibility = Mathf.Clamp01((0.28f + surgeIntensity * 0.65f) * introIgnition * (1f - playZoomProgress));
-
-            for (int i = 0; i < tetherNodes.Count; i++)
-            {
-                var node = tetherNodes[i];
-                float flowT = reducedMotion
-                    ? node.Phase
-                    : Mathf.Repeat(node.Phase + time * (0.38f + surgeIntensity * 0.32f), 1f);
-
-                float inv = 1f - flowT;
-                Vector2 pos = inv * inv * startPos + 2f * inv * flowT * controlPos + flowT * flowT * endPos;
-                float wave = reducedMotion ? 0f : Mathf.Sin(flowT * 9f - time * 4.5f) * 8f * Mathf.Sin(flowT * Mathf.PI);
-                pos.y += wave;
-
-                node.Rect.anchoredPosition = pos;
-                float edgeFade = Mathf.Sin(flowT * Mathf.PI);
-                float alpha = streamVisibility * edgeFade;
-                node.Img.color = new Color(1.0f, 0.76f, 0.28f, alpha);
-                float pulseScale = 0.75f + 0.5f * edgeFade + surgeIntensity * 0.25f;
-                node.Rect.localScale = new Vector3(pulseScale, pulseScale, 1f);
-            }
         }
 
         private void OnDestroy()
@@ -741,8 +702,8 @@ namespace TheLightenRoad.Frontend
             Color pillarDark = new Color(0.035f, 0.026f, 0.024f, 0.98f);
             Color pillarMid = new Color(0.068f, 0.050f, 0.040f, 0.98f);
 
-            float[] pillarCenters = { 0.04f, 0.38f, 0.56f, 0.92f };
-            float[] pillarWidths = { 0.042f, 0.026f, 0.028f, 0.045f };
+            float[] pillarCenters = { 0.05f, 0.16f, 0.84f, 0.95f };
+            float[] pillarWidths = { 0.042f, 0.030f, 0.030f, 0.045f };
 
             for (int y = 0; y < h; y++)
             {
@@ -983,7 +944,7 @@ namespace TheLightenRoad.Frontend
                 for (int x = 0; x < size; x++)
                 {
                     float d = Vector2.Distance(new Vector2(x, y), center) / maxR;
-                    float a = Mathf.Pow(Mathf.Clamp01(1f - d), 2.2f);
+                    float a = Mathf.Pow(Mathf.Clamp01(1f - d), 2.8f);
                     tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
                 }
             }

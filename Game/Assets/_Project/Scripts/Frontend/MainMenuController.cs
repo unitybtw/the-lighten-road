@@ -77,6 +77,9 @@ namespace TheLightenRoad.Frontend
         private ProceduralArchiveStage stage;
         private Sprite filigreeSprite;
         private Sprite softRadialSprite;
+        private Sprite topFiligreeSprite;
+        private Sprite bottomCrestSprite;
+        private Sprite buttonPointerSprite;
 
         private RectTransform safeFrame;
         private Image subpanelVeil;
@@ -302,16 +305,16 @@ namespace TheLightenRoad.Frontend
                     float headerT = Mathf.Clamp01(Mathf.InverseLerp(0.35f, 0.90f, age));
                     float headerE = SmoothStep(headerT);
                     if (homeHeaderGroup != null) homeHeaderGroup.alpha = headerE;
-                    if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos + new Vector2(0f, (1f - headerE) * 20f);
+                    if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos + new Vector2(0f, (1f - headerE) * 16f);
 
-                    // Each button cascades in from the left (age 0.65s .. 1.80s)
+                    // Each button cascades in from below (age 0.65s .. 1.80s)
                     for (int i = 0; i < homeButtons.Count; i++)
                     {
                         float btnStart = 0.65f + i * 0.10f;
                         float btnT = Mathf.Clamp01(Mathf.InverseLerp(btnStart, btnStart + 0.38f, age));
                         float btnE = 1f - Mathf.Pow(1f - btnT, 3f); // Smooth ease-out cubic
                         var b = homeButtons[i];
-                        b.Rect.anchoredPosition = b.BasePos + new Vector2(Mathf.Lerp(-80f, 0f, btnE), 0f);
+                        b.Rect.anchoredPosition = b.BasePos + new Vector2(0f, (1f - btnE) * -14f);
                         b.Group.alpha = btnE;
                         bool canInteract = btnE >= 0.98f && !loading && !quitting;
                         b.Group.interactable = canInteract;
@@ -366,6 +369,7 @@ namespace TheLightenRoad.Frontend
             {
                 curtain.color = new Color(0.012f, 0.018f, 0.038f, 0f);
             }
+            if (homeGroup != null) homeGroup.alpha = 1f;
             if (homeHeaderGroup != null) homeHeaderGroup.alpha = 1f;
             if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos;
             for (int i = 0; i < homeButtons.Count; i++)
@@ -711,6 +715,19 @@ namespace TheLightenRoad.Frontend
             filigreeSprite = stage.CreateOrnateFiligreeSprite(512, 64);
             softRadialSprite = CreateSoftRadialSprite(128);
 
+            topFiligreeSprite = Resources.Load<Sprite>("UI/HollowKnight_TopFiligree");
+            bottomCrestSprite = Resources.Load<Sprite>("UI/HollowKnight_BottomCrest");
+            buttonPointerSprite = Resources.Load<Sprite>("UI/HollowKnight_ButtonPointer");
+
+#if UNITY_EDITOR
+            if (topFiligreeSprite == null)
+                topFiligreeSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Sprites/HollowKnight_TopFiligree.png");
+            if (bottomCrestSprite == null)
+                bottomCrestSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Sprites/HollowKnight_BottomCrest.png");
+            if (buttonPointerSprite == null)
+                buttonPointerSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Sprites/HollowKnight_ButtonPointer.png");
+#endif
+
             // 2. Ethereal Sub-Panel Midnight Veil
             subpanelVeil = CreateFullStretchImage("Ethereal Subpanel Veil", rootRect, Color.clear);
 
@@ -739,12 +756,8 @@ namespace TheLightenRoad.Frontend
             creditsGroup.alpha = 0f;
             quitGroup.alpha = 0f;
 
-            // 5. Delicate Whispered Footer & Intro Skip Prompt
-            var footer = CreateLabel("Footer Brand", safeFrame, "THE LIGHTEN ROAD   •   AN ATMOSPHERIC LANTERN JOURNEY", 11f, mutedIndigo, new Vector2(820f, 26f), new Vector2(0.5f, 0f), new Vector2(0f, 22f), pivot: new Vector2(0.5f, 0f));
-            footer.alignment = TextAlignmentOptions.Center;
-            footer.characterSpacing = 5f;
-
-            hintText = CreateLabel("Skip Hint", safeFrame, "PRESS [ENTER], [SPACE] OR CLICK TO AWAKEN THE LANTERN", 11f, amberGold, new Vector2(680f, 26f), new Vector2(0.5f, 0f), new Vector2(0f, 52f), pivot: new Vector2(0.5f, 0f));
+            // 5. Delicate Whispered Intro Skip Prompt
+            hintText = CreateLabel("Skip Hint", safeFrame, "PRESS [ENTER], [SPACE] OR CLICK TO AWAKEN THE LANTERN", 11f, amberGold, new Vector2(680f, 26f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), pivot: new Vector2(0.5f, 0f));
             hintText.alignment = TextAlignmentOptions.Center;
             hintText.characterSpacing = 3.5f;
 
@@ -777,160 +790,184 @@ namespace TheLightenRoad.Frontend
         }
 
         // =====================================================================
-        // HOME VIEW: PIXEL-PERFECT LEFT-ALIGNED VERTICAL MENU & CASCADING INTRO
+        // HOME VIEW: CENTERED HOLLOW KNIGHT / LIGHTEN ROAD ETHEREAL SANCTUM
         // =====================================================================
 
         private void BuildFramelessHomeView()
         {
             homeButtons.Clear();
 
-            // Left Menu Container anchored at left edge of safeFrame with comfortable 140px margin
-            var leftColumn = CreateAnchoredRect("Left Menu Column", home, new Vector2(620f, 840f), new Vector2(0f, 0.5f), new Vector2(140f, 0f), pivot: new Vector2(0f, 0.5f));
+            // Centered Main Menu Container
+            var centerColumn = CreateAnchoredRect("Center Menu Column", home, new Vector2(960f, 960f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
 
-            // 1. Header Container (Eyebrow, Monumental Title, Ethereal Ember Divider, Active Realm)
-            homeHeaderRect = CreateAnchoredRect("Home Header Container", leftColumn, new Vector2(620f, 260f), new Vector2(0f, 0.5f), new Vector2(0f, 260f), pivot: new Vector2(0f, 0.5f));
+            // Soft atmospheric darkness behind menu to enhance contrast against background pillars
+            var centerVignette = CreateAnchoredRect("Center Stage Shadow Vignette", centerColumn, new Vector2(1100f, 1000f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var vigImg = centerVignette.gameObject.AddComponent<Image>();
+            vigImg.sprite = softRadialSprite;
+            vigImg.color = new Color(0.008f, 0.012f, 0.022f, 0.86f);
+            vigImg.raycastTarget = false;
+
+            // 1. Monumental Title Header (Crown Arch, Cinzel Serif Title, Sacred Lantern Crest, Active Realm)
+            homeHeaderRect = CreateAnchoredRect("Home Header Container", centerColumn, new Vector2(960f, 380f), new Vector2(0.5f, 0.5f), new Vector2(0f, 215f), pivot: new Vector2(0.5f, 0.5f));
             homeHeaderBasePos = homeHeaderRect.anchoredPosition;
             homeHeaderGroup = homeHeaderRect.gameObject.AddComponent<CanvasGroup>();
 
-            // Soft Golden Lantern Glow behind Title
-            var titleAura = CreateAnchoredRect("Title Soft Lantern Glow", homeHeaderRect, new Vector2(560f, 150f), new Vector2(0f, 0.5f), new Vector2(0f, 26f), pivot: new Vector2(0f, 0.5f));
+            // Soft Golden Radial Bloom behind Title
+            var titleAura = CreateAnchoredRect("Title Soft Lantern Glow", homeHeaderRect, new Vector2(720f, 220f), new Vector2(0.5f, 0.5f), new Vector2(0f, 15f), pivot: new Vector2(0.5f, 0.5f));
             var auraImg = titleAura.gameObject.AddComponent<Image>();
             auraImg.sprite = softRadialSprite;
-            auraImg.color = new Color(1.0f, 0.60f, 0.16f, 0.12f);
+            auraImg.color = new Color(1.0f, 0.80f, 0.45f, 0.07f);
             auraImg.raycastTarget = false;
 
-            // Whispered Eyebrow
-            var eyebrow = CreateLabel("Eyebrow", homeHeaderRect, "SOME LIGHTS REFUSE TO DIE", 11.5f, moonlightSilver, new Vector2(580f, 22f), new Vector2(0f, 0.5f), new Vector2(0f, 66f), pivot: new Vector2(0f, 0.5f));
-            eyebrow.alignment = TextAlignmentOptions.MidlineLeft;
-            eyebrow.characterSpacing = 8.5f;
+            // Top Filigree Crown Arch
+            if (topFiligreeSprite != null)
+            {
+                var topArchRect = CreateAnchoredRect("Top Filigree Crown", homeHeaderRect, new Vector2(760f, 85f), new Vector2(0.5f, 0.5f), new Vector2(0f, 95f), pivot: new Vector2(0.5f, 0.5f));
+                var topArchImg = topArchRect.gameObject.AddComponent<Image>();
+                topArchImg.sprite = topFiligreeSprite;
+                topArchImg.color = Color.white;
+                topArchImg.raycastTarget = false;
+            }
 
-            // Monumental Title: THE LIGHTEN ROAD
-            var mainTitle = CreateLabel("Title Lighten Road", homeHeaderRect, "THE LIGHTEN ROAD", 52f, radiantIvory, new Vector2(600f, 72f), new Vector2(0f, 0.5f), new Vector2(0f, 20f), pivot: new Vector2(0f, 0.5f));
-            mainTitle.alignment = TextAlignmentOptions.MidlineLeft;
+            // Monumental Serif Title: THE LIGHTEN ROAD
+            var mainTitle = CreateLabel("Title Lighten Road", homeHeaderRect, "THE LIGHTEN ROAD", 56f, radiantIvory, new Vector2(940f, 70f), new Vector2(0.5f, 0.5f), new Vector2(0f, 16f), pivot: new Vector2(0.5f, 0.5f));
+            mainTitle.alignment = TextAlignmentOptions.Center;
             mainTitle.fontStyle = FontStyles.Bold;
-            mainTitle.characterSpacing = 8f;
+            mainTitle.characterSpacing = 9.5f;
 
-            // Minimalist Glowing Ember Divider under Title (replacing curly baroque crest)
-            var midCrest = CreateAnchoredRect("Title Bottom Filigree", homeHeaderRect, new Vector2(460f, 6f), new Vector2(0f, 0.5f), new Vector2(0f, -24f), pivot: new Vector2(0f, 0.5f));
-            var midCrestImg = midCrest.gameObject.AddComponent<Image>();
-            midCrestImg.sprite = filigreeSprite;
-            midCrestImg.color = new Color(1.0f, 0.76f, 0.35f, 0.85f);
-            midCrestImg.raycastTarget = false;
+            // Bottom Sacred Lantern Relic & Ember Vein Wings Crest
+            if (bottomCrestSprite != null)
+            {
+                var botCrestRect = CreateAnchoredRect("Bottom Lantern Crest", homeHeaderRect, new Vector2(920f, 130f), new Vector2(0.5f, 0.5f), new Vector2(0f, -80f), pivot: new Vector2(0.5f, 0.5f));
+                var botCrestImg = botCrestRect.gameObject.AddComponent<Image>();
+                botCrestImg.sprite = bottomCrestSprite;
+                botCrestImg.color = Color.white;
+                botCrestImg.raycastTarget = false;
+            }
 
-            // Frameless Active Realm Whisper
-            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "REALM I   ·   THE RUINED ARCHIVE", 12f, amberGold, new Vector2(580f, 24f), new Vector2(0f, 0.5f), new Vector2(0f, -58f), pivot: new Vector2(0f, 0.5f));
-            activeRealmBadgeText.alignment = TextAlignmentOptions.MidlineLeft;
+            // Whispered Active Realm Badge
+            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "—   REALM I  :  THE FIRST LIGHT   —", 11.5f, amberGold, new Vector2(700f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -165f), pivot: new Vector2(0.5f, 0.5f));
+            activeRealmBadgeText.alignment = TextAlignmentOptions.Center;
             activeRealmBadgeText.characterSpacing = 4.5f;
 
-            // 2. Left-Aligned Vertical Menu Stack with Animated Flame Cursor & Cascading Intro
+            // 2. Centered Vertical Menu Stack with Symmetrical Ember Wing Pointers
             playButton = CreateFramelessMenuButton(
-                leftColumn,
-                "Enter the Archive",
-                "Awaken the lantern and step into the realm",
-                yPos: 68f,
-                cameraPan: new Vector2(-18f, 14f),
+                centerColumn,
+                gameObjectName: "Enter the Archive",
+                labelText: "START GAME",
+                yPos: -45f,
+                cameraPan: new Vector2(0f, 10f),
                 onClick: Play,
-                isPrimary: true);
+                isPrimary: true,
+                customWingOffset: 135f);
 
             CreateFramelessMenuButton(
-                leftColumn,
-                "Realms & Chapters",
-                "Choose between Sirac Sandbox, Kemal Sandbox & Test Chamber",
-                yPos: -6f,
-                cameraPan: new Vector2(-24f, 8f),
-                onClick: ShowRealms);
+                centerColumn,
+                gameObjectName: "Settings",
+                labelText: "OPTIONS",
+                yPos: -100f,
+                cameraPan: new Vector2(14f, 4f),
+                onClick: ShowSettings,
+                isPrimary: false,
+                customWingOffset: 118f);
 
             CreateFramelessMenuButton(
-                leftColumn,
-                "Settings",
-                "Audio mixer, display & motion preferences",
-                yPos: -80f,
-                cameraPan: new Vector2(18f, 4f),
-                onClick: ShowSettings);
+                centerColumn,
+                gameObjectName: "Realms & Chapters",
+                labelText: "REALMS & CHAPTERS",
+                yPos: -155f,
+                cameraPan: new Vector2(-16f, 6f),
+                onClick: ShowRealms,
+                isPrimary: false,
+                customWingOffset: 175f);
 
             CreateFramelessMenuButton(
-                leftColumn,
-                "Controls & Guide",
-                "Movement, coyote jump, lantern flare & ember veins",
-                yPos: -154f,
-                cameraPan: new Vector2(-16f, -8f),
-                onClick: ShowControls);
+                centerColumn,
+                gameObjectName: "Controls & Guide",
+                labelText: "CONTROLS",
+                yPos: -210f,
+                cameraPan: new Vector2(-12f, -6f),
+                onClick: ShowControls,
+                isPrimary: false,
+                customWingOffset: 122f);
 
             CreateFramelessMenuButton(
-                leftColumn,
-                "Credits",
-                "The creators & soundscape of the archive",
-                yPos: -228f,
-                cameraPan: new Vector2(16f, -14f),
-                onClick: ShowCredits);
+                centerColumn,
+                gameObjectName: "Credits",
+                labelText: "CREDITS",
+                yPos: -265f,
+                cameraPan: new Vector2(12f, -8f),
+                onClick: ShowCredits,
+                isPrimary: false,
+                customWingOffset: 118f);
 
             CreateFramelessMenuButton(
-                leftColumn,
-                "Leave the Light",
-                "Extinguish the lantern and exit to desktop",
-                yPos: -302f,
-                cameraPan: new Vector2(0f, -22f),
-                onClick: ShowQuit);
+                centerColumn,
+                gameObjectName: "Leave the Light",
+                labelText: "QUIT GAME",
+                yPos: -320f,
+                cameraPan: new Vector2(0f, -16f),
+                onClick: ShowQuit,
+                isPrimary: false,
+                customWingOffset: 132f);
         }
 
         private Button CreateFramelessMenuButton(
             RectTransform parent,
-            string title,
-            string subtitle,
+            string gameObjectName,
+            string labelText,
             float yPos,
             Vector2 cameraPan,
             UnityEngine.Events.UnityAction onClick,
-            bool isPrimary = false)
+            bool isPrimary = false,
+            float customWingOffset = 140f)
         {
-            var itemRect = CreateAnchoredRect(title, parent, new Vector2(580f, isPrimary ? 64f : 56f), new Vector2(0f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0f, 0.5f));
+            var itemRect = CreateAnchoredRect(gameObjectName, parent, new Vector2(480f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
 
             var btnGroup = itemRect.gameObject.AddComponent<CanvasGroup>();
             btnGroup.alpha = 0f;
             btnGroup.interactable = false;
             btnGroup.blocksRaycasts = false;
 
-            // Invisible raycast hit graphic
+            // Transparent hit graphic
             var hitGraphic = itemRect.gameObject.AddComponent<Image>();
             hitGraphic.color = Color.clear;
 
-            // Soft radial lantern glow behind text
-            var glowRect = CreateAnchoredRect("Soft Lantern Aura", itemRect, new Vector2(440f, 64f), new Vector2(0f, 0.5f), new Vector2(10f, 0f), pivot: new Vector2(0f, 0.5f));
+            // Soft radial lantern glow behind text on hover
+            var glowRect = CreateAnchoredRect("Soft Lantern Aura", itemRect, new Vector2(240f, 30f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var glowImg = glowRect.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
             glowImg.color = Color.clear;
             glowImg.raycastTarget = false;
 
-            // Small Animated Pixel-Art Flame Cursor on left of text
-            var flameCursorRect = CreateAnchoredRect("Flame Cursor", itemRect, new Vector2(20f, 26f), new Vector2(0f, 0.5f), new Vector2(10f, 2f), pivot: new Vector2(0f, 0.5f));
-            var flameHaloRect = CreateAnchoredRect("Flame Cursor Halo", flameCursorRect, new Vector2(48f, 48f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
-            var flameHaloImg = flameHaloRect.gameObject.AddComponent<Image>();
-            flameHaloImg.sprite = PixelSprites.Glow != null ? PixelSprites.Glow : softRadialSprite;
-            flameHaloImg.color = Color.clear;
-            flameHaloImg.raycastTarget = false;
-
-            var flameImg = flameCursorRect.gameObject.AddComponent<Image>();
-            flameImg.sprite = PixelSprites.Flame != null ? PixelSprites.Flame : softRadialSprite;
-            flameImg.preserveAspect = true;
-            flameImg.color = Color.clear;
-            flameImg.raycastTarget = false;
-
-            // Left-Aligned Title Typography
-            var titleTxt = CreateLabel("Title", itemRect, title.ToUpperInvariant(), isPrimary ? 23f : 19f, isPrimary ? amberGold : radiantIvory, new Vector2(520f, 30f), new Vector2(0f, 0.5f), new Vector2(42f, 7f), pivot: new Vector2(0f, 0.5f));
-            titleTxt.alignment = TextAlignmentOptions.MidlineLeft;
+            // Centered Title Typography
+            var titleTxt = CreateLabel("Title", itemRect, labelText.ToUpperInvariant(), isPrimary ? 22f : 19f, radiantIvory, new Vector2(440f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            titleTxt.alignment = TextAlignmentOptions.Center;
             titleTxt.fontStyle = FontStyles.Bold;
-            titleTxt.characterSpacing = isPrimary ? 5.2f : 3.8f;
+            titleTxt.characterSpacing = isPrimary ? 6.5f : 5.2f;
 
-            // Whispered Left-Aligned Subtitle underneath
-            var subTxt = CreateLabel("Subtitle", itemRect, subtitle, 11f, moonlightSilver, new Vector2(520f, 18f), new Vector2(0f, 0.5f), new Vector2(42f, -13f), pivot: new Vector2(0f, 0.5f));
-            subTxt.alignment = TextAlignmentOptions.MidlineLeft;
-            subTxt.characterSpacing = 1.2f;
+            // Symmetrical Ember Wing Pointers (Hollow Knight / The Lighten Road style)
+            var wingContainer = CreateAnchoredRect("Wings Container", itemRect, new Vector2(480f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
+            wingGroup.alpha = 0f;
 
-            // Left-to-right glowing ember line underline
-            var lineRect = CreateAnchoredRect("Underline Filigree", itemRect, new Vector2(0f, 2f), new Vector2(0f, 0.5f), new Vector2(42f, -2f), pivot: new Vector2(0f, 0.5f));
-            var lineImg = lineRect.gameObject.AddComponent<Image>();
-            lineImg.sprite = filigreeSprite;
-            lineImg.color = Color.clear;
-            lineImg.raycastTarget = false;
+            RectTransform leftWingRect = null;
+            RectTransform rightWingRect = null;
+            if (buttonPointerSprite != null)
+            {
+                leftWingRect = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(48f, 24f), new Vector2(0.5f, 0.5f), new Vector2(-customWingOffset, 0f), pivot: new Vector2(0.5f, 0.5f));
+                var leftImg = leftWingRect.gameObject.AddComponent<Image>();
+                leftImg.sprite = buttonPointerSprite;
+                leftImg.color = Color.white;
+                leftImg.raycastTarget = false;
+
+                rightWingRect = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(48f, 24f), new Vector2(0.5f, 0.5f), new Vector2(customWingOffset, 0f), pivot: new Vector2(0.5f, 0.5f));
+                rightWingRect.localScale = new Vector3(-1f, 1f, 1f); // Mirrored horizontally
+                var rightImg = rightWingRect.gameObject.AddComponent<Image>();
+                rightImg.sprite = buttonPointerSprite;
+                rightImg.color = Color.white;
+                rightImg.raycastTarget = false;
+            }
 
             var btn = itemRect.gameObject.AddComponent<Button>();
             btn.targetGraphic = hitGraphic;
@@ -939,16 +976,15 @@ namespace TheLightenRoad.Frontend
 
             var motion = itemRect.gameObject.AddComponent<MenuButtonMotion>();
             motion.Text = titleTxt;
-            motion.SubtitleText = subTxt;
             motion.SoftGlow = glowImg;
-            motion.FlameCursorRect = flameCursorRect;
-            motion.FlameCursorImage = flameImg;
-            motion.FlameCursorHalo = flameHaloImg;
-            motion.UnderlineFiligree = lineImg;
+            motion.LeftWing = leftWingRect;
+            motion.RightWing = rightWingRect;
+            motion.WingGroup = wingGroup;
+            motion.BaseWingOffset = customWingOffset;
             motion.IsPrimaryAction = isPrimary;
-            motion.LeftAlignedItem = true;
-            motion.InitializeBasePositions(new Vector2(42f, 7f), new Vector2(42f, -13f), new Vector2(10f, 2f));
-            motion.StageFocusCanvasPosition = new Vector2(-460f, yPos);
+            motion.LeftAlignedItem = false;
+            motion.InitializeBasePositions(Vector2.zero, Vector2.zero, Vector2.zero);
+            motion.StageFocusCanvasPosition = new Vector2(0f, yPos);
             motion.StageCameraPanOffset = cameraPan;
             motion.OnFocusedCallback = OnMenuButtonFocused;
 

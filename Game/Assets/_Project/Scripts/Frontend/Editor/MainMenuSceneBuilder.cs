@@ -16,7 +16,7 @@ namespace TheLightenRoad.Frontend.Editor
     public static class MainMenuSceneBuilder
     {
         public const string ScenePath = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
-        private const string FontPath = "Assets/_Project/Resources/UI/MenuType.asset";
+        private const string PrimaryFontPath = "Assets/_Project/Resources/UI/MenuType.asset";
 
         private static readonly string[] BuildScenePaths =
         {
@@ -72,7 +72,7 @@ namespace TheLightenRoad.Frontend.Editor
             var controller = root.AddComponent<MainMenuController>();
 
             var serialized = new SerializedObject(controller);
-            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
+            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(PrimaryFontPath);
             if (font != null)
             {
                 serialized.FindProperty("font").objectReferenceValue = font;
