@@ -67,7 +67,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
                     bool changed=Circuit.TryTransfer(Player.GetComponent<LanternFuel>());
                     Show(changed?(Circuit.Powered?"CIRCUIT POWERED\nOne ember is stored in the circuit. The platform is moving.":"EMBER RECOVERED\nThe platform freezes exactly where it is."):(Circuit.Powered?"LANTERN FULL\nMake room before recovering the circuit's ember.":"NO EMBERS\nAn ember is needed to power this circuit."),5f);
                 }
-                if(promptTime<=0 && Prompt!=null)Prompt.text=Circuit.Powered?"E / RECOVER EMBER — FREEZE PLATFORM":"E / DEPOSIT ONE EMBER — POWER PLATFORM";
+                if(promptTime<=0 && Prompt!=null)Prompt.text=Circuit.Powered?"E / RECOVER EMBER - FREEZE PLATFORM":"E / DEPOSIT ONE EMBER - POWER PLATFORM";
             }
             else if(promptTime<=0 && Prompt!=null)Prompt.text=IsComplete?"CHAMBERS COMPLETE / BACKSPACE TO RESTART":"F / SCOUT WITH ONE EMBER     BACKSPACE / RESTART";
             promptTime=Mathf.Max(0,promptTime-Time.unscaledDeltaTime);

@@ -422,7 +422,7 @@ namespace TheLightenRoad.UI
             // 5c. Ornate Divider Line
             dividerText = AddTMPText("Divider", centerGroup, new Vector2(0f, 2f), new Vector2(300f, 16f), 12,
                 TextAlignmentOptions.Center, Color.clear);
-            dividerText.text = "— — —";
+            dividerText.text = "- - -";
             dividerText.characterSpacing = 4f;
 
             // 5d. Subtitle Lore Flavor

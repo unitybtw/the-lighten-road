@@ -454,15 +454,15 @@ namespace TheLightenRoad.Frontend
 
             if (sceneName.Contains("Furkan"))
             {
-                chamberName = "CHAMBER 01-02   •   THE FIRST LIGHT";
+                chamberName = "CHAMBER 01-02   -   THE FIRST LIGHT";
             }
             else if (sceneName.Contains("Kemal"))
             {
-                chamberName = "CHAMBER 02   •   THE FLOODED MECHANISMS";
+                chamberName = "CHAMBER 02   -   THE FLOODED MECHANISMS";
             }
             else if (sceneName.Contains("ArchiveTest"))
             {
-                chamberName = "CHAMBER 03   •   CALIBRATION SANCTUARY";
+                chamberName = "CHAMBER 03   -   CALIBRATION SANCTUARY";
             }
 
             if (chamberTitleLabel != null)
@@ -485,12 +485,12 @@ namespace TheLightenRoad.Frontend
 
                 if (hasMemento)
                 {
-                    mementoBadgeLabel.text = "✦   ARCHIVE MEMENTO RECOVERED   ✦\n<size=13><color=#B0BED6>\"The deep stone whispers of paths that open only in high flame.\"</color></size>";
+                    mementoBadgeLabel.text = "*   ARCHIVE MEMENTO RECOVERED   *\n<size=13><color=#B0BED6>\"The deep stone whispers of paths that open only in high flame.\"</color></size>";
                     mementoBadgeLabel.color = amberGold;
                 }
                 else
                 {
-                    mementoBadgeLabel.text = "◇   ARCHIVE MEMENTO : UNFOUND   ◇\n<size=13><color=#76849E>Scout forgotten ledges with radiant flare to reveal the ancient seal.</color></size>";
+                    mementoBadgeLabel.text = "-   ARCHIVE MEMENTO : UNFOUND   -\n<size=13><color=#76849E>Scout forgotten ledges with radiant flare to reveal the ancient seal.</color></size>";
                     mementoBadgeLabel.color = moonlightSilver;
                 }
             }
@@ -616,7 +616,7 @@ namespace TheLightenRoad.Frontend
 
             // Whispered Eyebrow
             var eyebrow = CreateLabel("Eyebrow", modal.transform, new Vector2(0f, 345f), new Vector2(600f, 24f),
-                "—   ARCHIVE TRAVERSAL SUSPENDED   —", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
+                "--   ARCHIVE TRAVERSAL SUSPENDED   --", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
             eyebrow.characterSpacing = 6.5f;
 
             // Monumental Center Title: PAUSED
@@ -634,7 +634,7 @@ namespace TheLightenRoad.Frontend
 
             // Chamber Title Whisper
             chamberTitleLabel = CreateLabel("ChamberTitle", modal.transform, new Vector2(0f, 225f), new Vector2(640f, 26f),
-                "CHAMBER 01-02   •   THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
+                "CHAMBER 01-02   -   THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
             chamberTitleLabel.characterSpacing = 4f;
 
             // Memento Recovery Badge

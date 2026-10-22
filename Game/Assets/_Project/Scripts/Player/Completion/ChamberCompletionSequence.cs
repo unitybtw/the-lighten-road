@@ -244,9 +244,9 @@ namespace TheLightenRoad.Player.Completion
             if (memento.HasValue)
             {
                 if (memento.Value)
-                    Text("✦   ARCHIVE MEMENTO RECOVERED   ✦", card.transform, -102f, 13f, new Color(.98f, .86f, .52f, .95f), 3.5f);
+                    Text("*   ARCHIVE MEMENTO RECOVERED   *", card.transform, -102f, 13f, new Color(.98f, .86f, .52f, .95f), 3.5f);
                 else
-                    Text("◇   ARCHIVE MEMENTO UNFOUND   ◇", card.transform, -102f, 13f, new Color(.62f, .68f, .75f, .62f), 3.5f);
+                    Text("-   ARCHIVE MEMENTO UNFOUND   -", card.transform, -102f, 13f, new Color(.62f, .68f, .75f, .62f), 3.5f);
             }
 
             // The curtain must draw above the caption to conceal the scene swap completely.

@@ -283,7 +283,7 @@ namespace TheLightenRoad.Lantern
             var panel = new Rect(16f, 16f, width, height);
             GUI.Box(panel, string.Empty);
             GUI.Label(new Rect(28f, 20f, width - 20f, 20f),
-                $"[F] {(IsFlared ? "FLARE (SCOUT)" : "DIM")} — Embers: {fuel.TotalEmbers} ({fuel.TotalCharges} charges)");
+                $"[F] {(IsFlared ? "FLARE (SCOUT)" : "DIM")} - Embers: {fuel.TotalEmbers} ({fuel.TotalCharges} charges)");
         }
     }
 }

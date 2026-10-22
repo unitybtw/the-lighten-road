@@ -46,7 +46,7 @@ namespace TheLightenRoad.Frontend
             {
                 Number = "REALM II",
                 Title = "THE FLOODED MECHANISMS",
-                Tag = "KEMAL SANDBOX  •  PUZZLES & VEINS",
+                Tag = "KEMAL SANDBOX  -  PUZZLES & VEINS",
                 Description = "Channel lantern energy into ancient Ember Veins, push rolling archive shelves, and navigate past electrified waters and lifts.",
                 ScenePath = "Assets/_Project/Scenes/Sandbox/Kemal/SceneKemal.unity"
             },
@@ -54,7 +54,7 @@ namespace TheLightenRoad.Frontend
             {
                 Number = "REALM III",
                 Title = "ARCHIVE TEST CHAMBER",
-                Tag = "PROTOTYPE  •  CALIBRATION ROOM",
+                Tag = "PROTOTYPE  -  CALIBRATION ROOM",
                 Description = "Focused testing ground for lantern light radii, movement physics, coyote time, and environmental hazards.",
                 ScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity"
             }
@@ -464,8 +464,8 @@ namespace TheLightenRoad.Frontend
                 var r = AvailableRealms[selectedRealmIndex];
                 bool activeDone = MenuPreferences.IsRealmCompleted(selectedRealmIndex);
                 activeRealmBadgeText.text = activeDone
-                    ? $"—   {r.Number}  :  {r.Title}  [✦ CONQUERED]   —"
-                    : $"—   {r.Number}  :  {r.Title}   —";
+                    ? $"--   {r.Number}  :  {r.Title}  [* CONQUERED]   --"
+                    : $"--   {r.Number}  :  {r.Title}   --";
             }
 
             for (int i = 0; i < realmRowAuras.Count; i++)
@@ -496,12 +496,12 @@ namespace TheLightenRoad.Frontend
                 {
                     if (isSelected)
                     {
-                        realmStatusLabels[i].text = isCompleted ? "[ ACTIVE REALM • CONQUERED ✦ ]" : "[ ACTIVE REALM ]";
+                        realmStatusLabels[i].text = isCompleted ? "[ ACTIVE REALM - CONQUERED * ]" : "[ ACTIVE REALM ]";
                         realmStatusLabels[i].color = amberGold;
                     }
                     else
                     {
-                        realmStatusLabels[i].text = isCompleted ? "[ CONQUERED ✦ ]" : "SELECT REALM";
+                        realmStatusLabels[i].text = isCompleted ? "[ CONQUERED * ]" : "SELECT REALM";
                         realmStatusLabels[i].color = isCompleted ? radiantIvory : mutedIndigo;
                     }
                 }
@@ -899,7 +899,7 @@ namespace TheLightenRoad.Frontend
             }
 
             // Whispered Active Realm Badge
-            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "—   REALM I  :  THE FIRST LIGHT   —", 11.5f, amberGold, new Vector2(700f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -165f), pivot: new Vector2(0.5f, 0.5f));
+            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "--   REALM I  :  THE FIRST LIGHT   --", 11.5f, amberGold, new Vector2(700f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -165f), pivot: new Vector2(0.5f, 0.5f));
             activeRealmBadgeText.alignment = TextAlignmentOptions.Center;
             activeRealmBadgeText.characterSpacing = 4.5f;
 
@@ -1098,7 +1098,7 @@ namespace TheLightenRoad.Frontend
                 btn.onClick.AddListener(() => SelectRealm(capturedIndex));
                 if (i == 0) realmsFirst = btn;
 
-                var tagTxt = CreateLabel("Realm Number", row, $"{r.Number}   ·   {r.Tag}", 11f, amberGold, new Vector2(780f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 38f));
+                var tagTxt = CreateLabel("Realm Number", row, $"{r.Number}   -   {r.Tag}", 11f, amberGold, new Vector2(780f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 38f));
                 tagTxt.rectTransform.pivot = Vector2.one * 0.5f;
                 tagTxt.alignment = TextAlignmentOptions.Center;
                 tagTxt.characterSpacing = 4f;
