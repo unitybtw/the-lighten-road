@@ -1,0 +1,24 @@
+{
+  "name": "TheLightenRoad.Sirac.OfficeTutorial.Editor",
+  "references": [
+    "TheLightenRoad.Sirac.FurkanPrototype",
+    "TheLightenRoad.Sirac.FurkanPrototype.Editor",
+    "TheLightenRoad.Relays",
+    "TheLightenRoad.Glyphs",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Audio",
+    "TheLightenRoad.Effects",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Completion",
+    "Unity.TextMeshPro",
+    "UnityEngine.UI",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime",
+    "Unity.2D.Tilemap.Extras"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}
