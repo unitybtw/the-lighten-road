@@ -4,6 +4,7 @@
     "references": [
         "TheLightenRoad.Lantern",
         "TheLightenRoad.Player",
+        "TheLightenRoad.Audio",
         "UnityEngine.UI",
         "Unity.InputSystem",
         "Unity.TextMeshPro"
