@@ -76,7 +76,6 @@ namespace TheLightenRoad.Frontend
         private Vector2 currentCameraOffset;
         private Vector2 targetButtonCanvasPos = new Vector2(-460f, 85f);
         private Vector2 currentButtonCanvasPos = new Vector2(-460f, 85f);
-        private bool hasActiveButtonTarget;
         private RectTransform parentCanvasRectTransform;
 
         public void SetArtOverrides(Sprite characterOverride, Sprite hangingLampOverride, Sprite chainOverride)

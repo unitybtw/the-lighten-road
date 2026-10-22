@@ -81,6 +81,18 @@ namespace TheLightenRoad.Frontend
         private Sprite bottomCrestSprite;
         private Sprite buttonPointerSprite;
 
+        // Procedural 9-Slice Rounded Glass Sprites (Smooth, Anti-Aliased 12-16px Corners with 1px Ethereal Contour)
+        private readonly List<Sprite> proceduralSprites = new List<Sprite>();
+        private Sprite roundedContainerSprite;
+        private Sprite roundedCardNormalSprite;
+        private Sprite roundedCardActiveSprite;
+        private Sprite roundedButtonNormalSprite;
+        private Sprite roundedButtonPrimarySprite;
+        private Sprite roundedPillSprite;
+        private Sprite roundedRowSprite;
+        private Sprite roundedTrackSprite;
+        private Sprite roundedFillSprite;
+
         private RectTransform safeFrame;
         private Image subpanelVeil;
         private Image curtain;
@@ -129,6 +141,7 @@ namespace TheLightenRoad.Frontend
         private readonly List<Image> realmRowAuras = new List<Image>();
         private readonly List<Image> realmRowUnderlines = new List<Image>();
         private readonly List<TMP_Text> realmStatusLabels = new List<TMP_Text>();
+        private readonly List<Image> realmRowBackgrounds = new List<Image>();
 
         private Slider masterSlider;
         private Slider musicSlider;
@@ -203,6 +216,16 @@ namespace TheLightenRoad.Frontend
                 if (softRadialSprite.texture != null) Destroy(softRadialSprite.texture);
                 Destroy(softRadialSprite);
             }
+            for (int i = 0; i < proceduralSprites.Count; i++)
+            {
+                var s = proceduralSprites[i];
+                if (s != null)
+                {
+                    if (s.texture != null) Destroy(s.texture);
+                    Destroy(s);
+                }
+            }
+            proceduralSprites.Clear();
         }
 
         private void Update()
@@ -449,6 +472,10 @@ namespace TheLightenRoad.Frontend
                     realmRowUnderlines[i].color = isSelected
                         ? new Color(1.0f, 0.74f, 0.28f, 0.85f)
                         : (isCompleted ? new Color(0.95f, 0.78f, 0.42f, 0.35f) : new Color(0.55f, 0.68f, 0.90f, 0.16f));
+                }
+                if (i < realmRowBackgrounds.Count && realmRowBackgrounds[i] != null)
+                {
+                    realmRowBackgrounds[i].sprite = isSelected ? roundedCardActiveSprite : roundedCardNormalSprite;
                 }
                 if (realmStatusLabels[i] != null)
                 {
@@ -714,6 +741,17 @@ namespace TheLightenRoad.Frontend
             stage.BuildStage(rootRect);
             filigreeSprite = stage.CreateOrnateFiligreeSprite(512, 64);
             softRadialSprite = CreateSoftRadialSprite(128);
+
+            // Procedural 9-Slice Rounded Glass Sprites (Smooth, Anti-Aliased 12-16px Corners with 1px Ethereal Contour)
+            roundedContainerSprite = Create9SliceRoundedSprite(64, 18f, 1.2f, new Color(0.016f, 0.024f, 0.045f, 0.88f), new Color(0.85f, 0.75f, 0.55f, 0.35f), 22);
+            roundedCardNormalSprite = Create9SliceRoundedSprite(64, 14f, 1.0f, new Color(0.022f, 0.034f, 0.060f, 0.65f), new Color(0.65f, 0.72f, 0.88f, 0.28f), 18);
+            roundedCardActiveSprite = Create9SliceRoundedSprite(64, 14f, 1.4f, new Color(0.045f, 0.052f, 0.078f, 0.82f), new Color(1.0f, 0.78f, 0.32f, 0.88f), 18);
+            roundedButtonNormalSprite = Create9SliceRoundedSprite(48, 12f, 1.0f, new Color(0.030f, 0.045f, 0.080f, 0.75f), new Color(0.68f, 0.76f, 0.90f, 0.32f), 15);
+            roundedButtonPrimarySprite = Create9SliceRoundedSprite(48, 12f, 1.2f, new Color(0.045f, 0.058f, 0.095f, 0.82f), new Color(1.0f, 0.75f, 0.30f, 0.75f), 15);
+            roundedPillSprite = Create9SliceRoundedSprite(32, 15f, 1.0f, new Color(0.035f, 0.050f, 0.090f, 0.88f), new Color(0.90f, 0.78f, 0.50f, 0.45f), 15);
+            roundedRowSprite = Create9SliceRoundedSprite(48, 10f, 1.0f, new Color(0.020f, 0.030f, 0.055f, 0.50f), new Color(0.55f, 0.65f, 0.80f, 0.16f), 14);
+            roundedTrackSprite = Create9SliceRoundedSprite(16, 4f, 0.8f, new Color(0.12f, 0.16f, 0.25f, 0.65f), new Color(0.40f, 0.50f, 0.65f, 0.30f), 6);
+            roundedFillSprite = Create9SliceRoundedSprite(16, 4f, 0f, amberGold, amberGold, 6);
 
             topFiligreeSprite = Resources.Load<Sprite>("UI/HollowKnight_TopFiligree");
             bottomCrestSprite = Resources.Load<Sprite>("UI/HollowKnight_BottomCrest");
@@ -1018,6 +1056,7 @@ namespace TheLightenRoad.Frontend
             realmRowAuras.Clear();
             realmRowUnderlines.Clear();
             realmStatusLabels.Clear();
+            realmRowBackgrounds.Clear();
 
             for (int i = 0; i < AvailableRealms.Length; i++)
             {
@@ -1027,7 +1066,10 @@ namespace TheLightenRoad.Frontend
 
                 var row = CreateAnchoredRect($"Realm Option {i}", surface, new Vector2(860f, 122f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
                 var cardBg = row.gameObject.AddComponent<Image>();
-                cardBg.color = new Color(0.04f, 0.07f, 0.12f, 0.55f);
+                cardBg.sprite = (i == selectedRealmIndex) ? roundedCardActiveSprite : roundedCardNormalSprite;
+                cardBg.type = Image.Type.Sliced;
+                cardBg.color = Color.white;
+                realmRowBackgrounds.Add(cardBg);
 
                 var auraRect = CreateAnchoredRect("Row Aura", row, new Vector2(860f, 130f), new Vector2(0.5f, 0.5f), Vector2.zero);
                 var auraImg = auraRect.gameObject.AddComponent<Image>();
@@ -1104,7 +1146,9 @@ namespace TheLightenRoad.Frontend
         {
             var row = CreateAnchoredRect(title, parent, new Vector2(780f, 60f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
             var rowBg = row.gameObject.AddComponent<Image>();
-            rowBg.color = new Color(0.04f, 0.07f, 0.12f, 0.35f);
+            rowBg.sprite = roundedRowSprite;
+            rowBg.type = Image.Type.Sliced;
+            rowBg.color = Color.white;
 
             var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 14f, radiantIvory, new Vector2(380f, 22f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
             titleTxt.fontStyle = FontStyles.Bold;
@@ -1121,12 +1165,17 @@ namespace TheLightenRoad.Frontend
             sRect.sizeDelta = new Vector2(360f, 28f);
             sRect.anchoredPosition = new Vector2(-16f, 0f);
 
-            var track = CreateAnchoredRect("Track", sRect, new Vector2(285f, 4f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
-            track.gameObject.AddComponent<Image>().color = new Color(0.18f, 0.24f, 0.35f, 0.55f);
+            var track = CreateAnchoredRect("Track", sRect, new Vector2(285f, 6f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
+            var trackImg = track.gameObject.AddComponent<Image>();
+            trackImg.sprite = roundedTrackSprite;
+            trackImg.type = Image.Type.Sliced;
+            trackImg.color = Color.white;
 
             var fillArea = CreateStretchRect("Fill Area", track);
             var fill = CreateStretchRect("Fill", fillArea);
             var fillImg = fill.gameObject.AddComponent<Image>();
+            fillImg.sprite = roundedFillSprite;
+            fillImg.type = Image.Type.Sliced;
             fillImg.color = amberGold;
 
             var handleSlide = CreateStretchRect("Handle Slide Area", track);
@@ -1152,7 +1201,9 @@ namespace TheLightenRoad.Frontend
         {
             var row = CreateAnchoredRect(title, parent, new Vector2(780f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
             var hit = row.gameObject.AddComponent<Image>();
-            hit.color = new Color(0.04f, 0.07f, 0.12f, 0.35f);
+            hit.sprite = roundedRowSprite;
+            hit.type = Image.Type.Sliced;
+            hit.color = Color.white;
 
             var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 14f, radiantIvory, new Vector2(480f, 22f), new Vector2(0f, 0.5f), new Vector2(16f, 8f), pivot: new Vector2(0f, 0.5f));
             titleTxt.fontStyle = FontStyles.Bold;
@@ -1162,7 +1213,9 @@ namespace TheLightenRoad.Frontend
 
             var pill = CreateAnchoredRect("Pill", row, new Vector2(96f, 30f), new Vector2(1f, 0.5f), new Vector2(-16f, 0f), pivot: new Vector2(1f, 0.5f));
             var pillImg = pill.gameObject.AddComponent<Image>();
-            pillImg.color = new Color(0.08f, 0.12f, 0.20f, 0.85f);
+            pillImg.sprite = roundedPillSprite;
+            pillImg.type = Image.Type.Sliced;
+            pillImg.color = Color.white;
 
             var valTxt = CreateLabel("Value", pill, "OFF", 12f, amberGold, new Vector2(96f, 30f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             valTxt.alignment = TextAlignmentOptions.Center;
@@ -1180,7 +1233,9 @@ namespace TheLightenRoad.Frontend
         {
             var row = CreateAnchoredRect(title, parent, new Vector2(780f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
             var hit = row.gameObject.AddComponent<Image>();
-            hit.color = new Color(0.04f, 0.07f, 0.12f, 0.35f);
+            hit.sprite = roundedRowSprite;
+            hit.type = Image.Type.Sliced;
+            hit.color = Color.white;
 
             var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 14f, radiantIvory, new Vector2(480f, 22f), new Vector2(0f, 0.5f), new Vector2(16f, 8f), pivot: new Vector2(0f, 0.5f));
             titleTxt.fontStyle = FontStyles.Bold;
@@ -1189,7 +1244,10 @@ namespace TheLightenRoad.Frontend
             var subTxt = CreateLabel("Subtitle", row, subtitle, 11f, moonlightSilver, new Vector2(480f, 18f), new Vector2(0f, 0.5f), new Vector2(16f, -10f), pivot: new Vector2(0f, 0.5f));
 
             var pill = CreateAnchoredRect("FPS Pill", row, new Vector2(136f, 30f), new Vector2(1f, 0.5f), new Vector2(-16f, 0f), pivot: new Vector2(1f, 0.5f));
-            pill.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.12f, 0.20f, 0.85f);
+            var pillImg = pill.gameObject.AddComponent<Image>();
+            pillImg.sprite = roundedPillSprite;
+            pillImg.type = Image.Type.Sliced;
+            pillImg.color = Color.white;
 
             var fpsVal = CreateLabel("FPS Value", pill, "60 FPS", 12f, amberGold, new Vector2(136f, 30f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             fpsVal.alignment = TextAlignmentOptions.Center;
@@ -1224,10 +1282,15 @@ namespace TheLightenRoad.Frontend
         {
             var row = CreateAnchoredRect(actionTitle, parent, new Vector2(820f, 54f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
             var rowBg = row.gameObject.AddComponent<Image>();
-            rowBg.color = new Color(0.04f, 0.07f, 0.12f, 0.35f);
+            rowBg.sprite = roundedRowSprite;
+            rowBg.type = Image.Type.Sliced;
+            rowBg.color = Color.white;
 
             var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(210f, 36f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
-            badge.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.12f, 0.20f, 0.85f);
+            var badgeImg = badge.gameObject.AddComponent<Image>();
+            badgeImg.sprite = roundedPillSprite;
+            badgeImg.type = Image.Type.Sliced;
+            badgeImg.color = Color.white;
 
             var keyTxt = CreateLabel("Key Text", badge, keys, 12.5f, amberGold, new Vector2(210f, 36f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             keyTxt.alignment = TextAlignmentOptions.Center;
@@ -1260,7 +1323,9 @@ namespace TheLightenRoad.Frontend
         {
             var block = CreateAnchoredRect(name, parent, new Vector2(820f, 98f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
             var blockBg = block.gameObject.AddComponent<Image>();
-            blockBg.color = new Color(0.04f, 0.07f, 0.12f, 0.45f);
+            blockBg.sprite = roundedCardNormalSprite;
+            blockBg.type = Image.Type.Sliced;
+            blockBg.color = Color.white;
 
             var nameTxt = CreateLabel("Name", block, name, 21f, radiantIvory, new Vector2(780f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 22f));
             nameTxt.rectTransform.pivot = Vector2.one * 0.5f;
@@ -1286,7 +1351,9 @@ namespace TheLightenRoad.Frontend
         {
             var surface = CreateAnchoredRect("Quit Ethereal Frame", quit, new Vector2(760f, 360f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var surfBg = surface.gameObject.AddComponent<Image>();
-            surfBg.color = new Color(0.035f, 0.05f, 0.085f, 0.75f);
+            surfBg.sprite = roundedContainerSprite;
+            surfBg.type = Image.Type.Sliced;
+            surfBg.color = Color.white;
 
             var tag = CreateLabel("Quit Tag", surface, "UNTIL YOUR NEXT RETURN", 11f, amberGold, new Vector2(620f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 96f));
             tag.rectTransform.pivot = Vector2.one * 0.5f;
@@ -1321,7 +1388,9 @@ namespace TheLightenRoad.Frontend
         {
             var container = CreateAnchoredRect("Ethereal Subview Container", viewRoot, new Vector2(960f, 760f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var containerBg = container.gameObject.AddComponent<Image>();
-            containerBg.color = new Color(0.035f, 0.05f, 0.085f, 0.65f);
+            containerBg.sprite = roundedContainerSprite;
+            containerBg.type = Image.Type.Sliced;
+            containerBg.color = Color.white;
 
             var sub = CreateLabel("Subheading", container, subheading, 11f, amberGold, new Vector2(820f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 310f));
             sub.rectTransform.pivot = Vector2.one * 0.5f;
@@ -1353,12 +1422,14 @@ namespace TheLightenRoad.Frontend
         {
             var rect = CreateAnchoredRect(label, parent, new Vector2(width, 48f), new Vector2(0.5f, 0.5f), anchoredPos);
             var hit = rect.gameObject.AddComponent<Image>();
-            hit.color = new Color(0.06f, 0.09f, 0.15f, 0.65f);
+            hit.sprite = isPrimary ? roundedButtonPrimarySprite : roundedButtonNormalSprite;
+            hit.type = Image.Type.Sliced;
+            hit.color = Color.white;
 
-            var glowRect = CreateAnchoredRect("Soft Glow", rect, new Vector2(width + 40f, 60f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var glowRect = CreateAnchoredRect("Soft Glow", rect, new Vector2(width + 24f, 44f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var glowImg = glowRect.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
-            glowImg.color = isPrimary ? new Color(1.0f, 0.64f, 0.18f, 0.16f) : Color.clear;
+            glowImg.color = isPrimary ? new Color(1.0f, 0.74f, 0.28f, 0.12f) : Color.clear;
             glowImg.raycastTarget = false;
 
             var lineRect = CreateAnchoredRect("Filigree Underline", rect, new Vector2(width * 0.72f, 4f), new Vector2(0.5f, 0.5f), new Vector2(0f, -17f));
@@ -1485,6 +1556,51 @@ namespace TheLightenRoad.Frontend
             }
             tex.Apply();
             return Sprite.Create(tex, new Rect(0, 0, size, size), Vector2.one * 0.5f, 100f);
+        }
+
+        private Sprite Create9SliceRoundedSprite(int size, float radius, float borderWidth, Color fillColor, Color borderColor, int sliceMargin)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            float half = (size - 1f) * 0.5f;
+            float innerBox = Mathf.Max(0f, half - radius);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float qx = Mathf.Abs(x - half) - innerBox;
+                    float qy = Mathf.Abs(y - half) - innerBox;
+
+                    float dx = Mathf.Max(0f, qx);
+                    float dy = Mathf.Max(0f, qy);
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float d = dist - radius;
+
+                    float outerCoverage = Mathf.Clamp01(0.5f - d);
+                    if (outerCoverage <= 0.001f)
+                    {
+                        tex.SetPixel(x, y, Color.clear);
+                        continue;
+                    }
+
+                    float hw = Mathf.Max(0.001f, borderWidth * 0.5f);
+                    float borderFactor = (borderWidth > 0f) ? Mathf.Clamp01(1f - Mathf.Abs(d + hw) / hw) : 0f;
+                    Color c = Color.Lerp(fillColor, borderColor, borderFactor);
+                    c.a *= outerCoverage;
+                    tex.SetPixel(x, y, c);
+                }
+            }
+            tex.Apply();
+
+            Vector4 border = new Vector4(sliceMargin, sliceMargin, sliceMargin, sliceMargin);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), Vector2.one * 0.5f, 100f, 0, SpriteMeshType.FullRect, border);
+            proceduralSprites.Add(sprite);
+            return sprite;
         }
 
         private static float SmoothStep(float t)
