@@ -10,10 +10,12 @@ namespace TheLightenRoad.Frontend.Tests
     {
         private GameObject _host;
         private MainMenuController _menu;
+        private bool completed0,completed2;
 
         [SetUp]
         public void SetUp()
         {
+            completed0=MenuPreferences.IsRealmCompleted(0);completed2=MenuPreferences.IsRealmCompleted(2);
             MenuPreferences.ResetToDefaults();
             MenuPreferences.SetSelectedRealm(0);
             _host = new GameObject("MainMenuTestHost");
@@ -24,6 +26,7 @@ namespace TheLightenRoad.Frontend.Tests
         [TearDown]
         public void TearDown()
         {
+            MenuPreferences.SetRealmCompleted(0,completed0);MenuPreferences.SetRealmCompleted(2,completed2);
             if (_host != null)
             {
                 Object.Destroy(_host);
@@ -160,8 +163,8 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(foundConqueredInactive, Is.True, "Other conquered realm must show conquered label.");
 
             MenuPreferences.ResetToDefaults();
-            Assert.That(MenuPreferences.IsRealmCompleted(0), Is.False);
-            Assert.That(MenuPreferences.IsRealmCompleted(2), Is.False);
+            Assert.That(MenuPreferences.IsRealmCompleted(0), Is.True,"Resetting settings must preserve progress.");
+            Assert.That(MenuPreferences.IsRealmCompleted(2), Is.True);
         }
 
         [UnityTest]
@@ -187,5 +190,40 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(_menu.CreditsGroup.alpha, Is.EqualTo(0f));
             Assert.That(_menu.QuitGroup.alpha, Is.EqualTo(0f));
         }
+        [UnityTest]
+        public IEnumerator SettingsCategoriesAndResetConfirmationPreserveChangesUntilConfirmed()
+        {
+            yield return null;_menu.SkipIntro();_menu.ShowSettings();
+            Assert.That(_menu.CurrentSettingsSection,Is.EqualTo(0));
+            _menu.SelectSettingsSection(1);
+            Assert.That(_menu.CurrentSettingsSection,Is.EqualTo(1));
+            var panels=_menu.GetComponentsInChildren<RectTransform>(true);
+            var audio=System.Array.Find(panels,p=>p.name=="Audio settings");
+            var display=System.Array.Find(panels,p=>p.name=="Display settings");
+            Assert.That(audio.gameObject.activeSelf,Is.False);Assert.That(display.gameObject.activeSelf,Is.True);
+            MenuPreferences.SetAudio(.3f,.4f,.5f);
+            _menu.RequestSettingsReset();Assert.That(_menu.IsSettingsResetOpen,Is.True);
+            _menu.CancelSettingsReset();Assert.That(_menu.IsSettingsResetOpen,Is.False);
+            Assert.That(MenuPreferences.Master,Is.EqualTo(.3f).Within(.01f));
+            _menu.RequestSettingsReset();_menu.ResetDefaults();
+            Assert.That(_menu.IsSettingsResetOpen,Is.False);
+            Assert.That(MenuPreferences.Master,Is.EqualTo(.85f).Within(.01f));
+        }
+
+        [UnityTest]
+        public IEnumerator VSyncControlsFrameLimitAndAudioChangesReceiveSaveFeedback()
+        {
+            yield return null;_menu.SkipIntro();_menu.ShowSettings();
+            MenuPreferences.SetVSync(true);int before=MenuPreferences.TargetFPS;
+            _menu.SetSettingsFrameRate(120);Assert.That(MenuPreferences.TargetFPS,Is.EqualTo(before));
+            MenuPreferences.SetVSync(false);_menu.SetSettingsFrameRate(120);
+            Assert.That(MenuPreferences.TargetFPS,Is.EqualTo(120));
+            var slider=GameObject.Find("Master Volume").GetComponentInChildren<Slider>();
+            slider.value=.42f;yield return new WaitForSecondsRealtime(.65f);
+            var labels=_menu.GetComponentsInChildren<TMPro.TMP_Text>(true);
+            Assert.That(System.Array.Exists(labels,t=>t.text=="All changes saved"),Is.True);
+            _menu.ShowHome();Assert.That(_menu.CurrentView,Is.EqualTo("home"));
+        }
+
     }
 }

@@ -629,3 +629,7 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
      - `FurkanTutorialTests`: **8/8 passed**
      - `ArchiveTestChamberTests`: **3/3 passed**
    - Zero compilation errors, zero warnings, zero GUI bloat.
+
+## Checkpoint — lantern-lit Options (23 October 2026)
+
+Main-menu settings now use Audio, Display and Accessibility categories, frameless light-based focus, actual archive cage lamps/chains and calmer motion support. Direct frame-limit choices explain V-Sync interaction; settings show debounced save feedback and flush on return. Restore Defaults asks for confirmation and no longer erases realm-completion progress. The new layout is isolated in `MainMenuSettingsView.cs`; the title/stage and Credits are preserved. **14/14 frontend PlayMode tests passed** in Unity 6000.3.2f1. [Screenshots, scope and validation](SETTINGS-UX.md).

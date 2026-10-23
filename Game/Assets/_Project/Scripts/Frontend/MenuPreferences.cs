@@ -115,10 +115,7 @@ namespace TheLightenRoad.Frontend
             SetFullscreen(true);
             SetVSync(true);
             SetTargetFPS(60);
-            for (int i = 0; i < 5; i++)
-            {
-                PlayerPrefs.DeleteKey(Prefix + "RealmCompleted." + i);
-            }
+            // Restoring presentation preferences must never erase chapter progress.
             Save();
         }
 

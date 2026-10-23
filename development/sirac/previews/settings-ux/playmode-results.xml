@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="14" result="Passed" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:05Z" duration="2.8577563">
+  <test-suite type="TestSuite" id="1216" name="The Lighten Road" fullname="The Lighten Road" runstate="Runnable" testcasecount="166" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:05Z" duration="2.857756" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1030" name="TheLightenRoad.Frontend.PlayModeTests.dll" fullname="/Users/siracsimsek/Desktop/gamedevproject/Game/Library/ScriptAssemblies/TheLightenRoad.Frontend.PlayModeTests.dll" runstate="Runnable" testcasecount="19" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:05Z" duration="2.851988" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="88097" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1031" name="TheLightenRoad" fullname="TheLightenRoad" runstate="Runnable" testcasecount="19" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:05Z" duration="2.850716" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1032" name="Frontend" fullname="TheLightenRoad.Frontend" runstate="Runnable" testcasecount="19" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:05Z" duration="2.849351" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1033" name="Tests" fullname="TheLightenRoad.Frontend.Tests" runstate="Runnable" testcasecount="19" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:05Z" duration="2.848061" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1014" name="MainMenuTests" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:04Z" duration="2.477123" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1015" name="AwakensInHomeView_AndBuildsProceduralArchiveStageAndFramelessUI" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.AwakensInHomeView_AndBuildsProceduralArchiveStageAndFramelessUI" methodname="AwakensInHomeView_AndBuildsProceduralArchiveStageAndFramelessUI" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="1405732411" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:02Z" duration="0.221365" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1020" name="ConqueredRealms_DisplayBadgesAndRetainStatus" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.ConqueredRealms_DisplayBadgesAndRetainStatus" methodname="ConqueredRealms_DisplayBadgesAndRetainStatus" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="1155100859" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:02Z" duration="0.190825" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1017" name="QuitView_OpensAndCancelsBackToHome" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.QuitView_OpensAndCancelsBackToHome" methodname="QuitView_OpensAndCancelsBackToHome" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="1569632494" result="Passed" start-time="2026-10-23 19:38:02Z" end-time="2026-10-23 19:38:03Z" duration="0.191474" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1018" name="SelectingRealm_UpdatesTargetGameplaySceneAndPersistsChoice" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.SelectingRealm_UpdatesTargetGameplaySceneAndPersistsChoice" methodname="SelectingRealm_UpdatesTargetGameplaySceneAndPersistsChoice" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="2123788421" result="Passed" start-time="2026-10-23 19:38:03Z" end-time="2026-10-23 19:38:03Z" duration="0.192688" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1022" name="SettingsCategoriesAndResetConfirmationPreserveChangesUntilConfirmed" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.SettingsCategoriesAndResetConfirmationPreserveChangesUntilConfirmed" methodname="SettingsCategoriesAndResetConfirmationPreserveChangesUntilConfirmed" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="2003905028" result="Passed" start-time="2026-10-23 19:38:03Z" end-time="2026-10-23 19:38:03Z" duration="0.194485" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1019" name="SettingsSliders_PersistMasterMusicAndEffectsLevels" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.SettingsSliders_PersistMasterMusicAndEffectsLevels" methodname="SettingsSliders_PersistMasterMusicAndEffectsLevels" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="1210472675" result="Passed" start-time="2026-10-23 19:38:03Z" end-time="2026-10-23 19:38:03Z" duration="0.191146" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1021" name="StartGame_SuppressesInactiveSubViews_DuringDarknessTransition" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.StartGame_SuppressesInactiveSubViews_DuringDarknessTransition" methodname="StartGame_SuppressesInactiveSubViews_DuringDarknessTransition" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="1858177426" result="Passed" start-time="2026-10-23 19:38:03Z" end-time="2026-10-23 19:38:03Z" duration="0.237150" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1016" name="SubViews_SwitchCleanlyBetweenRealmsSettingsControlsAndCredits" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.SubViews_SwitchCleanlyBetweenRealmsSettingsControlsAndCredits" methodname="SubViews_SwitchCleanlyBetweenRealmsSettingsControlsAndCredits" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="1461417021" result="Passed" start-time="2026-10-23 19:38:03Z" end-time="2026-10-23 19:38:04Z" duration="0.196258" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1023" name="VSyncControlsFrameLimitAndAudioChangesReceiveSaveFeedback" fullname="TheLightenRoad.Frontend.Tests.MainMenuTests.VSyncControlsFrameLimitAndAudioChangesReceiveSaveFeedback" methodname="VSyncControlsFrameLimitAndAudioChangesReceiveSaveFeedback" classname="TheLightenRoad.Frontend.Tests.MainMenuTests" runstate="Runnable" seed="684970874" result="Passed" start-time="2026-10-23 19:38:04Z" end-time="2026-10-23 19:38:04Z" duration="0.849510" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1024" name="PauseMenuTests" fullname="TheLightenRoad.Frontend.Tests.PauseMenuTests" classname="TheLightenRoad.Frontend.Tests.PauseMenuTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-23 19:38:04Z" end-time="2026-10-23 19:38:05Z" duration="0.369304" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              <test-case id="1025" name="PauseMenu_AwakensAndBuildsFullUIHierarchy" fullname="TheLightenRoad.Frontend.Tests.PauseMenuTests.PauseMenu_AwakensAndBuildsFullUIHierarchy" methodname="PauseMenu_AwakensAndBuildsFullUIHierarchy" classname="TheLightenRoad.Frontend.Tests.PauseMenuTests" runstate="Runnable" seed="927730817" result="Passed" start-time="2026-10-23 19:38:04Z" end-time="2026-10-23 19:38:05Z" duration="0.077684" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              </test-case>
+              <test-case id="1026" name="PauseMenu_PausesAndResumesTimeScaleCorrectly" fullname="TheLightenRoad.Frontend.Tests.PauseMenuTests.PauseMenu_PausesAndResumesTimeScaleCorrectly" methodname="PauseMenu_PausesAndResumesTimeScaleCorrectly" classname="TheLightenRoad.Frontend.Tests.PauseMenuTests" runstate="Runnable" seed="2096665240" result="Passed" start-time="2026-10-23 19:38:05Z" end-time="2026-10-23 19:38:05Z" duration="0.070400" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              </test-case>
+              <test-case id="1029" name="PauseMenu_SettingsSyncsWithMenuPreferences" fullname="TheLightenRoad.Frontend.Tests.PauseMenuTests.PauseMenu_SettingsSyncsWithMenuPreferences" methodname="PauseMenu_SettingsSyncsWithMenuPreferences" classname="TheLightenRoad.Frontend.Tests.PauseMenuTests" runstate="Runnable" seed="1171465142" result="Passed" start-time="2026-10-23 19:38:05Z" end-time="2026-10-23 19:38:05Z" duration="0.070096" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              </test-case>
+              <test-case id="1027" name="PauseMenu_SubViewsSwitchCleanly" fullname="TheLightenRoad.Frontend.Tests.PauseMenuTests.PauseMenu_SubViewsSwitchCleanly" methodname="PauseMenu_SubViewsSwitchCleanly" classname="TheLightenRoad.Frontend.Tests.PauseMenuTests" runstate="Runnable" seed="1652560173" result="Passed" start-time="2026-10-23 19:38:05Z" end-time="2026-10-23 19:38:05Z" duration="0.072400" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+]]></output>
+              </test-case>
+              <test-case id="1028" name="PauseMenu_SuspendsAndRestoresPlayerMotor" fullname="TheLightenRoad.Frontend.Tests.PauseMenuTests.PauseMenu_SuspendsAndRestoresPlayerMotor" methodname="PauseMenu_SuspendsAndRestoresPlayerMotor" classname="TheLightenRoad.Frontend.Tests.PauseMenuTests" runstate="Runnable" seed="741502033" result="Passed" start-time="2026-10-23 19:38:05Z" end-time="2026-10-23 19:38:05Z" duration="0.071855" asserts="0">
+                <properties>
+                  <property name="_JOINTYPE" value="UnityCombinatorial" />
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+There are no audio listeners in the scene. Please ensure there is always one audio listener in the scene
+<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: /Users/siracsimsek/Library/Application Support/DefaultCompany/The Lighten Road/TestResults.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
