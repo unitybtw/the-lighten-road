@@ -71,12 +71,15 @@ namespace TheLightenRoad.Frontend
         private float surgeIntensity;
         private float pendulumBoost;
         private float playZoomProgress;
+        private float subViewFocusProgress;
+        private bool isInSubView;
         private float lastIntroIgnition;
         private Vector2 targetCameraOffset;
         private Vector2 currentCameraOffset;
         private Vector2 targetButtonCanvasPos = new Vector2(-460f, 85f);
         private Vector2 currentButtonCanvasPos = new Vector2(-460f, 85f);
         private RectTransform parentCanvasRectTransform;
+        private Image subViewAtmosphericHaze;
 
         public void SetArtOverrides(Sprite characterOverride, Sprite hangingLampOverride, Sprite chainOverride)
         {
@@ -174,6 +177,13 @@ namespace TheLightenRoad.Frontend
             cursorLanternGlow.sprite = radialGlowSprite;
             cursorLanternGlow.color = new Color(1.0f, 0.78f, 0.40f, 0.04f);
             cursorLanternGlow.raycastTarget = false;
+
+            // 7. Full-Screen SubView Depth-of-Field & Atmospheric Haze Overlay
+            var hazeRect = CreateStretchRect("Stage SubView Haze", stageRoot);
+            subViewAtmosphericHaze = hazeRect.gameObject.AddComponent<Image>();
+            subViewAtmosphericHaze.sprite = radialGlowSprite;
+            subViewAtmosphericHaze.color = Color.clear;
+            subViewAtmosphericHaze.raycastTarget = false;
         }
 
         private void LoadProjectArtAssetsIfNeeded()
@@ -383,11 +393,17 @@ namespace TheLightenRoad.Frontend
             playZoomProgress = Mathf.Clamp01(zoom01);
         }
 
+        public void SetSubViewFocus(bool inSubView)
+        {
+            isInSubView = inSubView;
+        }
+
         public void TickStage(float dt, float introIgnition, Vector2 normalizedMouse, Vector2 mouseCanvasPosition, bool reducedMotion)
         {
             time += dt;
             surgeIntensity = Mathf.MoveTowards(surgeIntensity, 0f, dt * 1.35f);
             pendulumBoost = Mathf.MoveTowards(pendulumBoost, 0f, dt * 2.4f);
+            subViewFocusProgress = Mathf.MoveTowards(subViewFocusProgress, isInSubView ? 1f : 0f, dt * 2.8f);
 
             // Smooth 2D orthographic parallax pan
             Vector2 desiredCam = reducedMotion
@@ -399,14 +415,22 @@ namespace TheLightenRoad.Frontend
             // Dynamic lantern canvas position (always exact to held lantern)
             Vector2 lanternCanvasPos = GetHeroLanternCanvasPosition();
 
-            // Play Transition Zoom into character's lantern
+            // Play Transition Zoom & Sub-View Focal Zoom
             if (cameraRig != null)
             {
                 float smoothZoom = playZoomProgress * playZoomProgress * (3f - 2f * playZoomProgress);
-                float rigScale = Mathf.Lerp(1.05f, 3.20f, smoothZoom);
+                float subViewZoom = Mathf.SmoothStep(0f, 1f, subViewFocusProgress);
+                float baseScale = Mathf.Lerp(1.05f, 1.16f, subViewZoom);
+                float rigScale = Mathf.Lerp(baseScale, 3.20f, smoothZoom);
                 cameraRig.localScale = new Vector3(rigScale, rigScale, 1f);
                 Vector2 zoomPan = Vector2.Lerp(Vector2.zero, new Vector2(-lanternCanvasPos.x * 2.1f, -lanternCanvasPos.y * 2.1f), smoothZoom);
                 cameraRig.anchoredPosition = zoomPan;
+            }
+
+            if (subViewAtmosphericHaze != null)
+            {
+                float hazeAlpha = Mathf.Lerp(0f, 0.65f, Mathf.SmoothStep(0f, 1f, subViewFocusProgress));
+                subViewAtmosphericHaze.color = new Color(0.015f, 0.022f, 0.045f, hazeAlpha);
             }
 
             // 1. Multi-layer 2D Orthographic Parallax

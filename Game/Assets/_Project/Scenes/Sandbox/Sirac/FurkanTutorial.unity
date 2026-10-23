@@ -1501,68 +1501,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1001 &113791739
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1717944007}
-    m_Modifications:
-    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_Name
-      value: HangingCageLamp_02
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 14.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 4.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
---- !u!4 &113791740 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-  m_PrefabInstance: {fileID: 113791739}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &127328316
 GameObject:
   m_ObjectHideFlags: 0
@@ -9256,68 +9194,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1001 &667649850
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1717944007}
-    m_Modifications:
-    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_Name
-      value: HangingCageLamp_01
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 3.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
---- !u!4 &667649851 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-  m_PrefabInstance: {fileID: 667649850}
-  m_PrefabAsset: {fileID: 0}
 --- !u!21 &682214106
 Material:
   serializedVersion: 8
@@ -15509,6 +15385,68 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &816640875
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1717944007}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_Name
+      value: HangingCageLamp_02
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 14.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+--- !u!4 &816640876 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+  m_PrefabInstance: {fileID: 816640875}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &830512192
 GameObject:
   m_ObjectHideFlags: 0
@@ -18222,6 +18160,68 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &962917613
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1717944007}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_Name
+      value: HangingCageLamp_03
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 4.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+--- !u!4 &962917614 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+  m_PrefabInstance: {fileID: 962917613}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &964160481
 GameObject:
   m_ObjectHideFlags: 0
@@ -24777,68 +24777,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1001 &1460822705
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1717944007}
-    m_Modifications:
-    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_Name
-      value: HangingCageLamp_04
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 32
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 5.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
---- !u!4 &1460822706 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-  m_PrefabInstance: {fileID: 1460822705}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1468065999
 GameObject:
   m_ObjectHideFlags: 0
@@ -29061,10 +28999,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 667649851}
-  - {fileID: 113791740}
-  - {fileID: 2140000510}
-  - {fileID: 1460822706}
+  - {fileID: 2114592502}
+  - {fileID: 816640876}
+  - {fileID: 962917614}
+  - {fileID: 2046943985}
   m_Father: {fileID: 384308929}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1725019997
@@ -34195,6 +34133,68 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &2046943984
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1717944007}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_Name
+      value: HangingCageLamp_04
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 32
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+--- !u!4 &2046943985 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+  m_PrefabInstance: {fileID: 2046943984}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2047010293
 GameObject:
   m_ObjectHideFlags: 0
@@ -35421,6 +35421,68 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1001 &2114592501
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1717944007}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_Name
+      value: HangingCageLamp_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+--- !u!4 &2114592502 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
+  m_PrefabInstance: {fileID: 2114592501}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2116408280
 GameObject:
   m_ObjectHideFlags: 0
@@ -35558,68 +35620,6 @@ Texture2D:
     offset: 0
     size: 0
     path: 
---- !u!1001 &2140000509
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1717944007}
-    m_Modifications:
-    - target: {fileID: 1000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_Name
-      value: HangingCageLamp_03
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 22
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 4.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
---- !u!4 &2140000510 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4000000000000001, guid: 58a9e7bc18044f77a833503289127d14, type: 3}
-  m_PrefabInstance: {fileID: 2140000509}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2142404453
 GameObject:
   m_ObjectHideFlags: 0
