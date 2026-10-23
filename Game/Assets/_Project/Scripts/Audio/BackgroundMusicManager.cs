@@ -99,6 +99,12 @@ namespace TheLightenRoad.Audio
             }
             else if (instance != this)
             {
+                var localSource = GetComponent<AudioSource>();
+                if (localSource != null)
+                {
+                    localSource.Stop();
+                    localSource.playOnAwake = false;
+                }
                 Destroy(gameObject);
                 return;
             }

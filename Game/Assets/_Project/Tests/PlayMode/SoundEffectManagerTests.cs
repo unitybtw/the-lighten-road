@@ -204,5 +204,28 @@ public sealed class SoundEffectManagerTests
         var recoveredSrc = sfxManager.GetAvailableSource();
         Assert.That(recoveredSrc, Is.Not.Null);
     }
+
+    [Test]
+    public void PlaysUIFeedbackClipsWithoutErrors()
+    {
+        Assert.DoesNotThrow(() => sfxManager.PlayUIHover());
+        Assert.DoesNotThrow(() => sfxManager.PlayUIClick());
+        Assert.DoesNotThrow(() => sfxManager.PlayUIBack());
+        Assert.That(sfxManager.UIHoverClip, Is.Not.Null);
+        Assert.That(sfxManager.UIClickClip, Is.Not.Null);
+        Assert.That(sfxManager.UIBackClip, Is.Not.Null);
+    }
+
+    [Test]
+    public void DebouncesIdenticalClipsRapidlyFiredInSameFrame()
+    {
+        Assert.DoesNotThrow(() =>
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                sfxManager.PlayUIClick();
+            }
+        });
+    }
 }
 

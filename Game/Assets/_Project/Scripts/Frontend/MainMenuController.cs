@@ -463,7 +463,7 @@ namespace TheLightenRoad.Frontend
 
             if (Application.isPlaying)
             {
-                SoundEffectManager.Instance?.PlayEmberPickup();
+                SoundEffectManager.Instance?.PlayUIClick();
             }
         }
 
@@ -688,21 +688,21 @@ namespace TheLightenRoad.Frontend
         {
             MenuPreferences.SetFullscreen(value);
             UpdateSwitchVisual(fullscreenToggle);
-            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
         }
 
         private void OnVSyncToggled(bool value)
         {
             MenuPreferences.SetVSync(value);
             UpdateSwitchVisual(vsyncToggle);
-            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
         }
 
         private void OnReducedMotionToggled(bool value)
         {
             MenuPreferences.SetReducedMotion(value);
             UpdateSwitchVisual(motionToggle);
-            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
         }
 
         private void CycleTargetFPS()
@@ -711,7 +711,7 @@ namespace TheLightenRoad.Frontend
             int next = current == 60 ? 120 : (current == 120 ? -1 : 60);
             MenuPreferences.SetTargetFPS(next);
             UpdateFpsLabel();
-            if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
         }
 
         private void UpdateFpsLabel()
@@ -728,7 +728,7 @@ namespace TheLightenRoad.Frontend
             stage?.TriggerInteractionSurge(Vector2.zero, Vector2.zero, 1f);
             if (Application.isPlaying)
             {
-                SoundEffectManager.Instance?.PlayEmberPickup();
+                SoundEffectManager.Instance?.PlayUIClick();
             }
         }
 
@@ -1534,7 +1534,7 @@ namespace TheLightenRoad.Frontend
             btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(() =>
             {
-                if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+                if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
                 onClick();
             });
 

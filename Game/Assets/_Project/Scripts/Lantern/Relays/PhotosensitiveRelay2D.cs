@@ -67,7 +67,7 @@ namespace TheLightenRoad.Lantern.Relays
         private float lingerTimer;
         private bool isActivated;
         private bool isLit;
-        private float soundTimer;
+        private float soundTimer = 0.45f;
 
         public RelayMode Mode { get => mode; set => mode = value; }
         public float ChargeLevel => chargeLevel;
@@ -102,6 +102,7 @@ namespace TheLightenRoad.Lantern.Relays
         {
             EnsureHierarchy();
             UpdateVisuals(0f);
+            soundTimer = 0.45f;
         }
 
         private void Update()

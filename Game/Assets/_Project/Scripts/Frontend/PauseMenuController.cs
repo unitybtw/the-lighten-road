@@ -807,7 +807,7 @@ namespace TheLightenRoad.Frontend
             {
                 btn.onClick.AddListener(() =>
                 {
-                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
                     onClick.Invoke();
                 });
             }
@@ -882,7 +882,7 @@ namespace TheLightenRoad.Frontend
             {
                 btn.onClick.AddListener(() =>
                 {
-                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayEmberPickup();
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
                     onClick.Invoke();
                 });
             }

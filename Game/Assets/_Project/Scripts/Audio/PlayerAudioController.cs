@@ -25,6 +25,7 @@ namespace TheLightenRoad.Audio
         private float footstepTimer;
         private float skidCooldown;
         private float airDraftCooldown;
+        private float spawnGraceTimer = 0.35f;
 
         public float WalkInterval { get => walkInterval; set => walkInterval = value; }
         public float SprintInterval { get => sprintInterval; set => sprintInterval = value; }
@@ -139,7 +140,8 @@ namespace TheLightenRoad.Audio
                 lantern.EmberBroken += HandleEmberBroken;
             }
 
-            footstepTimer = 0.05f;
+            footstepTimer = walkInterval * 0.5f;
+            spawnGraceTimer = 0.35f;
         }
 
         private void OnDisable()
@@ -169,13 +171,18 @@ namespace TheLightenRoad.Audio
 
         private void Update()
         {
+            if (spawnGraceTimer > 0f)
+            {
+                spawnGraceTimer -= Time.deltaTime;
+            }
+
             TickFootsteps(Time.deltaTime);
             TickFoley(Time.deltaTime);
         }
 
         public void TickFoley(float dt)
         {
-            if (motor == null) return;
+            if (motor == null || spawnGraceTimer > 0f) return;
 
             // Skid scuff on rapid directional turn
             if (motor.IsGrounded && Mathf.Abs(motor.HorizontalSpeed) > 1.8f)
@@ -211,7 +218,9 @@ namespace TheLightenRoad.Audio
                 if (motor == null) return;
             }
 
-            bool isMovingOnGround = motor.IsGrounded && (Mathf.Abs(motor.HorizontalSpeed) > 0.15f || Mathf.Abs(motor.HorizontalInput) > 0.1f);
+            if (spawnGraceTimer > 0f) return;
+
+            bool isMovingOnGround = motor.IsGrounded && (Mathf.Abs(motor.HorizontalSpeed) > 0.35f || Mathf.Abs(motor.HorizontalInput) > 0.2f);
 
             if (isMovingOnGround)
             {
@@ -238,18 +247,20 @@ namespace TheLightenRoad.Audio
             }
             else
             {
-                footstepTimer = 0.05f;
+                footstepTimer = walkInterval * 0.4f;
             }
         }
 
         private void HandleJumped()
         {
+            if (spawnGraceTimer > 0f) return;
             var surface = GetCurrentSurface();
             SoundEffectManager.Instance?.PlayJump(surface);
         }
 
         private void HandleLanded(float impactSpeed)
         {
+            if (spawnGraceTimer > 0f || Mathf.Abs(impactSpeed) < 1.0f) return;
             var surface = GetCurrentSurface();
             SoundEffectManager.Instance?.PlayLanding(impactSpeed, surface);
         }

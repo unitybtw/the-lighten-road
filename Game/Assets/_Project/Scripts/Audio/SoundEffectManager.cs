@@ -120,6 +120,12 @@ namespace TheLightenRoad.Audio
         [SerializeField, Range(0f, 1f)] private float crystalVolume = 0.75f;
         [SerializeField, Range(0f, 1f)] private float gateVolume = 0.85f;
 
+        [Header("UI Feedback SFX")]
+        [SerializeField] private AudioClip uiHoverClip;
+        [SerializeField] private AudioClip uiClickClip;
+        [SerializeField] private AudioClip uiBackClip;
+        [SerializeField, Range(0f, 1f)] private float uiVolume = 0.65f;
+
         [Header("Volume Balances")]
         [SerializeField, Range(0f, 1f)] private float masterSFXVolume = 1.0f;
         [SerializeField, Range(0f, 1f)] private float footstepsVolume = 0.75f;
@@ -139,6 +145,8 @@ namespace TheLightenRoad.Audio
         private AudioSource exhaustionSource;
         private float targetExhaustionVol;
         private float exhaustionFadeSpeed = 2.5f;
+        private float sceneGraceTimer = 0f;
+        private readonly System.Collections.Generic.Dictionary<AudioClip, float> lastPlayTimes = new System.Collections.Generic.Dictionary<AudioClip, float>();
 
         public float MasterSFXVolume { get => masterSFXVolume; set => masterSFXVolume = Mathf.Clamp01(value); }
         public float FootstepsVolume { get => footstepsVolume; set => footstepsVolume = Mathf.Clamp01(value); }
@@ -165,6 +173,10 @@ namespace TheLightenRoad.Audio
         public AudioClip SkidScuffClip => skidScuffClip;
         public AudioClip AirDraftClip => airDraftClip;
         public AudioClip[] ChainClinkClips => chainClinkClips;
+        public AudioClip UIHoverClip => uiHoverClip;
+        public AudioClip UIClickClip => uiClickClip;
+        public AudioClip UIBackClip => uiBackClip;
+        public float UIVolume { get => uiVolume; set => uiVolume = Mathf.Clamp01(value); }
 
         private void Awake()
         {
@@ -190,11 +202,34 @@ namespace TheLightenRoad.Audio
         private void OnEnable()
         {
             EmberPickup.EmberCollected += HandleEmberPickupCollected;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
         }
 
         private void OnDisable()
         {
             EmberPickup.EmberCollected -= HandleEmberPickupCollected;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+        }
+
+        private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            StopTransientSounds();
+            sceneGraceTimer = 0.35f;
+            lastPlayTimes.Clear();
+        }
+
+        public void StopTransientSounds()
+        {
+            if (sourcePool != null)
+            {
+                for (int i = 0; i < sourcePool.Length; i++)
+                {
+                    if (sourcePool[i] != null && sourcePool[i].isPlaying)
+                    {
+                        sourcePool[i].Stop();
+                    }
+                }
+            }
         }
 
         private void OnDestroy()
@@ -323,6 +358,34 @@ namespace TheLightenRoad.Audio
             if (crystalActivateClip == null) crystalActivateClip = Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_activate");
             if (gateOpenClip == null) gateOpenClip = Resources.Load<AudioClip>("Audio/SFX/Environment/gate_open");
             if (gateCloseClip == null) gateCloseClip = Resources.Load<AudioClip>("Audio/SFX/Environment/gate_close");
+
+            if (uiHoverClip == null)
+            {
+                uiHoverClip = CreateProceduralClip("UI_Hover", 0.05f, t =>
+                {
+                    float env = Mathf.Exp(-70f * t);
+                    return Mathf.Sin(2f * Mathf.PI * 1450f * t) * 0.25f * env;
+                });
+            }
+            if (uiClickClip == null)
+            {
+                uiClickClip = CreateProceduralClip("UI_Click", 0.07f, t =>
+                {
+                    float env = Mathf.Exp(-48f * t);
+                    float click = Mathf.Sin(2f * Mathf.PI * 560f * t) * 0.5f 
+                                + Mathf.Sin(2f * Mathf.PI * 1120f * t) * 0.3f;
+                    return click * env;
+                });
+            }
+            if (uiBackClip == null)
+            {
+                uiBackClip = CreateProceduralClip("UI_Back", 0.11f, t =>
+                {
+                    float env = Mathf.Exp(-32f * t);
+                    float freq = Mathf.Lerp(420f, 260f, t / 0.11f);
+                    return Mathf.Sin(2f * Mathf.PI * freq * t) * 0.45f * env;
+                });
+            }
         }
 
         private float playerCheckTimer;
@@ -330,6 +393,11 @@ namespace TheLightenRoad.Audio
 
         private void Update()
         {
+            if (sceneGraceTimer > 0f)
+            {
+                sceneGraceTimer -= Time.unscaledDeltaTime;
+            }
+
             TickExhaustion(Time.unscaledDeltaTime);
             HandleSFXShortcuts();
 
@@ -482,7 +550,15 @@ namespace TheLightenRoad.Audio
 
         public void PlayOneShot(AudioClip clip, float volume = 1f, float pitch = 1f)
         {
-            if (clip == null) return;
+            if (clip == null || masterSFXVolume <= 0.001f) return;
+
+            // Debounce identical clips playing in the same millisecond burst
+            float now = Time.unscaledTime;
+            if (lastPlayTimes.TryGetValue(clip, out float lastTime))
+            {
+                if (now - lastTime < 0.045f) return;
+            }
+            lastPlayTimes[clip] = now;
 
             var src = GetAvailableSource();
             if (src == null) return;
@@ -648,14 +724,16 @@ namespace TheLightenRoad.Audio
 
         public void PlayLanding(float impactSpeed, SurfaceType surface = SurfaceType.Stone)
         {
+            if (sceneGraceTimer > 0f || Mathf.Abs(impactSpeed) < 1.0f) return;
+
             EnsureClipsLoaded();
             bool isHard = Mathf.Abs(impactSpeed) > 10.5f;
             AudioClip clip = isHard ? landingHardClip : landingSoftClip;
             if (clip == null) clip = landingSoftClip ?? landingHardClip;
             if (clip == null) return;
 
-            float speedFactor = Mathf.Clamp01(Mathf.Abs(impactSpeed) / 14f);
-            float vol = landingVolume * Mathf.Lerp(0.5f, 1.2f, speedFactor);
+            float speedFactor = Mathf.Clamp01((Mathf.Abs(impactSpeed) - 1.0f) / 12f);
+            float vol = landingVolume * Mathf.Lerp(0.25f, 1.0f, speedFactor);
             float pitchMod = surface == SurfaceType.Ethereal ? 1.2f : (surface == SurfaceType.Wood ? 0.9f : 1.0f);
             float pitch = pitchMod + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(clip, vol, pitch);
@@ -760,6 +838,33 @@ namespace TheLightenRoad.Audio
             {
                 float pitch = 1.0f + Random.Range(-pitchRandomRange, pitchRandomRange);
                 PlayOneShot(gateCloseClip, gateVolume * Mathf.Clamp01(volumeScale), pitch);
+            }
+        }
+
+        public void PlayUIHover(float volumeScale = 1.0f)
+        {
+            if (uiHoverClip == null) EnsureClipsLoaded();
+            if (uiHoverClip != null)
+            {
+                PlayOneShot(uiHoverClip, uiVolume * 0.40f * Mathf.Clamp01(volumeScale), 1.0f);
+            }
+        }
+
+        public void PlayUIClick(float volumeScale = 1.0f)
+        {
+            if (uiClickClip == null) EnsureClipsLoaded();
+            if (uiClickClip != null)
+            {
+                PlayOneShot(uiClickClip, uiVolume * 0.85f * Mathf.Clamp01(volumeScale), 1.0f);
+            }
+        }
+
+        public void PlayUIBack(float volumeScale = 1.0f)
+        {
+            if (uiBackClip == null) EnsureClipsLoaded();
+            if (uiBackClip != null)
+            {
+                PlayOneShot(uiBackClip, uiVolume * 0.75f * Mathf.Clamp01(volumeScale), 1.0f);
             }
         }
 

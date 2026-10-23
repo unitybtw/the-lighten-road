@@ -149,7 +149,7 @@ namespace TheLightenRoad.Frontend
             OnFocusedCallback?.Invoke(this);
             if (Application.isPlaying && Time.timeSinceLevelLoad > 0.35f && SoundEffectManager.HasInstance)
             {
-                SoundEffectManager.Instance.PlayWalkFootstep();
+                SoundEffectManager.Instance.PlayUIHover();
             }
         }
 

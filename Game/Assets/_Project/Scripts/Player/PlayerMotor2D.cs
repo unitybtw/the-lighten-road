@@ -87,6 +87,7 @@ namespace TheLightenRoad.Player
         private float previousVerticalVelocity;
         private float baseGravityScale = 3f;
         private float currentTilt;
+        private bool groundStateInitialized;
 
         public event System.Action OnJumped;
         public event System.Action<float> OnLanded;
@@ -174,6 +175,8 @@ namespace TheLightenRoad.Player
             move.Enable();
             jump.Enable();
             sprint.Enable();
+            groundStateInitialized = false;
+            IsGrounded = CheckGrounded();
         }
 
         private void Update()
@@ -222,18 +225,23 @@ namespace TheLightenRoad.Player
             {
                 coyoteTimer = coyoteTime;
 
-                // Trigger landing squash when touching ground from air
-                if (!wasGrounded && body.linearVelocity.y <= 0.1f)
+                // Trigger landing squash when touching ground from air (suppressed on initial spawn frame or micro-curbs)
+                if (!wasGrounded && body.linearVelocity.y <= 0.1f && groundStateInitialized)
                 {
                     float impactSpeed = Mathf.Abs(previousVerticalVelocity);
-                    ApplySquash(landSquash);
-                    OnLanded?.Invoke(impactSpeed);
+                    if (impactSpeed > 0.8f)
+                    {
+                        ApplySquash(landSquash);
+                        OnLanded?.Invoke(impactSpeed);
+                    }
                 }
             }
             else
             {
                 coyoteTimer -= Time.fixedDeltaTime;
             }
+
+            groundStateInitialized = true;
 
             if (jumpBufferTimer > 0f)
             {
