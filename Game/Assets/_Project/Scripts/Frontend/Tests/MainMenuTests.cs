@@ -163,5 +163,29 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(MenuPreferences.IsRealmCompleted(0), Is.False);
             Assert.That(MenuPreferences.IsRealmCompleted(2), Is.False);
         }
+
+        [UnityTest]
+        public IEnumerator StartGame_SuppressesInactiveSubViews_DuringDarknessTransition()
+        {
+            yield return null;
+            _menu.SkipIntro();
+
+            Assert.That(_menu.CurrentView, Is.EqualTo("home"));
+            Assert.That(_menu.SettingsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.RealmsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.ControlsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.CreditsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.QuitGroup.alpha, Is.EqualTo(0f));
+
+            _menu.Play();
+            yield return null;
+
+            // During transition, inactive subviews must NEVER become visible
+            Assert.That(_menu.SettingsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.RealmsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.ControlsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.CreditsGroup.alpha, Is.EqualTo(0f));
+            Assert.That(_menu.QuitGroup.alpha, Is.EqualTo(0f));
+        }
     }
 }

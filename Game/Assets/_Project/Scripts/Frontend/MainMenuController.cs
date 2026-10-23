@@ -180,6 +180,12 @@ namespace TheLightenRoad.Frontend
         public string GameplayScene => gameplayScene;
         public int SelectedRealmIndex => selectedRealmIndex;
         public TMP_Text ActiveRealmBadgeText => activeRealmBadgeText;
+        public CanvasGroup HomeGroup => homeGroup;
+        public CanvasGroup RealmsGroup => realmsGroup;
+        public CanvasGroup SettingsGroup => settingsGroup;
+        public CanvasGroup ControlsGroup => controlsGroup;
+        public CanvasGroup CreditsGroup => creditsGroup;
+        public CanvasGroup QuitGroup => quitGroup;
 
         private void Awake()
         {
@@ -567,6 +573,29 @@ namespace TheLightenRoad.Frontend
             if (creditsGroup != null) { creditsGroup.interactable = false; creditsGroup.blocksRaycasts = false; }
             if (quitGroup != null) { quitGroup.interactable = false; quitGroup.blocksRaycasts = false; }
 
+            // Ensure only the currently active view is visible; immediately zero out all inactive subviews
+            if (view != "home" && homeGroup != null) homeGroup.alpha = 0f;
+            if (view != "realms" && realmsGroup != null) realmsGroup.alpha = 0f;
+            if (view != "settings" && settingsGroup != null) settingsGroup.alpha = 0f;
+            if (view != "controls" && controlsGroup != null) controlsGroup.alpha = 0f;
+            if (view != "credits" && creditsGroup != null) creditsGroup.alpha = 0f;
+            if (view != "quit" && quitGroup != null) quitGroup.alpha = 0f;
+
+            float startHomeAlpha = (view == "home" && homeGroup != null) ? homeGroup.alpha : 0f;
+            float startRealmsAlpha = (view == "realms" && realmsGroup != null) ? realmsGroup.alpha : 0f;
+            float startSettingsAlpha = (view == "settings" && settingsGroup != null) ? settingsGroup.alpha : 0f;
+            float startControlsAlpha = (view == "controls" && controlsGroup != null) ? controlsGroup.alpha : 0f;
+            float startCreditsAlpha = (view == "credits" && creditsGroup != null) ? creditsGroup.alpha : 0f;
+            float startQuitAlpha = (view == "quit" && quitGroup != null) ? quitGroup.alpha : 0f;
+            float startHeaderAlpha = (view == "home" && homeHeaderGroup != null) ? homeHeaderGroup.alpha : 0f;
+            float startVeilAlpha = subpanelVeil != null ? subpanelVeil.color.a : 0f;
+
+            var startBtnAlphas = new float[homeButtons.Count];
+            for (int i = 0; i < homeButtons.Count; i++)
+            {
+                startBtnAlphas[i] = (view == "home" && homeButtons[i].Group != null) ? homeButtons[i].Group.alpha : 0f;
+            }
+
             // Ensure no intermediate loading bar or text box appears over the cinematic transition
             if (loadingContainer != null) loadingContainer.SetActive(false);
             if (hintText != null) hintText.gameObject.SetActive(false);
@@ -588,18 +617,22 @@ namespace TheLightenRoad.Frontend
                 elapsed += Time.unscaledDeltaTime;
                 float progress = Mathf.Clamp01(Mathf.Min(elapsed / transitionDuration, operation.progress / 0.9f));
 
-                // Fade all UI smoothly away into the deep dark in the initial 40% of the transition
-                float uiAlpha = Mathf.Clamp01(1f - progress * 2.5f);
-                if (homeGroup != null) homeGroup.alpha = uiAlpha;
-                if (realmsGroup != null) realmsGroup.alpha = uiAlpha;
-                if (settingsGroup != null) settingsGroup.alpha = uiAlpha;
-                if (controlsGroup != null) controlsGroup.alpha = uiAlpha;
-                if (creditsGroup != null) creditsGroup.alpha = uiAlpha;
-                if (quitGroup != null) quitGroup.alpha = uiAlpha;
-                if (homeHeaderGroup != null) homeHeaderGroup.alpha = uiAlpha;
+                // Fade ONLY the currently active view smoothly away into the dark
+                float fadeFactor = Mathf.Clamp01(1f - progress * 2.5f);
+                if (homeGroup != null) homeGroup.alpha = startHomeAlpha * fadeFactor;
+                if (realmsGroup != null) realmsGroup.alpha = startRealmsAlpha * fadeFactor;
+                if (settingsGroup != null) settingsGroup.alpha = startSettingsAlpha * fadeFactor;
+                if (controlsGroup != null) controlsGroup.alpha = startControlsAlpha * fadeFactor;
+                if (creditsGroup != null) creditsGroup.alpha = startCreditsAlpha * fadeFactor;
+                if (quitGroup != null) quitGroup.alpha = startQuitAlpha * fadeFactor;
+                if (homeHeaderGroup != null) homeHeaderGroup.alpha = startHeaderAlpha * fadeFactor;
+                if (subpanelVeil != null) subpanelVeil.color = new Color(1f, 1f, 1f, startVeilAlpha * fadeFactor);
                 for (int i = 0; i < homeButtons.Count; i++)
                 {
-                    homeButtons[i].Group.alpha = uiAlpha;
+                    if (homeButtons[i].Group != null)
+                    {
+                        homeButtons[i].Group.alpha = startBtnAlphas[i] * fadeFactor;
+                    }
                 }
 
                 // Animate lantern flame extinction & stage darkness
@@ -620,6 +653,14 @@ namespace TheLightenRoad.Frontend
             {
                 curtain.color = new Color(0.005f, 0.008f, 0.016f, 1f);
             }
+            if (homeGroup != null) homeGroup.alpha = 0f;
+            if (realmsGroup != null) realmsGroup.alpha = 0f;
+            if (settingsGroup != null) settingsGroup.alpha = 0f;
+            if (controlsGroup != null) controlsGroup.alpha = 0f;
+            if (creditsGroup != null) creditsGroup.alpha = 0f;
+            if (quitGroup != null) quitGroup.alpha = 0f;
+            if (homeHeaderGroup != null) homeHeaderGroup.alpha = 0f;
+            if (subpanelVeil != null) subpanelVeil.color = new Color(1f, 1f, 1f, 0f);
             operation.allowSceneActivation = true;
         }
 
