@@ -920,11 +920,6 @@ namespace TheLightenRoad.Audio
 
         public void SetExhaustionActive(bool active)
         {
-            if (active && sceneGraceTimer > 0f)
-            {
-                targetExhaustionVol = 0f;
-                return;
-            }
             targetExhaustionVol = active ? (exhaustionVolume * masterSFXVolume) : 0f;
 
             var src = EnsureExhaustionSource();

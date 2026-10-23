@@ -501,7 +501,7 @@ namespace TheLightenRoad.UI
             txt.alignment = alignment;
             txt.color = color;
             txt.raycastTarget = false;
-            txt.enableWordWrapping = false;
+            txt.textWrappingMode = TextWrappingModes.NoWrap;
             return txt;
         }
     }

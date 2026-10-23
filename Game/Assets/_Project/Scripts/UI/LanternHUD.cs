@@ -1,3 +1,4 @@
+using TheLightenRoad.Audio;
 using TheLightenRoad.Lantern;
 using TMPro;
 using UnityEngine;

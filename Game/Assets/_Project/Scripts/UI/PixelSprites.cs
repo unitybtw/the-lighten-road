@@ -347,7 +347,6 @@ namespace TheLightenRoad.UI
                 if (pillGlow != null) return pillGlow;
                 const int w = 48;
                 const int h = 24;
-                const float r = 8f;
                 const float halo = 6f;
                 var texture = new Texture2D(w, h, TextureFormat.RGBA32, false)
                 {
