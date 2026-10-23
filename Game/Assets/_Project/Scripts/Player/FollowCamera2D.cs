@@ -78,13 +78,29 @@ namespace TheLightenRoad.Player
             }
 
             currentFollowPosition = transform.position;
+            if (target == null)
+            {
+                var player = FindFirstObjectByType<PlayerMotor2D>();
+                if (player != null)
+                {
+                    target = player.transform;
+                }
+            }
             if (target != null)
                 BindTarget(target);
         }
 
         private void Start()
         {
-            if (target != null)
+            if (target == null)
+            {
+                var player = FindFirstObjectByType<PlayerMotor2D>();
+                if (player != null)
+                {
+                    SetTarget(player.transform, snap: true);
+                }
+            }
+            else
             {
                 currentFollowPosition = target.position + offset;
                 transform.position = currentFollowPosition;
@@ -169,7 +185,17 @@ namespace TheLightenRoad.Player
         private void LateUpdate()
         {
             if (target == null)
-                return;
+            {
+                var player = FindFirstObjectByType<PlayerMotor2D>();
+                if (player != null)
+                {
+                    SetTarget(player.transform, snap: true);
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             float dt = Time.deltaTime;
             if (dt <= 0f)

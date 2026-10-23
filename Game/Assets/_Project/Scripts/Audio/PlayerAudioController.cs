@@ -15,6 +15,7 @@ namespace TheLightenRoad.Audio
         [SerializeField] private PlayerMotor2D motor;
         [SerializeField] private PlayerStamina stamina;
         [SerializeField] private LanternController lantern;
+        private PlayerRespawnController respawnController;
 
         [Header("Footstep Intervals")]
         [Tooltip("Seconds between footstep sounds while walking.")]
@@ -95,11 +96,24 @@ namespace TheLightenRoad.Audio
             var motors = Object.FindObjectsByType<PlayerMotor2D>(FindObjectsSortMode.None);
             foreach (var m in motors)
             {
-                if (m != null && m.GetComponent<PlayerAudioController>() == null)
+                if (m != null)
                 {
-                    m.gameObject.AddComponent<PlayerAudioController>();
+                    var ctrl = m.GetComponent<PlayerAudioController>();
+                    if (ctrl == null)
+                    {
+                        ctrl = m.gameObject.AddComponent<PlayerAudioController>();
+                    }
+                    ctrl.ResetSpawnGrace(0.40f);
                 }
             }
+        }
+
+        public void ResetSpawnGrace(float duration = 0.40f)
+        {
+            spawnGraceTimer = duration;
+            footstepTimer = walkInterval * 0.5f;
+            skidCooldown = 0.3f;
+            airDraftCooldown = 0.6f;
         }
 
         public void EnsureReferences()
@@ -107,6 +121,7 @@ namespace TheLightenRoad.Audio
             if (motor == null) motor = GetComponent<PlayerMotor2D>() ?? GetComponentInParent<PlayerMotor2D>() ?? GetComponentInChildren<PlayerMotor2D>();
             if (stamina == null) stamina = GetComponent<PlayerStamina>() ?? GetComponentInParent<PlayerStamina>() ?? GetComponentInChildren<PlayerStamina>();
             if (lantern == null) lantern = GetComponent<LanternController>() ?? GetComponentInParent<LanternController>() ?? GetComponentInChildren<LanternController>();
+            if (respawnController == null) respawnController = GetComponent<PlayerRespawnController>() ?? GetComponentInParent<PlayerRespawnController>() ?? GetComponentInChildren<PlayerRespawnController>();
         }
 
         private void Awake()
@@ -140,8 +155,14 @@ namespace TheLightenRoad.Audio
                 lantern.EmberBroken += HandleEmberBroken;
             }
 
+            if (respawnController != null)
+            {
+                respawnController.OnPlayerRespawned -= HandlePlayerRespawned;
+                respawnController.OnPlayerRespawned += HandlePlayerRespawned;
+            }
+
             footstepTimer = walkInterval * 0.5f;
-            spawnGraceTimer = 0.35f;
+            spawnGraceTimer = 0.40f;
         }
 
         private void OnDisable()
@@ -161,6 +182,11 @@ namespace TheLightenRoad.Audio
             {
                 lantern.FlareChanged -= HandleFlareChanged;
                 lantern.EmberBroken -= HandleEmberBroken;
+            }
+
+            if (respawnController != null)
+            {
+                respawnController.OnPlayerRespawned -= HandlePlayerRespawned;
             }
 
             if (SoundEffectManager.HasInstance)
@@ -285,6 +311,11 @@ namespace TheLightenRoad.Audio
         private void HandleEmberBroken()
         {
             SoundEffectManager.Instance?.PlayEmberBreak();
+        }
+
+        private void HandlePlayerRespawned()
+        {
+            ResetSpawnGrace(0.40f);
         }
     }
 }

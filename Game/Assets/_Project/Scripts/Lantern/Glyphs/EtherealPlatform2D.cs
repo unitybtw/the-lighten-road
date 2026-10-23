@@ -191,14 +191,20 @@ namespace TheLightenRoad.Lantern.Glyphs
 
             if (isSolid)
             {
-                PlaySound(solidifySound, 587.33f, 880f); // D5 -> A5 ascending crystalline chime
+                if (Time.timeSinceLevelLoad > 0.35f)
+                {
+                    PlaySound(solidifySound, 587.33f, 880f); // D5 -> A5 ascending crystalline chime
+                }
                 OnSolidified.Invoke();
             }
             else
             {
                 isDecaying = false;
                 wasIlluminatedByFlare = false;
-                PlaySound(dissolveSound, 440f, 220f); // Descending whisper
+                if (Time.timeSinceLevelLoad > 0.35f)
+                {
+                    PlaySound(dissolveSound, 440f, 220f); // Descending whisper
+                }
                 OnDissolved.Invoke();
             }
 

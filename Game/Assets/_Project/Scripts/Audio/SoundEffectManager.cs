@@ -147,6 +147,11 @@ namespace TheLightenRoad.Audio
         private float exhaustionFadeSpeed = 2.5f;
         private float sceneGraceTimer = 0f;
         private readonly System.Collections.Generic.Dictionary<AudioClip, float> lastPlayTimes = new System.Collections.Generic.Dictionary<AudioClip, float>();
+        private int oneShotsThisFrame;
+        private int lastFrameCount = -1;
+        private const int MaxOneShotsPerFrame = 4;
+
+        public bool IsInSceneGracePeriod => sceneGraceTimer > 0f;
 
         public float MasterSFXVolume { get => masterSFXVolume; set => masterSFXVolume = Mathf.Clamp01(value); }
         public float FootstepsVolume { get => footstepsVolume; set => footstepsVolume = Mathf.Clamp01(value); }
@@ -560,6 +565,21 @@ namespace TheLightenRoad.Audio
             }
             lastPlayTimes[clip] = now;
 
+            // Burst limiter to prevent cacophony when multiple colliders trigger on same frame
+            if (Time.frameCount != lastFrameCount)
+            {
+                lastFrameCount = Time.frameCount;
+                oneShotsThisFrame = 1;
+            }
+            else
+            {
+                oneShotsThisFrame++;
+                if (oneShotsThisFrame > MaxOneShotsPerFrame)
+                {
+                    return;
+                }
+            }
+
             var src = GetAvailableSource();
             if (src == null) return;
 
@@ -691,6 +711,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayWalkFootstep(SurfaceType surface = SurfaceType.Stone)
         {
+            if (sceneGraceTimer > 0f) return;
             EnsureClipsLoaded();
             var bank = GetWalkClipsForSurface(surface);
             if (bank == null || bank.Length == 0 || bank[0] == null) bank = walkClips;
@@ -703,6 +724,7 @@ namespace TheLightenRoad.Audio
 
         public void PlaySprintFootstep(SurfaceType surface = SurfaceType.Stone)
         {
+            if (sceneGraceTimer > 0f) return;
             EnsureClipsLoaded();
             var bank = GetSprintClipsForSurface(surface);
             if (bank == null || bank.Length == 0 || bank[0] == null) bank = sprintClips;
@@ -715,6 +737,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayJump(SurfaceType surface = SurfaceType.Stone)
         {
+            if (sceneGraceTimer > 0f) return;
             if (jumpClip == null) EnsureClipsLoaded();
             if (jumpClip == null) return;
             float pitchMod = surface == SurfaceType.Ethereal ? 1.15f : (surface == SurfaceType.Metal ? 1.08f : 1.0f);
@@ -753,6 +776,7 @@ namespace TheLightenRoad.Audio
 
         public void PlaySkidScuff(SurfaceType surface = SurfaceType.Stone)
         {
+            if (sceneGraceTimer > 0f) return;
             if (skidScuffClip == null) EnsureClipsLoaded();
             if (skidScuffClip == null) return;
             float pitchMod = surface == SurfaceType.Metal ? 1.25f : (surface == SurfaceType.Wood ? 0.85f : 1.0f);
@@ -761,6 +785,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayAirDraft()
         {
+            if (sceneGraceTimer > 0f) return;
             if (airDraftClip == null) EnsureClipsLoaded();
             if (airDraftClip == null) return;
             PlayOneShot(airDraftClip, 0.45f, 1.0f);
@@ -790,6 +815,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayChainClink(float volumeScale = 1.0f)
         {
+            if (sceneGraceTimer > 0f) return;
             if (chainClinkClips == null || chainClinkClips.Length == 0) EnsureClipsLoaded();
             if (chainClinkClips == null || chainClinkClips.Length == 0) return;
 
@@ -804,6 +830,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayCrystalCharge(float pitchScale = 1.0f, float volumeScale = 1.0f)
         {
+            if (sceneGraceTimer > 0f) return;
             if (crystalChargeClip == null) EnsureClipsLoaded();
             if (crystalChargeClip != null)
             {
@@ -823,6 +850,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayGateOpen(float volumeScale = 1.0f)
         {
+            if (sceneGraceTimer > 0f) return;
             if (gateOpenClip == null) EnsureClipsLoaded();
             if (gateOpenClip != null)
             {
@@ -833,6 +861,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayGateClose(float volumeScale = 1.0f)
         {
+            if (sceneGraceTimer > 0f) return;
             if (gateCloseClip == null) EnsureClipsLoaded();
             if (gateCloseClip != null)
             {
