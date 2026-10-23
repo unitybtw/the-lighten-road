@@ -311,49 +311,52 @@ namespace TheLightenRoad.Frontend
             }
 
             float transitionProgress = MenuPreferences.ReducedMotion ? 1f : SmoothStep(Mathf.Clamp01(viewAge / 0.25f));
-            UpdateEtherealView(homeGroup, view == "home", 1f, transitionProgress, isHome: true);
-            UpdateEtherealView(realmsGroup, view == "realms", 1f, transitionProgress, isHome: false);
-            UpdateEtherealView(settingsGroup, view == "settings", 1f, transitionProgress, isHome: false);
-            UpdateEtherealView(controlsGroup, view == "controls", 1f, transitionProgress, isHome: false);
-            UpdateEtherealView(creditsGroup, view == "credits", 1f, transitionProgress, isHome: false);
-            UpdateEtherealView(quitGroup, view == "quit", 1f, transitionProgress, isHome: false);
-
-            // Cascading Staggered Button Entrance Animation on Initial Opening
-            if (view == "home")
+            if (!loading && !quitting)
             {
-                if (MenuPreferences.ReducedMotion || introDone)
-                {
-                    if (homeHeaderGroup != null) homeHeaderGroup.alpha = 1f;
-                    if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos;
-                    for (int i = 0; i < homeButtons.Count; i++)
-                    {
-                        var b = homeButtons[i];
-                        b.Rect.anchoredPosition = b.BasePos;
-                        b.Group.alpha = 1f;
-                        b.Group.interactable = !loading && !quitting;
-                        b.Group.blocksRaycasts = !loading && !quitting;
-                    }
-                }
-                else
-                {
-                    // Header fades down & in (age 0.35s .. 0.90s)
-                    float headerT = Mathf.Clamp01(Mathf.InverseLerp(0.35f, 0.90f, age));
-                    float headerE = SmoothStep(headerT);
-                    if (homeHeaderGroup != null) homeHeaderGroup.alpha = headerE;
-                    if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos + new Vector2(0f, (1f - headerE) * 16f);
+                UpdateEtherealView(homeGroup, view == "home", 1f, transitionProgress, isHome: true);
+                UpdateEtherealView(realmsGroup, view == "realms", 1f, transitionProgress, isHome: false);
+                UpdateEtherealView(settingsGroup, view == "settings", 1f, transitionProgress, isHome: false);
+                UpdateEtherealView(controlsGroup, view == "controls", 1f, transitionProgress, isHome: false);
+                UpdateEtherealView(creditsGroup, view == "credits", 1f, transitionProgress, isHome: false);
+                UpdateEtherealView(quitGroup, view == "quit", 1f, transitionProgress, isHome: false);
 
-                    // Each button cascades in from below (age 0.65s .. 1.80s)
-                    for (int i = 0; i < homeButtons.Count; i++)
+                // Cascading Staggered Button Entrance Animation on Initial Opening
+                if (view == "home")
+                {
+                    if (MenuPreferences.ReducedMotion || introDone)
                     {
-                        float btnStart = 0.65f + i * 0.10f;
-                        float btnT = Mathf.Clamp01(Mathf.InverseLerp(btnStart, btnStart + 0.38f, age));
-                        float btnE = 1f - Mathf.Pow(1f - btnT, 3f); // Smooth ease-out cubic
-                        var b = homeButtons[i];
-                        b.Rect.anchoredPosition = b.BasePos + new Vector2(0f, (1f - btnE) * -14f);
-                        b.Group.alpha = btnE;
-                        bool canInteract = btnE >= 0.98f && !loading && !quitting;
-                        b.Group.interactable = canInteract;
-                        b.Group.blocksRaycasts = canInteract;
+                        if (homeHeaderGroup != null) homeHeaderGroup.alpha = 1f;
+                        if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos;
+                        for (int i = 0; i < homeButtons.Count; i++)
+                        {
+                            var b = homeButtons[i];
+                            b.Rect.anchoredPosition = b.BasePos;
+                            b.Group.alpha = 1f;
+                            b.Group.interactable = true;
+                            b.Group.blocksRaycasts = true;
+                        }
+                    }
+                    else
+                    {
+                        // Header fades down & in (age 0.35s .. 0.90s)
+                        float headerT = Mathf.Clamp01(Mathf.InverseLerp(0.35f, 0.90f, age));
+                        float headerE = SmoothStep(headerT);
+                        if (homeHeaderGroup != null) homeHeaderGroup.alpha = headerE;
+                        if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos + new Vector2(0f, (1f - headerE) * 16f);
+
+                        // Each button cascades in from below (age 0.65s .. 1.80s)
+                        for (int i = 0; i < homeButtons.Count; i++)
+                        {
+                            float btnStart = 0.65f + i * 0.10f;
+                            float btnT = Mathf.Clamp01(Mathf.InverseLerp(btnStart, btnStart + 0.38f, age));
+                            float btnE = 1f - Mathf.Pow(1f - btnT, 3f); // Smooth ease-out cubic
+                            var b = homeButtons[i];
+                            b.Rect.anchoredPosition = b.BasePos + new Vector2(0f, (1f - btnE) * -14f);
+                            b.Group.alpha = btnE;
+                            bool canInteract = btnE >= 0.98f;
+                            b.Group.interactable = canInteract;
+                            b.Group.blocksRaycasts = canInteract;
+                        }
                     }
                 }
             }
@@ -366,7 +369,7 @@ namespace TheLightenRoad.Frontend
 
             if (hintText != null)
             {
-                hintText.gameObject.SetActive(!introDone);
+                hintText.gameObject.SetActive(!introDone && !loading && !quitting);
             }
 
             UpdateSafeFrame();
@@ -543,6 +546,12 @@ namespace TheLightenRoad.Frontend
             loading = true;
             MenuPreferences.Save();
 
+            // Clear any active UI selection to prevent re-triggering or ghost highlights
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+            }
+
             // Extinguish lantern audio (flame hiss & cold air draft)
             if (Application.isPlaying)
             {
@@ -550,30 +559,23 @@ namespace TheLightenRoad.Frontend
                 SoundEffectManager.Instance?.PlayAirDraft();
             }
 
-            // Immediately disable interaction on menus so player feels the darkness setting in
-            if (homeGroup != null)
-            {
-                homeGroup.interactable = false;
-                homeGroup.blocksRaycasts = false;
-            }
-            if (realmsGroup != null)
-            {
-                realmsGroup.interactable = false;
-                realmsGroup.blocksRaycasts = false;
-            }
+            // Immediately disable interaction on all menus so player feels the darkness setting in
+            if (homeGroup != null) { homeGroup.interactable = false; homeGroup.blocksRaycasts = false; }
+            if (realmsGroup != null) { realmsGroup.interactable = false; realmsGroup.blocksRaycasts = false; }
+            if (settingsGroup != null) { settingsGroup.interactable = false; settingsGroup.blocksRaycasts = false; }
+            if (controlsGroup != null) { controlsGroup.interactable = false; controlsGroup.blocksRaycasts = false; }
+            if (creditsGroup != null) { creditsGroup.interactable = false; creditsGroup.blocksRaycasts = false; }
+            if (quitGroup != null) { quitGroup.interactable = false; quitGroup.blocksRaycasts = false; }
 
-            if (loadingContainer != null) loadingContainer.SetActive(true);
-            if (loadingText != null)
-            {
-                var r = AvailableRealms[Mathf.Clamp(selectedRealmIndex, 0, AvailableRealms.Length - 1)];
-                loadingText.text = $"DESCENDING INTO {r.Title}...";
-                loadingText.color = new Color(radiantIvory.r, radiantIvory.g, radiantIvory.b, 0f);
-            }
+            // Ensure no intermediate loading bar or text box appears over the cinematic transition
+            if (loadingContainer != null) loadingContainer.SetActive(false);
+            if (hintText != null) hintText.gameObject.SetActive(false);
 
             var operation = SceneManager.LoadSceneAsync(gameplayScene, LoadSceneMode.Single);
             if (operation == null)
             {
                 loading = false;
+                if (loadingContainer != null) loadingContainer.SetActive(true);
                 if (loadingText != null) loadingText.text = "UNABLE TO OPEN REALM.";
                 yield break;
             }
@@ -586,11 +588,19 @@ namespace TheLightenRoad.Frontend
                 elapsed += Time.unscaledDeltaTime;
                 float progress = Mathf.Clamp01(Mathf.Min(elapsed / transitionDuration, operation.progress / 0.9f));
 
-                // Fade UI away into the deep dark
-                float uiAlpha = Mathf.Clamp01(1f - progress * 2.2f);
+                // Fade all UI smoothly away into the deep dark in the initial 40% of the transition
+                float uiAlpha = Mathf.Clamp01(1f - progress * 2.5f);
                 if (homeGroup != null) homeGroup.alpha = uiAlpha;
                 if (realmsGroup != null) realmsGroup.alpha = uiAlpha;
+                if (settingsGroup != null) settingsGroup.alpha = uiAlpha;
+                if (controlsGroup != null) controlsGroup.alpha = uiAlpha;
+                if (creditsGroup != null) creditsGroup.alpha = uiAlpha;
+                if (quitGroup != null) quitGroup.alpha = uiAlpha;
                 if (homeHeaderGroup != null) homeHeaderGroup.alpha = uiAlpha;
+                for (int i = 0; i < homeButtons.Count; i++)
+                {
+                    homeButtons[i].Group.alpha = uiAlpha;
+                }
 
                 // Animate lantern flame extinction & stage darkness
                 stage?.SetPlayZoom(progress);
@@ -600,17 +610,6 @@ namespace TheLightenRoad.Frontend
                 {
                     float darknessAlpha = SmoothStep(Mathf.Clamp01(progress * 1.15f));
                     curtain.color = new Color(0.005f, 0.008f, 0.016f, darknessAlpha);
-                }
-
-                if (loadingBarFill != null)
-                {
-                    loadingBarFill.rectTransform.anchorMax = new Vector2(progress, 1f);
-                    loadingBarFill.color = new Color(amberGold.r, amberGold.g, amberGold.b, Mathf.Clamp01(progress * 1.5f));
-                }
-                if (loadingText != null)
-                {
-                    float textAlpha = SmoothStep(Mathf.Clamp01(Mathf.InverseLerp(0.30f, 0.85f, progress)));
-                    loadingText.color = new Color(radiantIvory.r, radiantIvory.g, radiantIvory.b, textAlpha);
                 }
 
                 yield return null;
