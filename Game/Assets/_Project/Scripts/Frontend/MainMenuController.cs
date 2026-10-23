@@ -543,18 +543,31 @@ namespace TheLightenRoad.Frontend
             loading = true;
             MenuPreferences.Save();
 
-            stage?.TriggerInteractionSurge(new Vector2(-460f, 88f), new Vector2(-36f, 18f), 1.6f);
+            // Extinguish lantern audio (flame hiss & cold air draft)
             if (Application.isPlaying)
             {
-                SoundEffectManager.Instance?.PlayFlareIgnite();
+                SoundEffectManager.Instance?.PlayFlareExtinguish();
+                SoundEffectManager.Instance?.PlayAirDraft();
+            }
+
+            // Immediately disable interaction on menus so player feels the darkness setting in
+            if (homeGroup != null)
+            {
+                homeGroup.interactable = false;
+                homeGroup.blocksRaycasts = false;
+            }
+            if (realmsGroup != null)
+            {
+                realmsGroup.interactable = false;
+                realmsGroup.blocksRaycasts = false;
             }
 
             if (loadingContainer != null) loadingContainer.SetActive(true);
             if (loadingText != null)
             {
                 var r = AvailableRealms[Mathf.Clamp(selectedRealmIndex, 0, AvailableRealms.Length - 1)];
-                loadingText.text = $"ENTERING {r.Title}...";
-                loadingText.color = new Color32(42, 26, 12, 255);
+                loadingText.text = $"DESCENDING INTO {r.Title}...";
+                loadingText.color = new Color(radiantIvory.r, radiantIvory.g, radiantIvory.b, 0f);
             }
 
             var operation = SceneManager.LoadSceneAsync(gameplayScene, LoadSceneMode.Single);
@@ -567,34 +580,46 @@ namespace TheLightenRoad.Frontend
 
             operation.allowSceneActivation = false;
             float elapsed = 0f;
-            const float zoomDuration = 0.85f;
-            while (elapsed < zoomDuration || operation.progress < 0.9f)
+            const float transitionDuration = 1.30f;
+            while (elapsed < transitionDuration || operation.progress < 0.9f)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float progress = Mathf.Clamp01(Mathf.Min(elapsed / zoomDuration, operation.progress / 0.9f));
+                float progress = Mathf.Clamp01(Mathf.Min(elapsed / transitionDuration, operation.progress / 0.9f));
 
-                // Zoom the 2D parallax stage into the character's raised lantern
+                // Fade UI away into the deep dark
+                float uiAlpha = Mathf.Clamp01(1f - progress * 2.2f);
+                if (homeGroup != null) homeGroup.alpha = uiAlpha;
+                if (realmsGroup != null) realmsGroup.alpha = uiAlpha;
+                if (homeHeaderGroup != null) homeHeaderGroup.alpha = uiAlpha;
+
+                // Animate lantern flame extinction & stage darkness
                 stage?.SetPlayZoom(progress);
+
+                // Deep obsidian darkness collapses across the entire screen
+                if (curtain != null)
+                {
+                    float darknessAlpha = SmoothStep(Mathf.Clamp01(progress * 1.15f));
+                    curtain.color = new Color(0.005f, 0.008f, 0.016f, darknessAlpha);
+                }
 
                 if (loadingBarFill != null)
                 {
                     loadingBarFill.rectTransform.anchorMax = new Vector2(progress, 1f);
-                    loadingBarFill.color = new Color32(168, 92, 20, 255);
+                    loadingBarFill.color = new Color(amberGold.r, amberGold.g, amberGold.b, Mathf.Clamp01(progress * 1.5f));
                 }
-                if (curtain != null)
+                if (loadingText != null)
                 {
-                    // Warm golden-white lantern flash expanding across the entire screen
-                    float flashAlpha = SmoothStep(Mathf.InverseLerp(0.15f, 0.95f, progress));
-                    Color flashColor = Color.Lerp(new Color(1.0f, 0.78f, 0.36f, flashAlpha), new Color(1.0f, 0.97f, 0.88f, flashAlpha), progress);
-                    curtain.color = flashColor;
+                    float textAlpha = SmoothStep(Mathf.Clamp01(Mathf.InverseLerp(0.30f, 0.85f, progress)));
+                    loadingText.color = new Color(radiantIvory.r, radiantIvory.g, radiantIvory.b, textAlpha);
                 }
+
                 yield return null;
             }
 
             stage?.SetPlayZoom(1f);
             if (curtain != null)
             {
-                curtain.color = new Color(1.0f, 0.97f, 0.88f, 1f);
+                curtain.color = new Color(0.005f, 0.008f, 0.016f, 1f);
             }
             operation.allowSceneActivation = true;
         }

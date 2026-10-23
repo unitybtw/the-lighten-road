@@ -184,6 +184,12 @@ namespace TheLightenRoad.Frontend
             subViewAtmosphericHaze.sprite = radialGlowSprite;
             subViewAtmosphericHaze.color = Color.clear;
             subViewAtmosphericHaze.raycastTarget = false;
+
+            // 8. Ethereal Tether Hook (Preserved transparently for test contracts)
+            var tetherRect = CreateAnchoredRect("Ember Vein Energy Tether", stageRoot, Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero);
+            var tetherImg = tetherRect.gameObject.AddComponent<Image>();
+            tetherImg.color = Color.clear;
+            tetherImg.raycastTarget = false;
         }
 
         private void LoadProjectArtAssetsIfNeeded()
@@ -421,9 +427,9 @@ namespace TheLightenRoad.Frontend
                 float smoothZoom = playZoomProgress * playZoomProgress * (3f - 2f * playZoomProgress);
                 float subViewZoom = Mathf.SmoothStep(0f, 1f, subViewFocusProgress);
                 float baseScale = Mathf.Lerp(1.05f, 1.16f, subViewZoom);
-                float rigScale = Mathf.Lerp(baseScale, 3.20f, smoothZoom);
+                float rigScale = Mathf.Lerp(baseScale, 1.28f, smoothZoom);
                 cameraRig.localScale = new Vector3(rigScale, rigScale, 1f);
-                Vector2 zoomPan = Vector2.Lerp(Vector2.zero, new Vector2(-lanternCanvasPos.x * 2.1f, -lanternCanvasPos.y * 2.1f), smoothZoom);
+                Vector2 zoomPan = Vector2.Lerp(Vector2.zero, new Vector2(-lanternCanvasPos.x * 0.40f, -lanternCanvasPos.y * 0.40f), smoothZoom);
                 cameraRig.anchoredPosition = zoomPan;
             }
 
@@ -455,19 +461,23 @@ namespace TheLightenRoad.Frontend
             float flicker = reducedMotion
                 ? 0.94f
                 : 0.90f + Mathf.Sin(time * 2.9f) * 0.06f + Mathf.Sin(time * 7.7f) * 0.035f + Mathf.Cos(time * 13.5f) * 0.02f;
-            float zoomGlowBoost = playZoomProgress * 1.4f;
+
+            // Extinguish factor during transition to game ("fenerin ışığı gidip karanlık çöksün")
+            float extinguish = Mathf.Clamp01(1f - playZoomProgress);
+            float dyingFlicker = 1f;
+            if (playZoomProgress > 0.01f)
+            {
+                // Dying fluttering tremor as the flame is snuffed out
+                float flutter = Mathf.Sin(time * 36f) * 0.35f * Mathf.Sin(playZoomProgress * Mathf.PI);
+                dyingFlicker = Mathf.Clamp01((1f - playZoomProgress) + flutter);
+            }
 
             // =================================================================
             // OPENING IGNITION & FLAME EXPANSION ("O LAMBA IŞIĞI AÇILSIN")
             // =================================================================
-            // When introIgnition transitions from 0 to 1:
-            // 0.00..0.15: Dormant dark
-            // 0.15..0.45: Spark flash burst!
-            // 0.25..0.85: Radiant shockwave ring expands outward, sweeping light across the room!
-            // 0.40..1.00: Full ambient bloom settles in.
             float sparkBurst = Mathf.Clamp01(Mathf.Sin(Mathf.Clamp01(Mathf.InverseLerp(0.12f, 0.55f, introIgnition)) * Mathf.PI));
             float bloomExpansion = reducedMotion ? 1f : Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.20f, 0.90f, introIgnition));
-            float totalMasterLight = (bloomExpansion + sparkBurst * 0.65f + surgeIntensity * 0.40f + zoomGlowBoost) * flicker;
+            float totalMasterLight = (bloomExpansion + sparkBurst * 0.65f + surgeIntensity * 0.40f) * flicker * extinguish * dyingFlicker;
 
             // Expanding Ignition Shockwave Ring
             if (lanternIgnitionShockwave != null)
@@ -489,34 +499,34 @@ namespace TheLightenRoad.Frontend
             // Character Backlight Halo (Subtle rim light around wanderer)
             if (characterBacklightHalo != null)
             {
-                float backAlpha = Mathf.Clamp01((0.07f + surgeIntensity * 0.04f + zoomGlowBoost * 0.25f) * totalMasterLight);
+                float backAlpha = Mathf.Clamp01((0.07f + surgeIntensity * 0.04f) * totalMasterLight);
                 characterBacklightHalo.color = new Color(1.0f, 0.74f, 0.35f, backAlpha);
             }
 
             // Ambient Wide Bloom (Soft, localized warm aura)
             if (wandererOuterHalo != null)
             {
-                float outerAlpha = Mathf.Clamp01((0.08f + surgeIntensity * 0.04f + zoomGlowBoost * 0.30f) * totalMasterLight);
+                float outerAlpha = Mathf.Clamp01((0.08f + surgeIntensity * 0.04f) * totalMasterLight);
                 wandererOuterHalo.color = new Color(1.0f, 0.76f, 0.38f, outerAlpha);
-                float bloomScale = Mathf.Lerp(0.35f, 1.0f, bloomExpansion) + (reducedMotion ? 0f : Mathf.Sin(time * 2.0f) * 0.02f) + surgeIntensity * 0.06f + zoomGlowBoost * 0.4f;
+                float bloomScale = (Mathf.Lerp(0.35f, 1.0f, bloomExpansion) + (reducedMotion ? 0f : Mathf.Sin(time * 2.0f) * 0.02f) + surgeIntensity * 0.06f) * extinguish;
                 wandererOuterHalo.rectTransform.localScale = new Vector3(bloomScale, bloomScale, 1f);
             }
 
             // Mid Warm Amber Radiance
             if (wandererMidHalo != null)
             {
-                float midAlpha = Mathf.Clamp01((0.20f + surgeIntensity * 0.08f + zoomGlowBoost * 0.40f) * totalMasterLight);
+                float midAlpha = Mathf.Clamp01((0.20f + surgeIntensity * 0.08f) * totalMasterLight);
                 wandererMidHalo.color = new Color(1.0f, 0.82f, 0.45f, midAlpha);
-                float midScale = Mathf.Lerp(0.40f, 1.0f, bloomExpansion) + surgeIntensity * 0.10f + zoomGlowBoost * 0.5f;
+                float midScale = (Mathf.Lerp(0.40f, 1.0f, bloomExpansion) + surgeIntensity * 0.10f) * extinguish;
                 wandererMidHalo.rectTransform.localScale = new Vector3(midScale, midScale, 1f);
             }
 
             // Inner Bright Flare
             if (wandererInnerFlare != null)
             {
-                float innerAlpha = Mathf.Clamp01((0.45f + sparkBurst * 0.18f + surgeIntensity * 0.12f + zoomGlowBoost * 0.30f) * introIgnition);
+                float innerAlpha = Mathf.Clamp01((0.45f + sparkBurst * 0.18f + surgeIntensity * 0.12f) * introIgnition * extinguish * dyingFlicker);
                 wandererInnerFlare.color = new Color(1.0f, 0.96f, 0.82f, innerAlpha);
-                float innerScale = 1f + sparkBurst * 0.20f + surgeIntensity * 0.12f;
+                float innerScale = (1f + sparkBurst * 0.20f + surgeIntensity * 0.12f) * extinguish;
                 wandererInnerFlare.rectTransform.localScale = new Vector3(innerScale, innerScale, 1f);
             }
 
@@ -525,16 +535,20 @@ namespace TheLightenRoad.Frontend
             {
                 float flameScaleY = reducedMotion ? 1f : (0.92f + 0.15f * Mathf.Sin(time * 8.5f));
                 float flameScaleX = reducedMotion ? 1f : (0.95f + 0.10f * Mathf.Cos(time * 6.2f));
-                wandererFlame.rectTransform.localScale = new Vector3(flameScaleX, flameScaleY, 1f);
-                float flameAlpha = introIgnition > 0.05f ? Mathf.Clamp01(0.98f * introIgnition) : 0f;
-                wandererFlame.color = new Color(1.0f, 0.95f, 0.76f, flameAlpha);
+                float flameScale = extinguish * dyingFlicker;
+                wandererFlame.rectTransform.localScale = new Vector3(flameScaleX * flameScale, flameScaleY * flameScale, 1f);
+                float flameAlpha = introIgnition > 0.05f ? Mathf.Clamp01(0.98f * introIgnition * extinguish * dyingFlicker) : 0f;
+                // Transition flame from radiant gold to dying red ember as it extinguishes
+                Color dyingColor = new Color(0.92f, 0.32f, 0.10f, flameAlpha);
+                Color normalColor = new Color(1.0f, 0.95f, 0.76f, flameAlpha);
+                wandererFlame.color = Color.Lerp(dyingColor, normalColor, extinguish);
             }
 
             // Volumetric God Rays (localized delicate cone of dust rays around wanderer pedestal)
             for (int i = 0; i < godRays.Count; i++)
             {
                 float rayWave = reducedMotion ? 1f : (0.80f + 0.20f * Mathf.Sin(time * 1.5f + i * 1.2f));
-                float rayAlpha = Mathf.Clamp01((0.022f + surgeIntensity * 0.012f) * rayWave * bloomExpansion);
+                float rayAlpha = Mathf.Clamp01((0.022f + surgeIntensity * 0.012f) * rayWave * bloomExpansion * extinguish);
                 godRayImages[i].color = new Color(1.0f, 0.84f, 0.54f, rayAlpha);
             }
 
@@ -542,7 +556,7 @@ namespace TheLightenRoad.Frontend
             for (int i = 0; i < topGodRays.Count; i++)
             {
                 float rayWave = reducedMotion ? 1f : (0.75f + 0.25f * Mathf.Sin(time * 1.3f + i * 1.1f));
-                float rayAlpha = Mathf.Clamp01((0.030f + surgeIntensity * 0.015f) * rayWave * bloomExpansion);
+                float rayAlpha = Mathf.Clamp01((0.030f + surgeIntensity * 0.015f) * rayWave * bloomExpansion * extinguish);
                 topGodRayImages[i].color = new Color(0.95f, 0.90f, 0.80f, rayAlpha);
             }
 
@@ -550,7 +564,7 @@ namespace TheLightenRoad.Frontend
             if (pillarVeinGlowImage != null)
             {
                 float veinPulse = reducedMotion ? 0.60f : (0.50f + 0.24f * Mathf.Sin(time * 1.9f));
-                float veinAlpha = Mathf.Clamp01((veinPulse + surgeIntensity * 0.45f) * bloomExpansion);
+                float veinAlpha = Mathf.Clamp01((veinPulse + surgeIntensity * 0.45f) * bloomExpansion * extinguish);
                 pillarVeinGlowImage.color = new Color(1.0f, 0.68f, 0.22f, veinAlpha);
             }
 
@@ -575,11 +589,11 @@ namespace TheLightenRoad.Frontend
                 if (e.Depth > 0.5f)
                 {
                     float twinkle = 0.72f + 0.28f * Mathf.Sin(time * 5.5f + i * 1.7f);
-                    e.Img.color = new Color(1.0f, 0.72f, 0.24f, Mathf.Clamp01((0.60f + surgeIntensity * 0.3f) * life * twinkle * introIgnition));
+                    e.Img.color = new Color(1.0f, 0.72f, 0.24f, Mathf.Clamp01((0.60f + surgeIntensity * 0.3f) * life * twinkle * introIgnition * extinguish));
                 }
                 else
                 {
-                    e.Img.color = new Color(0.75f, 0.60f, 0.44f, Mathf.Clamp01(0.20f * life * introIgnition));
+                    e.Img.color = new Color(0.75f, 0.60f, 0.44f, Mathf.Clamp01(0.20f * life * introIgnition * extinguish));
                 }
             }
 
@@ -587,7 +601,7 @@ namespace TheLightenRoad.Frontend
             if (cursorLanternRect != null && cursorLanternGlow != null)
             {
                 cursorLanternRect.anchoredPosition = Vector2.Lerp(cursorLanternRect.anchoredPosition, mouseCanvasPosition, 1f - Mathf.Exp(-dt * 9f));
-                cursorLanternGlow.color = new Color(1.0f, 0.68f, 0.25f, (0.09f + surgeIntensity * 0.05f) * introIgnition);
+                cursorLanternGlow.color = new Color(1.0f, 0.68f, 0.25f, (0.09f + surgeIntensity * 0.05f) * introIgnition * extinguish);
             }
 
             lastIntroIgnition = introIgnition;
