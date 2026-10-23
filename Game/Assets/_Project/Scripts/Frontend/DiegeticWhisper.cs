@@ -154,6 +154,7 @@ namespace TheLightenRoad.Frontend
         public void EnsureReferences()
         {
             if (canvasGroup == null) BuildWorldCanvas();
+            CheckPersistence();
             FindPlayerReferences();
         }
 
@@ -451,7 +452,10 @@ namespace TheLightenRoad.Frontend
             dissolveTimer = 0f;
 
             // Audio celebration
-            SoundEffectManager.Instance?.PlayEmberPickup();
+            if (Time.timeSinceLevelLoad > 0.65f)
+            {
+                SoundEffectManager.Instance?.PlayEmberPickup();
+            }
 
             // Record persistence
             if (persistCompletion && !string.IsNullOrEmpty(whisperId))

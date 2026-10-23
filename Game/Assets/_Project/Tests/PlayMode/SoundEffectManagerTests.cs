@@ -217,6 +217,29 @@ public sealed class SoundEffectManagerTests
     }
 
     [Test]
+    public void GracePeriod_InitializesActive_AndSuppressesWorldSFX()
+    {
+        Assert.That(sfxManager.IsInSceneGracePeriod, Is.True);
+        Assert.That(sfxManager.SceneGraceTimer, Is.GreaterThan(0.5f));
+
+        // World sounds should be suppressed during grace period without errors
+        Assert.DoesNotThrow(() => sfxManager.PlayFlareIgnite());
+        Assert.DoesNotThrow(() => sfxManager.PlayFlareExtinguish());
+        Assert.DoesNotThrow(() => sfxManager.PlayEmberBreak());
+        Assert.DoesNotThrow(() => sfxManager.PlayEmberPickup());
+        Assert.DoesNotThrow(() => sfxManager.PlayCrystalActivate());
+
+        // UI clicks bypass grace period
+        Assert.DoesNotThrow(() => sfxManager.PlayUIClick());
+
+        // Once grace period expires or is reset, world sounds operate normally
+        sfxManager.ResetSceneGraceForTesting();
+        Assert.That(sfxManager.IsInSceneGracePeriod, Is.False);
+        Assert.DoesNotThrow(() => sfxManager.PlayFlareIgnite());
+        Assert.DoesNotThrow(() => sfxManager.PlayEmberBreak());
+    }
+
+    [Test]
     public void DebouncesIdenticalClipsRapidlyFiredInSameFrame()
     {
         Assert.DoesNotThrow(() =>

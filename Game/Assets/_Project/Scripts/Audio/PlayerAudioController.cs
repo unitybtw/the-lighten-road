@@ -26,7 +26,7 @@ namespace TheLightenRoad.Audio
         private float footstepTimer;
         private float skidCooldown;
         private float airDraftCooldown;
-        private float spawnGraceTimer = 0.35f;
+        private float spawnGraceTimer = 0.65f;
 
         public float WalkInterval { get => walkInterval; set => walkInterval = value; }
         public float SprintInterval { get => sprintInterval; set => sprintInterval = value; }
@@ -116,12 +116,12 @@ namespace TheLightenRoad.Audio
                     {
                         ctrl = m.gameObject.AddComponent<PlayerAudioController>();
                     }
-                    ctrl.ResetSpawnGrace(0.40f);
+                    ctrl.ResetSpawnGrace(0.65f);
                 }
             }
         }
 
-        public void ResetSpawnGrace(float duration = 0.40f)
+        public void ResetSpawnGrace(float duration = 0.65f)
         {
             spawnGraceTimer = duration;
             footstepTimer = walkInterval * 0.5f;
@@ -175,7 +175,7 @@ namespace TheLightenRoad.Audio
             }
 
             footstepTimer = walkInterval * 0.5f;
-            spawnGraceTimer = 0.40f;
+            spawnGraceTimer = 0.65f;
         }
 
         private void OnDisable()
@@ -306,11 +306,13 @@ namespace TheLightenRoad.Audio
 
         private void HandleExhaustionChanged(bool isExhausted)
         {
+            if (spawnGraceTimer > 0f) return;
             SoundEffectManager.Instance?.SetExhaustionActive(isExhausted);
         }
 
         private void HandleFlareChanged(bool isFlared)
         {
+            if (spawnGraceTimer > 0f) return;
             if (isFlared)
             {
                 SoundEffectManager.Instance?.PlayFlareIgnite();
@@ -323,12 +325,13 @@ namespace TheLightenRoad.Audio
 
         private void HandleEmberBroken()
         {
+            if (spawnGraceTimer > 0f) return;
             SoundEffectManager.Instance?.PlayEmberBreak();
         }
 
         private void HandlePlayerRespawned()
         {
-            ResetSpawnGrace(0.40f);
+            ResetSpawnGrace(0.65f);
         }
     }
 }

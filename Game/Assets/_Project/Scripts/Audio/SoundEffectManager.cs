@@ -152,6 +152,8 @@ namespace TheLightenRoad.Audio
         private const int MaxOneShotsPerFrame = 4;
 
         public bool IsInSceneGracePeriod => sceneGraceTimer > 0f;
+        public float SceneGraceTimer { get => sceneGraceTimer; set => sceneGraceTimer = Mathf.Max(0f, value); }
+        public void ResetSceneGraceForTesting() => sceneGraceTimer = 0f;
 
         public float MasterSFXVolume { get => masterSFXVolume; set => masterSFXVolume = Mathf.Clamp01(value); }
         public float FootstepsVolume { get => footstepsVolume; set => footstepsVolume = Mathf.Clamp01(value); }
@@ -186,6 +188,7 @@ namespace TheLightenRoad.Audio
         private void Awake()
         {
             isApplicationQuitting = false;
+            sceneGraceTimer = 0.65f;
             if (instance == null)
             {
                 instance = this;
@@ -219,7 +222,7 @@ namespace TheLightenRoad.Audio
         private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
             StopTransientSounds();
-            sceneGraceTimer = 0.35f;
+            sceneGraceTimer = 0.65f;
             lastPlayTimes.Clear();
         }
 
@@ -234,6 +237,13 @@ namespace TheLightenRoad.Audio
                         sourcePool[i].Stop();
                     }
                 }
+            }
+
+            if (exhaustionSource != null && exhaustionSource.isPlaying)
+            {
+                exhaustionSource.Stop();
+                exhaustionSource.volume = 0f;
+                targetExhaustionVol = 0f;
             }
         }
 
@@ -553,9 +563,10 @@ namespace TheLightenRoad.Audio
             return fallback;
         }
 
-        public void PlayOneShot(AudioClip clip, float volume = 1f, float pitch = 1f)
+        public void PlayOneShot(AudioClip clip, float volume = 1f, float pitch = 1f, bool bypassGrace = false)
         {
             if (clip == null || masterSFXVolume <= 0.001f) return;
+            if (!bypassGrace && sceneGraceTimer > 0f) return;
 
             // Debounce identical clips playing in the same millisecond burst
             float now = Time.unscaledTime;
@@ -769,6 +780,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayFlareExtinguish()
         {
+            if (sceneGraceTimer > 0f) return;
             if (flareExtinguishClip == null) EnsureClipsLoaded();
             if (flareExtinguishClip == null) return;
             PlayOneShot(flareExtinguishClip, flareVolume * 0.75f, 1.0f);
@@ -793,6 +805,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayFlareIgnite()
         {
+            if (sceneGraceTimer > 0f) return;
             if (flareIgniteClip == null) EnsureClipsLoaded();
             if (flareIgniteClip == null) return;
             PlayOneShot(flareIgniteClip, flareVolume, 1.0f);
@@ -800,6 +813,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayEmberBreak()
         {
+            if (sceneGraceTimer > 0f) return;
             if (emberBreakClip == null) EnsureClipsLoaded();
             if (emberBreakClip == null) return;
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
@@ -808,6 +822,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayEmberPickup()
         {
+            if (sceneGraceTimer > 0f) return;
             if (emberPickupClip == null) EnsureClipsLoaded();
             if (emberPickupClip == null) return;
             PlayOneShot(emberPickupClip, emberPickupVolume, 1.0f);
@@ -840,6 +855,7 @@ namespace TheLightenRoad.Audio
 
         public void PlayCrystalActivate(float volumeScale = 1.0f)
         {
+            if (sceneGraceTimer > 0f) return;
             if (crystalActivateClip == null) EnsureClipsLoaded();
             if (crystalActivateClip != null)
             {
@@ -875,7 +891,7 @@ namespace TheLightenRoad.Audio
             if (uiHoverClip == null) EnsureClipsLoaded();
             if (uiHoverClip != null)
             {
-                PlayOneShot(uiHoverClip, uiVolume * 0.40f * Mathf.Clamp01(volumeScale), 1.0f);
+                PlayOneShot(uiHoverClip, uiVolume * 0.40f * Mathf.Clamp01(volumeScale), 1.0f, bypassGrace: true);
             }
         }
 
@@ -884,7 +900,7 @@ namespace TheLightenRoad.Audio
             if (uiClickClip == null) EnsureClipsLoaded();
             if (uiClickClip != null)
             {
-                PlayOneShot(uiClickClip, uiVolume * 0.85f * Mathf.Clamp01(volumeScale), 1.0f);
+                PlayOneShot(uiClickClip, uiVolume * 0.85f * Mathf.Clamp01(volumeScale), 1.0f, bypassGrace: true);
             }
         }
 
@@ -893,7 +909,7 @@ namespace TheLightenRoad.Audio
             if (uiBackClip == null) EnsureClipsLoaded();
             if (uiBackClip != null)
             {
-                PlayOneShot(uiBackClip, uiVolume * 0.75f * Mathf.Clamp01(volumeScale), 1.0f);
+                PlayOneShot(uiBackClip, uiVolume * 0.75f * Mathf.Clamp01(volumeScale), 1.0f, bypassGrace: true);
             }
         }
 
@@ -904,6 +920,11 @@ namespace TheLightenRoad.Audio
 
         public void SetExhaustionActive(bool active)
         {
+            if (active && sceneGraceTimer > 0f)
+            {
+                targetExhaustionVol = 0f;
+                return;
+            }
             targetExhaustionVol = active ? (exhaustionVolume * masterSFXVolume) : 0f;
 
             var src = EnsureExhaustionSource();

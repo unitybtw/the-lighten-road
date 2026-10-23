@@ -260,27 +260,33 @@ namespace TheLightenRoad.UI
                 slots[index].Broken = true;
                 slots[index].Ghost.sprite = PixelSprites.EmberFragments;
             }
-            if (breakAudio == null)
+
+            // Centralized ember break SFX is handled by PlayerAudioController via SoundEffectManager.
+            // Only play local fallback audio if SoundEffectManager is not active.
+            if (!SoundEffectManager.HasInstance && Time.timeSinceLevelLoad > 0.65f)
             {
-                breakAudio = gameObject.AddComponent<AudioSource>();
-                breakAudio.playOnAwake = false;
-                breakAudio.spatialBlend = 0f;
-            }
-            if (emberBreakClip == null && placeholderBreakClip == null)
-            {
-                const int samples = 4410;
-                float[] data = new float[samples];
-                var noise = new System.Random(173);
-                for (int i = 0; i < samples; i++)
+                if (breakAudio == null)
                 {
-                    float t = i / 22050f;
-                    float click = Mathf.Exp(-t * 85f) + 0.35f * Mathf.Exp(-Mathf.Abs(t - 0.035f) * 180f);
-                    data[i] = ((float)noise.NextDouble() * 2f - 1f) * click * 0.45f;
+                    breakAudio = gameObject.AddComponent<AudioSource>();
+                    breakAudio.playOnAwake = false;
+                    breakAudio.spatialBlend = 0f;
                 }
-                placeholderBreakClip = AudioClip.Create("Ember crack / prototype", samples, 1, 22050, false);
-                placeholderBreakClip.SetData(data, 0);
+                if (emberBreakClip == null && placeholderBreakClip == null)
+                {
+                    const int samples = 4410;
+                    float[] data = new float[samples];
+                    var noise = new System.Random(173);
+                    for (int i = 0; i < samples; i++)
+                    {
+                        float t = i / 22050f;
+                        float click = Mathf.Exp(-t * 85f) + 0.35f * Mathf.Exp(-Mathf.Abs(t - 0.035f) * 180f);
+                        data[i] = ((float)noise.NextDouble() * 2f - 1f) * click * 0.45f;
+                    }
+                    placeholderBreakClip = AudioClip.Create("Ember crack / prototype", samples, 1, 22050, false);
+                    placeholderBreakClip.SetData(data, 0);
+                }
+                breakAudio.PlayOneShot(emberBreakClip != null ? emberBreakClip : placeholderBreakClip, emberBreakVolume);
             }
-            breakAudio.PlayOneShot(emberBreakClip != null ? emberBreakClip : placeholderBreakClip, emberBreakVolume);
         }
 
         private void OnDestroy()
