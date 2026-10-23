@@ -85,8 +85,9 @@ namespace TheLightenRoad.Frontend
         // Sprites & Procedural Assets
         private readonly List<Sprite> proceduralSprites = new List<Sprite>();
         private Sprite vignetteBlurSprite;
-        private Sprite lineTrackSprite;
-        private Sprite lineFillSprite;
+        private Sprite roundTrackSprite;
+        private Sprite roundFillSprite;
+        private Sprite roundHandleSprite;
 
         private RectTransform safeFrame;
         private Image subpanelVeil;
@@ -769,10 +770,11 @@ namespace TheLightenRoad.Frontend
             filigreeSprite = stage.CreateOrnateFiligreeSprite(512, 64);
             softRadialSprite = CreateSoftRadialSprite(128);
 
-            // Procedural Full-Screen Depth Blur Vignette & Thin Line Sprites
+            // Procedural Full-Screen Depth Blur Vignette & Rounded Capsule Slider Sprites
             vignetteBlurSprite = CreateVignetteBlurSprite(256);
-            lineTrackSprite = CreateSolidLineSprite(16, 2, new Color(0.40f, 0.50f, 0.65f, 0.35f));
-            lineFillSprite = CreateSolidLineSprite(16, 2, amberGold);
+            roundTrackSprite = CreateRoundedCapsuleSprite(24, 8, new Color(0.40f, 0.50f, 0.65f, 0.35f), 4);
+            roundFillSprite = CreateRoundedCapsuleSprite(24, 8, amberGold, 4);
+            roundHandleSprite = CreateCircularHandleSprite(32);
 
             topFiligreeSprite = Resources.Load<Sprite>("UI/HollowKnight_TopFiligree");
             bottomCrestSprite = Resources.Load<Sprite>("UI/HollowKnight_BottomCrest");
@@ -1236,22 +1238,33 @@ namespace TheLightenRoad.Frontend
             sRect.sizeDelta = new Vector2(360f, 28f);
             sRect.anchoredPosition = new Vector2(0f, 0f);
 
-            var track = CreateAnchoredRect("Track", sRect, new Vector2(280f, 2f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
+            var track = CreateAnchoredRect("Track", sRect, new Vector2(280f, 4f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
             var trackImg = track.gameObject.AddComponent<Image>();
-            trackImg.sprite = lineTrackSprite;
+            trackImg.sprite = roundTrackSprite;
+            trackImg.type = Image.Type.Sliced;
             trackImg.color = Color.white;
 
             var fillArea = CreateStretchRect("Fill Area", track);
             var fill = CreateStretchRect("Fill", fillArea);
             var fillImg = fill.gameObject.AddComponent<Image>();
-            fillImg.sprite = lineFillSprite;
-            fillImg.color = amberGold;
+            fillImg.sprite = roundFillSprite;
+            fillImg.type = Image.Type.Sliced;
+            fillImg.color = Color.white;
 
             var handleSlide = CreateStretchRect("Handle Slide Area", track);
-            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(12f, 12f), new Vector2(0f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
-            handle.localEulerAngles = new Vector3(0f, 0f, 45f);
+            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(16f, 16f), new Vector2(0f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            handle.localEulerAngles = Vector3.zero;
+
+            // Soft radial bloom aura behind circular handle
+            var handleGlow = CreateAnchoredRect("Handle Glow", handle, new Vector2(28f, 28f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var hGlowImg = handleGlow.gameObject.AddComponent<Image>();
+            hGlowImg.sprite = softRadialSprite;
+            hGlowImg.color = new Color(1.0f, 0.75f, 0.30f, 0.35f);
+            hGlowImg.raycastTarget = false;
+
             var handleImg = handle.gameObject.AddComponent<Image>();
-            handleImg.color = radiantIvory;
+            handleImg.sprite = roundHandleSprite;
+            handleImg.color = Color.white;
 
             valueText = CreateLabel("Value", sRect, "85%", 13f, amberGold, new Vector2(64f, 24f), new Vector2(1f, 0.5f), Vector2.zero, pivot: new Vector2(1f, 0.5f));
             valueText.alignment = TextAlignmentOptions.Right;
@@ -1635,22 +1648,86 @@ namespace TheLightenRoad.Frontend
             return sprite;
         }
 
-        private Sprite CreateSolidLineSprite(int w, int h, Color col)
+        private Sprite CreateRoundedCapsuleSprite(int width, int height, Color col, int sliceMargin)
         {
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false)
             {
                 wrapMode = TextureWrapMode.Clamp,
                 filterMode = FilterMode.Bilinear
             };
-            for (int y = 0; y < h; y++)
+            float halfY = (height - 1f) * 0.5f;
+            float radius = halfY;
+            float leftCenter = radius;
+            float rightCenter = (width - 1f) - radius;
+
+            for (int y = 0; y < height; y++)
             {
-                for (int x = 0; x < w; x++)
+                for (int x = 0; x < width; x++)
                 {
-                    tex.SetPixel(x, y, col);
+                    float dist;
+                    if (x < leftCenter)
+                    {
+                        float dx = x - leftCenter;
+                        float dy = y - halfY;
+                        dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    }
+                    else if (x > rightCenter)
+                    {
+                        float dx = x - rightCenter;
+                        float dy = y - halfY;
+                        dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    }
+                    else
+                    {
+                        dist = Mathf.Abs(y - halfY);
+                    }
+
+                    float cov = Mathf.Clamp01(radius + 0.5f - dist);
+                    Color c = new Color(col.r, col.g, col.b, col.a * cov);
+                    tex.SetPixel(x, y, c);
                 }
             }
             tex.Apply();
-            var sprite = Sprite.Create(tex, new Rect(0, 0, w, h), Vector2.one * 0.5f, 100f);
+            Vector4 border = new Vector4(sliceMargin, 0, sliceMargin, 0);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, width, height), Vector2.one * 0.5f, 100f, 0, SpriteMeshType.FullRect, border);
+            proceduralSprites.Add(sprite);
+            return sprite;
+        }
+
+        private Sprite CreateCircularHandleSprite(int size)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+            float half = (size - 1f) * 0.5f;
+            float radius = half - 0.5f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - half;
+                    float dy = y - half;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float cov = Mathf.Clamp01(radius + 0.5f - dist);
+                    if (cov <= 0.001f)
+                    {
+                        tex.SetPixel(x, y, Color.clear);
+                        continue;
+                    }
+
+                    float t = dist / radius;
+                    Color core = new Color(0.98f, 0.98f, 1.0f, 1f);
+                    Color rim = amberGold;
+                    Color c = Color.Lerp(core, rim, t * 0.75f);
+                    c.a *= cov;
+                    tex.SetPixel(x, y, c);
+                }
+            }
+            tex.Apply();
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), Vector2.one * 0.5f, 100f);
             proceduralSprites.Add(sprite);
             return sprite;
         }
