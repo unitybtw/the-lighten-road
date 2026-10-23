@@ -1,6 +1,7 @@
 using TheLightenRoad.Lantern;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace TheLightenRoad.UI
@@ -136,6 +137,10 @@ namespace TheLightenRoad.UI
         public Sprite GetSlotSprite(int index) => ValidSlot(index) ? slots[index].Fill.sprite : null;
         public Color GetSlotColor(int index) => ValidSlot(index) ? slots[index].Fill.color : Color.clear;
         private bool lastChangeWasGain;
+        private Key lastToggleKey = (Key)(-1);
+        private string cachedKeyString = string.Empty;
+        private string cachedModeString = string.Empty;
+        private string cachedDetailString = string.Empty;
 
         private bool ValidSlot(int index) => slots != null && index >= 0 && index < slots.Length;
 
@@ -389,10 +394,27 @@ namespace TheLightenRoad.UI
         private void UpdateStatus(int charges)
         {
             bool active = target.HasActiveScout;
-            keyLabel.text = target.ToggleFlareKey.ToString().ToUpperInvariant();
-            modeLabel.text = active ? (target.IsDimming ? "DIMMING" : "FLARE ACTIVE") : charges <= 0 ? "NO EMBERS" : "FLARE";
+            if (target.ToggleFlareKey != lastToggleKey)
+            {
+                lastToggleKey = target.ToggleFlareKey;
+                cachedKeyString = target.ToggleFlareKey.ToString().ToUpperInvariant();
+                keyLabel.text = cachedKeyString;
+            }
+
+            string mode = active ? (target.IsDimming ? "DIMMING" : "FLARE ACTIVE") : charges <= 0 ? "NO EMBERS" : "FLARE";
+            if (mode != cachedModeString)
+            {
+                cachedModeString = mode;
+                modeLabel.text = mode;
+            }
             modeLabel.color = active ? Gold : Muted;
-            detailLabel.text = active ? (target.ScoutProgress < .6f ? "CRACKING" : "FADING") : "";
+
+            string detail = active ? (target.ScoutProgress < .6f ? "CRACKING" : "FADING") : "";
+            if (detail != cachedDetailString)
+            {
+                cachedDetailString = detail;
+                detailLabel.text = detail;
+            }
             detailLabel.color = Muted;
         }
 

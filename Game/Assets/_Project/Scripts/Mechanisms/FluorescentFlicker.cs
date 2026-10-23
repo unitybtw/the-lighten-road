@@ -8,18 +8,18 @@ namespace TheLightenRoad.Mechanisms
     {
         private Light2D fluorescentLight;
 
-        [Header("Intensity Settings (Şiddet ve Yumuşaklık)")]
+        [Header("Intensity Settings (Åiddet ve YumuÅŸaklÄ±k)")]
         [SerializeField] private float normalIntensity = 1.0f;
         [SerializeField] private float minIntensity = 0.6f;
-        [Tooltip("Geçişin ne kadar yumuşak olacağı. Değer düştükçe daha soft geçer.")]
+        [Tooltip("GeÃ§iÅŸin ne kadar yumuÅŸak olacaÄŸÄ±. DeÄŸer dÃ¼ÅŸtÃ¼kÃ§e daha soft geÃ§er.")]
         [SerializeField] private float transitionSpeed = 8f;
 
         [Header("Timing Settings (Zamanlama - Nadirlik)")]
-        [Tooltip("Işık arıza yapmadan önce NE KADAR SÜRE normal yanacak?")]
+        [Tooltip("IÅŸÄ±k arÄ±za yapmadan Ã¶nce NE KADAR SÃœRE normal yanacak?")]
         [SerializeField] private float minNormalTime = 4f;
         [SerializeField] private float maxNormalTime = 12f;
 
-        [Tooltip("Arıza başladığında (titreme krizi) ne kadar sürecek?")]
+        [Tooltip("ArÄ±za baÅŸladÄ±ÄŸÄ±nda (titreme krizi) ne kadar sÃ¼recek?")]
         [SerializeField] private float minFlickerDuration = 0.5f;
         [SerializeField] private float maxFlickerDuration = 1.5f;
 

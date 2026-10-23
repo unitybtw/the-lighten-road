@@ -51,7 +51,16 @@ namespace TheLightenRoad.Player.Completion
         private float ringBaseAlpha;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => active = null;
+        private static void ResetStatics()
+        {
+            active = null;
+            PauseMenuController.IsCompletionSequenceRunning = () => active != null && active.IsRunning;
+        }
+
+        private void OnEnable()
+        {
+            PauseMenuController.IsCompletionSequenceRunning = () => active != null && active.IsRunning;
+        }
 
         public bool TryBegin(PlayerRespawnController player)
         {

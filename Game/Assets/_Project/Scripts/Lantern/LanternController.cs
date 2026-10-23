@@ -69,6 +69,9 @@ namespace TheLightenRoad.Lantern
         private bool releasing;
         private bool reservingCharge;
 
+        /// <summary>Global active instance reference for fast zero-allocation access.</summary>
+        public static LanternController ActiveInstance { get; private set; }
+
         /// <summary>Raised when the lantern switches between Dim (false) and Flare (true).</summary>
         public event System.Action<bool> FlareChanged;
         /// <summary>Raised globally when any lantern switches between Dim and Flare.</summary>
@@ -107,6 +110,7 @@ namespace TheLightenRoad.Lantern
 
         private void Awake()
         {
+            ActiveInstance = this;
             fuel = GetComponent<LanternFuel>();
             useTimedScoutMode = true; // Migrate legacy scenes to the whole-ember scout contract.
             if (lanternLight == null)
@@ -114,6 +118,16 @@ namespace TheLightenRoad.Lantern
             keyboard = Keyboard.current;
             fuel.FuelDepleted += HandleFuelDepleted;
             ApplyLight();
+        }
+
+        private void OnEnable()
+        {
+            ActiveInstance = this;
+        }
+
+        private void OnDisable()
+        {
+            if (ActiveInstance == this) ActiveInstance = null;
         }
 
         private void Update()
@@ -240,6 +254,7 @@ namespace TheLightenRoad.Lantern
 
         private void OnDestroy()
         {
+            if (ActiveInstance == this) ActiveInstance = null;
             if (fuel != null) fuel.FuelDepleted -= HandleFuelDepleted;
         }
 

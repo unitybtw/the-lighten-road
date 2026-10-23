@@ -22,14 +22,14 @@ namespace TheLightenRoad.Interaction
 
         private void Update()
         {
-            // Yeni Input Sistemi ile E tuþunu dinliyoruz
+            // Yeni Input Sistemi ile E tuÅŸunu dinliyoruz
             if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
             {
                 var lantern = FindFirstObjectByType<LanternFuel>();
 
                 if (lantern != null)
                 {
-                    // Mesafeyi de 3f'e çýkardýk ki objenin pivot merkezinden dolayý uzak kalma sorunu yaþamayalým
+                    // Mesafeyi de 3f'e Ã§Ä±kardÄ±k ki objenin pivot merkezinden dolayÄ± uzak kalma sorunu yaÅŸamayalÄ±m
                     float distance = Vector2.Distance(transform.position, lantern.transform.position);
                     if (distance <= 3f)
                     {

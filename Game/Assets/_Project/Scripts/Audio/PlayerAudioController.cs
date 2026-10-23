@@ -31,51 +31,63 @@ namespace TheLightenRoad.Audio
         public float WalkInterval { get => walkInterval; set => walkInterval = value; }
         public float SprintInterval { get => sprintInterval; set => sprintInterval = value; }
 
+        private static readonly System.Collections.Generic.Dictionary<Collider2D, SurfaceType> surfaceCache = new System.Collections.Generic.Dictionary<Collider2D, SurfaceType>();
+
         public SurfaceType GetCurrentSurface()
         {
             if (motor == null) return SurfaceType.Stone;
             var col = motor.GroundCollider;
             if (col == null) return SurfaceType.Stone;
 
+            if (surfaceCache.TryGetValue(col, out var cachedSurface))
+                return cachedSurface;
+
             var provider = col.GetComponent<SurfaceAudioTypeProvider>() 
                            ?? col.GetComponentInParent<SurfaceAudioTypeProvider>()
                            ?? col.GetComponentInChildren<SurfaceAudioTypeProvider>();
-            if (provider != null) return provider.SurfaceType;
+            if (provider != null)
+            {
+                surfaceCache[col] = provider.SurfaceType;
+                return provider.SurfaceType;
+            }
 
             string colName = col.gameObject.name.ToLowerInvariant();
             string parentName = col.transform.parent != null ? col.transform.parent.gameObject.name.ToLowerInvariant() : "";
 
+            SurfaceType resolved;
             if (colName.Contains("ethereal") || parentName.Contains("ethereal") ||
                 colName.Contains("crystal") || parentName.Contains("crystal") ||
                 colName.Contains("glyph") || parentName.Contains("glyph"))
             {
-                return SurfaceType.Ethereal;
+                resolved = SurfaceType.Ethereal;
             }
-
-            if (colName.Contains("shelf") || parentName.Contains("shelf") ||
+            else if (colName.Contains("shelf") || parentName.Contains("shelf") ||
                 colName.Contains("wood") || parentName.Contains("wood") ||
                 colName.Contains("crate") || parentName.Contains("crate") ||
                 colName.Contains("timber") || parentName.Contains("timber"))
             {
-                return SurfaceType.Wood;
+                resolved = SurfaceType.Wood;
             }
-
-            if (colName.Contains("metal") || parentName.Contains("metal") ||
+            else if (colName.Contains("metal") || parentName.Contains("metal") ||
                 colName.Contains("iron") || parentName.Contains("iron") ||
                 colName.Contains("grid") || parentName.Contains("grid") ||
                 colName.Contains("circuit") || parentName.Contains("circuit") ||
                 colName.Contains("gate") || parentName.Contains("gate"))
             {
-                return SurfaceType.Metal;
+                resolved = SurfaceType.Metal;
             }
-
-            if (colName.Contains("water") || parentName.Contains("water") ||
+            else if (colName.Contains("water") || parentName.Contains("water") ||
                 colName.Contains("flood") || parentName.Contains("puddle"))
             {
-                return SurfaceType.Water;
+                resolved = SurfaceType.Water;
+            }
+            else
+            {
+                resolved = SurfaceType.Stone;
             }
 
-            return SurfaceType.Stone;
+            surfaceCache[col] = resolved;
+            return resolved;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -88,6 +100,7 @@ namespace TheLightenRoad.Audio
 
         private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
         {
+            surfaceCache.Clear();
             AttachToAllMotors();
         }
 

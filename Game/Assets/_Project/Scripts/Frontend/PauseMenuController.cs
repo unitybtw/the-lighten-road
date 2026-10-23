@@ -30,6 +30,9 @@ namespace TheLightenRoad.Frontend
         public const string MainMenuScenePath = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
 
         public static PauseMenuController Instance { get; private set; }
+        public static System.Func<bool> IsCompletionSequenceRunning;
+        public static System.Action OnRestartLevelRequested;
+        public static System.Action OnReturnToMenuRequested;
         public static bool IsPaused { get; private set; }
 
         public UnityEvent<bool> OnPauseToggled = new UnityEvent<bool>();
@@ -243,6 +246,9 @@ namespace TheLightenRoad.Frontend
             {
                 if (!IsPaused)
                 {
+                    if (IsCompletionSequenceRunning != null && IsCompletionSequenceRunning())
+                        return;
+
                     var completions = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
                     foreach (var comp in completions)
                     {
@@ -392,6 +398,12 @@ namespace TheLightenRoad.Frontend
         public void RestartChamber()
         {
             Resume();
+
+            if (OnRestartLevelRequested != null)
+            {
+                OnRestartLevelRequested.Invoke();
+                return;
+            }
 
             var directors = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
             foreach (var d in directors)

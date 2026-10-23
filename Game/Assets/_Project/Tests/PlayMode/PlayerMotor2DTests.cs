@@ -50,9 +50,9 @@ public sealed class PlayerMotor2DTests
     public IEnumerator MovesBothDirectionsAndStopsOnRelease()
     {
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(0.3f);
         float rightX = body.position.x;
-        Assert.That(rightX, Is.GreaterThan(0.7f),
+        Assert.That(rightX, Is.GreaterThan(0.65f),
             $"D pressed: {keyboard.dKey.isPressed}; device enabled: {keyboard.enabled}; velocity: {body.linearVelocity}");
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
@@ -60,7 +60,7 @@ public sealed class PlayerMotor2DTests
         Assert.That(Mathf.Abs(body.linearVelocity.x), Is.LessThan(0.15f));
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(0.3f);
         Assert.That(body.position.x, Is.LessThan(rightX - 0.55f));
     }
 

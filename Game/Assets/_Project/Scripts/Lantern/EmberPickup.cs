@@ -261,7 +261,7 @@ namespace TheLightenRoad.Lantern
 
             if (targetFuel == null)
             {
-                targetFuel = cachedLantern.GetComponentInParent<LanternFuel>();
+                targetFuel = cachedLantern.Fuel ?? cachedLantern.GetComponentInParent<LanternFuel>();
             }
 
             if (targetFuel == null || targetFuel.Capacity - targetFuel.CurrentFuel < fuelAmount)
@@ -269,8 +269,9 @@ namespace TheLightenRoad.Lantern
 
             float effectiveRadius = cachedLantern.IsFlared ? (attractRadius * 2.2f) : attractRadius;
             Vector3 lanternPos = cachedLantern.LanternLight != null ? cachedLantern.LanternLight.transform.position : cachedLantern.transform.position;
-            float dist = Vector2.Distance(transform.position, lanternPos);
-            if (dist <= effectiveRadius)
+            float dx = transform.position.x - lanternPos.x;
+            float dy = transform.position.y - lanternPos.y;
+            if ((dx * dx + dy * dy) <= (effectiveRadius * effectiveRadius))
             {
                 StartMagnetism(targetFuel);
             }
@@ -335,7 +336,7 @@ namespace TheLightenRoad.Lantern
         {
             if (cachedLantern == null || !cachedLantern.gameObject.activeInHierarchy)
             {
-                cachedLantern = FindAnyObjectByType<LanternController>();
+                cachedLantern = LanternController.ActiveInstance ?? FindAnyObjectByType<LanternController>();
             }
 
             if (cachedLantern == null || cachedLantern.LanternLight == null || cachedLantern.LanternLight.intensity <= 0f)
@@ -346,9 +347,10 @@ namespace TheLightenRoad.Lantern
 
             Vector3 lightPos = cachedLantern.LanternLight.transform.position;
             float lightRadius = cachedLantern.LanternLight.pointLightOuterRadius;
-            float distance = Vector2.Distance(transform.position, lightPos);
+            float dx = transform.position.x - lightPos.x;
+            float dy = transform.position.y - lightPos.y;
 
-            isIlluminated = distance <= lightRadius;
+            isIlluminated = (dx * dx + dy * dy) <= (lightRadius * lightRadius);
         }
 
         private void ApplyReaction(float t)

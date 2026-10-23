@@ -71,6 +71,7 @@ namespace TheLightenRoad.Player
         [SerializeField] private LayerMask groundLayers = ~0;
 
         private readonly RaycastHit2D[] groundHits = new RaycastHit2D[8];
+        private readonly RaycastHit2D[] ceilingHits = new RaycastHit2D[8];
         private Rigidbody2D body;
         private CapsuleCollider2D capsuleCollider;
         private InputAction move;
@@ -448,10 +449,10 @@ namespace TheLightenRoad.Player
 
         private Collider2D GetSolidCeilingHit(Vector2 origin, float length)
         {
-            var hits = Physics2D.RaycastAll(origin, Vector2.up, length, groundLayers);
-            for (int i = 0; i < hits.Length; i++)
+            int count = Physics2D.RaycastNonAlloc(origin, Vector2.up, ceilingHits, length, groundLayers);
+            for (int i = 0; i < count; i++)
             {
-                var col = hits[i].collider;
+                var col = ceilingHits[i].collider;
                 if (col != null && !col.isTrigger && col.gameObject != gameObject)
                     return col;
             }

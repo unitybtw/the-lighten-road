@@ -37,3 +37,6 @@ sysinfo.txt
 !.env.example
 *.keystore
 *.jks
+
+# Graphify
+graphify-out/

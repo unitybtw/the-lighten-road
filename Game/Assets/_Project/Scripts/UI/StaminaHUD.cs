@@ -41,6 +41,7 @@ namespace TheLightenRoad.UI
         private float currentVisibility = 1f, recoveryTimer, recovering;
         private float phase;
         private float safeBottom;
+        private float bindRetryTimer;
         private Rect lastSafeArea;
         private int lastHeight;
 
@@ -76,7 +77,20 @@ namespace TheLightenRoad.UI
 
         private void Update()
         {
-            if (boundTarget != target || boundTarget == null) TryBind();
+            if (boundTarget == null)
+            {
+                bindRetryTimer -= Time.unscaledDeltaTime;
+                if (bindRetryTimer <= 0f)
+                {
+                    bindRetryTimer = 0.35f;
+                    TryBind();
+                }
+            }
+            else if (boundTarget != target)
+            {
+                TryBind();
+            }
+
             Tick(Time.unscaledDeltaTime);
         }
 

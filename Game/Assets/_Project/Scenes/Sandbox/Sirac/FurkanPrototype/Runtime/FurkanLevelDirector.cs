@@ -36,6 +36,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             pickupPositions=new Vector3[PickupRoot.childCount];
             for(int i=0;i<pickupPositions.Length;i++)pickupPositions[i]=PickupRoot.GetChild(i).position;
             Player.OnPlayerRespawned+=ResetAttempt;
+            PauseMenuController.OnRestartLevelRequested = Restart;
             SpawnTutorialWhispers();
             Show("CHAMBER 01 / QUIET ARRIVAL\nA / D to walk. SPACE to jump. Follow the rising archive blocks.",9f);
         }
@@ -47,7 +48,11 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             DiegeticWhisper.Spawn(new Vector3(18.2f, 2.8f, 0f), "F", "IGNITE FLARE TO PIERCE DARKNESS", WhisperAction.Flare, "furkan_flare", transform);
             DiegeticWhisper.Spawn(new Vector3(26.7f, 2.8f, 0f), "E", "TRANSFER EMBER TO POWER LIFT", WhisperAction.Interact, "furkan_circuit", transform);
         }
-        private void OnDestroy(){if(Player!=null)Player.OnPlayerRespawned-=ResetAttempt;}
+        private void OnDestroy()
+        {
+            if (PauseMenuController.OnRestartLevelRequested == Restart) PauseMenuController.OnRestartLevelRequested = null;
+            if(Player!=null)Player.OnPlayerRespawned-=ResetAttempt;
+        }
         private void Update()
         {
             if(Completion!=null && Completion.IsRunning)return;

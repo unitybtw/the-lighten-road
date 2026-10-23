@@ -5,7 +5,7 @@ namespace TheLightenRoad.Mechanisms
     public class RollingShelf : MonoBehaviour
     {
         [Header("Shelf Settings")]
-        public Vector3 localMovement = new Vector3(4f, 0f, 0f); // Varsayılan olarak X ekseninde 4 birim kayar
+        public Vector3 localMovement = new Vector3(4f, 0f, 0f); // VarsayÄ±lan olarak X ekseninde 4 birim kayar
         public float speed = 2.5f;
 
         private Vector3 startPosition;
@@ -13,27 +13,27 @@ namespace TheLightenRoad.Mechanisms
 
         private void Start()
         {
-            // Rafın ilk durduğu yeri başlangıç noktası kabul ediyoruz
+            // RafÄ±n ilk durduÄŸu yeri baÅŸlangÄ±Ã§ noktasÄ± kabul ediyoruz
             startPosition = transform.position;
             targetPosition = startPosition;
         }
 
         private void Update()
         {
-            // Rafı hedefine doğru pürüzsüz bir şekilde kaydırıyoruz
+            // RafÄ± hedefine doÄŸru pÃ¼rÃ¼zsÃ¼z bir ÅŸekilde kaydÄ±rÄ±yoruz
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.deltaTime);
         }
 
         public void OpenShelf()
         {
-            // Kor damarına güç verildiğinde raf yana kayıp yolu açar
+            // Kor damarÄ±na gÃ¼Ã§ verildiÄŸinde raf yana kayÄ±p yolu aÃ§ar
             targetPosition = startPosition + localMovement;
             Debug.Log("Shelf Opened: Path is clear.");
         }
 
         public void CloseShelf()
         {
-            // Güç geri çekildiğinde raf eski yerine dönüp yolu kapatır
+            // GÃ¼Ã§ geri Ã§ekildiÄŸinde raf eski yerine dÃ¶nÃ¼p yolu kapatÄ±r
             targetPosition = startPosition;
             Debug.Log("Shelf Closed: Path is blocked.");
         }
