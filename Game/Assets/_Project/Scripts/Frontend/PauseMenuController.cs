@@ -285,16 +285,6 @@ namespace TheLightenRoad.Frontend
                     }
                 }
             }
-
-            if (IsPaused && !MenuPreferences.ReducedMotion && transitionRoutine == null)
-            {
-                float t = Time.unscaledTime;
-                if (titleGlowRect != null)
-                {
-                    float pulse = 0.94f + 0.06f * Mathf.Sin(t * 2.5f);
-                    titleGlowRect.localScale = new Vector3(pulse, pulse, 1f);
-                }
-            }
         }
 
         public void Pause()
@@ -933,14 +923,14 @@ namespace TheLightenRoad.Frontend
                 leftWing = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(44f, 22f), new Vector2(0.5f, 0.5f), new Vector2(-wingOffset, 0f));
                 var leftImg = leftWing.gameObject.AddComponent<Image>();
                 leftImg.sprite = buttonPointerSprite;
-                leftImg.color = amberGold;
+                leftImg.color = radiantIvory;
                 leftImg.raycastTarget = false;
 
                 rightWing = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(44f, 22f), new Vector2(0.5f, 0.5f), new Vector2(wingOffset, 0f));
                 rightWing.localScale = new Vector3(-1f, 1f, 1f);
                 var rightImg = rightWing.gameObject.AddComponent<Image>();
                 rightImg.sprite = buttonPointerSprite;
-                rightImg.color = amberGold;
+                rightImg.color = radiantIvory;
                 rightImg.raycastTarget = false;
 
                 var lSpark = CreateAnchoredRect("Left Ember Spark", leftWing, new Vector2(6f, 6f), new Vector2(0.5f, 0.5f), new Vector2(21f, 0f));
@@ -1051,30 +1041,6 @@ namespace TheLightenRoad.Frontend
             txt.fontStyle = FontStyles.Bold;
             txt.characterSpacing = 3.5f;
 
-            // Symmetrical Ember Wing Pointers for Action Buttons
-            float wingOffset = Mathf.Max(95f, label.Length * 5.2f + 28f);
-            var wingContainer = CreateAnchoredRect("Wings Container", rect, new Vector2(width + 60f, 28f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
-            wingGroup.alpha = 0f;
-            wingGroup.blocksRaycasts = false;
-
-            RectTransform leftWing = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(34f, 16f), new Vector2(0.5f, 0.5f), new Vector2(-wingOffset, 0f));
-            RectTransform rightWing = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(34f, 16f), new Vector2(0.5f, 0.5f), new Vector2(wingOffset, 0f));
-            rightWing.localScale = new Vector3(-1f, 1f, 1f);
-
-            if (buttonPointerSprite != null)
-            {
-                var lImg = leftWing.gameObject.AddComponent<Image>();
-                lImg.sprite = buttonPointerSprite;
-                lImg.color = amberGold;
-                lImg.raycastTarget = false;
-
-                var rImg = rightWing.gameObject.AddComponent<Image>();
-                rImg.sprite = buttonPointerSprite;
-                rImg.color = amberGold;
-                rImg.raycastTarget = false;
-            }
-
             var btn = rect.gameObject.AddComponent<Button>();
             btn.targetGraphic = hit;
             btn.transition = Selectable.Transition.None;
@@ -1091,10 +1057,6 @@ namespace TheLightenRoad.Frontend
             motion.Text = txt;
             motion.SoftGlow = glowImg;
             motion.UnderlineFiligree = lineImg;
-            motion.LeftWing = leftWing;
-            motion.RightWing = rightWing;
-            motion.WingGroup = wingGroup;
-            motion.BaseWingOffset = wingOffset;
             motion.IsPrimaryAction = isPrimary;
 
             return btn;
@@ -1607,27 +1569,19 @@ namespace TheLightenRoad.Frontend
 
         private IEnumerator SubViewFadeRoutine(CanvasGroup group)
         {
-            float duration = MenuPreferences.ReducedMotion ? 0.04f : 0.16f;
+            float duration = MenuPreferences.ReducedMotion ? 0.04f : 0.14f;
             float elapsed = 0f;
             group.alpha = 0f;
-            var rt = group.GetComponent<RectTransform>();
-            Vector2 basePos = rt != null ? rt.anchoredPosition : new Vector2(0f, -80f);
 
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                float ease = EaseOutCubic(t);
-                group.alpha = ease;
-                if (rt != null && !MenuPreferences.ReducedMotion)
-                {
-                    rt.anchoredPosition = new Vector2(basePos.x, basePos.y - (1f - ease) * 12f);
-                }
+                group.alpha = EaseOutCubic(t);
                 yield return null;
             }
 
             group.alpha = 1f;
-            if (rt != null) rt.anchoredPosition = basePos;
             subViewRoutine = null;
         }
 
