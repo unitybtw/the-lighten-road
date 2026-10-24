@@ -69,6 +69,11 @@ namespace TheLightenRoad.Frontend
         private Toggle reducedMotionToggle;
 
         private Button resumeButton;
+        private Button controlsButton;
+        private Button settingsButton;
+        private Button restartButton;
+        private Button quitButton;
+        private Button lastPauseHomeButton;
         private Button settingsBackButton;
         private Button controlsBackButton;
 
@@ -318,6 +323,7 @@ namespace TheLightenRoad.Frontend
                 SetOpenVisualState(1f);
             }
 
+            lastPauseHomeButton = resumeButton;
             if (EventSystem.current != null && resumeButton != null)
             {
                 EventSystem.current.SetSelectedGameObject(resumeButton.gameObject);
@@ -367,14 +373,16 @@ namespace TheLightenRoad.Frontend
             UpdateChamberInfo();
             AnimateSubView(mainPanelGroup);
 
-            if (EventSystem.current != null && resumeButton != null)
+            var target = lastPauseHomeButton != null ? lastPauseHomeButton : resumeButton;
+            if (EventSystem.current != null && target != null)
             {
-                EventSystem.current.SetSelectedGameObject(resumeButton.gameObject);
+                EventSystem.current.SetSelectedGameObject(target.gameObject);
             }
         }
 
         public void ShowSettingsView()
         {
+            lastPauseHomeButton = settingsButton;
             currentView = "settings";
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(true);
@@ -390,6 +398,7 @@ namespace TheLightenRoad.Frontend
 
         public void ShowControlsView()
         {
+            lastPauseHomeButton = controlsButton;
             currentView = "controls";
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(false);
@@ -700,7 +709,7 @@ namespace TheLightenRoad.Frontend
 
             // Whispered Eyebrow
             var eyebrow = CreateLabel("Eyebrow", modal.transform, new Vector2(0f, 345f), new Vector2(620f, 24f),
-                "--   GAME PAUSED   --", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
+                "--   GAME PAUSED   --", 14f, TextAlignmentOptions.Center, moonlightSilver);
             eyebrow.characterSpacing = 6.5f;
 
             // Monumental Center Title: PAUSED
@@ -718,7 +727,7 @@ namespace TheLightenRoad.Frontend
 
             // Chamber Title Whisper
             chamberTitleLabel = CreateLabel("ChamberTitle", modal.transform, new Vector2(0f, 222f), new Vector2(640f, 26f),
-                "CHAMBER 01-02   -   THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
+                "CHAMBER 01-02   -   THE FIRST LIGHT", 14.5f, TextAlignmentOptions.Center, amberGold);
             chamberTitleLabel.characterSpacing = 4f;
 
             // Memento Recovery Badge
@@ -748,10 +757,30 @@ namespace TheLightenRoad.Frontend
             float stepY = 66f;
 
             resumeButton = CreateFramelessMenuButton("ResumeButton", r, "Resume", "Return to game", new Vector2(0f, startY), Resume, isPrimary: true);
-            CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
-            CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
-            CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
-            CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
+            controlsButton = CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
+            settingsButton = CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
+            restartButton = CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
+            quitButton = CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
+
+            ConfigurePauseNavigation();
+        }
+
+        private void ConfigurePauseNavigation()
+        {
+            var buttons = new[] { resumeButton, controlsButton, settingsButton, restartButton, quitButton };
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] == null) continue;
+                int prev = (i - 1 + buttons.Length) % buttons.Length;
+                int next = (i + 1) % buttons.Length;
+                var nav = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnUp = buttons[prev],
+                    selectOnDown = buttons[next]
+                };
+                buttons[i].navigation = nav;
+            }
         }
 
         private void BuildSettingsPanel(Transform parent)
@@ -928,7 +957,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.characterSpacing = isPrimary ? 6f : 4.5f;
 
             var subTxt = CreateLabel("Subtitle", itemRect, new Vector2(0f, -13f), new Vector2(500f, 18f),
-                subtitle, 10.5f, TextAlignmentOptions.Center, moonlightSilver);
+                subtitle, 14f, TextAlignmentOptions.Center, moonlightSilver);
             subTxt.characterSpacing = 1.5f;
 
             var lineRect = CreateAnchoredRect("Underline Filigree", itemRect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -22f));
@@ -1044,7 +1073,7 @@ namespace TheLightenRoad.Frontend
             divImg.raycastTarget = false;
 
             var titleTxt = CreateLabel("Title", row, new Vector2(8f, 8f), new Vector2(350f, 20f),
-                title.ToUpperInvariant(), 13.5f, TextAlignmentOptions.Left, radiantIvory);
+                title.ToUpperInvariant(), 15f, TextAlignmentOptions.Left, radiantIvory);
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -1052,7 +1081,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.characterSpacing = 2.5f;
 
             var subTxt = CreateLabel("Subtitle", row, new Vector2(8f, -9f), new Vector2(350f, 16f),
-                subtitle, 10.5f, TextAlignmentOptions.Left, moonlightSilver);
+                subtitle, 14f, TextAlignmentOptions.Left, moonlightSilver);
             subTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             subTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             subTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -1098,7 +1127,7 @@ namespace TheLightenRoad.Frontend
             handleImg.color = Color.white;
 
             var valTxt = CreateLabel("Value", sRect, Vector2.zero, new Vector2(60f, 24f),
-                "100%", 13f, TextAlignmentOptions.Right, amberGold);
+                "100%", 14f, TextAlignmentOptions.Right, amberGold);
             valTxt.rectTransform.anchorMin = new Vector2(1f, 0.5f);
             valTxt.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             valTxt.rectTransform.pivot = new Vector2(1f, 0.5f);
@@ -1132,7 +1161,7 @@ namespace TheLightenRoad.Frontend
             divImg.raycastTarget = false;
 
             var titleTxt = CreateLabel("Title", row, new Vector2(8f, 8f), new Vector2(450f, 20f),
-                title.ToUpperInvariant(), 13.5f, TextAlignmentOptions.Left, radiantIvory);
+                title.ToUpperInvariant(), 15f, TextAlignmentOptions.Left, radiantIvory);
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -1140,7 +1169,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.characterSpacing = 2.5f;
 
             var subTxt = CreateLabel("Subtitle", row, new Vector2(8f, -9f), new Vector2(450f, 16f),
-                subtitle, 10.5f, TextAlignmentOptions.Left, moonlightSilver);
+                subtitle, 14f, TextAlignmentOptions.Left, moonlightSilver);
             subTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             subTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             subTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -1151,7 +1180,7 @@ namespace TheLightenRoad.Frontend
             pillImg.color = Color.clear;
 
             var valTxt = CreateLabel("Value", pill, Vector2.zero, new Vector2(110f, 28f),
-                "[ OFF ]", 12.5f, TextAlignmentOptions.Center, mutedIndigo);
+                "[ OFF ]", 14f, TextAlignmentOptions.Center, mutedIndigo);
             valTxt.fontStyle = FontStyles.Bold;
             valTxt.characterSpacing = 2f;
 
@@ -1181,12 +1210,12 @@ namespace TheLightenRoad.Frontend
             badgeImg.color = new Color(1.0f, 0.72f, 0.28f, 0.16f);
 
             var keyTxt = CreateLabel("Key Text", badge, Vector2.zero, new Vector2(200f, 28f),
-                keys, 12f, TextAlignmentOptions.Center, amberGold);
+                keys, 14f, TextAlignmentOptions.Center, amberGold);
             keyTxt.fontStyle = FontStyles.Bold;
             keyTxt.characterSpacing = 1.5f;
 
             var actTxt = CreateLabel("Action", row, new Vector2(230f, 7f), new Vector2(480f, 18f),
-                actionTitle, 13f, TextAlignmentOptions.Left, radiantIvory);
+                actionTitle, 15.5f, TextAlignmentOptions.Left, radiantIvory);
             actTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             actTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             actTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -1194,7 +1223,7 @@ namespace TheLightenRoad.Frontend
             actTxt.characterSpacing = 2f;
 
             var descTxt = CreateLabel("Description", row, new Vector2(230f, -8f), new Vector2(480f, 16f),
-                desc, 10.5f, TextAlignmentOptions.Left, moonlightSilver);
+                desc, 14f, TextAlignmentOptions.Left, moonlightSilver);
             descTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             descTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             descTxt.rectTransform.pivot = new Vector2(0f, 0.5f);

@@ -133,6 +133,12 @@ namespace TheLightenRoad.Frontend
         private GameObject loadingContainer;
 
         private Button playButton;
+        private Button realmsButton;
+        private Button settingsButton;
+        private Button controlsButton;
+        private Button creditsButton;
+        private Button quitButton;
+        private Button lastHomeButton;
         private Button realmsFirst;
         private Button controlsFirst;
         private Button creditsFirst;
@@ -460,14 +466,14 @@ namespace TheLightenRoad.Frontend
 
         public void ShowHome()
         {
-            if(view=="settings")FlushSettingsSave();
-            SetView("home", playButton, Vector2.zero);
+            if (view == "settings") FlushSettingsSave();
+            SetView("home", lastHomeButton != null ? lastHomeButton : playButton, Vector2.zero);
         }
-        public void ShowRealms() { RefreshRealmSelectionUI(); SetView("realms", realmsFirst, new Vector2(-28f, -14f)); }
-        public void ShowSettings() { SyncSettingsUI(); SelectSettingsSection(0); SetView("settings", masterSlider, new Vector2(24f, -18f)); }
-        public void ShowControls() => SetView("controls", controlsFirst, new Vector2(-18f, 16f));
-        public void ShowCredits() => SetView("credits", creditsFirst, new Vector2(18f, 16f));
-        public void ShowQuit() => SetView("quit", quitFirst, new Vector2(0f, -26f));
+        public void ShowRealms() { lastHomeButton = realmsButton; RefreshRealmSelectionUI(); SetView("realms", realmsFirst, new Vector2(-28f, -14f)); }
+        public void ShowSettings() { lastHomeButton = settingsButton; SyncSettingsUI(); SelectSettingsSection(0); SetView("settings", masterSlider, new Vector2(24f, -18f)); }
+        public void ShowControls() { lastHomeButton = controlsButton; SetView("controls", controlsFirst, new Vector2(-18f, 16f)); }
+        public void ShowCredits() { lastHomeButton = creditsButton; SetView("credits", creditsFirst, new Vector2(18f, 16f)); }
+        public void ShowQuit() { lastHomeButton = quitButton; SetView("quit", quitFirst, new Vector2(0f, -26f)); }
 
         public void SelectRealm(int index)
         {
@@ -812,8 +818,12 @@ namespace TheLightenRoad.Frontend
             lastSafeArea = Screen.safeArea;
             if (lastWidth <= 0 || lastHeight <= 0 || safeFrame == null) return;
 
-            safeFrame.anchorMin = new Vector2(lastSafeArea.xMin / lastWidth, lastSafeArea.yMin / lastHeight);
-            safeFrame.anchorMax = new Vector2(lastSafeArea.xMax / lastWidth, lastSafeArea.yMax / lastHeight);
+            float minX = Mathf.Max(0.04f, lastSafeArea.xMin / lastWidth);
+            float minY = Mathf.Max(0.04f, lastSafeArea.yMin / lastHeight);
+            float maxX = Mathf.Min(0.96f, lastSafeArea.xMax / lastWidth);
+            float maxY = Mathf.Min(0.96f, lastSafeArea.yMax / lastHeight);
+            safeFrame.anchorMin = new Vector2(minX, minY);
+            safeFrame.anchorMax = new Vector2(maxX, maxY);
         }
 
         // =====================================================================
@@ -893,7 +903,7 @@ namespace TheLightenRoad.Frontend
             quitGroup.alpha = 0f;
 
             // 5. Delicate Whispered Intro Skip Prompt
-            hintText = CreateLabel("Skip Hint", safeFrame, "PRESS [ENTER], [SPACE] OR CLICK TO AWAKEN THE LANTERN", 11f, amberGold, new Vector2(680f, 26f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), pivot: new Vector2(0.5f, 0f));
+            hintText = CreateLabel("Skip Hint", safeFrame, "PRESS [ENTER], [SPACE] OR CLICK TO AWAKEN THE LANTERN", 14f, amberGold, new Vector2(740f, 28f), new Vector2(0.5f, 0f), new Vector2(0f, 24f), pivot: new Vector2(0.5f, 0f));
             hintText.alignment = TextAlignmentOptions.Center;
             hintText.characterSpacing = 3.5f;
 
@@ -966,7 +976,7 @@ namespace TheLightenRoad.Frontend
             }
 
             // Whispered Sanctuary Eyebrow
-            var eyebrow = CreateLabel("Sanctuary Eyebrow", homeHeaderRect, "-   SANCTUARY OF THE ETERNAL FLAME   -", 10.5f, moonlightSilver, new Vector2(640f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, 54f), pivot: new Vector2(0.5f, 0.5f));
+            var eyebrow = CreateLabel("Sanctuary Eyebrow", homeHeaderRect, "-   SANCTUARY OF THE ETERNAL FLAME   -", 14f, moonlightSilver, new Vector2(680f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 54f), pivot: new Vector2(0.5f, 0.5f));
             eyebrow.alignment = TextAlignmentOptions.Center;
             eyebrow.characterSpacing = 5.5f;
 
@@ -1000,7 +1010,7 @@ namespace TheLightenRoad.Frontend
             crestSparkImg.raycastTarget = false;
 
             // Centered Active Realm Badge
-            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "--   REALM I  :  THE FIRST LIGHT   --", 11.5f, amberGold, new Vector2(680f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -134f), pivot: new Vector2(0.5f, 0.5f));
+            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "--   REALM I  :  THE FIRST LIGHT   --", 14f, amberGold, new Vector2(680f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -134f), pivot: new Vector2(0.5f, 0.5f));
             activeRealmBadgeText.alignment = TextAlignmentOptions.Center;
             activeRealmBadgeText.characterSpacing = 4.5f;
 
@@ -1015,7 +1025,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: true,
                 customWingOffset: 148f);
 
-            CreateFramelessMenuButton(
+            realmsButton = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Realms & Chapters",
                 labelText: "REALMS & CHAPTERS",
@@ -1025,7 +1035,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 185f);
 
-            CreateFramelessMenuButton(
+            settingsButton = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Settings",
                 labelText: "OPTIONS",
@@ -1035,7 +1045,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 118f);
 
-            CreateFramelessMenuButton(
+            controlsButton = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Controls & Guide",
                 labelText: "CONTROLS",
@@ -1045,7 +1055,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 124f);
 
-            CreateFramelessMenuButton(
+            creditsButton = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Credits",
                 labelText: "CREDITS",
@@ -1055,7 +1065,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 115f);
 
-            CreateFramelessMenuButton(
+            quitButton = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Leave the Light",
                 labelText: "QUIT GAME",
@@ -1064,6 +1074,27 @@ namespace TheLightenRoad.Frontend
                 onClick: ShowQuit,
                 isPrimary: false,
                 customWingOffset: 132f);
+
+            ConfigureHomeNavigation();
+        }
+
+        private void ConfigureHomeNavigation()
+        {
+            if (homeButtons.Count == 0) return;
+            for (int i = 0; i < homeButtons.Count; i++)
+            {
+                var btn = homeButtons[i].Rect.GetComponent<Button>();
+                if (btn == null) continue;
+                int prev = (i - 1 + homeButtons.Count) % homeButtons.Count;
+                int next = (i + 1) % homeButtons.Count;
+                var nav = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnUp = homeButtons[prev].Rect.GetComponent<Button>(),
+                    selectOnDown = homeButtons[next].Rect.GetComponent<Button>()
+                };
+                btn.navigation = nav;
+            }
         }
 
         private Button CreateFramelessMenuButton(
@@ -1254,7 +1285,7 @@ namespace TheLightenRoad.Frontend
                 realmTitles.Add(titleTxt);
 
                 // Centered Status & Tag Whisper (Preserves exact test contracts)
-                var statusTxt = CreateLabel("Status", row, (i == selectedRealmIndex) ? "[ ACTIVE REALM ]" : "SELECT REALM", 11.5f, amberGold, new Vector2(520f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, -16f));
+                var statusTxt = CreateLabel("Status", row, (i == selectedRealmIndex) ? "[ ACTIVE REALM ]" : "SELECT REALM", 14f, amberGold, new Vector2(520f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, -16f));
                 statusTxt.rectTransform.pivot = Vector2.one * 0.5f;
                 statusTxt.alignment = TextAlignmentOptions.Center;
                 statusTxt.fontStyle = FontStyles.Bold;
@@ -1271,16 +1302,16 @@ namespace TheLightenRoad.Frontend
             // Centered Selected Realm Lore Whisper (Frameless between two delicate filigree lines)
             var showcaseBox = CreateAnchoredRect("Showcase Container", surface, new Vector2(780f, 86f), new Vector2(0.5f, 0.5f), new Vector2(0f, -168f));
 
-            activeRealmShowcaseTag = CreateLabel("Showcase Tag", showcaseBox, "- TUTORIAL & BEGINNINGS -", 11f, amberGold, new Vector2(740f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, 24f));
+            activeRealmShowcaseTag = CreateLabel("Showcase Tag", showcaseBox, "- TUTORIAL & BEGINNINGS -", 14f, amberGold, new Vector2(740f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, 24f));
             activeRealmShowcaseTag.rectTransform.pivot = Vector2.one * 0.5f;
             activeRealmShowcaseTag.alignment = TextAlignmentOptions.Center;
             activeRealmShowcaseTag.characterSpacing = 4.5f;
 
-            activeRealmShowcaseDesc = CreateLabel("Showcase Desc", showcaseBox, "\"Learn basic movement mechanics, explore the ruined archive, and power the conduit to advance.\"", 13f, radiantIvory, new Vector2(760f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
+            activeRealmShowcaseDesc = CreateLabel("Showcase Desc", showcaseBox, "\"Learn basic movement mechanics, explore the ruined archive, and power the conduit to advance.\"", 15f, radiantIvory, new Vector2(760f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
             activeRealmShowcaseDesc.rectTransform.pivot = Vector2.one * 0.5f;
             activeRealmShowcaseDesc.alignment = TextAlignmentOptions.Center;
 
-            activeRealmShowcaseStatus = CreateLabel("Showcase Status", showcaseBox, "[ ACTIVE REALM ]", 11f, moonlightSilver, new Vector2(500f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f));
+            activeRealmShowcaseStatus = CreateLabel("Showcase Status", showcaseBox, "[ ACTIVE REALM ]", 14f, moonlightSilver, new Vector2(500f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f));
             activeRealmShowcaseStatus.rectTransform.pivot = Vector2.one * 0.5f;
             activeRealmShowcaseStatus.alignment = TextAlignmentOptions.Center;
             activeRealmShowcaseStatus.characterSpacing = 3.0f;
@@ -1313,7 +1344,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.characterSpacing = 2.5f;
 
-            var subTxt = CreateLabel("Subtitle", row, subtitle, 12f, moonlightSilver, new Vector2(350f, 22f), new Vector2(0f, 0.5f), new Vector2(8f, -12f), pivot: new Vector2(0f, 0.5f));
+            var subTxt = CreateLabel("Subtitle", row, subtitle, 14f, moonlightSilver, new Vector2(350f, 22f), new Vector2(0f, 0.5f), new Vector2(8f, -12f), pivot: new Vector2(0f, 0.5f));
 
             var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Image), typeof(Slider));
             sliderGo.GetComponent<Image>().color = Color.clear;
@@ -1390,7 +1421,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.characterSpacing = 2.5f;
 
-            var subTxt = CreateLabel("Subtitle", row, subtitle, 12f, moonlightSilver, new Vector2(440f, 22f), new Vector2(0f, 0.5f), new Vector2(8f, -12f), pivot: new Vector2(0f, 0.5f));
+            var subTxt = CreateLabel("Subtitle", row, subtitle, 14f, moonlightSilver, new Vector2(440f, 22f), new Vector2(0f, 0.5f), new Vector2(8f, -12f), pivot: new Vector2(0f, 0.5f));
 
             var pill = CreateAnchoredRect("Pill", row, new Vector2(130f, 36f), new Vector2(1f, 0.5f), new Vector2(-8f, 0f), pivot: new Vector2(1f, 0.5f));
             var pillImg = pill.gameObject.AddComponent<Image>();
@@ -1437,7 +1468,7 @@ namespace TheLightenRoad.Frontend
             actTxt.fontStyle = FontStyles.Bold;
             actTxt.characterSpacing = 3.0f;
 
-            var descTxt = CreateLabel("Description", row, desc, 11.5f, moonlightSilver, new Vector2(420f, 20f), new Vector2(0f, 0.5f), new Vector2(12f, -10f), pivot: new Vector2(0f, 0.5f));
+            var descTxt = CreateLabel("Description", row, desc, 14f, moonlightSilver, new Vector2(420f, 20f), new Vector2(0f, 0.5f), new Vector2(12f, -10f), pivot: new Vector2(0f, 0.5f));
 
             // Right of center: Ornate Keybinding Emblem with Warm Lantern Glow
             var keyGlow = CreateAnchoredRect("Key Lantern Aura", row, new Vector2(180f, 34f), new Vector2(1f, 0.5f), new Vector2(-95f, 0f), pivot: new Vector2(0.5f, 0.5f));
@@ -1514,13 +1545,13 @@ namespace TheLightenRoad.Frontend
             nameTxt.fontStyle = FontStyles.Bold;
             nameTxt.characterSpacing = 4.5f;
 
-            var roleTxt = CreateLabel("Role", entry, role, 11f, amberGold, new Vector2(720f, 18f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
+            var roleTxt = CreateLabel("Role", entry, role, 14f, amberGold, new Vector2(720f, 18f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
             roleTxt.rectTransform.pivot = Vector2.one * 0.5f;
             roleTxt.alignment = TextAlignmentOptions.Center;
             roleTxt.fontStyle = FontStyles.Bold;
             roleTxt.characterSpacing = 3.0f;
 
-            var detTxt = CreateLabel("Details", entry, details, 12f, moonlightSilver, new Vector2(720f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -20f));
+            var detTxt = CreateLabel("Details", entry, details, 14.5f, moonlightSilver, new Vector2(720f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -20f));
             detTxt.rectTransform.pivot = Vector2.one * 0.5f;
             detTxt.alignment = TextAlignmentOptions.Center;
 
@@ -1550,7 +1581,7 @@ namespace TheLightenRoad.Frontend
                 topImg.raycastTarget = false;
             }
 
-            var tag = CreateLabel("Quit Tag", surface, "-   EXIT GAME   -", 11.5f, moonlightSilver, new Vector2(620f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 102f));
+            var tag = CreateLabel("Quit Tag", surface, "-   EXIT GAME   -", 14f, moonlightSilver, new Vector2(620f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 102f));
             tag.rectTransform.pivot = Vector2.one * 0.5f;
             tag.alignment = TextAlignmentOptions.Center;
             tag.characterSpacing = 6f;
@@ -1595,7 +1626,7 @@ namespace TheLightenRoad.Frontend
                 topImg.raycastTarget = false;
             }
 
-            var sub = CreateLabel("Subheading", container, $"-   {subheading}   -", 11f, moonlightSilver, new Vector2(860f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 322f));
+            var sub = CreateLabel("Subheading", container, $"-   {subheading}   -", 14f, moonlightSilver, new Vector2(860f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 322f));
             sub.rectTransform.pivot = Vector2.one * 0.5f;
             sub.alignment = TextAlignmentOptions.Center;
             sub.characterSpacing = 5.5f;
