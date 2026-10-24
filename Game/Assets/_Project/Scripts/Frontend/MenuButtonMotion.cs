@@ -49,12 +49,12 @@ namespace TheLightenRoad.Frontend
         private Vector2 baseFlameAnchoredPos;
         private bool capturedBasePositions;
 
-        private static readonly Color IdleIvory = new Color32(194, 210, 232, 215);
-        private static readonly Color IdlePrimaryGold = new Color32(236, 244, 255, 245);
-        private static readonly Color FocusedRadiantIvory = new Color32(255, 218, 138, 255);
-        private static readonly Color FocusedAmberGold = new Color32(255, 200, 96, 255);
-        private static readonly Color IdleSubtle = new Color32(142, 162, 190, 185);
-        private static readonly Color FocusedSubtle = new Color32(255, 224, 164, 235);
+        private static readonly Color IdleIvory = new Color32(214, 224, 240, 225);
+        private static readonly Color IdlePrimaryGold = new Color32(244, 248, 255, 255);
+        private static readonly Color FocusedRadiantIvory = new Color32(255, 244, 214, 255);
+        private static readonly Color FocusedAmberGold = new Color32(255, 196, 88, 255);
+        private static readonly Color IdleSubtle = new Color32(148, 166, 194, 190);
+        private static readonly Color FocusedSubtle = new Color32(255, 216, 148, 240);
 
         public void InitializeBasePositions(Vector2 textPos, Vector2 subPos, Vector2 flamePos)
         {
@@ -164,37 +164,38 @@ namespace TheLightenRoad.Frontend
             // 3. Delicate Warm Candlelight Radiance behind text (only when focused/hovered)
             if (SoftGlow != null)
             {
-                float targetAlpha = (IsPrimaryAction ? 0.16f : 0.12f) * pulse;
-                SoftGlow.color = new Color(1.0f, 0.82f, 0.45f, Mathf.Lerp(0f, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.88f, 1.04f, smooth);
+                float targetAlpha = (IsPrimaryAction ? 0.22f : 0.16f) * pulse;
+                SoftGlow.color = new Color(1.0f, 0.78f, 0.36f, Mathf.Lerp(0f, targetAlpha, smooth));
+                float glowScale = Mathf.Lerp(0.84f, 1.06f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
-            // 4. Symmetrical Wings (used for Hollow Knight / Lighten Road button selection pointers)
-            float breathing = (smooth > 0.1f && !MenuPreferences.ReducedMotion) ? Mathf.Sin(t * 3.5f) * 2.5f : 0f;
+            // 4. Symmetrical Wings (Hollow Knight / Lighten Road inward-gliding selection pointers)
+            float breathing = (smooth > 0.1f && !MenuPreferences.ReducedMotion) ? Mathf.Sin(t * 3.8f) * 2.5f : 0f;
             float wingSlide = MenuPreferences.ReducedMotion
                 ? BaseWingOffset
-                : Mathf.Lerp(BaseWingOffset + 14f, BaseWingOffset, smooth) + breathing;
+                : Mathf.Lerp(BaseWingOffset + 18f, BaseWingOffset, smooth) + breathing;
             if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
-            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(0f, 1f, smooth);
+            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.18f : 0f, 1f, smooth);
 
-            // 5. Silver-to-Ember Filigree Underline & Thin Silver Frame
+            // 5. Center-Expanding Ember-Vein Filigree Underline
             if (UnderlineFiligree != null)
             {
                 var r = UnderlineFiligree.rectTransform;
-                float targetW = LeftAlignedItem ? 320f : 280f;
-                float width = Mathf.Lerp(IsPrimaryAction ? 200f : 120f, targetW, smooth);
-                r.sizeDelta = new Vector2(width, 2f);
-                Color idleLine = new Color(0.58f, 0.72f, 0.90f, IsPrimaryAction ? 0.50f : 0.28f);
-                Color focusLine = new Color(1.0f, 0.74f, 0.30f, 0.92f);
+                float idleW = IsPrimaryAction ? 110f : 0f;
+                float targetW = LeftAlignedItem ? 300f : 260f;
+                float width = Mathf.Lerp(idleW, targetW, smooth);
+                r.sizeDelta = new Vector2(width, 2.5f);
+                Color idleLine = new Color(0.66f, 0.78f, 0.94f, IsPrimaryAction ? 0.35f : 0f);
+                Color focusLine = new Color(1.0f, 0.76f, 0.32f, 0.90f);
                 UnderlineFiligree.color = Color.Lerp(idleLine, focusLine, smooth);
             }
 
             if (BorderFrame != null)
             {
-                Color idleBorder = new Color(0.56f, 0.70f, 0.88f, IsPrimaryAction ? 0.45f : 0.26f);
-                Color focusBorder = new Color(1.0f, 0.74f, 0.30f, 0.92f);
+                Color idleBorder = new Color(0.56f, 0.70f, 0.88f, IsPrimaryAction ? 0.35f : 0.18f);
+                Color focusBorder = new Color(1.0f, 0.74f, 0.30f, 0.88f);
                 BorderFrame.color = Color.Lerp(idleBorder, focusBorder, smooth);
             }
         }

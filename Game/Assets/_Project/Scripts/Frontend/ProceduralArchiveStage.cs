@@ -141,11 +141,11 @@ namespace TheLightenRoad.Frontend
             farVaultImage.sprite = CreateArchiveColonnadePixelSprite(480, 270);
             farVaultImage.raycastTarget = false;
 
-            // Soft atmospheric moonlight mist veil
-            var mistRect = CreateAnchoredRect("Midnight Mist Veil", cameraRig, new Vector2(1900f, 800f), new Vector2(0.65f, 0.35f), Vector2.zero);
+            // Soft atmospheric moonlight mist veil centered behind the sanctuary menu
+            var mistRect = CreateAnchoredRect("Midnight Mist Veil", cameraRig, new Vector2(1900f, 820f), new Vector2(0.50f, 0.46f), Vector2.zero);
             var mistImg = mistRect.gameObject.AddComponent<Image>();
             mistImg.sprite = radialGlowSprite;
-            mistImg.color = new Color(0.22f, 0.34f, 0.52f, 0.24f);
+            mistImg.color = new Color(0.20f, 0.32f, 0.50f, 0.24f);
             mistImg.raycastTarget = false;
 
             // 3. Mid 2D Parallax Layer (0.50x): Stone Pillars & Carved Glowing Ember Veins
@@ -215,8 +215,8 @@ namespace TheLightenRoad.Frontend
 
         private void BuildCeilingLamps(RectTransform parent)
         {
-            // Background hanging cage lamp on the upper-left vault arch (delicate atmospheric accent)
-            ceilingLampPivot = CreateAnchoredRect("Pendulum Lantern Pivot", parent, new Vector2(30f, 30f), new Vector2(0.38f, 1.02f), Vector2.zero);
+            // Symmetrical hanging cage lamps on the left and right vault arches framing the centered menu
+            ceilingLampPivot = CreateAnchoredRect("Pendulum Lantern Pivot", parent, new Vector2(30f, 30f), new Vector2(0.20f, 1.02f), Vector2.zero);
             ceilingLampPivot.pivot = new Vector2(0.5f, 1f);
 
             for (int i = 0; i < 4; i++)
@@ -235,7 +235,7 @@ namespace TheLightenRoad.Frontend
             var lampGlow = CreateAnchoredRect("Ceiling Lamp Glow", lampHead, new Vector2(140f, 140f), new Vector2(0.5f, 0.45f), Vector2.zero);
             var lampGlowImg = lampGlow.gameObject.AddComponent<Image>();
             lampGlowImg.sprite = radialGlowSprite;
-            lampGlowImg.color = new Color(1.0f, 0.74f, 0.32f, 0.08f);
+            lampGlowImg.color = new Color(1.0f, 0.74f, 0.32f, 0.10f);
             lampGlowImg.raycastTarget = false;
 
             var lampCage = lampHead.gameObject.AddComponent<Image>();
@@ -244,29 +244,29 @@ namespace TheLightenRoad.Frontend
             lampCage.color = new Color(0.78f, 0.72f, 0.64f, 0.85f);
             lampCage.raycastTarget = false;
 
-            // Far upper-right background lamp
-            farCeilingLampPivot = CreateAnchoredRect("Far Ceiling Lamp Pivot", parent, new Vector2(24f, 24f), new Vector2(0.88f, 1.02f), Vector2.zero);
+            // Symmetrical upper-right background lamp
+            farCeilingLampPivot = CreateAnchoredRect("Far Ceiling Lamp Pivot", parent, new Vector2(30f, 30f), new Vector2(0.80f, 1.02f), Vector2.zero);
             farCeilingLampPivot.pivot = new Vector2(0.5f, 1f);
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
-                var lRect = CreateAnchoredRect($"FarChain_{i}", farCeilingLampPivot, new Vector2(10f, 20f), new Vector2(0.5f, 1f), new Vector2(0f, -6f - i * 16f));
+                var lRect = CreateAnchoredRect($"FarChain_{i}", farCeilingLampPivot, new Vector2(14f, 26f), new Vector2(0.5f, 1f), new Vector2(0f, -8f - i * 20f));
                 lRect.pivot = new Vector2(0.5f, 1f);
                 var lImg = lRect.gameObject.AddComponent<Image>();
                 lImg.sprite = chainLinkSprite;
-                lImg.color = new Color(0.58f, 0.50f, 0.40f, 0.65f);
+                lImg.color = new Color(0.70f, 0.60f, 0.48f, 0.75f);
                 lImg.raycastTarget = false;
             }
-            var farLampHead = CreateAnchoredRect("Far Lamp Head", farCeilingLampPivot, new Vector2(52f, 72f), new Vector2(0.5f, 1f), new Vector2(0f, -56f));
+            var farLampHead = CreateAnchoredRect("Far Lamp Head", farCeilingLampPivot, new Vector2(68f, 92f), new Vector2(0.5f, 1f), new Vector2(0f, -92f));
             farLampHead.pivot = new Vector2(0.5f, 0.88f);
-            var farGlow = CreateAnchoredRect("Far Lamp Glow", farLampHead, new Vector2(100f, 100f), new Vector2(0.5f, 0.45f), Vector2.zero);
+            var farGlow = CreateAnchoredRect("Far Lamp Glow", farLampHead, new Vector2(140f, 140f), new Vector2(0.5f, 0.45f), Vector2.zero);
             var farGlowImg = farGlow.gameObject.AddComponent<Image>();
             farGlowImg.sprite = radialGlowSprite;
-            farGlowImg.color = new Color(1.0f, 0.70f, 0.30f, 0.06f);
+            farGlowImg.color = new Color(1.0f, 0.74f, 0.32f, 0.10f);
             farGlowImg.raycastTarget = false;
             var farCageImg = farLampHead.gameObject.AddComponent<Image>();
             farCageImg.sprite = lanternCageSprite;
             farCageImg.preserveAspect = true;
-            farCageImg.color = new Color(0.65f, 0.60f, 0.54f, 0.75f);
+            farCageImg.color = new Color(0.78f, 0.72f, 0.64f, 0.85f);
             farCageImg.raycastTarget = false;
         }
 
@@ -279,8 +279,8 @@ namespace TheLightenRoad.Frontend
             ledgeImg.sprite = CreateForegroundLedgePixelSprite(480, 270);
             ledgeImg.raycastTarget = false;
 
-            // Hero Character Centerpiece (Character_Light_Stand.png, 50x54 scaled 7.5x -> 375x405) on Right Pedestal
-            wandererBodyRect = CreateAnchoredRect("Cloaked Wanderer Silhouette", foregroundLedgeLayer, new Vector2(375f, 405f), new Vector2(0.68f, 0.155f), Vector2.zero);
+            // Hero Character Centerpiece on Right Overlook (0.78f) leaving the Center Menu Column (0.50f) completely clear
+            wandererBodyRect = CreateAnchoredRect("Cloaked Wanderer Silhouette", foregroundLedgeLayer, new Vector2(360f, 390f), new Vector2(0.78f, 0.155f), Vector2.zero);
             wandererBodyRect.pivot = new Vector2(0.5f, 0.04f);
             var wandererImg = wandererBodyRect.gameObject.AddComponent<Image>();
             wandererImg.sprite = characterHeroSprite;
@@ -800,8 +800,8 @@ namespace TheLightenRoad.Frontend
                     bool brickLineV = ((x + (y / 9) * 7) % 16 == 0);
 
                     float floorH = 0.095f;
-                    float pedestalH = (nx >= 0.50f && nx <= 0.90f) ? ((nx >= 0.54f && nx <= 0.86f) ? 0.155f : 0.125f) : 0f;
-                    float bookStackH = (nx >= 0.565f && nx <= 0.605f) ? 0.195f : 0f;
+                    float pedestalH = (nx >= 0.62f && nx <= 0.94f) ? ((nx >= 0.65f && nx <= 0.90f) ? 0.155f : 0.125f) : 0f;
+                    float bookStackH = (nx >= 0.675f && nx <= 0.715f) ? 0.195f : 0f;
                     float maxH = Mathf.Max(floorH, pedestalH);
 
                     if (ny <= maxH)

@@ -61,20 +61,18 @@ namespace TheLightenRoad.Frontend
 
             var accessibility=(RectTransform)settingsSections[2].transform;
             motionToggle=CreateEtherealToggle(accessibility,"Reduced motion","Reduce parallax, sway and HUD motion",84,out motionToggleValueText,OnReducedMotionToggled);
-            var comfortCard=CreateAnchoredRect("Motion Comfort Card",accessibility,new Vector2(720,110),Vector2.one*.5f,new Vector2(0,-36));
-            var comfortBg=comfortCard.gameObject.AddComponent<Image>();
-            comfortBg.color=new Color(0.025f,0.038f,0.064f,0.72f);comfortBg.raycastTarget=false;
-            var comfortBorder=CreateStretchRect("Row Silver Border",comfortCard);
-            var cbImg=comfortBorder.gameObject.AddComponent<Image>();
-            cbImg.sprite=thinBorderSprite;cbImg.type=Image.Type.Sliced;cbImg.color=new Color(0.56f,0.70f,0.88f,0.28f);cbImg.raycastTarget=false;
-            SettingsText(comfortCard,"MOTION COMFORT",new Vector2(20,24),15.5f,radiantIvory,680);
-            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(20,-14),13f,moonlightSilver,680);
-            note.rectTransform.sizeDelta=new Vector2(680,54);
+            var comfortCard=CreateAnchoredRect("Motion Comfort Card",accessibility,new Vector2(680,104),Vector2.one*.5f,new Vector2(0,-36));
+            var titleComfort=SettingsText(comfortCard,"MOTION COMFORT",new Vector2(0,22),15f,radiantIvory,680);
+            titleComfort.alignment=TextAlignmentOptions.Center;titleComfort.fontStyle=FontStyles.Bold;titleComfort.characterSpacing=2.5f;
+            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(0,-14),12.5f,moonlightSilver,660);
+            note.alignment=TextAlignmentOptions.Center;
+            note.rectTransform.sizeDelta=new Vector2(660,54);
+            SettingsRule(comfortCard,"Comfort Bottom Rule",new Vector2(0,-48),540);
 
             settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-206),12.5f,moonlightSilver,720);
             settingsSaveStatus.alignment=TextAlignmentOptions.Center;
-            resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-180,-268),new Vector2(290,48),RequestSettingsReset);
-            settingsDoneButton=SettingsButton(surface,"Done",new Vector2(180,-268),new Vector2(290,48),ShowHome);
+            resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-180,-268),new Vector2(280,46),RequestSettingsReset);
+            settingsDoneButton=SettingsButton(surface,"Done",new Vector2(180,-268),new Vector2(280,46),ShowHome);
             BuildSettingsReset(surface);
             SelectSettingsSection(0);
             SyncSettingsUI();
@@ -95,8 +93,6 @@ namespace TheLightenRoad.Frontend
                 if(focus!=null)focus.IsCurrent=active;
                 var marker=settingsTabs[i]!=null?settingsTabs[i].transform.Find("Selection rule"):null;
                 if(marker!=null)marker.gameObject.SetActive(active);
-                var border=settingsTabs[i]!=null?settingsTabs[i].transform.Find("Button Silver Border")?.GetComponent<Image>():null;
-                if(border!=null)border.color=active?new Color(1.0f,0.76f,0.32f,0.92f):new Color(0.56f,0.70f,0.88f,0.35f);
             }
             if(resetSettingsButton!=null)resetSettingsButton.interactable=true;
             if(settingsDoneButton!=null)settingsDoneButton.interactable=true;
@@ -104,23 +100,21 @@ namespace TheLightenRoad.Frontend
 
         private void BuildFrameLimit(RectTransform parent)
         {
-            var row=CreateAnchoredRect("Target Frame Rate",parent,new Vector2(720,76),Vector2.one*.5f,new Vector2(0,-96));
-            var rowBg=row.gameObject.AddComponent<Image>();
-            rowBg.color=new Color(0.025f,0.038f,0.064f,0.72f);rowBg.raycastTarget=false;
-            var rowBorder=CreateStretchRect("Row Silver Border",row);
-            var rbImg=rowBorder.gameObject.AddComponent<Image>();
-            rbImg.sprite=thinBorderSprite;rbImg.type=Image.Type.Sliced;rbImg.color=new Color(0.56f,0.70f,0.88f,0.30f);rbImg.raycastTarget=false;
+            var row=CreateAnchoredRect("Target Frame Rate",parent,new Vector2(680,70),Vector2.one*.5f,new Vector2(0,-96));
+            var divRect=CreateAnchoredRect("Row Filigree Rule",row,new Vector2(680,2),new Vector2(0.5f,0f),Vector2.zero,new Vector2(0.5f,0.5f));
+            var divImg=divRect.gameObject.AddComponent<Image>();
+            divImg.sprite=filigreeSprite;divImg.color=new Color(0.62f,0.76f,0.94f,0.24f);divImg.raycastTarget=false;
 
-            var titleTxt=CreateLabel("Title",row,"FRAME LIMIT",17f,radiantIvory,new Vector2(300,26),new Vector2(0,0.5f),new Vector2(20,13),new Vector2(0,0.5f));
-            titleTxt.fontStyle=FontStyles.Bold;titleTxt.characterSpacing=1.5f;
-            frameRateHint=CreateLabel("Subtitle",row,"",12.5f,moonlightSilver,new Vector2(340,28),new Vector2(0,0.5f),new Vector2(20,-14),new Vector2(0,0.5f));
+            var titleTxt=CreateLabel("Title",row,"FRAME LIMIT",16.5f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,11),new Vector2(0,0.5f));
+            titleTxt.fontStyle=FontStyles.Bold;titleTxt.characterSpacing=2.5f;
+            frameRateHint=CreateLabel("Subtitle",row,"",12f,moonlightSilver,new Vector2(340,22),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
 
             for(int i=0;i<3;i++)
             {
                 int limit=FrameLimits[i];
-                frameRateOptions[i]=SettingsButton(row,limit<0?"Unlimited":limit+" FPS",new Vector2(102+i*112,0),new Vector2(104,40),()=>SetSettingsFrameRate(limit));
+                frameRateOptions[i]=SettingsButton(row,limit<0?"Unlimited":limit+" FPS",new Vector2(102+i*108,0),new Vector2(102,38),()=>SetSettingsFrameRate(limit));
                 frameRateLabels[i]=frameRateOptions[i].GetComponentInChildren<TMP_Text>();
-                frameRateLabels[i].fontSize=13.5f;
+                frameRateLabels[i].fontSize=13f;
             }
             RefreshSettingsFrameRate();
         }
@@ -141,8 +135,6 @@ namespace TheLightenRoad.Frontend
                 frameRateLabels[i].color=active?amberGold:radiantIvory;
                 var marker=frameRateOptions[i].transform.Find("Selection rule");
                 if(marker!=null)marker.gameObject.SetActive(active);
-                var border=frameRateOptions[i].transform.Find("Button Silver Border")?.GetComponent<Image>();
-                if(border!=null)border.color=active?new Color(1.0f,0.76f,0.32f,0.88f):new Color(0.56f,0.70f,0.88f,0.32f);
             }
             if(frameRateHint!=null)frameRateHint.text=MenuPreferences.VSync
                 ?"Controlled by V-Sync. Turn it off to choose a limit."
@@ -153,19 +145,19 @@ namespace TheLightenRoad.Frontend
         {
             var panel=CreateAnchoredRect("Restore settings confirmation",parent,new Vector2(720,300),Vector2.one*.5f,new Vector2(0,-22));
             var panelBg=panel.gameObject.AddComponent<Image>();
-            panelBg.color=new Color(0.020f,0.032f,0.054f,0.92f);
-            var pBorder=CreateStretchRect("Reset Silver Border",panel);
-            var pbImg=pBorder.gameObject.AddComponent<Image>();
-            pbImg.sprite=thinBorderSprite;pbImg.type=Image.Type.Sliced;pbImg.color=new Color(0.56f,0.70f,0.88f,0.42f);pbImg.raycastTarget=false;
+            panelBg.sprite=softRadialSprite;
+            panelBg.color=new Color(0.008f,0.014f,0.028f,0.96f);
 
             settingsResetPanel=panel.gameObject;
+            SettingsRule(panel,"Reset Top Rule",new Vector2(0,122),520);
             var head=SettingsText(panel,"RESTORE DEFAULT SETTINGS?",new Vector2(0,82),24,radiantIvory,660);
-            head.alignment=TextAlignmentOptions.Center;head.fontStyle=FontStyles.Bold;
-            var note=SettingsText(panel,"Audio, display and accessibility preferences will return to their defaults.\nYour chapter progress will be kept.",new Vector2(0,18),15,moonlightSilver,660);
+            head.alignment=TextAlignmentOptions.Center;head.fontStyle=FontStyles.Bold;head.characterSpacing=4f;
+            var note=SettingsText(panel,"Audio, display and accessibility preferences will return to their defaults.\nYour chapter progress will be kept.",new Vector2(0,18),14.5f,moonlightSilver,660);
             note.alignment=TextAlignmentOptions.Center;
             note.rectTransform.sizeDelta=new Vector2(660,72);
-            cancelResetButton=SettingsButton(panel,"Keep my settings",new Vector2(-155,-76),new Vector2(270,48),CancelSettingsReset);
-            SettingsButton(panel,"Restore defaults",new Vector2(155,-76),new Vector2(270,48),ResetDefaults);
+            SettingsRule(panel,"Reset Bottom Rule",new Vector2(0,-32),520);
+            cancelResetButton=SettingsButton(panel,"Keep my settings",new Vector2(-155,-76),new Vector2(270,46),CancelSettingsReset);
+            SettingsButton(panel,"Restore defaults",new Vector2(155,-76),new Vector2(270,46),ResetDefaults);
             settingsResetPanel.SetActive(false);
         }
         public void RequestSettingsReset()
@@ -217,16 +209,12 @@ namespace TheLightenRoad.Frontend
         private Button SettingsButton(RectTransform parent,string text,Vector2 position,Vector2 size,UnityEngine.Events.UnityAction action)
         {
             var rect=CreateAnchoredRect(text,parent,size,Vector2.one*.5f,position);
-            var image=rect.gameObject.AddComponent<Image>();image.color=new Color(0.025f,0.038f,0.064f,0.78f);
-            var borderRect=CreateStretchRect("Button Silver Border",rect);
-            var borderImg=borderRect.gameObject.AddComponent<Image>();
-            borderImg.sprite=thinBorderSprite;borderImg.type=Image.Type.Sliced;
-            borderImg.color=new Color(0.56f,0.70f,0.88f,0.35f);borderImg.raycastTarget=false;
+            var image=rect.gameObject.AddComponent<Image>();image.color=Color.clear;
             var button=rect.gameObject.AddComponent<Button>();button.targetGraphic=image;
             var label=CreateLabel("Caption",rect,text.ToUpperInvariant(),15.5f,radiantIvory,size,Vector2.one*.5f,Vector2.zero,Vector2.one*.5f);
-            label.alignment=TextAlignmentOptions.Center;label.fontStyle=FontStyles.Bold;label.characterSpacing=2.2f;
+            label.alignment=TextAlignmentOptions.Center;label.fontStyle=FontStyles.Bold;label.characterSpacing=2.8f;
             AddSettingsFocus(rect,button,label);
-            var rule=CreateAnchoredRect("Selection rule",rect,new Vector2(size.x-24,2),new Vector2(.5f,0),new Vector2(0,3),new Vector2(.5f,0));
+            var rule=CreateAnchoredRect("Selection rule",rect,new Vector2(size.x*0.85f,2.5f),new Vector2(.5f,0),new Vector2(0,3),new Vector2(.5f,0));
             var line=rule.gameObject.AddComponent<Image>();line.sprite=filigreeSprite;line.color=amberGold;line.raycastTarget=false;rule.gameObject.SetActive(false);
             button.onClick.AddListener(()=>{action();if(Application.isPlaying)SoundEffectManager.Instance?.PlayUIClick();});
             return button;
