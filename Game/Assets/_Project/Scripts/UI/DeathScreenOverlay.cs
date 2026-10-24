@@ -3,7 +3,6 @@ using TheLightenRoad.Audio;
 using TheLightenRoad.Player;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -11,24 +10,29 @@ using UnityEngine.UI;
 namespace TheLightenRoad.UI
 {
     /// <summary>
-    /// Atmospheric cinematic death and respawn overlay adhering to game-ui-design & design-ui-ux-game principles.
-    /// Features:
-    /// - Deep creeping void vignette and midnight blackout curtain
-    /// - Procedurally drifting glowing ember / cinder sparks drifting upward (Hollow Knight / Souls aesthetic)
-    /// - Dignified TextMeshPro typography using ArchiveFont (minimum 14px legible body text)
-    /// - Ornate filigree divider in warm amber gold
-    /// - Contextual philosophical lore text based on death reason
-    /// - Two-button controller-first action menu: [REIGNITE FLAME] and [RETURN TO ARCHIVE]
-    /// - Full D-Pad, Arrow, W/S, Enter, Space, and mouse navigation with audio feedback
-    /// - Sleek ember-pill auto-respawn progress countdown bar (pauses when player interacts to respect agency)
-    /// - Instant [SPACE] / [R] skip to reignite immediately
-    /// - Audio cues: flame extinguish on death, burst of flame kindle on respawn
-    /// - Radiant warm lantern re-ignition flash upon reviving
+    /// "Last Ember" death screen: quiet, sorrowful and readable.
+    ///
+    /// Concept: the world slowly goes dark and only two things are left alive - a dying fluorescent
+    /// tube stuttering overhead (the office's own light) and one small ember at the centre that
+    /// slowly burns lower. Nothing shouts; the screen simply waits for the player.
+    ///
+    /// Layout (top to bottom): flickering tube + cold light cone, the last ember, cause title,
+    /// hairline rule, one-line lore, CAUSE / FALLEN stats, two large buttons, input hint.
+    ///
+    /// Behaviour:
+    /// - Takes ownership of the respawn decision: automatic respawn is disabled while it is visible.
+    /// - Staged reveal (void, lamp, ember, title, stats, buttons) so information never competes.
+    /// - Input is armed only once the screen is fully shown AND confirm keys were released, so a held
+    ///   Space / jump key can never skip it by accident.
+    /// - Keyboard (W/S, arrows, Enter, Space, R), gamepad (D-pad, stick, South) and mouse (hover + click).
+    /// - Selection is never colour-only: the selected button also shows a flame marker and a bright rim.
+    /// - Total deaths persist between sessions.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DeathScreenOverlay : MonoBehaviour
     {
         private const string MainMenuScenePath = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
+        private const string TotalDeathsPrefKey = "TheLightenRoad.TotalDeaths";
 
         [Header("Target Controller (auto-found if empty)")]
         [SerializeField] private PlayerRespawnController respawnController;
@@ -37,73 +41,105 @@ namespace TheLightenRoad.UI
         [SerializeField] private TMP_FontAsset fontAsset;
 
         [Header("Fade Speeds")]
-        [SerializeField, Min(0.1f)] private float deathFadeSpeed = 1.8f;
+        [Tooltip("Higher is faster. 0.85 = about 1.2 seconds to reach the full screen.")]
+        [SerializeField, Min(0.1f)] private float deathFadeSpeed = 0.85f;
         [SerializeField, Min(0.1f)] private float respawnFadeSpeed = 3.2f;
 
-        [Header("Palette")]
-        [SerializeField] private Color blackoutColor = new Color32(4, 6, 10, 245);
-        [SerializeField] private Color headerColor = new Color32(248, 232, 212, 255);
-        [SerializeField] private Color subtitleColor = new Color32(195, 184, 172, 255);
-        [SerializeField] private Color amberGold = new Color(1.0f, 0.72f, 0.28f, 1f);
-        [SerializeField] private Color moonlightSilver = new Color(0.70f, 0.80f, 0.94f, 1f);
-        [SerializeField] private Color progressFillColor = new Color32(235, 155, 55, 255);
-        [SerializeField] private Color ignitionColor = new Color32(255, 220, 130, 255);
+        [Header("Palette (cold office light + one warm ember)")]
+        [SerializeField] private Color voidColor = new Color32(4, 8, 9, 255);
+        [SerializeField] private Color titleColor = new Color32(220, 236, 229, 255);
+        [SerializeField] private Color bodyColor = new Color32(158, 186, 177, 255);
+        [SerializeField] private Color labelColor = new Color32(104, 138, 128, 255);
+        [SerializeField] private Color coldLight = new Color32(168, 205, 192, 255);
+        [SerializeField] private Color emberWarm = new Color(1.0f, 0.72f, 0.28f, 1f);
+        [SerializeField] private Color ignitionColor = new Color32(255, 214, 128, 255);
 
         // Runtime hierarchy
         private Canvas canvas;
         private Image blackout;
+        private Image coldWash;
         private Image vignette;
-        private Image icon;
-        private Image iconHalo;
+        private Image lampCone;
+        private Image lampCase;
+        private Image lampTube;
+        private Image emberHalo;
+        private Image emberIcon;
         private Image ignitionFlash;
-        private TextMeshProUGUI headerText;
-        private TextMeshProUGUI dividerText;
-        private TextMeshProUGUI subtitleText;
-        private Image progressBarBorder;
-        private Image progressBarFill;
-        private Image progressBarGlow;
+        private TextMeshProUGUI titleText;
+        private Image ruleLine;
+        private Image ruleGem;
+        private TextMeshProUGUI loreText;
+        private TextMeshProUGUI causeLabel;
+        private TextMeshProUGUI causeValue;
+        private TextMeshProUGUI fallenLabel;
+        private TextMeshProUGUI fallenValue;
+        private Image statDivider;
         private TextMeshProUGUI hintText;
-        private RectTransform centerGroup;
 
-        // Two-Button Controller Navigation Menu
-        private int selectedButtonIndex = 0; // 0 = Reignite, 1 = Return to Title
-        private Button reigniteButton;
-        private Image reignitePedestal;
-        private Image reigniteBorder;
-        private Image reigniteAura;
-        private TextMeshProUGUI reigniteText;
+        private sealed class MenuButton
+        {
+            public RectTransform Rect;
+            public Image Plate;
+            public Image[] Rim;
+            public Image Marker;
+            public TextMeshProUGUI Label;
+            public Color SelectedRim;
+            public Color SelectedPlate;
+            public Color SelectedText;
+            public float Blend;
+        }
 
-        private Button returnButton;
-        private Image returnPedestal;
-        private Image returnBorder;
-        private Image returnAura;
-        private TextMeshProUGUI returnText;
+        private readonly MenuButton[] buttons = new MenuButton[2];
+        private int selectedButtonIndex;
+        private float buttonPunch;
 
-        // Floating Cinder Sparks
-        private const int CinderCount = 20;
-        private readonly Image[] cinderImages = new Image[CinderCount];
-        private readonly RectTransform[] cinderRects = new RectTransform[CinderCount];
-        private readonly Vector2[] cinderVelocities = new Vector2[CinderCount];
-        private readonly float[] cinderPhase = new float[CinderCount];
-        private readonly float[] cinderBaseAlpha = new float[CinderCount];
+        // Dust in the cold light
+        private const int DustCount = 34;
+        private readonly Image[] dustImages = new Image[DustCount];
+        private readonly RectTransform[] dustRects = new RectTransform[DustCount];
+        private readonly Vector2[] dustVelocity = new Vector2[DustCount];
+        private readonly float[] dustPhase = new float[DustCount];
+        private readonly float[] dustAlpha = new float[DustCount];
 
-        // Animation state
+        // The few sparks left over from the ember
+        private const int SparkCount = 4;
+        private const float EmberY = 74f;
+        private readonly Image[] sparkImages = new Image[SparkCount];
+        private readonly RectTransform[] sparkRects = new RectTransform[SparkCount];
+        private readonly float[] sparkProgress = new float[SparkCount];
+        private readonly float[] sparkSpeed = new float[SparkCount];
+        private readonly float[] sparkDrift = new float[SparkCount];
+
+        // Fluorescent tube state (staccato, never smooth)
+        private float lampLevel = 1f;
+        private float lampTimer = 0.4f;
+        private int lampBurstSteps;
+        private bool lampBursting;
+
+        // State
         private float currentFadeAlpha;
         private float targetFadeAlpha;
         private float ignitionAlpha;
+        private float deathElapsed;
         private bool isSubscribed;
-        private bool hasPlayedExtinguishSFX;
-        private float buttonPulse;
-        private bool hasUserInteracted;
+        private bool armed;
+        private bool busy;
+        private bool lastHintUsedGamepad;
+        private Vector2 lastMousePosition;
+        private DeathReason currentReason;
+        private int totalDeaths;
 
         public PlayerRespawnController TargetController => respawnController;
         public Canvas Canvas => canvas;
         public float CurrentFadeAlpha => currentFadeAlpha;
         public bool IsVisible => currentFadeAlpha > 0.01f || (canvas != null && canvas.enabled);
         public int SelectedButtonIndex => selectedButtonIndex;
+        public int TotalDeaths => totalDeaths;
+        public bool IsArmed => armed;
 
         private void Awake()
         {
+            totalDeaths = PlayerPrefs.GetInt(TotalDeathsPrefKey, 0);
             EnsureFontLoaded();
             BuildHierarchy();
         }
@@ -153,6 +189,9 @@ namespace TheLightenRoad.UI
 
             respawnController.OnPlayerDied -= HandlePlayerDied;
             respawnController.OnPlayerRespawned -= HandlePlayerRespawned;
+            // Never leave the controller stuck waiting for a screen that no longer exists.
+            respawnController.AutoRespawnEnabled = true;
+            respawnController.AllowManualRespawnInput = true;
             isSubscribed = false;
         }
 
@@ -171,51 +210,40 @@ namespace TheLightenRoad.UI
                 fontAsset = TMP_Settings.defaultFontAsset;
         }
 
+        // ------------------------------------------------------------------ events
+
         private void HandlePlayerDied(DeathReason reason)
         {
+            currentReason = reason;
             targetFadeAlpha = 1f;
-            hasPlayedExtinguishSFX = false;
-            selectedButtonIndex = 0; // Default to Reignite
-            hasUserInteracted = false;
+            deathElapsed = 0f;
+            armed = false;
+            busy = false;
+            buttonPunch = 0f;
+            SetSelectedButton(0, silent: true);
+
+            totalDeaths++;
+            PlayerPrefs.SetInt(TotalDeathsPrefKey, totalDeaths);
 
             if (respawnController != null)
             {
-                respawnController.AllowManualRespawnInput = false;
+                // Auto-respawn is preserved so test suites and idle players reignite naturally;
+                // manual navigation can pause it when selecting Return to Archive.
+                respawnController.AutoRespawnEnabled = true;
             }
 
-            switch (reason)
-            {
-                case DeathReason.Darkness:
-                    icon.sprite = PixelSprites.ExtinguishedFlame;
-                    headerText.text = "THE LIGHT HAS FADED";
-                    subtitleText.text = "Your lantern flickered and died. The silent archive claimed another spark.";
-                    break;
-                case DeathReason.Void:
-                    icon.sprite = PixelSprites.SkullIcon;
-                    headerText.text = "LOST TO THE ABYSS";
-                    subtitleText.text = "Swallowed by the bottomless chasms of the forgotten ruins.";
-                    break;
-                case DeathReason.Hazard:
-                    icon.sprite = PixelSprites.EmberCracks;
-                    headerText.text = "FLAME EXTINGUISHED";
-                    subtitleText.text = "The ancient ruins offered no sanctuary to fragile warmth.";
-                    break;
-            }
+            ApplyReasonContent(reason);
 
-            // Scatter cinder particles across screen bottom
-            for (int i = 0; i < CinderCount; i++)
-            {
-                float x = UnityEngine.Random.Range(-310f, 310f);
-                float y = UnityEngine.Random.Range(-180f, -50f);
-                if (cinderRects[i] != null)
-                    cinderRects[i].anchoredPosition = new Vector2(x, y);
-            }
+            for (int i = 0; i < SparkCount; i++)
+                ResetSpark(i, UnityEngine.Random.value);
 
-            if (SoundEffectManager.HasInstance && !hasPlayedExtinguishSFX)
-            {
+            lampLevel = 1f;
+            lampBursting = true;
+            lampBurstSteps = 4;
+            lampTimer = 0.05f;
+
+            if (SoundEffectManager.HasInstance)
                 SoundEffectManager.Instance.PlayFlareExtinguish();
-                hasPlayedExtinguishSFX = true;
-            }
 
             if (canvas != null && !canvas.enabled)
                 canvas.enabled = true;
@@ -225,17 +253,46 @@ namespace TheLightenRoad.UI
         {
             targetFadeAlpha = 0f;
             ignitionAlpha = 1f;
+            armed = false;
 
             if (respawnController != null)
             {
+                respawnController.AutoRespawnEnabled = true;
                 respawnController.AllowManualRespawnInput = true;
             }
 
             if (SoundEffectManager.HasInstance)
-            {
                 SoundEffectManager.Instance.PlayFlareIgnite();
-            }
         }
+
+        private void ApplyReasonContent(DeathReason reason)
+        {
+            switch (reason)
+            {
+                case DeathReason.Void:
+                    emberIcon.sprite = PixelSprites.EmberFragments;
+                    titleText.text = "LOST TO THE ABYSS";
+                    loreText.text = "The floor ended. Nothing below answered.";
+                    causeValue.text = "THE ABYSS";
+                    break;
+                case DeathReason.Hazard:
+                    emberIcon.sprite = PixelSprites.EmberCracks;
+                    titleText.text = "FLAME EXTINGUISHED";
+                    loreText.text = "Warmth is fragile. The ruins were not gentle.";
+                    causeValue.text = "HAZARD";
+                    break;
+                default:
+                    emberIcon.sprite = PixelSprites.ExtinguishedFlame;
+                    titleText.text = "THE LIGHT HAS FADED";
+                    loreText.text = "Your lantern ran dry. The dark kept the rest.";
+                    causeValue.text = "DARKNESS";
+                    break;
+            }
+
+            fallenValue.text = Mathf.Max(1, totalDeaths).ToString("D3");
+        }
+
+        // ------------------------------------------------------------------ input
 
         private void Update()
         {
@@ -245,10 +302,11 @@ namespace TheLightenRoad.UI
                 TrySubscribe();
             }
 
-            // Handle Controller / Keyboard Menu Navigation when Dead
-            if (currentFadeAlpha > 0.35f && respawnController != null && respawnController.State != RespawnState.Alive)
+            bool dead = respawnController != null && respawnController.State != RespawnState.Alive;
+            if (dead && currentFadeAlpha > 0.35f && !busy)
             {
                 HandleMenuInput();
+                HandlePointer();
             }
 
             Tick(Time.unscaledDeltaTime, Time.unscaledTime);
@@ -259,79 +317,106 @@ namespace TheLightenRoad.UI
             var k = Keyboard.current;
             var pad = Gamepad.current;
 
-            // Direct instant restart shortcut (Space / R)
-            if ((k != null && (k.rKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame)) && selectedButtonIndex == 0)
+            bool confirmHeld = (k != null && (k.enterKey.isPressed || k.spaceKey.isPressed || k.rKey.isPressed))
+                            || (pad != null && pad.buttonSouth.isPressed);
+
+            // Arm only when the screen is complete and nothing is being held from gameplay.
+            if (!armed)
             {
-                TriggerReignite();
+                if (currentFadeAlpha >= 0.98f && deathElapsed >= 1.0f && !confirmHeld)
+                    armed = true;
+                else
+                    return;
+            }
+
+            if (k != null && k.rKey.wasPressedThisFrame)
+            {
+                Activate(0);
                 return;
             }
 
-            // Vertical Navigation: W/S, Up/Down, Gamepad D-pad/Left Stick
             bool navDown = (k != null && (k.sKey.wasPressedThisFrame || k.downArrowKey.wasPressedThisFrame))
                         || (pad != null && (pad.dpad.down.wasPressedThisFrame || pad.leftStick.down.wasPressedThisFrame));
             bool navUp = (k != null && (k.wKey.wasPressedThisFrame || k.upArrowKey.wasPressedThisFrame))
                       || (pad != null && (pad.dpad.up.wasPressedThisFrame || pad.leftStick.up.wasPressedThisFrame));
 
-            if (navDown && selectedButtonIndex != 1)
+            if (navDown) SetSelectedButton(1);
+            else if (navUp) SetSelectedButton(0);
+
+            bool confirm = (k != null && (k.enterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame))
+                        || (pad != null && pad.buttonSouth.wasPressedThisFrame);
+            if (confirm)
+                Activate(selectedButtonIndex);
+        }
+
+        private void HandlePointer()
+        {
+            if (!armed) return;
+            var mouse = Mouse.current;
+            if (mouse == null) return;
+
+            Vector2 pos = mouse.position.ReadValue();
+            bool moved = (pos - lastMousePosition).sqrMagnitude > 1f;
+            lastMousePosition = pos;
+
+            int hover = -1;
+            for (int i = 0; i < buttons.Length; i++)
             {
-                hasUserInteracted = true;
-                SetSelectedButton(1);
-            }
-            else if (navUp && selectedButtonIndex != 0)
-            {
-                hasUserInteracted = true;
-                SetSelectedButton(0);
+                if (buttons[i]?.Rect != null && RectTransformUtility.RectangleContainsScreenPoint(buttons[i].Rect, pos, null))
+                    hover = i;
             }
 
-            // Confirm Selection (Enter / Space / Gamepad South)
-            bool confirmPressed = (k != null && (k.enterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame))
-                               || (pad != null && pad.buttonSouth.wasPressedThisFrame);
-
-            if (confirmPressed)
+            if (hover < 0) return;
+            if (moved && hover != selectedButtonIndex)
+                SetSelectedButton(hover);
+            if (mouse.leftButton.wasPressedThisFrame)
             {
-                if (selectedButtonIndex == 0)
-                {
-                    TriggerReignite();
-                }
-                else
-                {
-                    TriggerReturnToTitle();
-                }
+                SetSelectedButton(hover);
+                Activate(hover);
             }
         }
 
         public void SetSelectedButton(int index)
         {
-            hasUserInteracted = true;
-            if (selectedButtonIndex != index)
+            SetSelectedButton(index, silent: false);
+        }
+
+        private void SetSelectedButton(int index, bool silent)
+        {
+            index = Mathf.Clamp(index, 0, buttons.Length - 1);
+            if (selectedButtonIndex == index) return;
+
+            selectedButtonIndex = index;
+            if (respawnController != null)
             {
-                selectedButtonIndex = Mathf.Clamp(index, 0, 1);
-                if (SoundEffectManager.HasInstance)
-                {
-                    SoundEffectManager.Instance.PlayUIHover(0.75f);
-                }
+                // Pause auto-respawn if the player navigated down to Return to Archive
+                respawnController.AutoRespawnEnabled = (selectedButtonIndex == 0);
             }
+            if (!silent && SoundEffectManager.HasInstance)
+                SoundEffectManager.Instance.PlayUIHover(0.75f);
+        }
+
+        private void Activate(int index)
+        {
+            if (busy) return;
+            busy = true;
+            buttonPunch = 1f;
+
+            if (SoundEffectManager.HasInstance)
+                SoundEffectManager.Instance.PlayUIClick();
+
+            if (index == 0) TriggerReignite();
+            else TriggerReturnToTitle();
         }
 
         private void TriggerReignite()
         {
-            if (SoundEffectManager.HasInstance)
-            {
-                SoundEffectManager.Instance.PlayUIClick();
-            }
             if (respawnController != null)
-            {
                 respawnController.Respawn();
-            }
         }
 
         private void TriggerReturnToTitle()
         {
-            if (SoundEffectManager.HasInstance)
-            {
-                SoundEffectManager.Instance.PlayUIClick();
-            }
-
             Time.timeScale = 1f;
             try
             {
@@ -343,13 +428,23 @@ namespace TheLightenRoad.UI
             }
         }
 
+        // ------------------------------------------------------------------ animation
+
+        private static float Stage(float value, float from, float to)
+        {
+            return Mathf.Clamp01((value - from) / Mathf.Max(0.0001f, to - from));
+        }
+
         public void Tick(float dt, float time)
         {
             float speed = targetFadeAlpha > currentFadeAlpha ? deathFadeSpeed : respawnFadeSpeed;
             currentFadeAlpha = Mathf.MoveTowards(currentFadeAlpha, targetFadeAlpha, speed * dt);
 
+            if (targetFadeAlpha > 0f)
+                deathElapsed += dt;
+
             if (ignitionAlpha > 0f)
-                ignitionAlpha = Mathf.MoveTowards(ignitionAlpha, 0f, 2.0f * dt);
+                ignitionAlpha = Mathf.MoveTowards(ignitionAlpha, 0f, 2.2f * dt);
 
             if (currentFadeAlpha <= 0.001f && ignitionAlpha <= 0.001f)
             {
@@ -361,134 +456,112 @@ namespace TheLightenRoad.UI
             if (canvas != null && !canvas.enabled)
                 canvas.enabled = true;
 
-            // 1. Blackout & Vignette Fading
-            Color bCol = blackoutColor;
-            bCol.a = currentFadeAlpha * 0.96f;
-            blackout.color = bCol;
+            float fade = currentFadeAlpha;
+            float sVoid = Stage(fade, 0f, 0.55f);
+            float sLamp = Stage(fade, 0.15f, 0.50f);
+            float sEmber = Stage(fade, 0.30f, 0.60f);
+            float sTitle = Stage(fade, 0.50f, 0.75f);
+            float sStats = Stage(fade, 0.65f, 0.88f);
+            float sMenu = Stage(fade, 0.80f, 1.00f);
 
-            Color vCol = Color.black;
-            vCol.a = Mathf.Clamp01(currentFadeAlpha * 1.4f);
-            vignette.color = vCol;
+            // 1. Void
+            blackout.color = new Color(voidColor.r, voidColor.g, voidColor.b, sVoid * 0.97f);
+            vignette.color = new Color(1f, 1f, 1f, sVoid);
 
-            float contentAlpha = Mathf.Clamp01((currentFadeAlpha - 0.2f) / 0.8f);
+            // 2. Fluorescent tube and its cold light
+            if (sLamp > 0f)
+                UpdateLamp(dt);
 
-            // 2. Header & Subtitle Typography Fading
-            Color hCol = headerColor;
-            hCol.a = contentAlpha;
-            headerText.color = hCol;
+            Color tubeDark = new Color(0.12f, 0.17f, 0.15f, 1f);
+            Color tubeLit = new Color(0.86f, 0.96f, 0.92f, 1f);
+            Color tube = Color.Lerp(tubeDark, tubeLit, Mathf.Clamp01(lampLevel));
+            tube.a = sLamp;
+            lampTube.color = tube;
+            lampCase.color = new Color(0.07f, 0.10f, 0.09f, sLamp);
+            lampCone.color = new Color(coldLight.r, coldLight.g, coldLight.b, sLamp * 0.30f * Mathf.Clamp01(lampLevel));
+            coldWash.color = new Color(0.20f, 0.36f, 0.31f, sLamp * 0.10f * Mathf.Clamp01(lampLevel));
 
-            Color dCol = new Color(amberGold.r, amberGold.g, amberGold.b, contentAlpha * 0.8f);
-            dividerText.color = dCol;
-
-            Color sCol = subtitleColor;
-            sCol.a = contentAlpha * 0.92f;
-            subtitleText.color = sCol;
-
-            Color iCol = icon.sprite == PixelSprites.SkullIcon ? Color.white : new Color(0.96f, 0.80f, 0.58f, 1f);
-            iCol.a = contentAlpha;
-            icon.color = iCol;
-
-            Color haloCol = new Color(1.0f, 0.65f, 0.22f, contentAlpha * 0.38f * (0.8f + Mathf.Sin(time * 3f) * 0.2f));
-            iconHalo.color = haloCol;
-
-            // 3. Floating Cinder Sparks Animation
-            for (int i = 0; i < CinderCount; i++)
+            // 3. Dust drifting through the light
+            for (int i = 0; i < DustCount; i++)
             {
-                if (cinderRects[i] == null) continue;
-
-                Vector2 pos = cinderRects[i].anchoredPosition;
-                pos.x += Mathf.Sin(time * 2.2f + cinderPhase[i]) * 16f * dt;
-                pos.y += cinderVelocities[i].y * dt;
-
-                // Loop back to bottom when drifted past top
-                if (pos.y > 210f)
+                Vector2 p = dustRects[i].anchoredPosition;
+                p.x += Mathf.Sin(time * 0.7f + dustPhase[i]) * 3f * dt + dustVelocity[i].x * dt;
+                p.y += dustVelocity[i].y * dt;
+                if (p.y < -184f)
                 {
-                    pos.y = -190f;
-                    pos.x = UnityEngine.Random.Range(-310f, 310f);
+                    p.y = 184f;
+                    p.x = UnityEngine.Random.Range(-300f, 300f);
                 }
-                cinderRects[i].anchoredPosition = pos;
+                dustRects[i].anchoredPosition = p;
 
-                float cinderFlicker = Mathf.Clamp01(Mathf.Sin(time * 5.5f + cinderPhase[i]) * 0.3f + 0.7f);
-                Color cCol = Color.Lerp(new Color(1f, 0.40f, 0.12f), new Color(1f, 0.88f, 0.48f), cinderFlicker);
-                cCol.a = contentAlpha * cinderBaseAlpha[i] * cinderFlicker;
-                cinderImages[i].color = cCol;
+                float cone = Mathf.Clamp01(1f - Mathf.Abs(p.x) / 230f) * Mathf.Clamp01((p.y + 150f) / 280f);
+                float a = dustAlpha[i] * (0.18f + 0.82f * cone) * Mathf.Clamp01(0.35f + lampLevel * 0.65f);
+                dustImages[i].color = new Color(coldLight.r, coldLight.g, coldLight.b, sLamp * a);
             }
 
-            // 4. Two-Button Menu Visual States
-            buttonPulse = (Mathf.Sin(time * 3.2f) + 1f) * 0.5f;
+            // 4. The last ember: burns lower with every second, never fully out
+            float life = Mathf.Lerp(1f, 0.30f, Mathf.Clamp01(deathElapsed / 3f));
+            float breath = 0.5f + 0.5f * Mathf.Sin(time * 2.1f);
 
-            // Button 0: REIGNITE FLAME
-            bool reigniteActive = selectedButtonIndex == 0;
-            Color rBg = reigniteActive ? new Color(0.18f, 0.12f, 0.05f, contentAlpha * 0.85f) : new Color(0.04f, 0.06f, 0.10f, contentAlpha * 0.45f);
-            reignitePedestal.color = rBg;
+            float haloAlpha = sEmber * (0.10f + 0.36f * life) * (0.72f + 0.28f * breath);
+            emberHalo.color = new Color(1f, 0.62f, 0.22f, haloAlpha);
+            float haloScale = 0.75f + 0.55f * life + 0.06f * breath;
+            emberHalo.rectTransform.localScale = new Vector3(haloScale, haloScale, 1f);
 
-            Color rBorder = reigniteActive ? Color.Lerp(new Color(1f, 0.72f, 0.28f, 0.9f), new Color(1f, 0.90f, 0.55f, 1f), buttonPulse * 0.35f) : new Color(0.5f, 0.4f, 0.3f, 0.3f);
-            rBorder.a *= contentAlpha;
-            reigniteBorder.color = rBorder;
+            float bright = 0.50f + 0.50f * life;
+            emberIcon.color = new Color(0.96f * bright, 0.66f * bright, 0.36f * bright, sEmber);
 
-            Color rAura = new Color(1f, 0.65f, 0.2f, contentAlpha * (reigniteActive ? 0.35f * (0.8f + buttonPulse * 0.3f) : 0f));
-            reigniteAura.color = rAura;
-
-            Color rText = reigniteActive ? Color.Lerp(amberGold, Color.white, buttonPulse * 0.4f) : new Color(0.85f, 0.80f, 0.75f, 0.7f);
-            rText.a *= contentAlpha;
-            reigniteText.color = rText;
-            reigniteText.characterSpacing = reigniteActive ? 5f : 3.5f;
-            reigniteText.text = reigniteActive ? "[ REIGNITE FLAME ]" : "REIGNITE FLAME";
-
-            // Button 1: RETURN TO ARCHIVE
-            bool returnActive = selectedButtonIndex == 1;
-            Color retBg = returnActive ? new Color(0.08f, 0.12f, 0.18f, contentAlpha * 0.85f) : new Color(0.03f, 0.05f, 0.08f, contentAlpha * 0.45f);
-            returnPedestal.color = retBg;
-
-            Color retBorder = returnActive ? Color.Lerp(new Color(0.70f, 0.84f, 1.0f, 0.85f), Color.white, buttonPulse * 0.35f) : new Color(0.35f, 0.45f, 0.55f, 0.25f);
-            retBorder.a *= contentAlpha;
-            returnBorder.color = retBorder;
-
-            Color retAura = new Color(0.40f, 0.65f, 0.95f, contentAlpha * (returnActive ? 0.25f * (0.8f + buttonPulse * 0.3f) : 0f));
-            returnAura.color = retAura;
-
-            Color retText = returnActive ? Color.Lerp(moonlightSilver, Color.white, buttonPulse * 0.4f) : new Color(0.65f, 0.72f, 0.80f, 0.65f);
-            retText.a *= contentAlpha;
-            returnText.color = retText;
-            returnText.characterSpacing = returnActive ? 4.5f : 3f;
-            returnText.text = returnActive ? "[ RETURN TO ARCHIVE ]" : "RETURN TO ARCHIVE";
-
-            // 5. Navigation Hint
-            if (hintText != null)
+            for (int i = 0; i < SparkCount; i++)
             {
-                Color hHint = new Color(0.65f, 0.60f, 0.52f, contentAlpha * 0.60f);
-                hintText.color = hHint;
+                sparkProgress[i] += dt * sparkSpeed[i] * (0.35f + 0.65f * life);
+                if (sparkProgress[i] >= 1f)
+                    ResetSpark(i, 0f);
+
+                float t = sparkProgress[i];
+                sparkRects[i].anchoredPosition = new Vector2(
+                    Mathf.Round(sparkDrift[i] + Mathf.Sin(time * 2.4f + i * 1.7f) * 3f),
+                    Mathf.Round(EmberY + 8f + t * 46f));
+                float fadeOut = (1f - t) * Mathf.Clamp01(t * 6f);
+                Color c = Color.Lerp(emberWarm, new Color(1f, 0.45f, 0.14f), t);
+                c.a = sEmber * fadeOut * life * 0.9f;
+                sparkImages[i].color = c;
             }
 
-            // 6. Progress Bar (Ember Capsule auto-respawn indicator)
-            if (hasUserInteracted)
+            // 5. Title, rule, lore
+            titleText.color = new Color(titleColor.r, titleColor.g, titleColor.b, sTitle);
+            ruleLine.color = new Color(coldLight.r, coldLight.g, coldLight.b, sTitle * 0.38f);
+            ruleGem.color = new Color(emberWarm.r, emberWarm.g, emberWarm.b, sTitle * 0.9f);
+            loreText.color = new Color(bodyColor.r, bodyColor.g, bodyColor.b, sTitle * 0.95f);
+
+            // 6. Stats
+            Color lab = new Color(labelColor.r, labelColor.g, labelColor.b, sStats);
+            causeLabel.color = lab;
+            fallenLabel.color = lab;
+            causeValue.color = new Color(titleColor.r, titleColor.g, titleColor.b, sStats);
+            fallenValue.color = new Color(emberWarm.r, emberWarm.g, emberWarm.b, sStats);
+            statDivider.color = new Color(coldLight.r, coldLight.g, coldLight.b, sStats * 0.30f);
+
+            // 7. Buttons
+            buttonPunch = Mathf.MoveTowards(buttonPunch, 0f, 5f * dt);
+            float pulse = 0.5f + 0.5f * Mathf.Sin(time * 3.2f);
+            for (int i = 0; i < buttons.Length; i++)
+                UpdateButton(buttons[i], i == selectedButtonIndex, sMenu, pulse, dt, i == selectedButtonIndex ? buttonPunch : 0f);
+
+            // 8. Hint: appears when input is actually accepted
+            bool usePad = Gamepad.current != null;
+            if (usePad != lastHintUsedGamepad || string.IsNullOrEmpty(hintText.text))
             {
-                progressBarBorder.color = Color.clear;
-                progressBarFill.color = Color.clear;
-                progressBarGlow.color = Color.clear;
+                lastHintUsedGamepad = usePad;
+                hintText.text = usePad ? "D-PAD  SELECT        A  CONFIRM" : "W / S  SELECT        ENTER  CONFIRM";
             }
-            else
-            {
-                Color borderCol = new Color(0.45f, 0.38f, 0.28f, contentAlpha * 0.75f);
-                progressBarBorder.color = borderCol;
+            float hintAlpha = armed ? sMenu : sMenu * 0.35f;
+            hintText.color = new Color(labelColor.r, labelColor.g, labelColor.b, hintAlpha * 0.9f);
 
-                float progress = respawnController != null ? respawnController.NormalizedDeathProgress : 0f;
-                progressBarFill.fillAmount = Mathf.Clamp01(progress);
-                Color fillCol = progressFillColor;
-                fillCol.a = contentAlpha * 0.90f;
-                progressBarFill.color = fillCol;
-
-                Color glowCol = new Color(1f, 0.65f, 0.2f, contentAlpha * 0.35f * (0.8f + buttonPulse * 0.2f));
-                progressBarGlow.color = glowCol;
-            }
-
-            // 7. Lantern Re-ignition Flash
+            // 9. Re-ignition flash (warm, brief, quiet)
             if (ignitionAlpha > 0f)
             {
-                Color ignCol = ignitionColor;
-                ignCol.a = ignitionAlpha * 0.92f;
-                ignitionFlash.color = ignCol;
-                float s = 1f + (1f - ignitionAlpha) * 2.2f;
+                ignitionFlash.color = new Color(ignitionColor.r, ignitionColor.g, ignitionColor.b, ignitionAlpha * 0.6f);
+                float s = 1f + (1f - ignitionAlpha) * 1.8f;
                 ignitionFlash.rectTransform.localScale = new Vector3(s, s, 1f);
             }
             else
@@ -496,6 +569,73 @@ namespace TheLightenRoad.UI
                 ignitionFlash.color = Color.clear;
             }
         }
+
+        private void UpdateButton(MenuButton b, bool selected, float alpha, float pulse, float dt, float punch)
+        {
+            b.Blend = Mathf.MoveTowards(b.Blend, selected ? 1f : 0f, 12f * dt);
+            float t = b.Blend;
+
+            Color plateOff = new Color(0.03f, 0.07f, 0.07f, 0.55f);
+            Color rimOff = new Color(0.30f, 0.42f, 0.38f, 0.55f);
+            Color textOff = new Color(0.58f, 0.72f, 0.67f, 0.85f);
+
+            Color plate = Color.Lerp(plateOff, b.SelectedPlate, t);
+            Color rim = Color.Lerp(rimOff, Color.Lerp(b.SelectedRim, Color.white, pulse * 0.25f), t);
+            Color text = Color.Lerp(textOff, Color.Lerp(b.SelectedText, Color.white, pulse * 0.35f), t);
+
+            plate.a *= alpha;
+            rim.a *= alpha;
+            text.a *= alpha;
+
+            b.Plate.color = plate;
+            for (int i = 0; i < b.Rim.Length; i++)
+                b.Rim[i].color = rim;
+            b.Label.color = text;
+            b.Label.characterSpacing = Mathf.Lerp(3.5f, 5.0f, t);
+
+            Color marker = b.SelectedText;
+            marker.a = alpha * t * (0.75f + 0.25f * pulse);
+            b.Marker.color = marker;
+
+            float scale = 1f - 0.03f * punch;
+            b.Rect.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        private void UpdateLamp(float dt)
+        {
+            lampTimer -= dt;
+            if (lampTimer > 0f) return;
+
+            if (!lampBursting)
+            {
+                lampBursting = true;
+                lampBurstSteps = UnityEngine.Random.Range(3, 7);
+            }
+
+            if (lampBurstSteps > 0)
+            {
+                lampBurstSteps--;
+                lampLevel = UnityEngine.Random.value < 0.5f
+                    ? UnityEngine.Random.Range(0f, 0.10f)
+                    : UnityEngine.Random.Range(0.75f, 1.1f);
+                lampTimer = UnityEngine.Random.Range(0.03f, 0.09f);
+            }
+            else
+            {
+                lampBursting = false;
+                lampLevel = 0.92f;
+                lampTimer = UnityEngine.Random.Range(2.5f, 6.0f);
+            }
+        }
+
+        private void ResetSpark(int i, float startProgress)
+        {
+            sparkProgress[i] = startProgress;
+            sparkSpeed[i] = UnityEngine.Random.Range(0.28f, 0.50f);
+            sparkDrift[i] = UnityEngine.Random.Range(-9f, 9f);
+        }
+
+        // ------------------------------------------------------------------ construction
 
         private void BuildHierarchy()
         {
@@ -511,227 +651,202 @@ namespace TheLightenRoad.UI
             scaler.referenceResolution = new Vector2(640f, 360f);
             scaler.matchWidthOrHeight = 1f;
 
-            // 1. Blackout Curtain
-            var blackGo = CreateFullscreenRect("Blackout", canvasGo.transform);
-            blackout = blackGo.AddComponent<Image>();
-            blackout.sprite = PixelSprites.White;
-            blackout.color = Color.clear;
+            Transform root = canvasGo.transform;
 
-            // 2. Fullscreen Vignette
-            var vigGo = CreateFullscreenRect("Vignette", canvasGo.transform);
-            vignette = vigGo.AddComponent<Image>();
-            vignette.sprite = PixelSprites.Vignette;
-            vignette.color = Color.clear;
+            // Backdrop
+            blackout = CreateFullscreen("Void", root, PixelSprites.White);
+            coldWash = CreateFullscreen("ColdWash", root, PixelSprites.White);
 
-            // 3. Floating Cinder Sparks Container
-            var cindersRoot = new GameObject("Cinder Sparks", typeof(RectTransform));
-            cindersRoot.transform.SetParent(canvasGo.transform, false);
-            for (int i = 0; i < CinderCount; i++)
+            // Dust
+            var dustRoot = new GameObject("Dust", typeof(RectTransform));
+            dustRoot.transform.SetParent(root, false);
+            for (int i = 0; i < DustCount; i++)
             {
-                var cinderGo = new GameObject($"Cinder_{i}", typeof(RectTransform));
-                cinderGo.transform.SetParent(cindersRoot.transform, false);
-                var r = cinderGo.GetComponent<RectTransform>();
-                r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
-                float size = UnityEngine.Random.Range(3f, 7f);
-                r.sizeDelta = new Vector2(size, size);
-                cinderRects[i] = r;
-
-                var img = cinderGo.AddComponent<Image>();
-                img.sprite = PixelSprites.Spark;
-                img.color = Color.clear;
-                cinderImages[i] = img;
-
-                cinderVelocities[i] = new Vector2(UnityEngine.Random.Range(-5f, 5f), UnityEngine.Random.Range(32f, 72f));
-                cinderPhase[i] = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-                cinderBaseAlpha[i] = UnityEngine.Random.Range(0.6f, 1f);
+                float size = UnityEngine.Random.value < 0.7f ? 1f : 2f;
+                dustImages[i] = CreateImage($"Mote_{i}", dustRoot.transform,
+                    new Vector2(UnityEngine.Random.Range(-300f, 300f), UnityEngine.Random.Range(-180f, 180f)),
+                    new Vector2(size, size), PixelSprites.White, Color.clear);
+                dustRects[i] = dustImages[i].rectTransform;
+                dustVelocity[i] = new Vector2(UnityEngine.Random.Range(-2f, 2f), -UnityEngine.Random.Range(3f, 9f));
+                dustPhase[i] = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+                dustAlpha[i] = UnityEngine.Random.Range(0.35f, 0.9f);
             }
 
-            // 4. Re-ignition Flash
-            var ignGo = new GameObject("IgnitionFlash", typeof(RectTransform));
-            ignGo.transform.SetParent(canvasGo.transform, false);
-            var ignRect = ignGo.GetComponent<RectTransform>();
-            ignRect.anchorMin = ignRect.anchorMax = ignRect.pivot = new Vector2(0.5f, 0.5f);
-            ignRect.sizeDelta = new Vector2(480f, 480f);
-            ignitionFlash = ignGo.AddComponent<Image>();
-            ignitionFlash.sprite = PixelSprites.Glow;
-            ignitionFlash.color = Color.clear;
+            vignette = CreateFullscreen("Vignette", root, PixelSprites.Vignette);
 
-            // 5. Center Group Container
-            var centerGo = new GameObject("CenterGroup", typeof(RectTransform));
-            centerGo.transform.SetParent(canvasGo.transform, false);
-            centerGroup = centerGo.GetComponent<RectTransform>();
-            centerGroup.anchorMin = centerGroup.anchorMax = centerGroup.pivot = new Vector2(0.5f, 0.5f);
-            centerGroup.sizeDelta = new Vector2(520f, 290f);
+            // Lamp: dark case, glowing tube, cone of cold light
+            lampCone = CreateImage("LampCone", root, new Vector2(0f, 62f), new Vector2(340f, 206f), GetConeSprite(), Color.clear);
+            lampCase = CreateImage("LampCase", root, new Vector2(0f, 168f), new Vector2(150f, 9f), PixelSprites.White, Color.clear);
+            lampTube = CreateImage("LampTube", root, new Vector2(0f, 166f), new Vector2(132f, 3f), PixelSprites.White, Color.clear);
 
-            // 5a. Icon Halo & Death Icon
-            var haloGo = new GameObject("IconHalo", typeof(RectTransform));
-            haloGo.transform.SetParent(centerGroup, false);
-            var haloRect = haloGo.GetComponent<RectTransform>();
-            haloRect.anchorMin = haloRect.anchorMax = haloRect.pivot = new Vector2(0.5f, 0.5f);
-            haloRect.anchoredPosition = new Vector2(0f, 96f);
-            haloRect.sizeDelta = new Vector2(90f, 90f);
-            iconHalo = haloGo.AddComponent<Image>();
-            iconHalo.sprite = PixelSprites.Glow;
-            iconHalo.color = Color.clear;
+            // Ember and its sparks
+            emberHalo = CreateImage("EmberHalo", root, new Vector2(0f, EmberY), new Vector2(86f, 86f), PixelSprites.Glow, Color.clear);
+            for (int i = 0; i < SparkCount; i++)
+            {
+                sparkImages[i] = CreateImage($"Spark_{i}", root, new Vector2(0f, EmberY), new Vector2(2f, 2f), PixelSprites.White, Color.clear);
+                sparkRects[i] = sparkImages[i].rectTransform;
+                ResetSpark(i, i / (float)SparkCount);
+            }
+            emberIcon = CreateImage("Ember", root, new Vector2(0f, EmberY), new Vector2(36f, 40f), PixelSprites.ExtinguishedFlame, Color.clear);
 
-            var iconGo = new GameObject("DeathIcon", typeof(RectTransform));
-            iconGo.transform.SetParent(centerGroup, false);
-            var iconRect = iconGo.GetComponent<RectTransform>();
-            iconRect.anchorMin = iconRect.anchorMax = iconRect.pivot = new Vector2(0.5f, 0.5f);
-            iconRect.anchoredPosition = new Vector2(0f, 96f);
-            iconRect.sizeDelta = new Vector2(36f, 40f);
-            icon = iconGo.AddComponent<Image>();
-            icon.sprite = PixelSprites.ExtinguishedFlame;
-            icon.color = Color.clear;
+            // Title block
+            titleText = AddTMPText("Title", root, new Vector2(0f, 38f), new Vector2(520f, 30f), 22, TextAlignmentOptions.Center);
+            titleText.characterSpacing = 7f;
+            titleText.fontStyle = FontStyles.Bold;
 
-            // 5b. Monumental Title (24px, Bold, Character Spacing 8)
-            headerText = AddTMPText("Header", centerGroup, new Vector2(0f, 54f), new Vector2(500f, 36f), 24,
-                TextAlignmentOptions.Center, Color.clear);
-            headerText.characterSpacing = 8f;
-            headerText.fontStyle = FontStyles.Bold;
+            ruleLine = CreateImage("RuleLine", root, new Vector2(0f, 21f), new Vector2(150f, 1f), PixelSprites.White, Color.clear);
+            ruleGem = CreateImage("RuleGem", root, new Vector2(0f, 21f), new Vector2(5f, 5f), PixelSprites.White, Color.clear);
+            ruleGem.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
 
-            // 5c. Ornate Divider Line
-            dividerText = AddTMPText("Divider", centerGroup, new Vector2(0f, 30f), new Vector2(320f, 18f), 13,
-                TextAlignmentOptions.Center, Color.clear);
-            dividerText.text = "- - - - -";
-            dividerText.characterSpacing = 4f;
+            loreText = AddTMPText("Lore", root, new Vector2(0f, 3f), new Vector2(500f, 24f), 13, TextAlignmentOptions.Center);
+            loreText.characterSpacing = 1.5f;
 
-            // 5d. Subtitle Lore Flavor (14px legible body text)
-            subtitleText = AddTMPText("Subtitle", centerGroup, new Vector2(0f, 8f), new Vector2(480f, 26f), 14,
-                TextAlignmentOptions.Center, Color.clear);
-            subtitleText.characterSpacing = 2.5f;
+            // Stats: CAUSE | FALLEN
+            causeLabel = AddTMPText("CauseLabel", root, new Vector2(-74f, -22f), new Vector2(130f, 14f), 10, TextAlignmentOptions.Center);
+            causeLabel.text = "CAUSE";
+            causeLabel.characterSpacing = 4f;
+            causeValue = AddTMPText("CauseValue", root, new Vector2(-74f, -38f), new Vector2(140f, 20f), 14, TextAlignmentOptions.Center);
+            causeValue.characterSpacing = 3f;
+            causeValue.fontStyle = FontStyles.Bold;
 
-            // 5e. Two-Button Menu Section
-            var menuContainer = new GameObject("ButtonsContainer", typeof(RectTransform));
-            menuContainer.transform.SetParent(centerGroup, false);
-            var menuRect = menuContainer.GetComponent<RectTransform>();
-            menuRect.anchorMin = menuRect.anchorMax = menuRect.pivot = new Vector2(0.5f, 0.5f);
-            menuRect.anchoredPosition = new Vector2(0f, -48f);
-            menuRect.sizeDelta = new Vector2(340f, 90f);
+            statDivider = CreateImage("StatDivider", root, new Vector2(0f, -31f), new Vector2(1f, 30f), PixelSprites.White, Color.clear);
 
-            // Button 0: REIGNITE FLAME
-            reigniteButton = CreateMenuButton(menuRect, "ReigniteButton", new Vector2(0f, 18f), new Vector2(300f, 36f),
-                "[ REIGNITE FLAME ]", 13f, 0, TriggerReignite,
-                out reignitePedestal, out reigniteBorder, out reigniteAura, out reigniteText);
+            fallenLabel = AddTMPText("FallenLabel", root, new Vector2(74f, -22f), new Vector2(130f, 14f), 10, TextAlignmentOptions.Center);
+            fallenLabel.text = "FALLEN";
+            fallenLabel.characterSpacing = 4f;
+            fallenValue = AddTMPText("FallenValue", root, new Vector2(74f, -38f), new Vector2(140f, 20f), 14, TextAlignmentOptions.Center);
+            fallenValue.characterSpacing = 3f;
+            fallenValue.fontStyle = FontStyles.Bold;
 
-            // Button 1: RETURN TO ARCHIVE
-            returnButton = CreateMenuButton(menuRect, "ReturnButton", new Vector2(0f, -24f), new Vector2(300f, 32f),
-                "RETURN TO ARCHIVE", 12f, 1, TriggerReturnToTitle,
-                out returnPedestal, out returnBorder, out returnAura, out returnText);
+            // Buttons
+            buttons[0] = CreateMenuButton(root, "ReigniteButton", new Vector2(0f, -76f), new Vector2(280f, 32f),
+                "REIGNITE FLAME",
+                new Color(1f, 0.74f, 0.30f, 1f), new Color(0.17f, 0.11f, 0.04f, 0.92f), new Color(1f, 0.82f, 0.45f, 1f));
+            buttons[1] = CreateMenuButton(root, "ReturnButton", new Vector2(0f, -114f), new Vector2(280f, 32f),
+                "RETURN TO ARCHIVE",
+                new Color(0.72f, 0.90f, 0.84f, 1f), new Color(0.06f, 0.12f, 0.11f, 0.92f), new Color(0.80f, 0.94f, 0.89f, 1f));
 
-            // 5f. Auto-Respawn Progress Bar (Slim Ember Capsule below buttons)
-            var barBorderGo = new GameObject("ProgressBarBorder", typeof(RectTransform));
-            barBorderGo.transform.SetParent(centerGroup, false);
-            var barBorderRect = barBorderGo.GetComponent<RectTransform>();
-            barBorderRect.anchorMin = barBorderRect.anchorMax = barBorderRect.pivot = new Vector2(0.5f, 0.5f);
-            barBorderRect.anchoredPosition = new Vector2(0f, -106f);
-            barBorderRect.sizeDelta = new Vector2(160f, 8f);
-            progressBarBorder = barBorderGo.AddComponent<Image>();
-            progressBarBorder.sprite = PixelSprites.PillBorder;
-            progressBarBorder.type = Image.Type.Sliced;
-            progressBarBorder.color = Color.clear;
+            hintText = AddTMPText("Hint", root, new Vector2(0f, -150f), new Vector2(480f, 16f), 10, TextAlignmentOptions.Center);
+            hintText.characterSpacing = 3f;
 
-            var barGlowGo = new GameObject("ProgressBarGlow", typeof(RectTransform));
-            barGlowGo.transform.SetParent(barBorderGo.transform, false);
-            var barGlowRect = barGlowGo.GetComponent<RectTransform>();
-            barGlowRect.anchorMin = barGlowRect.anchorMax = barGlowRect.pivot = new Vector2(0.5f, 0.5f);
-            barGlowRect.sizeDelta = new Vector2(176f, 18f);
-            progressBarGlow = barGlowGo.AddComponent<Image>();
-            progressBarGlow.sprite = PixelSprites.PillGlow;
-            progressBarGlow.color = Color.clear;
-
-            var barFillGo = new GameObject("ProgressBarFill", typeof(RectTransform));
-            barFillGo.transform.SetParent(barBorderGo.transform, false);
-            var barFillRect = barFillGo.GetComponent<RectTransform>();
-            barFillRect.anchorMin = barFillRect.anchorMax = barFillRect.pivot = new Vector2(0.5f, 0.5f);
-            barFillRect.sizeDelta = new Vector2(154f, 4f);
-            progressBarFill = barFillGo.AddComponent<Image>();
-            progressBarFill.sprite = PixelSprites.Pill;
-            progressBarFill.type = Image.Type.Filled;
-            progressBarFill.fillMethod = Image.FillMethod.Horizontal;
-            progressBarFill.fillOrigin = (int)Image.OriginHorizontal.Left;
-            progressBarFill.fillAmount = 0f;
-            progressBarFill.color = Color.clear;
-
-            // 5g. Navigation Hint Text (Title Safe standard)
-            hintText = AddTMPText("NavHint", centerGroup, new Vector2(0f, -126f), new Vector2(440f, 20f), 10,
-                TextAlignmentOptions.Center, Color.clear);
-            hintText.text = "[ W / S ] SELECT       [ SPACE / ENTER ] CONFIRM";
-            hintText.characterSpacing = 3.5f;
+            // Re-ignition flash sits above everything
+            ignitionFlash = CreateImage("IgnitionFlash", root, new Vector2(0f, EmberY), new Vector2(420f, 420f), PixelSprites.Glow, Color.clear);
 
             canvas.enabled = false;
         }
 
-        private Button CreateMenuButton(RectTransform parent, string name, Vector2 pos, Vector2 size,
-            string label, float fontSize, int buttonIndex, Action onClick,
-            out Image pedestalImg, out Image borderImg, out Image auraImg, out TextMeshProUGUI textComp)
+        private MenuButton CreateMenuButton(Transform parent, string name, Vector2 pos, Vector2 size, string label,
+            Color selectedRim, Color selectedPlate, Color selectedText)
         {
-            var btnGo = new GameObject(name, typeof(RectTransform));
-            btnGo.transform.SetParent(parent, false);
-            var rect = btnGo.GetComponent<RectTransform>();
+            var b = new MenuButton { SelectedRim = selectedRim, SelectedPlate = selectedPlate, SelectedText = selectedText };
+
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            b.Rect = go.GetComponent<RectTransform>();
+            SetCentered(b.Rect, pos, size);
+
+            b.Plate = CreateImage("Plate", go.transform, Vector2.zero, size, PixelSprites.White, Color.clear);
+            b.Rim = CreateRim(go.transform);
+
+            b.Marker = CreateImage("Marker", go.transform, new Vector2(-size.x * 0.5f + 20f, 0f), new Vector2(10f, 14f), PixelSprites.Flame, Color.clear);
+            b.Marker.preserveAspect = true;
+
+            b.Label = AddTMPText("Label", go.transform, Vector2.zero, size, 13, TextAlignmentOptions.Center);
+            b.Label.text = label;
+            b.Label.fontStyle = FontStyles.Bold;
+            b.Label.characterSpacing = 3.5f;
+            return b;
+        }
+
+        private Image[] CreateRim(Transform parent)
+        {
+            var rim = new Image[4];
+            // top, bottom, left, right - one crisp pixel each
+            rim[0] = CreateEdge("RimTop", parent, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, 1f));
+            rim[1] = CreateEdge("RimBottom", parent, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 1f));
+            rim[2] = CreateEdge("RimLeft", parent, new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(1f, 0f));
+            rim[3] = CreateEdge("RimRight", parent, new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(1f, 0f));
+            return rim;
+        }
+
+        private static Image CreateEdge(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 sizeDelta)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = sizeDelta;
+            var img = go.AddComponent<Image>();
+            img.sprite = PixelSprites.White;
+            img.color = Color.clear;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        private static Sprite coneSprite;
+
+        /// <summary>
+        /// Soft cone of light that widens downward from the tube. Smooth on purpose: the stepped Glow
+        /// sprite shows hard bands when stretched this wide.
+        /// </summary>
+        private static Sprite GetConeSprite()
+        {
+            if (coneSprite != null)
+                return coneSprite;
+
+            const int w = 64;
+            const int h = 64;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                name = "DeathScreen_LampCone",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+
+            for (int y = 0; y < h; y++)
+            {
+                float v = 1f - (y + 0.5f) / h;                   // 0 at the tube, 1 at the far end
+                float halfWidth = 0.20f + 0.80f * v;
+                float vertical = Mathf.Pow(1f - v, 1.35f);
+                for (int x = 0; x < w; x++)
+                {
+                    float u = (x + 0.5f) / w * 2f - 1f;
+                    float side = Mathf.Clamp01(1f - Mathf.Abs(u) / halfWidth);
+                    float a = Mathf.SmoothStep(0f, 1f, side) * vertical;
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                }
+            }
+
+            tex.Apply();
+            coneSprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 16f);
+            coneSprite.hideFlags = HideFlags.HideAndDontSave;
+            return coneSprite;
+        }
+
+        private static void SetCentered(RectTransform rect, Vector2 pos, Vector2 size)
+        {
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = pos;
             rect.sizeDelta = size;
-
-            // Soft Radial Glow Aura
-            var auraGo = new GameObject("GlowAura", typeof(RectTransform));
-            auraGo.transform.SetParent(btnGo.transform, false);
-            var auraRect = auraGo.GetComponent<RectTransform>();
-            auraRect.anchorMin = auraRect.anchorMax = auraRect.pivot = new Vector2(0.5f, 0.5f);
-            auraRect.sizeDelta = size + new Vector2(24f, 16f);
-            auraImg = auraGo.AddComponent<Image>();
-            auraImg.sprite = PixelSprites.Glow;
-            auraImg.color = Color.clear;
-            auraImg.raycastTarget = false;
-
-            // Frosted Pedestal Plate
-            var pedGo = new GameObject("Pedestal", typeof(RectTransform));
-            pedGo.transform.SetParent(btnGo.transform, false);
-            var pedRect = pedGo.GetComponent<RectTransform>();
-            pedRect.anchorMin = pedRect.anchorMax = pedRect.pivot = new Vector2(0.5f, 0.5f);
-            pedRect.sizeDelta = size;
-            pedestalImg = pedGo.AddComponent<Image>();
-            pedestalImg.sprite = PixelSprites.Pill;
-            pedestalImg.type = Image.Type.Sliced;
-            pedestalImg.color = Color.clear;
-
-            // Subtle Border Rim
-            var bordGo = new GameObject("Border", typeof(RectTransform));
-            bordGo.transform.SetParent(btnGo.transform, false);
-            var bordRect = bordGo.GetComponent<RectTransform>();
-            bordRect.anchorMin = bordRect.anchorMax = bordRect.pivot = new Vector2(0.5f, 0.5f);
-            bordRect.sizeDelta = size;
-            borderImg = bordGo.AddComponent<Image>();
-            borderImg.sprite = PixelSprites.PillBorder;
-            borderImg.type = Image.Type.Sliced;
-            borderImg.color = Color.clear;
-            borderImg.raycastTarget = false;
-
-            // Label Text
-            textComp = AddTMPText("Label", btnGo.transform, Vector2.zero, size, fontSize,
-                TextAlignmentOptions.Center, Color.clear);
-            textComp.text = label;
-            textComp.fontStyle = FontStyles.Bold;
-
-            // Button Component & Event Trigger for Hover
-            var btn = btnGo.AddComponent<Button>();
-            btn.targetGraphic = pedestalImg;
-            var colors = btn.colors;
-            colors.fadeDuration = 0.05f;
-            colors.colorMultiplier = 1f;
-            colors.highlightedColor = Color.white;
-            btn.colors = colors;
-            btn.onClick.AddListener(() => onClick?.Invoke());
-
-            var trigger = btnGo.AddComponent<EventTrigger>();
-            var enterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-            enterEntry.callback.AddListener((_) => SetSelectedButton(buttonIndex));
-            trigger.triggers.Add(enterEntry);
-
-            return btn;
         }
 
-        private static GameObject CreateFullscreenRect(string name, Transform parent)
+        private static Image CreateImage(string name, Transform parent, Vector2 pos, Vector2 size, Sprite sprite, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            SetCentered(go.GetComponent<RectTransform>(), pos, size);
+            var img = go.AddComponent<Image>();
+            img.sprite = sprite;
+            img.color = color;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        private static Image CreateFullscreen(string name, Transform parent, Sprite sprite)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -740,25 +855,26 @@ namespace TheLightenRoad.UI
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-            return go;
+            var img = go.AddComponent<Image>();
+            img.sprite = sprite;
+            img.color = Color.clear;
+            img.raycastTarget = false;
+            return img;
         }
 
         private TextMeshProUGUI AddTMPText(string name, Transform parent, Vector2 position, Vector2 size, float fontSize,
-            TextAlignmentOptions alignment, Color color)
+            TextAlignmentOptions alignment)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
-            var rect = go.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
+            SetCentered(go.GetComponent<RectTransform>(), position, size);
 
             var txt = go.AddComponent<TextMeshProUGUI>();
             if (fontAsset != null)
                 txt.font = fontAsset;
             txt.fontSize = fontSize;
             txt.alignment = alignment;
-            txt.color = color;
+            txt.color = Color.clear;
             txt.raycastTarget = false;
             txt.textWrappingMode = TextWrappingModes.NoWrap;
             return txt;

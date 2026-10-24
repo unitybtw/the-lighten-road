@@ -50,6 +50,7 @@ namespace TheLightenRoad.Player
         [Tooltip("Allow pressing Space, Enter, or R to respawn immediately.")]
         [SerializeField] private bool allowManualRespawnInput = true;
 
+        private bool autoRespawnEnabled = true;
         private RespawnState state = RespawnState.Alive;
         private DeathReason lastDeathReason;
         private float stateTimer;
@@ -65,6 +66,11 @@ namespace TheLightenRoad.Player
         public float VoidKillY { get => voidKillY; set => voidKillY = value; }
         public float AutoRespawnDelay { get => autoRespawnDelay; set => autoRespawnDelay = value; }
         public bool AllowManualRespawnInput { get => allowManualRespawnInput; set => allowManualRespawnInput = value; }
+        /// <summary>
+        /// When false the controller never respawns on its own; a death screen owns the decision.
+        /// Defaults to true so scenes without a death screen keep their automatic respawn.
+        /// </summary>
+        public bool AutoRespawnEnabled { get => autoRespawnEnabled; set => autoRespawnEnabled = value; }
         public float StateTimer => stateTimer;
         public float DarknessTimer => darknessTimer;
         public float NormalizedDeathProgress => Mathf.Clamp01(stateTimer / Mathf.Max(0.001f, autoRespawnDelay));
@@ -157,7 +163,7 @@ namespace TheLightenRoad.Player
                 }
 
                 // Automatic countdown respawn
-                if (stateTimer >= autoRespawnDelay)
+                if (autoRespawnEnabled && stateTimer >= autoRespawnDelay)
                 {
                     Respawn();
                 }
