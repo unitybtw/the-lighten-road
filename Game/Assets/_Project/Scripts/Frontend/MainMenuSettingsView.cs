@@ -24,7 +24,7 @@ namespace TheLightenRoad.Frontend
 
         private void BuildSettingsWorkspace()
         {
-            var surface=CreateEtherealSubViewFrame(settings,"OPTIONS","TEND THE LIGHT. FIND YOUR BALANCE.");
+            var surface=CreateEtherealSubViewFrame(settings,"OPTIONS","AUDIO, DISPLAY & ACCESSIBILITY");
             var backdrop=CreateAnchoredRect("Settings reading surface",surface,new Vector2(1580,1120),Vector2.one*.5f,Vector2.zero);
             backdrop.SetAsFirstSibling();
             var shade=backdrop.gameObject.AddComponent<Image>();
@@ -32,7 +32,7 @@ namespace TheLightenRoad.Frontend
             BuildSettingsLanterns(surface);
             SettingsRule(surface,"Footer rule",new Vector2(0,-235),880);
             var names=new[]{"Audio","Display","Accessibility"};
-            var descriptions=new[]{"Find your balance.","Keep the archive in focus.","Explore at your own pace."};
+            var descriptions=new[]{"Master, music and sound effects volumes.","Window mode, vertical sync and frame rate.","Motion and visual comfort settings."};
             for(int i=0;i<3;i++)
             {
                 int index=i;
@@ -50,7 +50,7 @@ namespace TheLightenRoad.Frontend
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
-            SettingsText(audio,"Balance music and the sounds of the archive.",new Vector2(0,-166),13,moonlightSilver,650);
+            SettingsText(audio,"Adjust audio levels for music and gameplay effects.",new Vector2(0,-166),13,moonlightSilver,650);
 
             var display=(RectTransform)settingsSections[1].transform;
             fullscreenToggle=CreateEtherealToggle(display,"Fullscreen","Use the whole display",110,out fullscreenToggleValueText,OnFullscreenToggled);
@@ -58,8 +58,8 @@ namespace TheLightenRoad.Frontend
             BuildFrameLimit(display);
             var accessibility=(RectTransform)settingsSections[2].transform;
             motionToggle=CreateEtherealToggle(accessibility,"Reduced motion","Reduce parallax, sway and HUD motion",110,out motionToggleValueText,OnReducedMotionToggled);
-            SettingsText(accessibility,"A steadier view",new Vector2(14,-1),18,radiantIvory,620);
-            var note=SettingsText(accessibility,"Keeps the archive atmosphere while reducing decorative movement.\nGameplay, puzzle timing and controls remain the same.",new Vector2(14,-65),15,moonlightSilver,620);
+            SettingsText(accessibility,"Motion Comfort",new Vector2(14,-1),18,radiantIvory,620);
+            var note=SettingsText(accessibility,"Reduces camera sway, parallax and UI animations.\nGameplay, puzzle timing and controls remain unchanged.",new Vector2(14,-65),15,moonlightSilver,620);
             note.rectTransform.sizeDelta=new Vector2(620,100);
 
             settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(120,-205),13,moonlightSilver,650);

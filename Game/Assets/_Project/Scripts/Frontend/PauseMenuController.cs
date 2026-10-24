@@ -693,7 +693,7 @@ namespace TheLightenRoad.Frontend
 
             // Whispered Eyebrow
             var eyebrow = CreateLabel("Eyebrow", modal.transform, new Vector2(0f, 345f), new Vector2(620f, 24f),
-                "--   ARCHIVE TRAVERSAL SUSPENDED   --", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
+                "--   GAME PAUSED   --", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
             eyebrow.characterSpacing = 6.5f;
 
             // Monumental Center Title: PAUSED
@@ -740,11 +740,11 @@ namespace TheLightenRoad.Frontend
             float startY = 100f;
             float stepY = 66f;
 
-            resumeButton = CreateFramelessMenuButton("ResumeButton", r, "Resume Traversal", "Awaken the lantern and resume your journey", new Vector2(0f, startY), Resume, isPrimary: true);
-            CreateFramelessMenuButton("ControlsButton", r, "Controls & Guide", "Keybindings, coyote leap & ember mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
-            CreateFramelessMenuButton("SettingsButton", r, "Sanctuary Settings", "Harmonize audio levels & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
-            CreateFramelessMenuButton("RestartButton", r, "Restart Chamber", "Restore chamber to last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
-            CreateFramelessMenuButton("QuitButton", r, "Leave to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
+            resumeButton = CreateFramelessMenuButton("ResumeButton", r, "Resume", "Return to game", new Vector2(0f, startY), Resume, isPrimary: true);
+            CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
+            CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
+            CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
+            CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
         }
 
         private void BuildSettingsPanel(Transform parent)
@@ -758,7 +758,7 @@ namespace TheLightenRoad.Frontend
             r.anchoredPosition = new Vector2(0f, -80f);
 
             var titleLabel = CreateLabel("SettingsTitle", settingsPanel.transform, new Vector2(0f, 175f), new Vector2(600f, 32f),
-                "SANCTUARY SETTINGS", 22f, TextAlignmentOptions.Center, radiantIvory);
+                "SETTINGS", 22f, TextAlignmentOptions.Center, radiantIvory);
             titleLabel.fontStyle = FontStyles.Bold;
             titleLabel.characterSpacing = 5f;
 
@@ -769,7 +769,7 @@ namespace TheLightenRoad.Frontend
             crestImg.raycastTarget = false;
 
             float y = 105f;
-            masterSlider = CreateSlider("MasterSlider", r, new Vector2(0f, y), "Master Volume", "Global audio output level", v =>
+            masterSlider = CreateSlider("MasterSlider", r, new Vector2(0f, y), "Master Volume", "Overall audio level", v =>
             {
                 MenuPreferences.SetAudio(v, MenuPreferences.Music, MenuPreferences.Effects);
                 MenuPreferences.Save();
@@ -777,7 +777,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            musicSlider = CreateSlider("MusicSlider", r, new Vector2(0f, y), "Ambient Music", "Background archive score (In-game key: M)", v =>
+            musicSlider = CreateSlider("MusicSlider", r, new Vector2(0f, y), "Ambient Music", "Music and atmospheric score", v =>
             {
                 MenuPreferences.SetAudio(MenuPreferences.Master, v, MenuPreferences.Effects);
                 MenuPreferences.Save();
@@ -785,7 +785,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            effectsSlider = CreateSlider("EffectsSlider", r, new Vector2(0f, y), "Sound Effects (SFX)", "Footsteps, lantern flare & embers (In-game key: N)", v =>
+            effectsSlider = CreateSlider("EffectsSlider", r, new Vector2(0f, y), "Sound Effects (SFX)", "Footsteps, lantern and interactions", v =>
             {
                 MenuPreferences.SetAudio(MenuPreferences.Master, MenuPreferences.Music, v);
                 MenuPreferences.Save();
@@ -793,7 +793,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            fullscreenToggle = CreateToggle("FullscreenToggle", r, new Vector2(0f, y), "Fullscreen Mode", "Expand the archive across the entire display", b =>
+            fullscreenToggle = CreateToggle("FullscreenToggle", r, new Vector2(0f, y), "Fullscreen Mode", "Display in fullscreen", b =>
             {
                 MenuPreferences.SetFullscreen(b);
                 MenuPreferences.Save();
@@ -801,7 +801,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            vsyncToggle = CreateToggle("VSyncToggle", r, new Vector2(0f, y), "Vertical Sync (V-Sync)", "Synchronize frame pacing with display refresh", b =>
+            vsyncToggle = CreateToggle("VSyncToggle", r, new Vector2(0f, y), "Vertical Sync (V-Sync)", "Match display refresh rate", b =>
             {
                 MenuPreferences.SetVSync(b);
                 MenuPreferences.Save();
@@ -809,7 +809,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            reducedMotionToggle = CreateToggle("ReducedMotionToggle", r, new Vector2(0f, y), "Reduced Motion Mode", "Calm camera shake and UI oscillations", b =>
+            reducedMotionToggle = CreateToggle("ReducedMotionToggle", r, new Vector2(0f, y), "Reduced Motion Mode", "Reduce camera shake and UI motion", b =>
             {
                 MenuPreferences.SetReducedMotion(b);
                 MenuPreferences.Save();
@@ -831,7 +831,7 @@ namespace TheLightenRoad.Frontend
             r.anchoredPosition = new Vector2(0f, -80f);
 
             var titleLabel = CreateLabel("ControlsTitle", controlsPanel.transform, new Vector2(0f, 175f), new Vector2(600f, 32f),
-                "CONTROLS & LANTERN GUIDE", 22f, TextAlignmentOptions.Center, radiantIvory);
+                "CONTROLS", 22f, TextAlignmentOptions.Center, radiantIvory);
             titleLabel.fontStyle = FontStyles.Bold;
             titleLabel.characterSpacing = 5f;
 
@@ -843,12 +843,12 @@ namespace TheLightenRoad.Frontend
 
             float y = 100f;
             float step = 45f;
-            CreateControlRow(r, "[ A / D  or  ARROWS ]", "TRAVERSE ARCHIVE", "Smooth horizontal locomotion with momentum & air control", y);
-            CreateControlRow(r, "[ SPACE  /  W ]", "LEAP & COYOTE JUMP", "Hold for maximum arc; forgiving ledge grace window", y - step);
-            CreateControlRow(r, "[ LEFT SHIFT ]", "ARCHIVE SPRINT", "Burst speed across wide chasms (consumes stamina)", y - step * 2);
-            CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE SURGE", "Ignite radiant light burst to reveal platforms & charge glyphs", y - step * 3);
-            CreateControlRow(r, "[ E  (HOLD) ]", "EMBER CONDUIT DRAIN", "Transfer / recover embers to power ancient platforms", y - step * 4);
-            CreateControlRow(r, "[ M  /  N ]", "LIVE AUDIO MIXING", "Quick volume adjustments for Music (M) and SFX (N)", y - step * 5);
+            CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y);
+            CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step);
+            CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2);
+            CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3);
+            CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4);
+            CreateControlRow(r, "[ M  /  N ]", "VOLUME SHORTCUTS", "Mute or adjust music / sound effects", y - step * 5);
 
             controlsBackButton = CreateEtherealActionButton("ControlsBackButton", r, "<  Return to Pause", new Vector2(0f, -205f), ShowMainView, isPrimary: true, width: 260f);
         }

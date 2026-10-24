@@ -38,24 +38,24 @@ namespace TheLightenRoad.Frontend
             {
                 Number = "REALM I",
                 Title = "THE FIRST LIGHT",
-                Tag = "FURKAN / TUTORIAL & BEGINNINGS",
-                Description = "Learn movement through the archive, scout the compact crossing, and power a shared circuit to reach an optional memory.",
+                Tag = "TUTORIAL & BEGINNINGS",
+                Description = "Learn basic movement mechanics, explore the ruined archive, and power the conduit to advance.",
                 ScenePath = DefaultGameplayScene
             },
             new RealmOption
             {
                 Number = "REALM II",
                 Title = "THE FLOODED MECHANISMS",
-                Tag = "KEMAL SANDBOX  -  PUZZLES & VEINS",
-                Description = "Channel lantern energy into ancient Ember Veins, push rolling archive shelves, and navigate past electrified waters and lifts.",
+                Tag = "PUZZLES & MECHANICS",
+                Description = "Channel lantern energy into ancient Ember Veins and navigate past electrified waters and lifts.",
                 ScenePath = "Assets/_Project/Scenes/Sandbox/Kemal/SceneKemal.unity"
             },
             new RealmOption
             {
                 Number = "REALM III",
                 Title = "ARCHIVE TEST CHAMBER",
-                Tag = "PROTOTYPE  -  CALIBRATION ROOM",
-                Description = "Focused testing ground for lantern light radii, movement physics, coyote time, and environmental hazards.",
+                Tag = "CALIBRATION ROOM",
+                Description = "Testing ground for lantern light radius, movement physics, coyote time, and environmental hazards.",
                 ScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity"
             }
         };
@@ -1137,7 +1137,7 @@ namespace TheLightenRoad.Frontend
 
         private void BuildFramelessRealmsView()
         {
-            var surface = CreateEtherealSubViewFrame(realms, "REALMS & CHAPTERS", "CHOOSE WHICH ARCHIVE REALM TO ILLUMINATE");
+            var surface = CreateEtherealSubViewFrame(realms, "REALMS & CHAPTERS", "SELECT LEVEL");
 
             realmButtons.Clear();
             realmTitles.Clear();
@@ -1360,14 +1360,14 @@ namespace TheLightenRoad.Frontend
 
         private void BuildFramelessControlsView()
         {
-            var surface = CreateEtherealSubViewFrame(controls, "CONTROLS & LANTERN GUIDE", "MASTER THE MECHANISMS OF THE ARCHIVE");
+            var surface = CreateEtherealSubViewFrame(controls, "CONTROLS", "KEYBOARD & MOUSE");
 
-            CreateControlRow(surface, "[ A / D  or  ARROWS ]", "TRAVERSE THE ARCHIVE", "Smooth horizontal movement with momentum & air control", 156f);
-            CreateControlRow(surface, "[ SPACE  /  W ]", "LEAP & COYOTE JUMP", "Hold for higher arc; forgiving ledge grace window", 94f);
-            CreateControlRow(surface, "[ LEFT SHIFT ]", "ARCHIVE SPRINT", "Burst speed across wide chasms (consumes Stamina)", 32f);
-            CreateControlRow(surface, "[ F  /  L-CLICK ]", "LANTERN FLARE SURGE", "Ignite a radiant light burst to reveal platforms", -30f);
-            CreateControlRow(surface, "[ E  (HOLD) ]", "CHANNEL EMBER VEIN", "Pour lantern light into ancient conduits & bridges", -92f);
-            CreateControlRow(surface, "[ M  /  N ]", "LIVE AUDIO MIXING", "Mute/adjust music (M) or sound effects (N) in-game", -154f);
+            CreateControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", 156f);
+            CreateControlRow(surface, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", 94f);
+            CreateControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes Stamina)", 32f);
+            CreateControlRow(surface, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", -30f);
+            CreateControlRow(surface, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", -92f);
+            CreateControlRow(surface, "[ M  /  N ]", "VOLUME SHORTCUTS", "Mute or adjust music / sound effects", -154f);
 
             controlsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -278f), ShowHome, isPrimary: true);
         }
@@ -1398,11 +1398,11 @@ namespace TheLightenRoad.Frontend
 
         private void BuildFramelessCreditsView()
         {
-            var surface = CreateEtherealSubViewFrame(credits, "KEEPERS OF THE FLAME", "CRAFTED FOR THE 2026 GAME DEVELOPMENT PROJECT");
+            var surface = CreateEtherealSubViewFrame(credits, "CREDITS", "THE LIGHTEN ROAD");
 
-            CreateCreditBlock(surface, "SIRAÇ ŞİMŞEK", "MOVEMENT, LANTERN SYSTEMS, AUDIO & PROCEDURAL FRONTEND", "Player physics, stamina & lantern HUD, dynamic lighting, foley & animated archive stage", 130f);
-            CreateCreditBlock(surface, "KEMAL", "PUZZLE MECHANISMS & EMBER VEIN ARCHITECTURE", "Ember Vein conduits, Flooded Mechanisms sandbox, interactive elevators & hazards", 10f);
-            CreateCreditBlock(surface, "ARCHIVE SOUNDSCAPE & ART", "ATMOSPHERIC AUDIO & PROCEDURAL SILHOUETTES", "Custom multi-layered SDF gothic colonnades, swinging lantern light rays & CC0 foley", -110f);
+            CreateCreditBlock(surface, "SİRAÇ ŞİMŞEK", "GAME DESIGN & PROGRAMMING", "Player movement, lantern mechanics, audio & user interface", 130f);
+            CreateCreditBlock(surface, "KEMAL", "LEVEL & PUZZLE DESIGN", "Ember vein conduits, environmental puzzles & mechanics", 10f);
+            CreateCreditBlock(surface, "AUDIO & ART", "ASSETS & SOUND DESIGN", "CC0 sound effects, ambient tracks & pixel art", -110f);
 
             creditsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -278f), ShowHome, isPrimary: true);
         }
@@ -1442,12 +1442,12 @@ namespace TheLightenRoad.Frontend
             var surfHit = surface.gameObject.AddComponent<Image>();
             surfHit.color = Color.clear;
 
-            var tag = CreateLabel("Quit Tag", surface, "- UNTIL YOUR NEXT RETURN -", 11.5f, amberGold, new Vector2(620f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 100f));
+            var tag = CreateLabel("Quit Tag", surface, "- EXIT GAME -", 11.5f, amberGold, new Vector2(620f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 100f));
             tag.rectTransform.pivot = Vector2.one * 0.5f;
             tag.alignment = TextAlignmentOptions.Center;
             tag.characterSpacing = 6f;
 
-            var title = CreateLabel("Quit Title", surface, "EXTINGUISH THE LANTERN?", 34f, radiantIvory, new Vector2(720f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, 50f));
+            var title = CreateLabel("Quit Title", surface, "ARE YOU SURE?", 34f, radiantIvory, new Vector2(720f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, 50f));
             title.rectTransform.pivot = Vector2.one * 0.5f;
             title.alignment = TextAlignmentOptions.Center;
             title.fontStyle = FontStyles.Bold;
@@ -1459,12 +1459,12 @@ namespace TheLightenRoad.Frontend
             botImg.color = new Color(1.0f, 0.74f, 0.30f, 0.75f);
             botImg.raycastTarget = false;
 
-            var note = CreateLabel("Quit Note", surface, "The ruined archive will wait in the midnight dark.\nAll audio and realm preferences have been preserved.", 13.5f, moonlightSilver, new Vector2(620f, 54f), new Vector2(0.5f, 0.5f), new Vector2(0f, -40f));
+            var note = CreateLabel("Quit Note", surface, "Any unsaved progress will be lost.\nYour settings will remain saved.", 13.5f, moonlightSilver, new Vector2(620f, 54f), new Vector2(0.5f, 0.5f), new Vector2(0f, -40f));
             note.rectTransform.pivot = Vector2.one * 0.5f;
             note.alignment = TextAlignmentOptions.Center;
 
-            quitFirst = CreateEtherealActionButton(surface, "Stay in the Light", new Vector2(-160f, -125f), ShowHome, isPrimary: true, width: 260f);
-            CreateEtherealActionButton(surface, "Extinguish & Exit", new Vector2(160f, -125f), ConfirmQuit, isPrimary: false, width: 260f);
+            quitFirst = CreateEtherealActionButton(surface, "Cancel", new Vector2(-160f, -125f), ShowHome, isPrimary: true, width: 260f);
+            CreateEtherealActionButton(surface, "Quit", new Vector2(160f, -125f), ConfirmQuit, isPrimary: false, width: 260f);
         }
 
         // =====================================================================
