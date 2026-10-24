@@ -64,6 +64,7 @@ namespace TheLightenRoad.Player
         public bool KillOnFuelDepleted { get => killOnFuelDepleted; set => killOnFuelDepleted = value; }
         public float VoidKillY { get => voidKillY; set => voidKillY = value; }
         public float AutoRespawnDelay { get => autoRespawnDelay; set => autoRespawnDelay = value; }
+        public bool AllowManualRespawnInput { get => allowManualRespawnInput; set => allowManualRespawnInput = value; }
         public float StateTimer => stateTimer;
         public float DarknessTimer => darknessTimer;
         public float NormalizedDeathProgress => Mathf.Clamp01(stateTimer / Mathf.Max(0.001f, autoRespawnDelay));
