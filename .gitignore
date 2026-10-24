@@ -40,3 +40,8 @@ sysinfo.txt
 
 # Graphify
 graphify-out/
+
+# Agent Skills
+.agents/
+skills-lock.json
+
