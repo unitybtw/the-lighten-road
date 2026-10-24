@@ -22,8 +22,9 @@ public sealed class ChamberCompletionTests
         previousTimeScale=Time.timeScale;
 #if UNITY_EDITOR
         scene=UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity",new LoadSceneParameters(LoadSceneMode.Additive));
+        while (!scene.isLoaded) yield return null;
+        SceneManager.SetActiveScene(scene);
 #endif
-        yield return null;
         level=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<FurkanLevelDirector>()).Single();
         sequence=level.Completion;
         Assert.That(sequence,Is.Not.Null,"Tutorial must have a wired reusable exit.");
@@ -36,7 +37,23 @@ public sealed class ChamberCompletionTests
         Time.timeScale=1f;
         if(sequence!=null) { sequence.Cancel(); Object.Destroy(sequence.gameObject); }
         if(profile!=null)Object.Destroy(profile);
-        if(scene.IsValid() && scene.isLoaded)yield return SceneManager.UnloadSceneAsync(scene);
+        if(scene.IsValid() && scene.isLoaded)
+        {
+            if (SceneManager.GetActiveScene() == scene)
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    var s = SceneManager.GetSceneAt(i);
+                    if (s != scene && s.isLoaded)
+                    {
+                        SceneManager.SetActiveScene(s);
+                        break;
+                    }
+                }
+            }
+            var op = SceneManager.UnloadSceneAsync(scene);
+            while (op != null && !op.isDone) yield return null;
+        }
         // Single travel replaces the runner's empty scene. Restore an empty scene, not a real
         // frontend whose cameras/lights/geometry would overlap later additive gameplay fixtures.
         if(SceneManager.GetActiveScene().name=="ArchiveTestChamber")
@@ -44,7 +61,8 @@ public sealed class ChamberCompletionTests
             var archive=SceneManager.GetActiveScene();
             var empty=SceneManager.CreateScene("Completion tests / empty host");
             SceneManager.SetActiveScene(empty);
-            yield return SceneManager.UnloadSceneAsync(archive);
+            var op2 = SceneManager.UnloadSceneAsync(archive);
+            while (op2 != null && !op2.isDone) yield return null;
         }
         yield return null;
     }

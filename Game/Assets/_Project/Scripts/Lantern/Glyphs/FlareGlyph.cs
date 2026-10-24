@@ -97,7 +97,7 @@ namespace TheLightenRoad.Lantern.Glyphs
 
         private void Update()
         {
-            if (targetLantern == null)
+            if (targetLantern == null || !targetLantern.gameObject.activeInHierarchy)
             {
                 FindPlayerLantern();
                 if (targetLantern == null) return;
@@ -158,7 +158,7 @@ namespace TheLightenRoad.Lantern.Glyphs
 
         private void FindPlayerLantern()
         {
-            targetLantern = Object.FindAnyObjectByType<LanternController>();
+            targetLantern = LanternController.ActiveInstance ?? Object.FindAnyObjectByType<LanternController>();
         }
 
         public void BindLantern(LanternController lantern)

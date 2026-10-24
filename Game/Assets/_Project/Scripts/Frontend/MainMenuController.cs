@@ -66,6 +66,8 @@ namespace TheLightenRoad.Frontend
         [SerializeField] private Sprite hangingLampSprite;
         [SerializeField] private Sprite chainLinkSprite;
 
+        public bool LoadSceneOnPlay { get; set; } = true;
+
         // Dark-Fantasy Obsidian & Lantern Ember Palette
         private readonly Color radiantIvory = new Color32(246, 248, 252, 255);
         private readonly Color moonlightSilver = new Color32(158, 168, 184, 215);
@@ -540,7 +542,7 @@ namespace TheLightenRoad.Frontend
         public void Play()
         {
             if (loading || quitting) return;
-            if (!Application.CanStreamedLevelBeLoaded(gameplayScene))
+            if (LoadSceneOnPlay && !Application.CanStreamedLevelBeLoaded(gameplayScene))
             {
                 if (loadingContainer != null) loadingContainer.SetActive(true);
                 if (loadingText != null)
@@ -605,22 +607,27 @@ namespace TheLightenRoad.Frontend
             if (loadingContainer != null) loadingContainer.SetActive(false);
             if (hintText != null) hintText.gameObject.SetActive(false);
 
-            var operation = SceneManager.LoadSceneAsync(gameplayScene, LoadSceneMode.Single);
-            if (operation == null)
+            AsyncOperation operation = null;
+            if (LoadSceneOnPlay)
             {
-                loading = false;
-                if (loadingContainer != null) loadingContainer.SetActive(true);
-                if (loadingText != null) loadingText.text = "UNABLE TO OPEN REALM.";
-                yield break;
+                operation = SceneManager.LoadSceneAsync(gameplayScene, LoadSceneMode.Single);
+                if (operation == null)
+                {
+                    loading = false;
+                    if (loadingContainer != null) loadingContainer.SetActive(true);
+                    if (loadingText != null) loadingText.text = "UNABLE TO OPEN REALM.";
+                    yield break;
+                }
+
+                operation.allowSceneActivation = false;
             }
 
-            operation.allowSceneActivation = false;
             float elapsed = 0f;
             const float transitionDuration = 1.30f;
-            while (elapsed < transitionDuration || operation.progress < 0.9f)
+            while (elapsed < transitionDuration || (operation != null && operation.progress < 0.9f))
             {
                 elapsed += Time.unscaledDeltaTime;
-                float progress = Mathf.Clamp01(Mathf.Min(elapsed / transitionDuration, operation.progress / 0.9f));
+                float progress = Mathf.Clamp01(Mathf.Min(elapsed / transitionDuration, operation != null ? (operation.progress / 0.9f) : 1f));
 
                 // Fade ONLY the currently active view smoothly away into the dark
                 float fadeFactor = Mathf.Clamp01(1f - progress * 2.5f);
@@ -666,7 +673,7 @@ namespace TheLightenRoad.Frontend
             if (quitGroup != null) quitGroup.alpha = 0f;
             if (homeHeaderGroup != null) homeHeaderGroup.alpha = 0f;
             if (subpanelVeil != null) subpanelVeil.color = new Color(1f, 1f, 1f, 0f);
-            operation.allowSceneActivation = true;
+            if (operation != null) operation.allowSceneActivation = true;
         }
 
         public void ConfirmQuit()

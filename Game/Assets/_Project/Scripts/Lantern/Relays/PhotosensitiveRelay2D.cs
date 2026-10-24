@@ -94,7 +94,7 @@ namespace TheLightenRoad.Lantern.Relays
         {
             if (targetLantern == null)
             {
-                targetLantern = Object.FindAnyObjectByType<LanternController>();
+                targetLantern = LanternController.ActiveInstance ?? Object.FindAnyObjectByType<LanternController>();
             }
         }
 
@@ -224,7 +224,7 @@ namespace TheLightenRoad.Lantern.Relays
 
             if (targetLantern == null)
             {
-                targetLantern = Object.FindAnyObjectByType<LanternController>();
+                targetLantern = LanternController.ActiveInstance ?? Object.FindAnyObjectByType<LanternController>();
                 if (targetLantern == null) return false;
             }
 

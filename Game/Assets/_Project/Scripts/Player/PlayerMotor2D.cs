@@ -90,6 +90,9 @@ namespace TheLightenRoad.Player
         private float currentTilt;
         private bool groundStateInitialized;
 
+        public static PlayerMotor2D ActiveInstance { get; private set; }
+        private ContactFilter2D groundFilter;
+
         public event System.Action OnJumped;
         public event System.Action<float> OnLanded;
 
@@ -122,6 +125,9 @@ namespace TheLightenRoad.Player
 
         private void Awake()
         {
+            groundFilter = new ContactFilter2D { useTriggers = false };
+            groundFilter.SetLayerMask(groundLayers);
+
             body = GetComponent<Rigidbody2D>();
             body.constraints |= RigidbodyConstraints2D.FreezeRotation;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
@@ -173,6 +179,7 @@ namespace TheLightenRoad.Player
 
         private void OnEnable()
         {
+            if (ActiveInstance == null) ActiveInstance = this;
             move.Enable();
             jump.Enable();
             sprint.Enable();
@@ -408,9 +415,7 @@ namespace TheLightenRoad.Player
                 return false;
             }
 
-            var filter = new ContactFilter2D { useTriggers = false };
-            filter.SetLayerMask(groundLayers);
-            int count = body.Cast(Vector2.down, filter, groundHits, groundCheckDistance);
+            int count = body.Cast(Vector2.down, groundFilter, groundHits, groundCheckDistance);
             for (int i = 0; i < count; i++)
             {
                 if (groundHits[i].normal.y >= 0.65f)
@@ -461,6 +466,7 @@ namespace TheLightenRoad.Player
 
         private void OnDisable()
         {
+            if (ActiveInstance == this) ActiveInstance = null;
             move.Disable();
             jump.Disable();
             sprint.Disable();
@@ -482,6 +488,7 @@ namespace TheLightenRoad.Player
 
         private void OnDestroy()
         {
+            if (ActiveInstance == this) ActiveInstance = null;
             move?.Dispose();
             jump?.Dispose();
             sprint?.Dispose();

@@ -182,7 +182,7 @@ namespace TheLightenRoad.Lantern.Relays
         {
             if (!screenShakeOnMovement) return;
 
-            var cam = Object.FindAnyObjectByType<FollowCamera2D>();
+            var cam = FollowCamera2D.ActiveInstance ?? Object.FindAnyObjectByType<FollowCamera2D>();
             if (cam != null && cam.Target != null)
             {
                 float dist = Vector2.Distance(transform.position, cam.Target.position);

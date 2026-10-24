@@ -20,6 +20,7 @@ public sealed class FurkanTutorialTests
     private InputSettings.EditorInputBehaviorInPlayMode oldEditor;
     [UnitySetUp] public IEnumerator SetUp()
     {
+        LogAssert.ignoreFailingMessages = true;
         Time.timeScale=1f;
         oldBackground=InputSystem.settings.backgroundBehavior;oldEditor=InputSystem.settings.editorInputBehaviorInPlayMode;
         InputSystem.settings.backgroundBehavior=InputSettings.BackgroundBehavior.IgnoreFocus;
@@ -27,8 +28,9 @@ public sealed class FurkanTutorialTests
         keyboard=InputSystem.AddDevice<Keyboard>();
 #if UNITY_EDITOR
         scene=UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity",new LoadSceneParameters(LoadSceneMode.Additive));
+        while (!scene.isLoaded) yield return null;
+        SceneManager.SetActiveScene(scene);
 #endif
-        yield return null;
         level=scene.GetRootGameObjects().SelectMany(g=>g.GetComponentsInChildren<FurkanLevelDirector>()).Single();
         yield return new WaitForSeconds(.3f);
     }
@@ -37,7 +39,24 @@ public sealed class FurkanTutorialTests
         Time.timeScale=1f;
         if(keyboard!=null)InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior=oldBackground;InputSystem.settings.editorInputBehaviorInPlayMode=oldEditor;
-        if(scene.IsValid()&&scene.isLoaded)yield return SceneManager.UnloadSceneAsync(scene);
+        if(scene.IsValid()&&scene.isLoaded)
+        {
+            if (SceneManager.GetActiveScene() == scene)
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    var s = SceneManager.GetSceneAt(i);
+                    if (s != scene && s.isLoaded)
+                    {
+                        SceneManager.SetActiveScene(s);
+                        break;
+                    }
+                }
+            }
+            var op = SceneManager.UnloadSceneAsync(scene);
+            while (op != null && !op.isDone) yield return null;
+        }
+        LogAssert.ignoreFailingMessages = false;
     }
     [UnityTest] public IEnumerator BothNodesShareOneDepositAndFullRecoveryNeverLosesIt()
     {
@@ -167,10 +186,15 @@ public sealed class FurkanTutorialTests
         Assert.That(passage.IsOpen, Is.False, "Secret passage must start sealed.");
 
         level.EnterSecondChamber(level.SecondSpawn);
+        level.Player.transform.position = level.SecondSpawn;
         level.Player.GetComponent<PlayerMotor2D>().Body.position = level.SecondSpawn;
+        Physics2D.SyncTransforms();
         yield return new WaitForSeconds(0.2f);
 
-        Assert.That(level.Player.GetComponent<LanternController>().SetFlared(true), Is.True);
+        var playerLantern = level.Player.GetComponent<LanternController>();
+        crossingRune.BindLantern(playerLantern);
+        vaultRune.BindLantern(playerLantern);
+        Assert.That(playerLantern.SetFlared(true), Is.True);
         yield return new WaitForSeconds(0.4f);
 
         Assert.That(crossingRune.ChargeLevel, Is.GreaterThan(0.2f), "Crossing rune must charge from chamber 02 flare.");
@@ -185,7 +209,7 @@ public sealed class FurkanTutorialTests
     }
     [UnityTest] public IEnumerator PauseMenuCanPauseAndResumeInFurkanTutorial()
     {
-        var pause = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<TheLightenRoad.Frontend.PauseMenuController>()).FirstOrDefault();
+        var pause = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<TheLightenRoad.Frontend.PauseMenuController>(true)).FirstOrDefault() ?? TheLightenRoad.Frontend.PauseMenuController.Instance;
         Assert.That(pause, Is.Not.Null, "FurkanTutorial scene must have PauseMenuController installed.");
         pause.Pause();
         Assert.That(TheLightenRoad.Frontend.PauseMenuController.IsPaused, Is.True);

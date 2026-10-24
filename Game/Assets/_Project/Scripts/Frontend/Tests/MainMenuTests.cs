@@ -180,6 +180,7 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(_menu.CreditsGroup.alpha, Is.EqualTo(0f));
             Assert.That(_menu.QuitGroup.alpha, Is.EqualTo(0f));
 
+            _menu.LoadSceneOnPlay = false;
             _menu.Play();
             yield return null;
 

@@ -192,6 +192,10 @@ namespace TheLightenRoad.Frontend
 
         private void OnDestroy()
         {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
             Time.timeScale = 1f;
             if (transitionRoutine != null)
             {

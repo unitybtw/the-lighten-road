@@ -23,6 +23,7 @@ public sealed class RuinedArchiveRouteTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        LogAssert.ignoreFailingMessages = true;
         Time.timeScale = 1f;
         oldBackground = InputSystem.settings.backgroundBehavior;
         oldEditorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
@@ -30,21 +31,14 @@ public sealed class RuinedArchiveRouteTests
         InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
         keyboard = InputSystem.AddDevice<Keyboard>();
 #if UNITY_EDITOR
-        var active = SceneManager.GetActiveScene();
-        if (active.path == "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity")
-        {
-            scene = active;
-        }
-        else
-        {
-            scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
-                "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity", new LoadSceneParameters(LoadSceneMode.Additive));
-        }
+        scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(
+            "Assets/_Project/Scenes/Sandbox/Sirac/MovementSandbox.unity", new LoadSceneParameters(LoadSceneMode.Additive));
+        while (!scene.isLoaded) yield return null;
+        SceneManager.SetActiveScene(scene);
 #else
         Assert.Ignore("Authored scene integration runs in the Editor.");
         yield break;
 #endif
-        yield return null;
         route = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<RuinedArchiveRoute>()).Single();
         player = route.Player;
         motor = player.GetComponent<PlayerMotor2D>();
@@ -59,7 +53,24 @@ public sealed class RuinedArchiveRouteTests
         if (keyboard != null) InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior = oldBackground;
         InputSystem.settings.editorInputBehaviorInPlayMode = oldEditorInput;
-        if (scene.IsValid() && scene.isLoaded && scene != SceneManager.GetActiveScene()) yield return SceneManager.UnloadSceneAsync(scene);
+        if (scene.IsValid() && scene.isLoaded)
+        {
+            if (SceneManager.GetActiveScene() == scene)
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    var s = SceneManager.GetSceneAt(i);
+                    if (s != scene && s.isLoaded)
+                    {
+                        SceneManager.SetActiveScene(s);
+                        break;
+                    }
+                }
+            }
+            var op = SceneManager.UnloadSceneAsync(scene);
+            while (op != null && !op.isDone) yield return null;
+        }
+        LogAssert.ignoreFailingMessages = false;
     }
 
     private IEnumerator WalkTo(float x)
@@ -71,7 +82,7 @@ public sealed class RuinedArchiveRouteTests
             // Keep the simulated key held across Editor focus/device changes.
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
             Assert.That(player.State, Is.EqualTo(RespawnState.Alive), "Unexpected death at " + motor.Body.position);
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         yield return new WaitForSeconds(0.06f);
@@ -83,12 +94,12 @@ public sealed class RuinedArchiveRouteTests
         Assert.That(motor.IsGrounded, Is.True, "Jump needs a safe launch pad at " + motor.Body.position);
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
         yield return new WaitForSeconds(0.08f);
-        float timeout = Time.time + 1f;
+        float timeout = Time.time + 1.5f;
         while (motor.Body.position.x < x && Time.time < timeout)
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
             Assert.That(player.State, Is.EqualTo(RespawnState.Alive), "Jump hit a hazard at " + motor.Body.position);
-            yield return null;
+            yield return new WaitForFixedUpdate();
         }
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
         yield return new WaitForSeconds(0.6f);

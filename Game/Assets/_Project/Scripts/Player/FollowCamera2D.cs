@@ -53,6 +53,8 @@ namespace TheLightenRoad.Player
         private Rigidbody2D targetBody;
         private Vector3 previousTargetPosition;
 
+        public static FollowCamera2D ActiveInstance { get; private set; }
+
         public Transform Target => target;
         public Vector3 Offset { get => offset; set => offset = value; }
         public float SmoothTime { get => smoothTime; set => smoothTime = value; }
@@ -68,8 +70,18 @@ namespace TheLightenRoad.Player
         public bool IsShaking => shakeTimer > 0f;
         public Vector3 CurrentFollowPosition => currentFollowPosition;
 
+        private void OnDestroy()
+        {
+            if (ActiveInstance == this) ActiveInstance = null;
+            if (targetMotor != null)
+            {
+                targetMotor.OnLanded -= HandleTargetLanded;
+            }
+        }
+
         private void Awake()
         {
+            if (ActiveInstance == null) ActiveInstance = this;
             var cam = GetComponent<Camera>();
             if (cam != null)
             {
@@ -80,7 +92,7 @@ namespace TheLightenRoad.Player
             currentFollowPosition = transform.position;
             if (target == null)
             {
-                var player = FindFirstObjectByType<PlayerMotor2D>();
+                var player = PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<PlayerMotor2D>();
                 if (player != null)
                 {
                     target = player.transform;
@@ -94,7 +106,7 @@ namespace TheLightenRoad.Player
         {
             if (target == null)
             {
-                var player = FindFirstObjectByType<PlayerMotor2D>();
+                var player = PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<PlayerMotor2D>();
                 if (player != null)
                 {
                     SetTarget(player.transform, snap: true);
@@ -109,12 +121,14 @@ namespace TheLightenRoad.Player
 
         private void OnEnable()
         {
+            if (ActiveInstance == null) ActiveInstance = this;
             if (target != null && targetMotor == null)
                 BindTarget(target);
         }
 
         private void OnDisable()
         {
+            if (ActiveInstance == this) ActiveInstance = null;
             UnbindTarget();
         }
 
@@ -186,7 +200,7 @@ namespace TheLightenRoad.Player
         {
             if (target == null)
             {
-                var player = FindFirstObjectByType<PlayerMotor2D>();
+                var player = PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<PlayerMotor2D>();
                 if (player != null)
                 {
                     SetTarget(player.transform, snap: true);

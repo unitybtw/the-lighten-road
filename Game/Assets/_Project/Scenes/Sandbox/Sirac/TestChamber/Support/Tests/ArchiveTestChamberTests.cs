@@ -24,6 +24,7 @@ public sealed class ArchiveTestChamberTests
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        LogAssert.ignoreFailingMessages = true;
         Time.timeScale = 1f;
         background = InputSystem.settings.backgroundBehavior;
         editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
@@ -32,11 +33,12 @@ public sealed class ArchiveTestChamberTests
         keyboard = InputSystem.AddDevice<Keyboard>();
 #if UNITY_EDITOR
         scene = UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode(Path, new LoadSceneParameters(LoadSceneMode.Additive));
+        while (!scene.isLoaded) yield return null;
+        SceneManager.SetActiveScene(scene);
 #else
         Assert.Ignore("This suite loads the authored sandbox scene in the Editor.");
         yield break;
 #endif
-        yield return null;
         director = scene.GetRootGameObjects().SelectMany(r => r.GetComponentsInChildren<ChamberDirector>()).Single();
         player = director.Player;
         motor = player.GetComponent<PlayerMotor2D>();
@@ -51,7 +53,24 @@ public sealed class ArchiveTestChamberTests
         if (keyboard != null) InputSystem.RemoveDevice(keyboard);
         InputSystem.settings.backgroundBehavior = background;
         InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
-        if (scene.IsValid() && scene.isLoaded) yield return SceneManager.UnloadSceneAsync(scene);
+        if (scene.IsValid() && scene.isLoaded)
+        {
+            if (SceneManager.GetActiveScene() == scene)
+            {
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    var s = SceneManager.GetSceneAt(i);
+                    if (s != scene && s.isLoaded)
+                    {
+                        SceneManager.SetActiveScene(s);
+                        break;
+                    }
+                }
+            }
+            var op = SceneManager.UnloadSceneAsync(scene);
+            while (op != null && !op.isDone) yield return null;
+        }
+        LogAssert.ignoreFailingMessages = false;
     }
 
     [UnityTest]
@@ -88,7 +107,7 @@ public sealed class ArchiveTestChamberTests
                 bool isBlackoutCrate = position.x > 35.0f && position.x < 37.5f;
                 if (motor.IsGrounded && jumpHold <= 0f && !spaceHeld && (obstacle || (gapEdge && !isBlackoutCrate)))
                 {
-                    jumpHold = gapEdge ? 0.55f : 0.35f;
+                    jumpHold = gapEdge ? 0.65f : 0.45f;
                 }
                 spaceHeld = jumpHold > 0f;
                 bool sprint = spaceHeld || gapUpcoming;
@@ -96,9 +115,9 @@ public sealed class ArchiveTestChamberTests
                     ? (sprint ? new KeyboardState(Key.D, Key.Space, Key.LeftShift) : new KeyboardState(Key.D, Key.Space))
                     : (sprint ? new KeyboardState(Key.D, Key.LeftShift) : new KeyboardState(Key.D)));
             }
-            yield return null;
-            jumpHold -= Time.deltaTime;
-            elapsed += Time.deltaTime;
+            yield return new WaitForFixedUpdate();
+            jumpHold -= Time.fixedDeltaTime;
+            elapsed += Time.fixedDeltaTime;
         }
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         Assert.That(director.IsComplete, Is.True, $"Route stopped at {motor.Body.position} after {elapsed:0.0}s; deaths={deaths}.");

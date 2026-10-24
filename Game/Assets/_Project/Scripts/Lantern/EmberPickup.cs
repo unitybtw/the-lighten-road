@@ -47,6 +47,9 @@ namespace TheLightenRoad.Lantern
         [SerializeField] private Color trailStartColor = new Color(1f, 0.75f, 0.25f, 0.9f);
         [SerializeField] private Color trailEndColor = new Color(1f, 0.35f, 0.05f, 0f);
 
+        private static Material sharedLitMaterial;
+        private static Material sharedParticleMaterial;
+
         private bool collected;
         private SpriteRenderer visualRenderer;
         private Light2D reactiveLight;
@@ -117,10 +120,14 @@ namespace TheLightenRoad.Lantern
                 // Ensure sprite uses lit material so it obeys 2D lighting
                 if (visualRenderer.sharedMaterial == null || visualRenderer.sharedMaterial.name.Contains("Unlit"))
                 {
-                    var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
-                    if (shader != null)
+                    if (sharedLitMaterial == null)
                     {
-                        visualRenderer.material = new Material(shader);
+                        var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
+                        if (shader != null) sharedLitMaterial = new Material(shader);
+                    }
+                    if (sharedLitMaterial != null)
+                    {
+                        visualRenderer.sharedMaterial = sharedLitMaterial;
                     }
                 }
             }
@@ -156,11 +163,14 @@ namespace TheLightenRoad.Lantern
                 var psRenderer = psGo.GetComponent<ParticleSystemRenderer>();
                 if (psRenderer != null)
                 {
-                    var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
-                    if (shader != null)
+                    if (sharedParticleMaterial == null)
                     {
-                        var mat = new Material(shader);
-                        psRenderer.material = mat;
+                        var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
+                        if (shader != null) sharedParticleMaterial = new Material(shader);
+                    }
+                    if (sharedParticleMaterial != null)
+                    {
+                        psRenderer.sharedMaterial = sharedParticleMaterial;
                     }
                     psRenderer.sortingOrder = 3;
                 }
@@ -211,10 +221,14 @@ namespace TheLightenRoad.Lantern
             );
             sparkTrail.colorGradient = gradient;
 
-            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
-            if (shader != null)
+            if (sharedParticleMaterial == null)
             {
-                sparkTrail.material = new Material(shader);
+                var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
+                if (shader != null) sharedParticleMaterial = new Material(shader);
+            }
+            if (sharedParticleMaterial != null)
+            {
+                sparkTrail.sharedMaterial = sharedParticleMaterial;
             }
             sparkTrail.sortingOrder = 4;
         }

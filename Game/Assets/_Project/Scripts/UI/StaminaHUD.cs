@@ -106,7 +106,11 @@ namespace TheLightenRoad.UI
 
         private void TryBind()
         {
-            if (target == null) target = FindAnyObjectByType<PlayerStamina>();
+            if (target == null)
+            {
+                var activeMotor = PlayerMotor2D.ActiveInstance;
+                target = activeMotor != null ? activeMotor.Stamina : FindAnyObjectByType<PlayerStamina>();
+            }
             if (boundTarget == target && boundTarget != null) return;
             Unbind();
             boundTarget = target;
