@@ -264,7 +264,7 @@ namespace TheLightenRoad.Frontend
 
             promptText = promptGo.AddComponent<TextMeshProUGUI>();
             promptText.alignment = TextAlignmentOptions.Center;
-            promptText.fontSize = 14f;
+            promptText.fontSize = 12.5f;
             promptText.fontStyle = FontStyles.Normal;
             promptText.color = radiantIvory;
             promptText.characterSpacing = 12f;

@@ -41,7 +41,7 @@ namespace TheLightenRoad.Frontend
                 settingsTabLabels[i]=settingsTabs[i].GetComponentInChildren<TMP_Text>();
                 var section=CreateAnchoredRect(names[i]+" settings",surface,new Vector2(720,350),Vector2.one*.5f,new Vector2(0,-22));
                 settingsSections[i]=section.gameObject;
-                var desc=SettingsText(section,descriptions[i],new Vector2(0,145),14.5f,moonlightSilver,720);
+                var desc=SettingsText(section,descriptions[i],new Vector2(0,145),13.5f,moonlightSilver,720);
                 desc.alignment=TextAlignmentOptions.Center;
             }
             var audio=(RectTransform)settingsSections[0].transform;
@@ -51,7 +51,7 @@ namespace TheLightenRoad.Frontend
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
-            var audioHint=SettingsText(audio,"Adjust audio levels for music and gameplay effects.",new Vector2(0,-156),14f,moonlightSilver,720);
+            var audioHint=SettingsText(audio,"Adjust audio levels for music and gameplay effects.",new Vector2(0,-156),12.5f,moonlightSilver,720);
             audioHint.alignment=TextAlignmentOptions.Center;
 
             var display=(RectTransform)settingsSections[1].transform;
@@ -64,12 +64,12 @@ namespace TheLightenRoad.Frontend
             var comfortCard=CreateAnchoredRect("Motion Comfort Card",accessibility,new Vector2(680,104),Vector2.one*.5f,new Vector2(0,-36));
             var titleComfort=SettingsText(comfortCard,"MOTION COMFORT",new Vector2(0,22),15f,radiantIvory,680);
             titleComfort.alignment=TextAlignmentOptions.Center;titleComfort.fontStyle=FontStyles.Bold;titleComfort.characterSpacing=2.5f;
-            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(0,-14),14f,moonlightSilver,660);
+            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(0,-14),12.5f,moonlightSilver,660);
             note.alignment=TextAlignmentOptions.Center;
             note.rectTransform.sizeDelta=new Vector2(660,54);
             SettingsRule(comfortCard,"Comfort Bottom Rule",new Vector2(0,-48),540);
 
-            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-206),14f,moonlightSilver,720);
+            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-206),12.5f,moonlightSilver,720);
             settingsSaveStatus.alignment=TextAlignmentOptions.Center;
             resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-180,-268),new Vector2(280,46),RequestSettingsReset);
             settingsDoneButton=SettingsButton(surface,"Done",new Vector2(180,-268),new Vector2(280,46),ShowHome);
@@ -107,14 +107,14 @@ namespace TheLightenRoad.Frontend
 
             var titleTxt=CreateLabel("Title",row,"FRAME LIMIT",16.5f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,11),new Vector2(0,0.5f));
             titleTxt.fontStyle=FontStyles.Bold;titleTxt.characterSpacing=2.5f;
-            frameRateHint=CreateLabel("Subtitle",row,"",14f,moonlightSilver,new Vector2(340,22),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
+            frameRateHint=CreateLabel("Subtitle",row,"",12f,moonlightSilver,new Vector2(340,22),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
 
             for(int i=0;i<3;i++)
             {
                 int limit=FrameLimits[i];
                 frameRateOptions[i]=SettingsButton(row,limit<0?"Unlimited":limit+" FPS",new Vector2(102+i*108,0),new Vector2(102,38),()=>SetSettingsFrameRate(limit));
                 frameRateLabels[i]=frameRateOptions[i].GetComponentInChildren<TMP_Text>();
-                frameRateLabels[i].fontSize=14f;
+                frameRateLabels[i].fontSize=13f;
             }
             RefreshSettingsFrameRate();
         }
