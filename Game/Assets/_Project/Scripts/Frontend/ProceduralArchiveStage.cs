@@ -129,7 +129,7 @@ namespace TheLightenRoad.Frontend
                 rayRect.localEulerAngles = new Vector3(0f, 0f, 180f + topAngles[i]);
                 var rayImg = rayRect.gameObject.AddComponent<Image>();
                 rayImg.sprite = lightRaySprite;
-                rayImg.color = new Color(1.0f, 0.88f, 0.65f, 0f);
+                rayImg.color = new Color(0.68f, 0.80f, 0.96f, 0f);
                 rayImg.raycastTarget = false;
                 topGodRays.Add(rayRect);
                 topGodRayImages.Add(rayImg);
@@ -141,11 +141,11 @@ namespace TheLightenRoad.Frontend
             farVaultImage.sprite = CreateArchiveColonnadePixelSprite(480, 270);
             farVaultImage.raycastTarget = false;
 
-            // Soft atmospheric mist veil
+            // Soft atmospheric moonlight mist veil
             var mistRect = CreateAnchoredRect("Midnight Mist Veil", cameraRig, new Vector2(1900f, 800f), new Vector2(0.65f, 0.35f), Vector2.zero);
             var mistImg = mistRect.gameObject.AddComponent<Image>();
             mistImg.sprite = radialGlowSprite;
-            mistImg.color = new Color(0.18f, 0.12f, 0.08f, 0.22f);
+            mistImg.color = new Color(0.22f, 0.34f, 0.52f, 0.24f);
             mistImg.raycastTarget = false;
 
             // 3. Mid 2D Parallax Layer (0.50x): Stone Pillars & Carved Glowing Ember Veins
@@ -552,12 +552,12 @@ namespace TheLightenRoad.Frontend
                 godRayImages[i].color = new Color(1.0f, 0.84f, 0.54f, rayAlpha);
             }
 
-            // Top-Down Volumetric Divine Light Rays
+            // Top-Down Volumetric Moonlight Rays
             for (int i = 0; i < topGodRays.Count; i++)
             {
                 float rayWave = reducedMotion ? 1f : (0.75f + 0.25f * Mathf.Sin(time * 1.3f + i * 1.1f));
-                float rayAlpha = Mathf.Clamp01((0.030f + surgeIntensity * 0.015f) * rayWave * bloomExpansion * extinguish);
-                topGodRayImages[i].color = new Color(0.95f, 0.90f, 0.80f, rayAlpha);
+                float rayAlpha = Mathf.Clamp01((0.036f + surgeIntensity * 0.015f) * rayWave * bloomExpansion * extinguish);
+                topGodRayImages[i].color = new Color(0.68f, 0.80f, 0.96f, rayAlpha);
             }
 
             // 4. Carved Pillar Ember Veins Pulse

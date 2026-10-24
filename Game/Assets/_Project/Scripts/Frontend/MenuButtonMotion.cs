@@ -31,6 +31,7 @@ namespace TheLightenRoad.Frontend
         public RectTransform RightWing;
         public CanvasGroup WingGroup;
         public Image UnderlineFiligree;
+        public Image BorderFrame;
         public bool IsPrimaryAction;
         public bool LeftAlignedItem;
         public float BaseWingOffset = 145f;
@@ -48,12 +49,12 @@ namespace TheLightenRoad.Frontend
         private Vector2 baseFlameAnchoredPos;
         private bool capturedBasePositions;
 
-        private static readonly Color IdleIvory = new Color32(180, 192, 208, 175);
-        private static readonly Color IdlePrimaryGold = new Color32(235, 195, 120, 215);
-        private static readonly Color FocusedRadiantIvory = new Color32(255, 255, 255, 255);
-        private static readonly Color FocusedAmberGold = new Color32(255, 225, 140, 255);
-        private static readonly Color IdleSubtle = new Color32(128, 138, 156, 175);
-        private static readonly Color FocusedSubtle = new Color32(215, 225, 240, 230);
+        private static readonly Color IdleIvory = new Color32(194, 210, 232, 215);
+        private static readonly Color IdlePrimaryGold = new Color32(236, 244, 255, 245);
+        private static readonly Color FocusedRadiantIvory = new Color32(255, 218, 138, 255);
+        private static readonly Color FocusedAmberGold = new Color32(255, 200, 96, 255);
+        private static readonly Color IdleSubtle = new Color32(142, 162, 190, 185);
+        private static readonly Color FocusedSubtle = new Color32(255, 224, 164, 235);
 
         public void InitializeBasePositions(Vector2 textPos, Vector2 subPos, Vector2 flamePos)
         {
@@ -178,14 +179,23 @@ namespace TheLightenRoad.Frontend
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
             if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(0f, 1f, smooth);
 
-            // 5. Glowing Ember Filigree Underline
+            // 5. Silver-to-Ember Filigree Underline & Thin Silver Frame
             if (UnderlineFiligree != null)
             {
                 var r = UnderlineFiligree.rectTransform;
                 float targetW = LeftAlignedItem ? 320f : 280f;
-                float width = Mathf.Lerp(IsPrimaryAction ? 140f : 0f, targetW, smooth);
+                float width = Mathf.Lerp(IsPrimaryAction ? 200f : 120f, targetW, smooth);
                 r.sizeDelta = new Vector2(width, 2f);
-                UnderlineFiligree.color = new Color(1.0f, 0.74f, 0.30f, Mathf.Lerp(IsPrimaryAction ? 0.38f : 0f, 0.88f, smooth));
+                Color idleLine = new Color(0.58f, 0.72f, 0.90f, IsPrimaryAction ? 0.50f : 0.28f);
+                Color focusLine = new Color(1.0f, 0.74f, 0.30f, 0.92f);
+                UnderlineFiligree.color = Color.Lerp(idleLine, focusLine, smooth);
+            }
+
+            if (BorderFrame != null)
+            {
+                Color idleBorder = new Color(0.56f, 0.70f, 0.88f, IsPrimaryAction ? 0.45f : 0.26f);
+                Color focusBorder = new Color(1.0f, 0.74f, 0.30f, 0.92f);
+                BorderFrame.color = Color.Lerp(idleBorder, focusBorder, smooth);
             }
         }
 
