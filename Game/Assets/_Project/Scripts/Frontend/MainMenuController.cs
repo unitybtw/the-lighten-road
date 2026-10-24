@@ -1697,12 +1697,12 @@ namespace TheLightenRoad.Frontend
             {
                 var lImg = leftWing.gameObject.AddComponent<Image>();
                 lImg.sprite = buttonPointerSprite;
-                lImg.color = radiantIvory;
+                lImg.color = amberGold;
                 lImg.raycastTarget = false;
 
                 var rImg = rightWing.gameObject.AddComponent<Image>();
                 rImg.sprite = buttonPointerSprite;
-                rImg.color = radiantIvory;
+                rImg.color = amberGold;
                 rImg.raycastTarget = false;
             }
 
