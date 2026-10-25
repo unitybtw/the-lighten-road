@@ -329,13 +329,13 @@ namespace TheLightenRoad.UI
                 case ControllerPromptStyle.PlayStation:
                     switch (action)
                     {
-                        case GlyphAction.Confirm: return "✕  CONFIRM";
-                        case GlyphAction.Cancel: return "○  BACK";
+                        case GlyphAction.Confirm: return "CROSS  CONFIRM";
+                        case GlyphAction.Cancel: return "CIRCLE  BACK";
                         case GlyphAction.Move: return "LEFT STICK / D-PAD";
-                        case GlyphAction.Jump: return "✕";
+                        case GlyphAction.Jump: return "CROSS";
                         case GlyphAction.Sprint: return "R2 / L3";
-                        case GlyphAction.Flare: return "R2 / □";
-                        case GlyphAction.Interact: return "△ / ○";
+                        case GlyphAction.Flare: return "R2 / SQUARE";
+                        case GlyphAction.Interact: return "TRIANGLE";
                         case GlyphAction.Pause: return "OPTIONS";
                         case GlyphAction.NextTab: return "R1";
                         case GlyphAction.PrevTab: return "L1";

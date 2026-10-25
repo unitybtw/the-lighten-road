@@ -425,7 +425,7 @@ namespace TheLightenRoad.UI
             }
             else if (keyLabel != null)
             {
-                string keyText = style == ControllerPromptStyle.PlayStation ? "R2 / □" : (style == ControllerPromptStyle.Xbox ? "RT / X" : target.ToggleFlareKey.ToString().ToUpperInvariant());
+                string keyText = style == ControllerPromptStyle.PlayStation ? "R2 / SQUARE" : (style == ControllerPromptStyle.Xbox ? "RT / X" : target.ToggleFlareKey.ToString().ToUpperInvariant());
                 if (keyLabel.text != keyText) keyLabel.text = keyText;
             }
 

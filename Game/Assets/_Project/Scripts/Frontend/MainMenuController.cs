@@ -1526,10 +1526,10 @@ namespace TheLightenRoad.Frontend
                 }
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
-                controlsRowKeyLabels[1].text = "[ ✕ ]";
+                controlsRowKeyLabels[1].text = "[ CROSS ]";
                 controlsRowKeyLabels[2].text = "[ R2 / L3 ]";
-                controlsRowKeyLabels[3].text = "[ R2 / □ ]";
-                controlsRowKeyLabels[4].text = "[ △ / ○ ]";
+                controlsRowKeyLabels[3].text = "[ R2 / SQUARE ]";
+                controlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
                 controlsRowKeyLabels[5].text = "[ OPTIONS ]";
             }
         }

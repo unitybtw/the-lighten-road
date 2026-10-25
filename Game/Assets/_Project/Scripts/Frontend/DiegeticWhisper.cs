@@ -296,10 +296,10 @@ namespace TheLightenRoad.Frontend
             {
                 switch (requiredAction)
                 {
-                    case WhisperAction.Jump: return "✕";
-                    case WhisperAction.Flare: return "R2 / □";
+                    case WhisperAction.Jump: return "CROSS";
+                    case WhisperAction.Flare: return "R2 / SQUARE";
                     case WhisperAction.Sprint: return "R2 / L3";
-                    case WhisperAction.Interact: return "△";
+                    case WhisperAction.Interact: return "TRIANGLE";
                 }
             }
             else if (style == ControllerPromptStyle.Xbox)

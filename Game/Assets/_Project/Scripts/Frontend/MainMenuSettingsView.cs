@@ -82,7 +82,7 @@ namespace TheLightenRoad.Frontend
             var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,92));
             var styleTitle=CreateLabel("Title",styleRow,"PROMPT GLYPHS",15f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,10),new Vector2(0,0.5f));
             styleTitle.fontStyle=FontStyles.Bold; styleTitle.characterSpacing=2.5f;
-            var styleSub=CreateLabel("Subtitle",styleRow,"Xbox (A/B/X/Y), PlayStation (✕/○/□/△) or PC",11.5f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
+            var styleSub=CreateLabel("Subtitle",styleRow,"Xbox (A/B/X/Y), PlayStation (Cross/Circle) or PC",11.5f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
             controllerStyleButton=SettingsButton(styleRow,"< AUTO-DETECT >",new Vector2(175,0),new Vector2(250,38),CycleControllerStyle);
             controllerStyleValueText=controllerStyleButton.GetComponentInChildren<TMP_Text>();
             controllerStyleValueText.fontSize=12.5f;
@@ -301,7 +301,7 @@ namespace TheLightenRoad.Frontend
                 int style = MenuPreferences.ControllerStyle;
                 string label = "< AUTO-DETECT >";
                 if (style == 1) label = "< XBOX (A / B / X / Y) >";
-                else if (style == 2) label = "< PLAYSTATION (✕ / ○ / □ / △) >";
+                else if (style == 2) label = "< PLAYSTATION (CROSS / CIRCLE) >";
                 else if (style == 3) label = "< KEYBOARD & MOUSE >";
                 controllerStyleValueText.text = label;
             }

@@ -38,10 +38,10 @@ namespace TheLightenRoad.Frontend.Tests
             ControllerGlyphService.ConfiguredStyle = ControllerPromptStyle.PlayStation;
             Assert.That(ControllerGlyphService.ActiveStyle, Is.EqualTo(ControllerPromptStyle.PlayStation));
 
-            Assert.That(ControllerGlyphService.GetConfirmPrompt(), Does.Contain("✕"));
-            Assert.That(ControllerGlyphService.GetCancelPrompt(), Does.Contain("○"));
-            Assert.That(ControllerGlyphService.GetJumpPrompt(), Is.EqualTo("✕"));
-            Assert.That(ControllerGlyphService.GetFlarePrompt(), Does.Contain("□"));
+            Assert.That(ControllerGlyphService.GetConfirmPrompt(), Does.Contain("CROSS"));
+            Assert.That(ControllerGlyphService.GetCancelPrompt(), Does.Contain("CIRCLE"));
+            Assert.That(ControllerGlyphService.GetJumpPrompt(), Is.EqualTo("CROSS"));
+            Assert.That(ControllerGlyphService.GetFlarePrompt(), Does.Contain("SQUARE"));
             Assert.That(ControllerGlyphService.GetTabCyclePrompt(), Is.EqualTo("L1 / R1"));
             Assert.That(ControllerGlyphService.GetControllerName(), Does.Contain("PlayStation"));
         }
@@ -152,8 +152,8 @@ namespace TheLightenRoad.Frontend.Tests
             // Switch to PlayStation tab
             menu.SetControlsDeviceTab(2);
             labels = menu.GetComponentsInChildren<TMPro.TMP_Text>(true);
-            bool hasPSJump = System.Array.Exists(labels, t => t.text.Contains("[ ✕ ]"));
-            Assert.That(hasPSJump, Is.True, "Controls view should show PlayStation [ ✕ ] jump button");
+            bool hasPSJump = System.Array.Exists(labels, t => t.text.Contains("[ CROSS ]"));
+            Assert.That(hasPSJump, Is.True, "Controls view should show PlayStation [ CROSS ] jump button");
         }
 
         [UnityTest]
@@ -172,8 +172,8 @@ namespace TheLightenRoad.Frontend.Tests
             // Switch to PlayStation tab
             pauseMenu.SetPauseControlsDeviceTab(2);
             var labels = pauseGo.GetComponentsInChildren<TMPro.TMP_Text>(true);
-            bool hasPSCross = System.Array.Exists(labels, t => t.text.Contains("✕"));
-            Assert.That(hasPSCross, Is.True, "Pause controls panel should display PlayStation ✕ glyph");
+            bool hasPSCross = System.Array.Exists(labels, t => t.text.Contains("CROSS"));
+            Assert.That(hasPSCross, Is.True, "Pause controls panel should display PlayStation CROSS glyph");
 
             // Switch to Xbox tab
             pauseMenu.SetPauseControlsDeviceTab(1);
@@ -245,7 +245,9 @@ namespace TheLightenRoad.Frontend.Tests
             for (int f = 0; f < 10; f++) yield return null;
             SaveCamShot(cam, rt, System.IO.Path.Combine(outDir, "controller_guide_playstation.png"));
 
-            // 4. Pause Menu -> Controls & Gamepad
+            // 4. Pause Menu -> Controls & Gamepad (Isolate from Main Menu)
+            if (canvas != null) canvas.gameObject.SetActive(false);
+
             var pauseObj = new GameObject("PauseMenuTest");
             var pause = pauseObj.AddComponent<PauseMenuController>();
             yield return null;
@@ -264,7 +266,11 @@ namespace TheLightenRoad.Frontend.Tests
             for (int f = 0; f < 10; f++) yield return null;
             SaveCamShot(cam, rt, System.IO.Path.Combine(outDir, "pause_menu_controls_gamepad.png"));
 
-            // 5. Death Screen with PlayStation Prompt
+            pause.Resume();
+            Object.Destroy(pauseObj);
+            yield return null;
+
+            // 5. Death Screen with PlayStation Prompt (Isolate from Pause Menu)
             ControllerGlyphService.ConfiguredStyle = ControllerPromptStyle.PlayStation;
             var deathGo = new GameObject("DeathOverlayTest");
             var death = deathGo.AddComponent<DeathScreenOverlay>();
@@ -277,7 +283,7 @@ namespace TheLightenRoad.Frontend.Tests
                 dCanvas.planeDistance = 10f;
             }
             death.PreviewDeath(DeathReason.Darkness);
-            for (int f = 0; f < 30; f++) yield return null;
+            for (int f = 0; f < 90; f++) yield return null;
             SaveCamShot(cam, rt, System.IO.Path.Combine(outDir, "death_screen_playstation_prompt.png"));
             Object.Destroy(deathGo);
 
@@ -285,7 +291,6 @@ namespace TheLightenRoad.Frontend.Tests
             RenderTexture.active = null;
             Object.Destroy(rt);
             Object.Destroy(camGo);
-            Object.Destroy(pauseObj);
         }
 
         private static void SaveCamShot(Camera cam, RenderTexture rt, string path)

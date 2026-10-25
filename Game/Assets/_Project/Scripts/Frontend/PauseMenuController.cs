@@ -55,6 +55,7 @@ namespace TheLightenRoad.Frontend
 
         private Canvas pauseCanvas;
         private CanvasGroup canvasGroup;
+        private GameObject mainHeader;
         private GameObject mainPanel;
         private GameObject settingsPanel;
         private GameObject controlsPanel;
@@ -376,6 +377,7 @@ namespace TheLightenRoad.Frontend
         public void ShowMainView()
         {
             currentView = "main";
+            if (mainHeader != null) mainHeader.SetActive(true);
             if (mainPanel != null) mainPanel.SetActive(true);
             if (settingsPanel != null) settingsPanel.SetActive(false);
             if (controlsPanel != null) controlsPanel.SetActive(false);
@@ -391,6 +393,7 @@ namespace TheLightenRoad.Frontend
         public void ShowSettingsView()
         {
             currentView = "settings";
+            if (mainHeader != null) mainHeader.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(true);
             if (controlsPanel != null) controlsPanel.SetActive(false);
@@ -406,6 +409,7 @@ namespace TheLightenRoad.Frontend
         public void ShowControlsView()
         {
             currentView = "controls";
+            if (mainHeader != null) mainHeader.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(false);
             if (controlsPanel != null) controlsPanel.SetActive(true);
@@ -698,8 +702,15 @@ namespace TheLightenRoad.Frontend
             mRect.anchoredPosition = Vector2.zero;
             modalRect = mRect;
 
+            mainHeader = new GameObject("MainHeader", typeof(RectTransform));
+            mainHeader.transform.SetParent(modal.transform, false);
+            var headerRect = mainHeader.GetComponent<RectTransform>();
+            headerRect.anchorMin = headerRect.anchorMax = new Vector2(0.5f, 0.5f);
+            headerRect.sizeDelta = new Vector2(920f, 400f);
+            headerRect.anchoredPosition = Vector2.zero;
+
             // Soft Radial Moonlight Glow behind Title
-            var titleGlow = CreateAnchoredRect("Title Soft Lantern Glow", modal.transform, new Vector2(760f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 310f));
+            var titleGlow = CreateAnchoredRect("Title Soft Lantern Glow", mainHeader.transform, new Vector2(760f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 310f));
             var glowImg = titleGlow.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
             glowImg.color = new Color(0.65f, 0.78f, 0.96f, 0.16f);
@@ -707,37 +718,37 @@ namespace TheLightenRoad.Frontend
             titleGlowRect = titleGlow;
 
             // Top Ornate Filigree Crest
-            var topCrest = CreateAnchoredRect("Top Ornate Crest", modal.transform, new Vector2(460f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 385f));
+            var topCrest = CreateAnchoredRect("Top Ornate Crest", mainHeader.transform, new Vector2(460f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 385f));
             var topCrestImg = topCrest.gameObject.AddComponent<Image>();
             topCrestImg.sprite = topFiligreeSprite != null ? topFiligreeSprite : filigreeSprite;
             topCrestImg.color = moonlightSilver;
             topCrestImg.raycastTarget = false;
 
             // Whispered Eyebrow
-            var eyebrow = CreateLabel("Eyebrow", modal.transform, new Vector2(0f, 345f), new Vector2(620f, 24f),
+            var eyebrow = CreateLabel("Eyebrow", mainHeader.transform, new Vector2(0f, 345f), new Vector2(620f, 24f),
                 "--   GAME PAUSED   --", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
             eyebrow.characterSpacing = 6.5f;
 
             // Monumental Center Title: PAUSED
-            var title = CreateLabel("Title", modal.transform, new Vector2(0f, 300f), new Vector2(640f, 60f),
+            var title = CreateLabel("Title", mainHeader.transform, new Vector2(0f, 300f), new Vector2(640f, 60f),
                 "PAUSED", 52f, TextAlignmentOptions.Center, radiantIvory);
             title.fontStyle = FontStyles.Bold;
             title.characterSpacing = 10f;
 
             // Lower Ornate Filigree Divider under Title
-            var midCrest = CreateAnchoredRect("Title Bottom Filigree", modal.transform, new Vector2(520f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 252f));
+            var midCrest = CreateAnchoredRect("Title Bottom Filigree", mainHeader.transform, new Vector2(520f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 252f));
             var midCrestImg = midCrest.gameObject.AddComponent<Image>();
             midCrestImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
             midCrestImg.color = moonlightSilver;
             midCrestImg.raycastTarget = false;
 
             // Chamber Title Whisper
-            chamberTitleLabel = CreateLabel("ChamberTitle", modal.transform, new Vector2(0f, 222f), new Vector2(640f, 26f),
+            chamberTitleLabel = CreateLabel("ChamberTitle", mainHeader.transform, new Vector2(0f, 222f), new Vector2(640f, 26f),
                 "CHAMBER 01-02   -   THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
             chamberTitleLabel.characterSpacing = 4f;
 
             // Memento Recovery Badge
-            mementoBadgeLabel = CreateLabel("MementoBadge", modal.transform, new Vector2(0f, 172f), new Vector2(680f, 50f),
+            mementoBadgeLabel = CreateLabel("MementoBadge", mainHeader.transform, new Vector2(0f, 172f), new Vector2(680f, 50f),
                 "", 14f, TextAlignmentOptions.Center, radiantIvory);
 
             // Sub-panels (Frameless Center Stage)
@@ -1003,10 +1014,10 @@ namespace TheLightenRoad.Frontend
                 }
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
-                pauseControlsRowKeyLabels[1].text = "[ ✕ ]  (CROSS)";
+                pauseControlsRowKeyLabels[1].text = "[ CROSS ]";
                 pauseControlsRowKeyLabels[2].text = "[ R2 / L3 ]";
-                pauseControlsRowKeyLabels[3].text = "[ R2 / □ ]";
-                pauseControlsRowKeyLabels[4].text = "[ △ / ○ ]";
+                pauseControlsRowKeyLabels[3].text = "[ R2 / SQUARE ]";
+                pauseControlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
                 pauseControlsRowKeyLabels[5].text = "[ OPTIONS ]";
             }
         }
