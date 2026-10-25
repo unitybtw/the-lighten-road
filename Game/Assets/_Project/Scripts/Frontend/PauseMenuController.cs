@@ -610,15 +610,15 @@ namespace TheLightenRoad.Frontend
 
             if (sceneName.Contains("Furkan"))
             {
-                chamberName = "CHAMBER 01-02   -   THE FIRST LIGHT";
+                chamberName = "CHAMBER 01-02 : THE FIRST LIGHT";
             }
             else if (sceneName.Contains("Kemal"))
             {
-                chamberName = "CHAMBER 02   -   THE FLOODED MECHANISMS";
+                chamberName = "CHAMBER 02 : THE FLOODED MECHANISMS";
             }
             else if (sceneName.Contains("ArchiveTest"))
             {
-                chamberName = "CHAMBER 03   -   CALIBRATION SANCTUARY";
+                chamberName = "CHAMBER 03 : CALIBRATION SANCTUARY";
             }
 
             if (chamberTitleLabel != null)
@@ -641,12 +641,12 @@ namespace TheLightenRoad.Frontend
 
                 if (hasMemento)
                 {
-                    mementoBadgeLabel.text = "*   ARCHIVE MEMENTO RECOVERED   *\n<size=13><color=#B0BED6>\"The deep stone whispers of paths that open only in high flame.\"</color></size>";
+                    mementoBadgeLabel.text = "ARCHIVE MEMENTO RECOVERED\n<size=13><color=#B0BED6>\"The deep stone whispers of paths that open only in high flame.\"</color></size>";
                     mementoBadgeLabel.color = amberGold;
                 }
                 else
                 {
-                    mementoBadgeLabel.text = "-   ARCHIVE MEMENTO : UNFOUND   -\n<size=13><color=#76849E>Scout forgotten ledges with radiant flare to reveal the ancient seal.</color></size>";
+                    mementoBadgeLabel.text = "ARCHIVE MEMENTO UNFOUND\n<size=13><color=#76849E>Scout forgotten ledges with radiant flare to reveal the ancient seal.</color></size>";
                     mementoBadgeLabel.color = moonlightSilver;
                 }
             }
@@ -790,7 +790,7 @@ namespace TheLightenRoad.Frontend
 
             // Whispered Eyebrow
             var eyebrow = CreateLabel("Eyebrow", mainHeader.transform, new Vector2(0f, 335f), new Vector2(620f, 24f),
-                "--   GAME PAUSED   --", 12f, TextAlignmentOptions.Center, moonlightSilver);
+                "GAME PAUSED", 12f, TextAlignmentOptions.Center, moonlightSilver);
             eyebrow.characterSpacing = 6.5f;
 
             // Monumental Center Title: PAUSED
@@ -801,7 +801,7 @@ namespace TheLightenRoad.Frontend
 
             // Chamber Title Whisper
             chamberTitleLabel = CreateLabel("ChamberTitle", mainHeader.transform, new Vector2(0f, 240f), new Vector2(640f, 26f),
-                "CHAMBER 01-02   -   THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
+                "CHAMBER 01-02 : THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
             chamberTitleLabel.characterSpacing = 4f;
 
             // Memento Recovery Badge
@@ -913,8 +913,32 @@ namespace TheLightenRoad.Frontend
                 UpdateSwitchVisual(reducedMotionToggle);
             });
 
-            CreateEtherealActionButton("ResetDefaultsButton", r, "Reset Defaults", new Vector2(-160f, -205f), ResetDefaults, isPrimary: false, width: 230f);
+            var resetBtn = CreateEtherealActionButton("ResetDefaultsButton", r, "Reset Defaults", new Vector2(-160f, -205f), ResetDefaults, isPrimary: false, width: 230f);
             settingsBackButton = CreateEtherealActionButton("SettingsBackButton", r, "<  Return to Pause", new Vector2(160f, -205f), ShowMainView, isPrimary: true, width: 260f);
+
+            var sNavButtons = new Selectable[] { masterSlider, musicSlider, effectsSlider, fullscreenToggle, vsyncToggle, reducedMotionToggle };
+            for (int i = 0; i < sNavButtons.Length; i++)
+            {
+                var nav = sNavButtons[i].navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = i > 0 ? sNavButtons[i - 1] : settingsBackButton;
+                nav.selectOnDown = i < sNavButtons.Length - 1 ? sNavButtons[i + 1] : resetBtn;
+                sNavButtons[i].navigation = nav;
+            }
+
+            var rNav = resetBtn.navigation;
+            rNav.mode = Navigation.Mode.Explicit;
+            rNav.selectOnUp = reducedMotionToggle;
+            rNav.selectOnRight = settingsBackButton;
+            rNav.selectOnDown = masterSlider;
+            resetBtn.navigation = rNav;
+
+            var bNav = settingsBackButton.navigation;
+            bNav.mode = Navigation.Mode.Explicit;
+            bNav.selectOnUp = reducedMotionToggle;
+            bNav.selectOnLeft = resetBtn;
+            bNav.selectOnDown = masterSlider;
+            settingsBackButton.navigation = bNav;
         }
 
         private readonly TMP_Text[] pauseControlsRowKeyLabels = new TMP_Text[6];
@@ -1002,6 +1026,37 @@ namespace TheLightenRoad.Frontend
             if (pauseVibrationText != null) pauseVibrationText.fontSize = 12f;
 
             controlsBackButton = CreateEtherealActionButton("ControlsBackButton", r, "<  Return to Pause", new Vector2(0f, -205f), ShowMainView, isPrimary: true, width: 260f);
+
+            for (int i = 0; i < 3; i++)
+            {
+                var tabNav = pauseControlsDeviceTabs[i].navigation;
+                tabNav.mode = Navigation.Mode.Explicit;
+                tabNav.selectOnLeft = pauseControlsDeviceTabs[(i - 1 + 3) % 3];
+                tabNav.selectOnRight = pauseControlsDeviceTabs[(i + 1) % 3];
+                tabNav.selectOnDown = pausePromptStyleButton;
+                tabNav.selectOnUp = controlsBackButton;
+                pauseControlsDeviceTabs[i].navigation = tabNav;
+            }
+
+            var promptNav = pausePromptStyleButton.navigation;
+            promptNav.mode = Navigation.Mode.Explicit;
+            promptNav.selectOnUp = pauseControlsDeviceTabs[1];
+            promptNav.selectOnRight = pauseVibrationButton;
+            promptNav.selectOnDown = controlsBackButton;
+            pausePromptStyleButton.navigation = promptNav;
+
+            var vibNav = pauseVibrationButton.navigation;
+            vibNav.mode = Navigation.Mode.Explicit;
+            vibNav.selectOnUp = pauseControlsDeviceTabs[2];
+            vibNav.selectOnLeft = pausePromptStyleButton;
+            vibNav.selectOnDown = controlsBackButton;
+            pauseVibrationButton.navigation = vibNav;
+
+            var cBackNav = controlsBackButton.navigation;
+            cBackNav.mode = Navigation.Mode.Explicit;
+            cBackNav.selectOnUp = pausePromptStyleButton;
+            cBackNav.selectOnDown = pauseControlsDeviceTabs[1];
+            controlsBackButton.navigation = cBackNav;
 
             var initialStyle = ControllerGlyphService.ActiveStyle;
             int defaultTab = initialStyle == ControllerPromptStyle.PlayStation ? 2 : (initialStyle == ControllerPromptStyle.Xbox ? 1 : 0);
@@ -1664,10 +1719,9 @@ namespace TheLightenRoad.Frontend
         {
             var row = CreateAnchoredRect(actionTitle, parent, new Vector2(740f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
-            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(740f, 2f), new Vector2(0.5f, 0f), Vector2.zero);
+            var divRect = CreateAnchoredRect("Row Rule", row, new Vector2(740f, 1f), new Vector2(0.5f, 0f), Vector2.zero);
             var divImg = divRect.gameObject.AddComponent<Image>();
-            divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.22f);
+            divImg.color = new Color(0.40f, 0.52f, 0.72f, 0.12f);
             divImg.raycastTarget = false;
 
             var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(240f, 36f), new Vector2(0f, 0.5f), new Vector2(120f, 0f));

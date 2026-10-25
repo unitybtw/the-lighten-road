@@ -176,16 +176,10 @@ namespace TheLightenRoad.Frontend
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
             if (WingGroup != null) WingGroup.alpha = smooth;
 
-            // 5. Center-Expanding Ember-Vein Filigree Underline
+            // 5. Center-Expanding Ember-Vein Filigree Underline (suppressed to prevent flickering lines)
             if (UnderlineFiligree != null)
             {
-                var r = UnderlineFiligree.rectTransform;
-                float targetW = LeftAlignedItem ? 320f : 280f;
-                float width = Mathf.Lerp(0f, targetW, smooth);
-                r.sizeDelta = new Vector2(width, 2.5f);
-                Color idleLine = Color.clear;
-                Color focusLine = new Color(1.0f, 0.76f, 0.32f, 0.90f);
-                UnderlineFiligree.color = Color.Lerp(idleLine, focusLine, smooth);
+                UnderlineFiligree.color = Color.clear;
             }
 
             // 6. Frosted Glass Card Plate & Glowing Gold Border Frame

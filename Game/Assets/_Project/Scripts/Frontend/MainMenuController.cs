@@ -337,15 +337,14 @@ namespace TheLightenRoad.Frontend
                 }
             }
             else if (view == "realms" && activePad != null)
+            {
+                if (activePad.dpad.up.wasPressedThisFrame || (activePad.leftStick.up.wasPressedThisFrame && activePad.leftStick.ReadValue().y > 0.5f))
                 {
-                    if (activePad.dpad.up.wasPressedThisFrame || (activePad.leftStick.up.wasPressedThisFrame && activePad.leftStick.ReadValue().y > 0.5f))
-                    {
-                        SelectRealm(Mathf.Clamp(selectedRealmIndex - 1, 0, AvailableRealms.Length - 1));
-                    }
-                    else if (activePad.dpad.down.wasPressedThisFrame || (activePad.leftStick.down.wasPressedThisFrame && activePad.leftStick.ReadValue().y < -0.5f))
-                    {
-                        SelectRealm(Mathf.Clamp(selectedRealmIndex + 1, 0, AvailableRealms.Length - 1));
-                    }
+                    SelectRealm(Mathf.Clamp(selectedRealmIndex - 1, 0, AvailableRealms.Length - 1));
+                }
+                else if (activePad.dpad.down.wasPressedThisFrame || (activePad.leftStick.down.wasPressedThisFrame && activePad.leftStick.ReadValue().y < -0.5f))
+                {
+                    SelectRealm(Mathf.Clamp(selectedRealmIndex + 1, 0, AvailableRealms.Length - 1));
                 }
             }
 
@@ -532,7 +531,12 @@ namespace TheLightenRoad.Frontend
             GameObject target = null;
             if (view == "home" && playButton != null) target = playButton.gameObject;
             else if (view == "realms" && realmButtons.Count > selectedRealmIndex && realmButtons[selectedRealmIndex] != null) target = realmButtons[selectedRealmIndex].gameObject;
-            else if (view == "settings") target = settingsTabs != null && settingsTabs.Length > settingsSection && settingsTabs[settingsSection] != null ? settingsTabs[settingsSection].gameObject : null;
+            else if (view == "settings")
+            {
+                Selectable[] firstControls = { masterSlider, fullscreenToggle, controllerStyleButton, motionToggle };
+                int sec = Mathf.Clamp(settingsSection, 0, 3);
+                target = (firstControls[sec] != null) ? firstControls[sec].gameObject : (settingsTabs != null && settingsTabs.Length > sec && settingsTabs[sec] != null ? settingsTabs[sec].gameObject : null);
+            }
             else if (view == "controls" && controlsFirst != null) target = controlsFirst.gameObject;
             else if (view == "credits" && creditsFirst != null) target = creditsFirst.gameObject;
             else if (view == "quit" && quitFirst != null) target = quitFirst.gameObject;

@@ -346,7 +346,14 @@ namespace TheLightenRoad.Frontend
             if (settingsSection == 2) RefreshControllerSettingsUI();
             if (resetSettingsButton != null) resetSettingsButton.interactable = true;
             if (settingsDoneButton != null) settingsDoneButton.interactable = true;
+            ConfigureSettingsNavigation();
             RefreshSettingsFooterPrompts();
+
+            Selectable[] firstControls = { masterSlider, fullscreenToggle, controllerStyleButton, motionToggle };
+            if (EventSystem.current != null && firstControls[settingsSection] != null)
+            {
+                EventSystem.current.SetSelectedGameObject(firstControls[settingsSection].gameObject);
+            }
         }
 
         private void BuildFrameLimit(RectTransform parent)
@@ -444,14 +451,138 @@ namespace TheLightenRoad.Frontend
 
         private void ConfigureSettingsNavigation()
         {
-            Selectable[] first={masterSlider,fullscreenToggle,controllerStyleButton,motionToggle};
-            for(int i=0;i<4;i++)
+            Selectable[] first = { masterSlider, fullscreenToggle, controllerStyleButton, motionToggle };
+            Selectable lastInActiveSection = null;
+
+            for (int i = 0; i < 4; i++)
             {
-                var nav=new Navigation{mode=Navigation.Mode.Explicit,
-                    selectOnLeft=i>0?settingsTabs[i-1]:settingsDoneButton,
-                    selectOnRight=i<3?settingsTabs[i+1]:resetSettingsButton,
-                    selectOnDown=first[i]};
-                settingsTabs[i].navigation=nav;
+                if (settingsTabs[i] == null) continue;
+                var nav = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnLeft = settingsTabs[(i - 1 + 4) % 4],
+                    selectOnRight = settingsTabs[(i + 1) % 4],
+                    selectOnDown = first[i],
+                    selectOnUp = settingsDoneButton
+                };
+                settingsTabs[i].navigation = nav;
+            }
+
+            // Section 0: Audio
+            if (masterSlider != null)
+            {
+                var nav = masterSlider.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = settingsTabs[0];
+                nav.selectOnDown = musicSlider;
+                masterSlider.navigation = nav;
+            }
+            if (musicSlider != null)
+            {
+                var nav = musicSlider.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = masterSlider;
+                nav.selectOnDown = effectsSlider;
+                musicSlider.navigation = nav;
+            }
+            if (effectsSlider != null)
+            {
+                var nav = effectsSlider.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = musicSlider;
+                nav.selectOnDown = resetSettingsButton;
+                effectsSlider.navigation = nav;
+                if (settingsSection == 0) lastInActiveSection = effectsSlider;
+            }
+
+            // Section 1: Display
+            if (fullscreenToggle != null)
+            {
+                var nav = fullscreenToggle.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = settingsTabs[1];
+                nav.selectOnDown = vsyncToggle;
+                fullscreenToggle.navigation = nav;
+            }
+            if (vsyncToggle != null)
+            {
+                var nav = vsyncToggle.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = fullscreenToggle;
+                nav.selectOnDown = frameRateOptions[0] != null ? frameRateOptions[0] : resetSettingsButton;
+                vsyncToggle.navigation = nav;
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if (frameRateOptions[i] != null)
+                {
+                    var nav = frameRateOptions[i].navigation;
+                    nav.mode = Navigation.Mode.Explicit;
+                    nav.selectOnUp = vsyncToggle;
+                    nav.selectOnDown = resetSettingsButton;
+                    nav.selectOnLeft = i > 0 ? frameRateOptions[i - 1] : null;
+                    nav.selectOnRight = i < 2 ? frameRateOptions[i + 1] : null;
+                    frameRateOptions[i].navigation = nav;
+                }
+            }
+            if (settingsSection == 1) lastInActiveSection = frameRateOptions[0] != null ? frameRateOptions[0] : vsyncToggle;
+
+            // Section 2: Controls
+            if (controllerStyleButton != null)
+            {
+                var nav = controllerStyleButton.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = settingsTabs[2];
+                nav.selectOnDown = vibrationToggle;
+                controllerStyleButton.navigation = nav;
+            }
+            if (vibrationToggle != null)
+            {
+                var nav = vibrationToggle.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = controllerStyleButton;
+                nav.selectOnDown = deadzoneSlider;
+                vibrationToggle.navigation = nav;
+            }
+            if (deadzoneSlider != null)
+            {
+                var nav = deadzoneSlider.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = vibrationToggle;
+                nav.selectOnDown = resetSettingsButton;
+                deadzoneSlider.navigation = nav;
+                if (settingsSection == 2) lastInActiveSection = deadzoneSlider;
+            }
+
+            // Section 3: Accessibility
+            if (motionToggle != null)
+            {
+                var nav = motionToggle.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = settingsTabs[3];
+                nav.selectOnDown = resetSettingsButton;
+                motionToggle.navigation = nav;
+                if (settingsSection == 3) lastInActiveSection = motionToggle;
+            }
+
+            // Bottom Buttons
+            if (resetSettingsButton != null)
+            {
+                var nav = resetSettingsButton.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = lastInActiveSection != null ? lastInActiveSection : settingsTabs[settingsSection];
+                nav.selectOnRight = settingsDoneButton;
+                nav.selectOnDown = settingsTabs[settingsSection];
+                resetSettingsButton.navigation = nav;
+            }
+            if (settingsDoneButton != null)
+            {
+                var nav = settingsDoneButton.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = lastInActiveSection != null ? lastInActiveSection : settingsTabs[settingsSection];
+                nav.selectOnLeft = resetSettingsButton;
+                nav.selectOnDown = settingsTabs[settingsSection];
+                settingsDoneButton.navigation = nav;
             }
         }
 
