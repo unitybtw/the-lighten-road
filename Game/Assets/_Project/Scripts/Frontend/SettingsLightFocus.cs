@@ -80,10 +80,10 @@ namespace TheLightenRoad.Frontend
         {
             var curSelected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             bool childSelected = curSelected != null && (curSelected == gameObject || curSelected.transform.IsChildOf(transform));
-            bool focus = hovered || isSelected || IsCurrent || childSelected;
             bool enabledState = control == null || control.IsInteractable();
+            bool focus = (hovered || isSelected || childSelected) && enabledState;
 
-            blend = Mathf.MoveTowards(blend, (focus && enabledState) ? 1f : 0f, Time.unscaledDeltaTime * 9f);
+            blend = Mathf.MoveTowards(blend, focus ? 1f : 0f, Time.unscaledDeltaTime * 9f);
             float pulse = MenuPreferences.ReducedMotion ? 1f : (0.92f + 0.08f * Mathf.Sin(Time.unscaledTime * 3.2f));
 
             if (Glow != null)
@@ -110,7 +110,7 @@ namespace TheLightenRoad.Frontend
             if (Label != null)
             {
                 Color disabledCol = new Color(0.55f, 0.58f, 0.65f, 0.6f);
-                Color idleCol = new Color(0.85f, 0.90f, 0.98f, 1f);
+                Color idleCol = IsCurrent ? new Color(1.0f, 0.78f, 0.32f, 0.95f) : new Color(0.85f, 0.90f, 0.98f, 1f);
                 Color focusCol = new Color(1.0f, 0.88f, 0.55f, 1f);
                 Label.color = !enabledState ? disabledCol : Color.Lerp(idleCol, focusCol, blend);
             }

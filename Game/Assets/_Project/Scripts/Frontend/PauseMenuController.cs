@@ -735,45 +735,31 @@ namespace TheLightenRoad.Frontend
             headerRect.anchoredPosition = Vector2.zero;
 
             // Soft Radial Moonlight Glow behind Title
-            var titleGlow = CreateAnchoredRect("Title Soft Lantern Glow", mainHeader.transform, new Vector2(760f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 310f));
+            var titleGlow = CreateAnchoredRect("Title Soft Lantern Glow", mainHeader.transform, new Vector2(760f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 300f));
             var glowImg = titleGlow.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
             glowImg.color = new Color(0.65f, 0.78f, 0.96f, 0.16f);
             glowImg.raycastTarget = false;
             titleGlowRect = titleGlow;
 
-            // Top Ornate Filigree Crest
-            var topCrest = CreateAnchoredRect("Top Ornate Crest", mainHeader.transform, new Vector2(460f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 385f));
-            var topCrestImg = topCrest.gameObject.AddComponent<Image>();
-            topCrestImg.sprite = topFiligreeSprite != null ? topFiligreeSprite : filigreeSprite;
-            topCrestImg.color = moonlightSilver;
-            topCrestImg.raycastTarget = false;
-
             // Whispered Eyebrow
-            var eyebrow = CreateLabel("Eyebrow", mainHeader.transform, new Vector2(0f, 345f), new Vector2(620f, 24f),
-                "--   GAME PAUSED   --", 11.5f, TextAlignmentOptions.Center, moonlightSilver);
+            var eyebrow = CreateLabel("Eyebrow", mainHeader.transform, new Vector2(0f, 335f), new Vector2(620f, 24f),
+                "--   GAME PAUSED   --", 12f, TextAlignmentOptions.Center, moonlightSilver);
             eyebrow.characterSpacing = 6.5f;
 
             // Monumental Center Title: PAUSED
-            var title = CreateLabel("Title", mainHeader.transform, new Vector2(0f, 300f), new Vector2(640f, 60f),
+            var title = CreateLabel("Title", mainHeader.transform, new Vector2(0f, 290f), new Vector2(640f, 60f),
                 "PAUSED", 52f, TextAlignmentOptions.Center, radiantIvory);
             title.fontStyle = FontStyles.Bold;
             title.characterSpacing = 10f;
 
-            // Lower Ornate Filigree Divider under Title
-            var midCrest = CreateAnchoredRect("Title Bottom Filigree", mainHeader.transform, new Vector2(520f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 252f));
-            var midCrestImg = midCrest.gameObject.AddComponent<Image>();
-            midCrestImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
-            midCrestImg.color = moonlightSilver;
-            midCrestImg.raycastTarget = false;
-
             // Chamber Title Whisper
-            chamberTitleLabel = CreateLabel("ChamberTitle", mainHeader.transform, new Vector2(0f, 222f), new Vector2(640f, 26f),
+            chamberTitleLabel = CreateLabel("ChamberTitle", mainHeader.transform, new Vector2(0f, 240f), new Vector2(640f, 26f),
                 "CHAMBER 01-02   -   THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
             chamberTitleLabel.characterSpacing = 4f;
 
             // Memento Recovery Badge
-            mementoBadgeLabel = CreateLabel("MementoBadge", mainHeader.transform, new Vector2(0f, 172f), new Vector2(680f, 50f),
+            mementoBadgeLabel = CreateLabel("MementoBadge", mainHeader.transform, new Vector2(0f, 195f), new Vector2(680f, 40f),
                 "", 14f, TextAlignmentOptions.Center, radiantIvory);
 
             // Sub-panels (Frameless Center Stage)
@@ -827,18 +813,12 @@ namespace TheLightenRoad.Frontend
             r.sizeDelta = new Vector2(780f, 500f);
             r.anchoredPosition = new Vector2(0f, -80f);
 
-            var titleLabel = CreateLabel("SettingsTitle", settingsPanel.transform, new Vector2(0f, 175f), new Vector2(600f, 32f),
+            var titleLabel = CreateLabel("SettingsTitle", settingsPanel.transform, new Vector2(0f, 160f), new Vector2(600f, 32f),
                 "SETTINGS", 22f, TextAlignmentOptions.Center, radiantIvory);
             titleLabel.fontStyle = FontStyles.Bold;
             titleLabel.characterSpacing = 5f;
 
-            var crest = CreateAnchoredRect("Settings Filigree", settingsPanel.transform, new Vector2(480f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, 145f));
-            var crestImg = crest.gameObject.AddComponent<Image>();
-            crestImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
-            crestImg.color = amberGold;
-            crestImg.raycastTarget = false;
-
-            float y = 105f;
+            float y = 100f;
             masterSlider = CreateSlider("MasterSlider", r, new Vector2(0f, y), "Master Volume", "Overall audio level", v =>
             {
                 MenuPreferences.SetAudio(v, MenuPreferences.Music, MenuPreferences.Effects);
@@ -1081,19 +1061,19 @@ namespace TheLightenRoad.Frontend
             var plateImg = plateRect.gameObject.AddComponent<Image>();
             plateImg.sprite = thinBorderSprite;
             plateImg.type = Image.Type.Sliced;
-            plateImg.color = isPrimary ? new Color(0.025f, 0.040f, 0.065f, 0.78f) : new Color(0.012f, 0.020f, 0.038f, 0.68f);
+            plateImg.color = new Color(0.012f, 0.020f, 0.038f, 0.68f);
             plateImg.raycastTarget = true;
 
             var borderRect = CreateStretchRect("Card Border", itemRect);
             var borderImg = borderRect.gameObject.AddComponent<Image>();
             borderImg.sprite = thinBorderSprite;
             borderImg.type = Image.Type.Sliced;
-            borderImg.color = isPrimary ? new Color(0.92f, 0.68f, 0.28f, 0.45f) : new Color(0.48f, 0.62f, 0.82f, 0.25f);
+            borderImg.color = new Color(0.48f, 0.62f, 0.82f, 0.25f);
             borderImg.raycastTarget = false;
 
             var wingContainer = CreateStretchRect("Ornate Wings", itemRect);
             var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
-            wingGroup.alpha = isPrimary ? 0.25f : 0f;
+            wingGroup.alpha = 0f;
             wingGroup.blocksRaycasts = false;
 
             float wingOffset = isPrimary ? 295f : 275f;

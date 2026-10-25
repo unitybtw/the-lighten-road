@@ -261,6 +261,9 @@ namespace TheLightenRoad.Frontend.Tests
             }
 
             pause.Pause();
+            for (int f = 0; f < 10; f++) yield return null;
+            SaveCamShot(cam, rt, System.IO.Path.Combine(outDir, "pause_menu_main.png"));
+
             pause.ShowControlsView();
             pause.SetPauseControlsDeviceTab(2);
             for (int f = 0; f < 10; f++) yield return null;
