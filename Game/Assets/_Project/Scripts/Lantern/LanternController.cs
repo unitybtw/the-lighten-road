@@ -133,7 +133,9 @@ namespace TheLightenRoad.Lantern
         private void Update()
         {
             keyboard = Keyboard.current;
-            if (keyboard != null && keyboard[toggleFlareKey].wasPressedThisFrame)
+            var pad = Gamepad.current;
+            bool gamepadFlare = pad != null && (pad.buttonWest.wasPressedThisFrame || pad.rightTrigger.wasPressedThisFrame || pad.rightShoulder.wasPressedThisFrame);
+            if ((keyboard != null && keyboard[toggleFlareKey].wasPressedThisFrame) || gamepadFlare)
                 ToggleFlare();
 
             TickScout(Time.deltaTime);

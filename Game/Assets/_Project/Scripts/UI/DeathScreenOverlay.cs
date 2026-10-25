@@ -287,6 +287,8 @@ namespace TheLightenRoad.UI
             // Configure archetype-specific visual groups and reset particles
             ConfigureArchetype(reason);
 
+            ControllerGlyphService.Rumble(0.65f, 0.85f, 0.40f);
+
             if (SoundEffectManager.HasInstance)
                 SoundEffectManager.Instance.PlayFlareExtinguish();
 
@@ -731,11 +733,18 @@ namespace TheLightenRoad.UI
                 UpdateButton(buttons[i], i == selectedButtonIndex, sMenu, pulse, dt, i == selectedButtonIndex ? buttonPunch : 0f);
 
             // 7. Hint
-            bool usePad = Gamepad.current != null;
-            if (usePad != lastHintUsedGamepad || string.IsNullOrEmpty(hintText.text))
+            var style = ControllerGlyphService.ActiveStyle;
+            if (style == ControllerPromptStyle.PlayStation)
             {
-                lastHintUsedGamepad = usePad;
-                hintText.text = usePad ? "D-PAD  SELECT        A  CONFIRM" : "W / S  SELECT        ENTER  CONFIRM";
+                hintText.text = "D-PAD / LS  SELECT        ✕  CONFIRM        ○  RETURN";
+            }
+            else if (style == ControllerPromptStyle.Xbox)
+            {
+                hintText.text = "D-PAD / LS  SELECT        A  CONFIRM        B  RETURN";
+            }
+            else
+            {
+                hintText.text = "W / S / ARROWS  SELECT        ENTER  CONFIRM        ESC  RETURN";
             }
             float hintAlpha = armed ? sMenu : sMenu * 0.35f;
             hintText.color = new Color(0.45f, 0.58f, 0.54f, hintAlpha * 0.9f);

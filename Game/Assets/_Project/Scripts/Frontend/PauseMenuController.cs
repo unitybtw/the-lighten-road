@@ -248,8 +248,9 @@ namespace TheLightenRoad.Frontend
 
             bool escapePressed = k != null && (k.escapeKey.wasPressedThisFrame || k.pKey.wasPressedThisFrame);
             bool startPressed = g != null && g.startButton.wasPressedThisFrame;
+            bool eastPressed = g != null && g.buttonEast.wasPressedThisFrame;
 
-            if (escapePressed || startPressed)
+            if (escapePressed || startPressed || (IsPaused && eastPressed))
             {
                 if (!IsPaused)
                 {
@@ -827,6 +828,15 @@ namespace TheLightenRoad.Frontend
             settingsBackButton = CreateEtherealActionButton("SettingsBackButton", r, "<  Return to Pause", new Vector2(160f, -205f), ShowMainView, isPrimary: true, width: 260f);
         }
 
+        private readonly TMP_Text[] pauseControlsRowKeyLabels = new TMP_Text[6];
+        private readonly Button[] pauseControlsDeviceTabs = new Button[3];
+        private readonly TMP_Text[] pauseControlsDeviceTabLabels = new TMP_Text[3];
+        private int selectedPauseControlsDeviceTab = 0;
+        private Button pausePromptStyleButton;
+        private TMP_Text pausePromptStyleText;
+        private Button pauseVibrationButton;
+        private TMP_Text pauseVibrationText;
+
         private void BuildControlsPanel(Transform parent)
         {
             controlsPanel = new GameObject("ControlsPanel", typeof(RectTransform), typeof(CanvasGroup));
@@ -834,30 +844,133 @@ namespace TheLightenRoad.Frontend
             controlsPanelGroup = controlsPanel.GetComponent<CanvasGroup>();
             var r = controlsPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
-            r.sizeDelta = new Vector2(780f, 500f);
-            r.anchoredPosition = new Vector2(0f, -80f);
+            r.sizeDelta = new Vector2(780f, 530f);
+            r.anchoredPosition = new Vector2(0f, -70f);
 
-            var titleLabel = CreateLabel("ControlsTitle", controlsPanel.transform, new Vector2(0f, 175f), new Vector2(600f, 32f),
-                "CONTROLS", 22f, TextAlignmentOptions.Center, radiantIvory);
+            var titleLabel = CreateLabel("ControlsTitle", controlsPanel.transform, new Vector2(0f, 210f), new Vector2(600f, 30f),
+                "CONTROLS & GAMEPAD", 21f, TextAlignmentOptions.Center, radiantIvory);
             titleLabel.fontStyle = FontStyles.Bold;
             titleLabel.characterSpacing = 5f;
 
-            var crest = CreateAnchoredRect("Controls Filigree", controlsPanel.transform, new Vector2(480f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, 145f));
-            var crestImg = crest.gameObject.AddComponent<Image>();
-            crestImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
-            crestImg.color = amberGold;
-            crestImg.raycastTarget = false;
+            // 3-way Device Switcher at top
+            var tabRow = CreateAnchoredRect("Pause Controls Tabs", controlsPanel.transform, new Vector2(680f, 36f), Vector2.one * 0.5f, new Vector2(0f, 172f));
+            string[] deviceTabNames = { "KEYBOARD", "XBOX CONTROLLER", "PLAYSTATION" };
+            float[] tabWidths = { 180f, 190f, 180f };
+            float[] tabX = { -200f, 0f, 200f };
 
-            float y = 100f;
-            float step = 45f;
-            CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y);
-            CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step);
-            CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2);
-            CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3);
-            CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4);
-            CreateControlRow(r, "[ M  /  N ]", "VOLUME SHORTCUTS", "Mute or adjust music / sound effects", y - step * 5);
+            for (int i = 0; i < 3; i++)
+            {
+                int tabIdx = i;
+                pauseControlsDeviceTabs[i] = CreateEtherealActionButton("Tab_" + i, tabRow, deviceTabNames[i], new Vector2(tabX[i], 0f), () => SetPauseControlsDeviceTab(tabIdx), isPrimary: false, width: tabWidths[i]);
+                pauseControlsDeviceTabLabels[i] = pauseControlsDeviceTabs[i].GetComponentInChildren<TMP_Text>();
+                if (pauseControlsDeviceTabLabels[i] != null) pauseControlsDeviceTabLabels[i].fontSize = 12f;
+            }
+
+            float y = 120f;
+            float step = 40f;
+            pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y);
+            pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step);
+            pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2);
+            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3);
+            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4);
+            pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5);
+
+            // Quick options bar: Prompt Style and Vibration
+            pausePromptStyleButton = CreateEtherealActionButton("PausePromptStyleBtn", r, "PROMPT: < AUTO >", new Vector2(-155f, -150f), CyclePausePromptStyle, isPrimary: false, width: 280f);
+            pausePromptStyleText = pausePromptStyleButton.GetComponentInChildren<TMP_Text>();
+            if (pausePromptStyleText != null) pausePromptStyleText.fontSize = 12f;
+
+            pauseVibrationButton = CreateEtherealActionButton("PauseVibrationBtn", r, "RUMBLE: < ENABLED >", new Vector2(155f, -150f), TogglePauseVibration, isPrimary: false, width: 280f);
+            pauseVibrationText = pauseVibrationButton.GetComponentInChildren<TMP_Text>();
+            if (pauseVibrationText != null) pauseVibrationText.fontSize = 12f;
 
             controlsBackButton = CreateEtherealActionButton("ControlsBackButton", r, "<  Return to Pause", new Vector2(0f, -205f), ShowMainView, isPrimary: true, width: 260f);
+
+            var initialStyle = ControllerGlyphService.ActiveStyle;
+            int defaultTab = initialStyle == ControllerPromptStyle.PlayStation ? 2 : (initialStyle == ControllerPromptStyle.Xbox ? 1 : 0);
+            SetPauseControlsDeviceTab(defaultTab);
+            RefreshPauseControlsQuickOptions();
+        }
+
+        private void CyclePausePromptStyle()
+        {
+            int current = MenuPreferences.ControllerStyle;
+            int next = (current + 1) % 4;
+            MenuPreferences.SetControllerStyle(next);
+            RefreshPauseControlsQuickOptions();
+            var active = ControllerGlyphService.ActiveStyle;
+            int targetTab = active == ControllerPromptStyle.PlayStation ? 2 : (active == ControllerPromptStyle.Xbox ? 1 : 0);
+            SetPauseControlsDeviceTab(targetTab);
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+        }
+
+        private void TogglePauseVibration()
+        {
+            bool current = MenuPreferences.Vibration;
+            MenuPreferences.SetVibration(!current);
+            RefreshPauseControlsQuickOptions();
+            if (!current && Application.isPlaying)
+            {
+                ControllerGlyphService.Rumble(0.4f, 0.6f, 0.15f);
+                SoundEffectManager.Instance?.PlayUIClick();
+            }
+        }
+
+        private void RefreshPauseControlsQuickOptions()
+        {
+            if (pausePromptStyleText != null)
+            {
+                int style = MenuPreferences.ControllerStyle;
+                string label = "PROMPT: < AUTO >";
+                if (style == 1) label = "PROMPT: < XBOX >";
+                else if (style == 2) label = "PROMPT: < PLAYSTATION >";
+                else if (style == 3) label = "PROMPT: < KEYBOARD >";
+                pausePromptStyleText.text = label;
+            }
+            if (pauseVibrationText != null)
+            {
+                pauseVibrationText.text = MenuPreferences.Vibration ? "RUMBLE: < ON >" : "RUMBLE: < OFF >";
+            }
+        }
+
+        public void SetPauseControlsDeviceTab(int tab)
+        {
+            selectedPauseControlsDeviceTab = Mathf.Clamp(tab, 0, 2);
+            for (int i = 0; i < 3; i++)
+            {
+                bool active = (i == selectedPauseControlsDeviceTab);
+                if (pauseControlsDeviceTabLabels[i] != null) pauseControlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+            }
+
+            if (pauseControlsRowKeyLabels[0] == null) return;
+
+            if (selectedPauseControlsDeviceTab == 0) // Keyboard
+            {
+                pauseControlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
+                pauseControlsRowKeyLabels[1].text = "[ SPACE  /  W ]";
+                pauseControlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
+                pauseControlsRowKeyLabels[3].text = "[ F  /  L-CLICK ]";
+                pauseControlsRowKeyLabels[4].text = "[ E  (HOLD) ]";
+                pauseControlsRowKeyLabels[5].text = "[ ESC / P ]";
+            }
+            else if (selectedPauseControlsDeviceTab == 1) // Xbox
+            {
+                pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
+                pauseControlsRowKeyLabels[1].text = "[ A ] (SOUTH)";
+                pauseControlsRowKeyLabels[2].text = "[ RT / LS ]";
+                pauseControlsRowKeyLabels[3].text = "[ RT / X ]";
+                pauseControlsRowKeyLabels[4].text = "[ Y / B ]";
+                pauseControlsRowKeyLabels[5].text = "[ MENU / START ]";
+            }
+            else // PlayStation
+            {
+                pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
+                pauseControlsRowKeyLabels[1].text = "[ ✕ ] (CROSS)";
+                pauseControlsRowKeyLabels[2].text = "[ R2 / L3 ]";
+                pauseControlsRowKeyLabels[3].text = "[ R2 / □ ]";
+                pauseControlsRowKeyLabels[4].text = "[ △ / ○ ]";
+                pauseControlsRowKeyLabels[5].text = "[ OPTIONS ]";
+            }
         }
 
         private Button CreateFramelessMenuButton(
@@ -1165,7 +1278,7 @@ namespace TheLightenRoad.Frontend
             return toggle;
         }
 
-        private void CreateControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
+        private TMP_Text CreateControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
         {
             var row = CreateAnchoredRect(actionTitle, parent, new Vector2(740f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
@@ -1198,6 +1311,8 @@ namespace TheLightenRoad.Frontend
             descTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             descTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             descTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
+
+            return keyTxt;
         }
 
         private TMP_Text CreateLabel(string name, Transform parent, Vector2 pos, Vector2 size, string text, float fontSize, TextAlignmentOptions align, Color color)

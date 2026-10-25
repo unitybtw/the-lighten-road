@@ -23,6 +23,9 @@ namespace TheLightenRoad.Frontend
         public static bool VSync => PlayerPrefs.GetInt(Prefix + "VSync", QualitySettings.vSyncCount > 0 ? 1 : 0) == 1;
         public static int TargetFPS => PlayerPrefs.GetInt(Prefix + "TargetFPS", 60);
         public static int SelectedRealmIndex => PlayerPrefs.GetInt(Prefix + "SelectedRealm", 0);
+        public static int ControllerStyle => PlayerPrefs.GetInt(Prefix + "ControllerStyle", 0);
+        public static bool Vibration => PlayerPrefs.GetInt(Prefix + "VibrationEnabled", 1) == 1;
+        public static float StickDeadzone => PlayerPrefs.GetFloat(Prefix + "StickDeadzone", 0.15f);
 
         public static void EnsureActive()
         {
@@ -100,6 +103,27 @@ namespace TheLightenRoad.Frontend
             PlayerPrefs.SetInt(Prefix + "SelectedRealm", Mathf.Max(0, index));
         }
 
+        public static void SetControllerStyle(int style)
+        {
+            PlayerPrefs.SetInt(Prefix + "ControllerStyle", Mathf.Clamp(style, 0, 3));
+            ControllerGlyphService.ConfiguredStyle = (ControllerPromptStyle)style;
+            Save();
+        }
+
+        public static void SetVibration(bool enabled)
+        {
+            PlayerPrefs.SetInt(Prefix + "VibrationEnabled", enabled ? 1 : 0);
+            ControllerGlyphService.VibrationEnabled = enabled;
+            Save();
+        }
+
+        public static void SetStickDeadzone(float deadzone)
+        {
+            PlayerPrefs.SetFloat(Prefix + "StickDeadzone", Mathf.Clamp(deadzone, 0.05f, 0.40f));
+            ControllerGlyphService.StickDeadzone = deadzone;
+            Save();
+        }
+
         public static bool IsRealmCompleted(int index) => PlayerPrefs.GetInt(Prefix + "RealmCompleted." + index, 0) == 1;
 
         public static void SetRealmCompleted(int index, bool completed = true)
@@ -115,6 +139,9 @@ namespace TheLightenRoad.Frontend
             SetFullscreen(true);
             SetVSync(true);
             SetTargetFPS(60);
+            SetControllerStyle(0);
+            SetVibration(true);
+            SetStickDeadzone(0.15f);
             // Restoring presentation preferences must never erase chapter progress.
             Save();
         }

@@ -1,6 +1,7 @@
 using TheLightenRoad.Audio;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
+using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -126,6 +127,8 @@ namespace TheLightenRoad.Frontend
 
         private void OnEnable()
         {
+            ControllerGlyphService.OnPromptStyleChanged -= RefreshText;
+            ControllerGlyphService.OnPromptStyleChanged += RefreshText;
             FindPlayerReferences();
             if (playerMotor != null)
             {
@@ -141,6 +144,7 @@ namespace TheLightenRoad.Frontend
 
         private void OnDisable()
         {
+            ControllerGlyphService.OnPromptStyleChanged -= RefreshText;
             if (playerMotor != null)
             {
                 playerMotor.OnJumped -= HandlePlayerJumped;
@@ -271,14 +275,41 @@ namespace TheLightenRoad.Frontend
             promptText.raycastTarget = false;
         }
 
+        private string GetEffectiveKeyHint()
+        {
+            var style = ControllerGlyphService.ActiveStyle;
+            if (style == ControllerPromptStyle.PlayStation)
+            {
+                switch (requiredAction)
+                {
+                    case WhisperAction.Jump: return "✕";
+                    case WhisperAction.Flare: return "R2 / □";
+                    case WhisperAction.Sprint: return "R2 / L3";
+                    case WhisperAction.Interact: return "△";
+                }
+            }
+            else if (style == ControllerPromptStyle.Xbox)
+            {
+                switch (requiredAction)
+                {
+                    case WhisperAction.Jump: return "A";
+                    case WhisperAction.Flare: return "RT / X";
+                    case WhisperAction.Sprint: return "RT / LS";
+                    case WhisperAction.Interact: return "Y";
+                }
+            }
+            return keyHint;
+        }
+
         private void RefreshText()
         {
             if (keycapText != null)
             {
-                keycapText.text = keyHint;
+                string hint = GetEffectiveKeyHint();
+                keycapText.text = hint;
                 if (keycapBg != null)
                 {
-                    float width = Mathf.Max(70f, keyHint.Length * 16f + 30f);
+                    float width = Mathf.Max(70f, hint.Length * 16f + 30f);
                     keycapBg.rectTransform.sizeDelta = new Vector2(width, 32f);
                 }
             }

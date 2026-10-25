@@ -280,6 +280,20 @@ namespace TheLightenRoad.Frontend
                 else ShowHome();
             }
 
+            if (view == "settings" && Gamepad.current != null)
+            {
+                if (Gamepad.current.leftShoulder.wasPressedThisFrame)
+                {
+                    SelectSettingsSection((settingsSection - 1 + 4) % 4);
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                }
+                else if (Gamepad.current.rightShoulder.wasPressedThisFrame)
+                {
+                    SelectSettingsSection((settingsSection + 1) % 4);
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                }
+            }
+
             if (!introDone && age >= 2.9f)
             {
                 SkipIntro();
@@ -719,6 +733,7 @@ namespace TheLightenRoad.Frontend
             if (fullscreenToggle != null) fullscreenToggle.SetIsOnWithoutNotify(MenuPreferences.Fullscreen);
             if (vsyncToggle != null) vsyncToggle.SetIsOnWithoutNotify(MenuPreferences.VSync);
             if (motionToggle != null) motionToggle.SetIsOnWithoutNotify(MenuPreferences.ReducedMotion);
+            if (vibrationToggle != null) vibrationToggle.SetIsOnWithoutNotify(MenuPreferences.Vibration);
 
             if (masterSlider != null) UpdateSliderPercentLabel(masterSlider);
             if (musicSlider != null) UpdateSliderPercentLabel(musicSlider);
@@ -726,7 +741,9 @@ namespace TheLightenRoad.Frontend
             UpdateSwitchVisual(fullscreenToggle);
             UpdateSwitchVisual(vsyncToggle);
             UpdateSwitchVisual(motionToggle);
+            UpdateSwitchVisual(vibrationToggle);
             RefreshSettingsFrameRate();
+            RefreshControllerSettingsUI();
         }
 
         private void OnAudioSliderChanged(float _)
@@ -1414,21 +1431,86 @@ namespace TheLightenRoad.Frontend
         // SUB-VIEW 3: CONTROLS & GUIDE (CENTERED HOLLOW-KNIGHT KEYBINDING ROWS)
         // =====================================================================
 
+        private readonly TMP_Text[] controlsRowKeyLabels = new TMP_Text[6];
+        private readonly Button[] controlsDeviceTabs = new Button[3];
+        private readonly TMP_Text[] controlsDeviceTabLabels = new TMP_Text[3];
+        private int selectedControlsDeviceTab = 0;
+
         private void BuildFramelessControlsView()
         {
-            var surface = CreateEtherealSubViewFrame(controls, "CONTROLS", "KEYBOARD & MOUSE");
+            var surface = CreateEtherealSubViewFrame(controls, "CONTROLS", "KEYBOARD, XBOX & PLAYSTATION");
 
-            CreateCenteredControlRow(surface, "[ A / D ]", "MOVE", "Walk left and right across the archive", 145f);
-            CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Variable height jump and ledge climb", 92f);
-            CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 39f);
-            CreateCenteredControlRow(surface, "[ F / L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -14f);
-            CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Channel embers into ancient conduits", -67f);
-            CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f);
+            // 3-way Device Switcher at top
+            var tabRow = CreateAnchoredRect("Controls Device Tabs", surface, new Vector2(680f, 40f), Vector2.one * 0.5f, new Vector2(0f, 185f));
+            string[] deviceTabNames = { "KEYBOARD", "XBOX PAD", "PLAYSTATION" };
+            float[] tabWidths = { 190f, 160f, 190f };
+            float[] tabX = { -190f, 0f, 190f };
+
+            for (int i = 0; i < 3; i++)
+            {
+                int tabIdx = i;
+                controlsDeviceTabs[i] = SettingsButton(tabRow, deviceTabNames[i], new Vector2(tabX[i], 0f), new Vector2(tabWidths[i], 38f), () => SetControlsDeviceTab(tabIdx));
+                controlsDeviceTabLabels[i] = controlsDeviceTabs[i].GetComponentInChildren<TMP_Text>();
+                controlsDeviceTabLabels[i].fontSize = 13.5f;
+            }
+
+            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right across the archive", 135f);
+            controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Variable height jump and ledge climb", 84f);
+            controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f);
+            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F / L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -18f);
+            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Channel embers into ancient conduits", -69f);
+            controlsRowKeyLabels[5] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f);
 
             controlsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -268f), ShowHome, isPrimary: true, width: 310f);
+
+            var initialStyle = ControllerGlyphService.ActiveStyle;
+            int defaultTab = initialStyle == ControllerPromptStyle.PlayStation ? 2 : (initialStyle == ControllerPromptStyle.Xbox ? 1 : 0);
+            SetControlsDeviceTab(defaultTab);
         }
 
-        private void CreateCenteredControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
+        public void SetControlsDeviceTab(int tab)
+        {
+            selectedControlsDeviceTab = Mathf.Clamp(tab, 0, 2);
+            for (int i = 0; i < 3; i++)
+            {
+                bool active = (i == selectedControlsDeviceTab);
+                if (controlsDeviceTabLabels[i] != null) controlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+                var marker = controlsDeviceTabs[i] != null ? controlsDeviceTabs[i].transform.Find("Selection rule") : null;
+                if (marker != null) marker.gameObject.SetActive(active);
+            }
+
+            if (controlsRowKeyLabels[0] == null) return;
+
+            if (selectedControlsDeviceTab == 0) // Keyboard
+            {
+                controlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
+                controlsRowKeyLabels[1].text = "[ SPACE ]";
+                controlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
+                controlsRowKeyLabels[3].text = "[ F / L-CLICK ]";
+                controlsRowKeyLabels[4].text = "[ E ]";
+                controlsRowKeyLabels[5].text = "[ ESC ]";
+            }
+            else if (selectedControlsDeviceTab == 1) // Xbox
+            {
+                controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
+                controlsRowKeyLabels[1].text = "[ A ]";
+                controlsRowKeyLabels[2].text = "[ RT / LS ]";
+                controlsRowKeyLabels[3].text = "[ RT / X ]";
+                controlsRowKeyLabels[4].text = "[ Y / B ]";
+                controlsRowKeyLabels[5].text = "[ MENU / START ]";
+            }
+            else // PlayStation
+            {
+                controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
+                controlsRowKeyLabels[1].text = "[ ✕ ]";
+                controlsRowKeyLabels[2].text = "[ R2 / L3 ]";
+                controlsRowKeyLabels[3].text = "[ R2 / □ ]";
+                controlsRowKeyLabels[4].text = "[ △ / ○ ]";
+                controlsRowKeyLabels[5].text = "[ OPTIONS ]";
+            }
+        }
+
+        private TMP_Text CreateCenteredControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
         {
             var row = CreateAnchoredRect(actionTitle, parent, new Vector2(680f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
 
@@ -1440,13 +1522,13 @@ namespace TheLightenRoad.Frontend
             var descTxt = CreateLabel("Description", row, desc, 11.5f, moonlightSilver, new Vector2(420f, 20f), new Vector2(0f, 0.5f), new Vector2(12f, -10f), pivot: new Vector2(0f, 0.5f));
 
             // Right of center: Ornate Keybinding Emblem with Warm Lantern Glow
-            var keyGlow = CreateAnchoredRect("Key Lantern Aura", row, new Vector2(180f, 34f), new Vector2(1f, 0.5f), new Vector2(-95f, 0f), pivot: new Vector2(0.5f, 0.5f));
+            var keyGlow = CreateAnchoredRect("Key Lantern Aura", row, new Vector2(210f, 34f), new Vector2(1f, 0.5f), new Vector2(-110f, 0f), pivot: new Vector2(0.5f, 0.5f));
             var keyGlowImg = keyGlow.gameObject.AddComponent<Image>();
             keyGlowImg.sprite = softRadialSprite;
             keyGlowImg.color = new Color(1.0f, 0.72f, 0.26f, 0.16f);
             keyGlowImg.raycastTarget = false;
 
-            var keyTxt = CreateLabel("Key Text", row, keys, 14f, amberGold, new Vector2(190f, 32f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), pivot: new Vector2(1f, 0.5f));
+            var keyTxt = CreateLabel("Key Text", row, keys, 14f, amberGold, new Vector2(220f, 32f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), pivot: new Vector2(1f, 0.5f));
             keyTxt.alignment = TextAlignmentOptions.Right;
             keyTxt.fontStyle = FontStyles.Bold;
             keyTxt.characterSpacing = 2.5f;
@@ -1457,6 +1539,8 @@ namespace TheLightenRoad.Frontend
             divImg.sprite = filigreeSprite;
             divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.22f);
             divImg.raycastTarget = false;
+
+            return keyTxt;
         }
 
         // =====================================================================

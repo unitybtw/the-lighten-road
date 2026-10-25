@@ -1,4 +1,5 @@
 using TheLightenRoad.Audio;
+using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,9 +9,9 @@ namespace TheLightenRoad.Frontend
 {
     public sealed partial class MainMenuController
     {
-        private readonly GameObject[] settingsSections = new GameObject[3];
-        private readonly Button[] settingsTabs = new Button[3];
-        private readonly TMP_Text[] settingsTabLabels = new TMP_Text[3];
+        private readonly GameObject[] settingsSections = new GameObject[4];
+        private readonly Button[] settingsTabs = new Button[4];
+        private readonly TMP_Text[] settingsTabLabels = new TMP_Text[4];
         private readonly Button[] frameRateOptions = new Button[3];
         private readonly TMP_Text[] frameRateLabels = new TMP_Text[3];
         private static readonly int[] FrameLimits = {60,120,-1};
@@ -22,9 +23,18 @@ namespace TheLightenRoad.Frontend
         public int CurrentSettingsSection => settingsSection;
         public bool IsSettingsResetOpen => settingsResetPanel != null && settingsResetPanel.activeSelf;
 
+        // Controller Settings elements
+        private Button controllerStyleButton;
+        private TMP_Text controllerStyleValueText;
+        private Toggle vibrationToggle;
+        private TMP_Text vibrationToggleValueText;
+        private Slider deadzoneSlider;
+        private TMP_Text deadzoneValueText;
+        private TMP_Text controllerMappingSummaryText;
+
         private void BuildSettingsWorkspace()
         {
-            var surface=CreateEtherealSubViewFrame(settings,"OPTIONS","AUDIO, DISPLAY & ACCESSIBILITY");
+            var surface=CreateEtherealSubViewFrame(settings,"OPTIONS","AUDIO, DISPLAY, CONTROLS & ACCESSIBILITY");
             var backdrop=CreateAnchoredRect("Settings reading surface",surface,new Vector2(1580,1120),Vector2.one*.5f,Vector2.zero);
             backdrop.SetAsFirstSibling();
             var shade=backdrop.gameObject.AddComponent<Image>();
@@ -32,16 +42,23 @@ namespace TheLightenRoad.Frontend
             BuildSettingsLanterns(surface);
             SettingsRule(surface,"Top tab rule",new Vector2(0,144),720);
             SettingsRule(surface,"Footer rule",new Vector2(0,-230),720);
-            var names=new[]{"Audio","Display","Accessibility"};
-            var descriptions=new[]{"Master, music and sound effects volumes.","Window mode, vertical sync and frame rate.","Motion and visual comfort settings."};
-            for(int i=0;i<3;i++)
+            var names=new[]{"Audio","Display","Controls","Accessibility"};
+            var descriptions=new[]{
+                "Master, music and sound effects volumes.",
+                "Window mode, vertical sync and frame rate.",
+                "Controller type (Xbox / PlayStation), prompts and vibration.",
+                "Motion and visual comfort settings."
+            };
+            for(int i=0;i<4;i++)
             {
                 int index=i;
-                settingsTabs[i]=SettingsButton(surface,names[i],new Vector2((i-1)*240f,182f),new Vector2(218,48),()=>SelectSettingsSection(index));
+                float xOffset = (i - 1.5f) * 170f;
+                settingsTabs[i]=SettingsButton(surface,names[i],new Vector2(xOffset,182f),new Vector2(162,48),()=>SelectSettingsSection(index));
                 settingsTabLabels[i]=settingsTabs[i].GetComponentInChildren<TMP_Text>();
+                settingsTabLabels[i].fontSize = 13.5f;
                 var section=CreateAnchoredRect(names[i]+" settings",surface,new Vector2(720,350),Vector2.one*.5f,new Vector2(0,-22));
                 settingsSections[i]=section.gameObject;
-                var desc=SettingsText(section,descriptions[i],new Vector2(0,145),13.5f,moonlightSilver,720);
+                var desc=SettingsText(section,descriptions[i],new Vector2(0,145),13f,moonlightSilver,720);
                 desc.alignment=TextAlignmentOptions.Center;
             }
             var audio=(RectTransform)settingsSections[0].transform;
@@ -59,7 +76,30 @@ namespace TheLightenRoad.Frontend
             vsyncToggle=CreateEtherealToggle(display,"V-Sync","Match the display refresh rate",-6,out vsyncToggleValueText,OnVSyncToggled);
             BuildFrameLimit(display);
 
-            var accessibility=(RectTransform)settingsSections[2].transform;
+            // Controls settings section (index 2)
+            var controls=(RectTransform)settingsSections[2].transform;
+            var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,92));
+            var styleTitle=CreateLabel("Title",styleRow,"PROMPT GLYPHS",15f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,10),new Vector2(0,0.5f));
+            styleTitle.fontStyle=FontStyles.Bold; styleTitle.characterSpacing=2.5f;
+            var styleSub=CreateLabel("Subtitle",styleRow,"Xbox (A/B/X/Y), PlayStation (✕/○/□/△) or PC",11.5f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
+            controllerStyleButton=SettingsButton(styleRow,"< AUTO-DETECT >",new Vector2(175,0),new Vector2(250,38),CycleControllerStyle);
+            controllerStyleValueText=controllerStyleButton.GetComponentInChildren<TMP_Text>();
+            controllerStyleValueText.fontSize=12.5f;
+
+            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Haptic rumble on jump, flare and impacts",22,out vibrationToggleValueText,OnVibrationToggled);
+
+            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-48,out deadzoneValueText);
+            deadzoneSlider.minValue=0.05f; deadzoneSlider.maxValue=0.40f;
+            deadzoneSlider.onValueChanged.AddListener(OnDeadzoneSliderChanged);
+
+            var guideCard=CreateAnchoredRect("Controller Mapping Preview",controls,new Vector2(680,68),Vector2.one*0.5f,new Vector2(0,-120));
+            var guideBg=guideCard.gameObject.AddComponent<Image>();
+            guideBg.sprite=softRadialSprite; guideBg.color=new Color(0.012f,0.024f,0.045f,0.85f); guideBg.raycastTarget=false;
+            controllerMappingSummaryText=SettingsText(guideCard,"",Vector2.zero,11.5f,amberGold,660);
+            controllerMappingSummaryText.alignment=TextAlignmentOptions.Center;
+            controllerMappingSummaryText.characterSpacing=1.2f;
+
+            var accessibility=(RectTransform)settingsSections[3].transform;
             motionToggle=CreateEtherealToggle(accessibility,"Reduced motion","Reduce parallax, sway and HUD motion",84,out motionToggleValueText,OnReducedMotionToggled);
             var comfortCard=CreateAnchoredRect("Motion Comfort Card",accessibility,new Vector2(680,104),Vector2.one*.5f,new Vector2(0,-36));
             var titleComfort=SettingsText(comfortCard,"MOTION COMFORT",new Vector2(0,22),15f,radiantIvory,680);
@@ -81,7 +121,7 @@ namespace TheLightenRoad.Frontend
 
         public void SelectSettingsSection(int section)
         {
-            settingsSection=Mathf.Clamp(section,0,2);
+            settingsSection=Mathf.Clamp(section,0,3);
             if(settingsResetPanel!=null)settingsResetPanel.SetActive(false);
             for(int i=0;i<settingsSections.Length;i++)
             {
@@ -94,6 +134,7 @@ namespace TheLightenRoad.Frontend
                 var marker=settingsTabs[i]!=null?settingsTabs[i].transform.Find("Selection rule"):null;
                 if(marker!=null)marker.gameObject.SetActive(active);
             }
+            if (settingsSection == 2) RefreshControllerSettingsUI();
             if(resetSettingsButton!=null)resetSettingsButton.interactable=true;
             if(settingsDoneButton!=null)settingsDoneButton.interactable=true;
         }
@@ -196,14 +237,79 @@ namespace TheLightenRoad.Frontend
 
         private void ConfigureSettingsNavigation()
         {
-            Selectable[] first={masterSlider,fullscreenToggle,motionToggle};
-            for(int i=0;i<3;i++)
+            Selectable[] first={masterSlider,fullscreenToggle,controllerStyleButton,motionToggle};
+            for(int i=0;i<4;i++)
             {
                 var nav=new Navigation{mode=Navigation.Mode.Explicit,
                     selectOnLeft=i>0?settingsTabs[i-1]:settingsDoneButton,
-                    selectOnRight=i<2?settingsTabs[i+1]:resetSettingsButton,
+                    selectOnRight=i<3?settingsTabs[i+1]:resetSettingsButton,
                     selectOnDown=first[i]};
                 settingsTabs[i].navigation=nav;
+            }
+        }
+
+        private void CycleControllerStyle()
+        {
+            int current = MenuPreferences.ControllerStyle;
+            int next = (current + 1) % 4;
+            MenuPreferences.SetControllerStyle(next);
+            MarkSettingsChanged();
+            RefreshControllerSettingsUI();
+            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+        }
+
+        private void OnVibrationToggled(bool value)
+        {
+            MenuPreferences.SetVibration(value);
+            MarkSettingsChanged();
+            UpdateSwitchVisual(vibrationToggle);
+            if (value && Application.isPlaying)
+            {
+                ControllerGlyphService.Rumble(0.4f, 0.6f, 0.15f);
+                SoundEffectManager.Instance?.PlayUIClick();
+            }
+        }
+
+        private void OnDeadzoneSliderChanged(float val)
+        {
+            MenuPreferences.SetStickDeadzone(val);
+            if (deadzoneValueText != null) deadzoneValueText.text = Mathf.RoundToInt(val * 100f) + "%";
+            MarkSettingsChanged();
+        }
+
+        private void RefreshControllerSettingsUI()
+        {
+            if (controllerStyleValueText != null)
+            {
+                int style = MenuPreferences.ControllerStyle;
+                string label = "< AUTO-DETECT >";
+                if (style == 1) label = "< XBOX (A / B / X / Y) >";
+                else if (style == 2) label = "< PLAYSTATION (✕ / ○ / □ / △) >";
+                else if (style == 3) label = "< KEYBOARD & MOUSE >";
+                controllerStyleValueText.text = label;
+            }
+
+            if (controllerMappingSummaryText != null)
+            {
+                var active = ControllerGlyphService.ActiveStyle;
+                if (active == ControllerPromptStyle.PlayStation)
+                {
+                    controllerMappingSummaryText.text = "PLAYSTATION:  [✕] JUMP    [R2 / □] FLARE    [R2 / L3] SPRINT    [△] INTERACT    [OPTIONS] PAUSE";
+                }
+                else if (active == ControllerPromptStyle.Xbox)
+                {
+                    controllerMappingSummaryText.text = "XBOX:  [A] JUMP    [RT / X] FLARE    [RT / LS] SPRINT    [Y] INTERACT    [MENU] PAUSE";
+                }
+                else
+                {
+                    controllerMappingSummaryText.text = "KEYBOARD:  [SPACE] JUMP    [F / L-CLICK] FLARE    [L-SHIFT] SPRINT    [E] INTERACT    [ESC] PAUSE";
+                }
+            }
+
+            if (deadzoneSlider != null)
+            {
+                deadzoneSlider.SetValueWithoutNotify(MenuPreferences.StickDeadzone);
+                if (deadzoneValueText != null) deadzoneValueText.text = Mathf.RoundToInt(MenuPreferences.StickDeadzone * 100f) + "%";
             }
         }
         private Button SettingsButton(RectTransform parent,string text,Vector2 position,Vector2 size,UnityEngine.Events.UnityAction action)

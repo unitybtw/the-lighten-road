@@ -401,11 +401,18 @@ namespace TheLightenRoad.UI
         private void UpdateStatus(int charges)
         {
             bool active = target.HasActiveScout;
-            if (target.ToggleFlareKey != lastToggleKey)
+            var style = ControllerGlyphService.ActiveStyle;
+            string keyText;
+            if (style == ControllerPromptStyle.PlayStation)
+                keyText = "R2 / □";
+            else if (style == ControllerPromptStyle.Xbox)
+                keyText = "RT / X";
+            else
+                keyText = target.ToggleFlareKey.ToString().ToUpperInvariant();
+
+            if (keyLabel != null && keyLabel.text != keyText)
             {
-                lastToggleKey = target.ToggleFlareKey;
-                cachedKeyString = target.ToggleFlareKey.ToString().ToUpperInvariant();
-                keyLabel.text = cachedKeyString;
+                keyLabel.text = keyText;
             }
 
             string mode = active ? (target.IsDimming ? "DIMMING" : "FLARE ACTIVE") : charges <= 0 ? "NO EMBERS" : "FLARE";

@@ -165,6 +165,9 @@ namespace TheLightenRoad.Player
                 .With("Negative", "<Keyboard>/leftArrow")
                 .With("Positive", "<Keyboard>/rightArrow");
             move.AddBinding("<Gamepad>/leftStick/x");
+            move.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Gamepad>/dpad/left")
+                .With("Positive", "<Gamepad>/dpad/right");
 
             jump = new InputAction("Jump", InputActionType.Button, "<Keyboard>/space");
             jump.AddBinding("<Gamepad>/buttonSouth");
@@ -189,7 +192,17 @@ namespace TheLightenRoad.Player
 
         private void Update()
         {
-            horizontalInput = move.ReadValue<float>();
+            float rawMove = move.ReadValue<float>();
+            float deadzone = Mathf.Clamp(PlayerPrefs.GetFloat("TLR.Menu.StickDeadzone", 0.15f), 0.05f, 0.40f);
+            if (Mathf.Abs(rawMove) < deadzone)
+            {
+                horizontalInput = 0f;
+            }
+            else
+            {
+                float sign = Mathf.Sign(rawMove);
+                horizontalInput = sign * ((Mathf.Abs(rawMove) - deadzone) / (1f - deadzone));
+            }
 
             if (jump.WasPressedThisFrame())
             {
