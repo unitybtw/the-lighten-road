@@ -24,6 +24,12 @@ namespace TheLightenRoad.Frontend
         public bool IsSettingsResetOpen => settingsResetPanel != null && settingsResetPanel.activeSelf;
 
         // Controller Settings elements
+        private static readonly string[] SectionTabNames = { "Audio", "Display", "Controls", "Accessibility" };
+        private Image leftBumperImg, rightBumperImg;
+        private TMP_Text leftBumperText, rightBumperText;
+        private RectTransform settingsFooterBar;
+        private Image footerSelectIcon, footerBackIcon, footerResetIcon, footerTabIcon;
+        private TMP_Text footerSelectText, footerBackText, footerResetText, footerTabText;
         private Button controllerStyleButton;
         private TMP_Text controllerStyleValueText;
         private Toggle vibrationToggle;
@@ -42,8 +48,32 @@ namespace TheLightenRoad.Frontend
             shade.sprite=softRadialSprite;shade.color=new Color(.006f,.010f,.020f,.96f);shade.raycastTarget=false;
             BuildSettingsLanterns(surface);
             SettingsRule(surface,"Top tab rule",new Vector2(0,150),720);
-            SettingsRule(surface,"Footer rule",new Vector2(0,-230),720);
-            var names=new[]{"Audio","Display","Controls","Accessibility"};
+            SettingsRule(surface,"Footer rule",new Vector2(0,-218),720);
+
+            // Hollow Knight Bumper Indicators for switching tabs
+            var leftBumperBadge = CreateAnchoredRect("Left Bumper Badge", surface, new Vector2(50f, 32f), Vector2.one * 0.5f, new Vector2(-365f, 182f));
+            leftBumperImg = leftBumperBadge.gameObject.AddComponent<Image>();
+            leftBumperImg.preserveAspect = true;
+            leftBumperImg.raycastTarget = false;
+            leftBumperText = CreateLabel("Keycap", leftBumperBadge, "[Q]", 12f, radiantIvory, new Vector2(50f, 32f), Vector2.one * 0.5f, Vector2.zero, Vector2.one * 0.5f);
+            leftBumperText.alignment = TextAlignmentOptions.Center;
+            leftBumperText.fontStyle = FontStyles.Bold;
+            var lBtn = leftBumperBadge.gameObject.AddComponent<Button>();
+            lBtn.targetGraphic = leftBumperImg;
+            lBtn.onClick.AddListener(() => { SelectSettingsSection((settingsSection - 1 + 4) % 4); if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick(); });
+
+            var rightBumperBadge = CreateAnchoredRect("Right Bumper Badge", surface, new Vector2(50f, 32f), Vector2.one * 0.5f, new Vector2(365f, 182f));
+            rightBumperImg = rightBumperBadge.gameObject.AddComponent<Image>();
+            rightBumperImg.preserveAspect = true;
+            rightBumperImg.raycastTarget = false;
+            rightBumperText = CreateLabel("Keycap", rightBumperBadge, "[E]", 12f, radiantIvory, new Vector2(50f, 32f), Vector2.one * 0.5f, Vector2.zero, Vector2.one * 0.5f);
+            rightBumperText.alignment = TextAlignmentOptions.Center;
+            rightBumperText.fontStyle = FontStyles.Bold;
+            var rBtn = rightBumperBadge.gameObject.AddComponent<Button>();
+            rBtn.targetGraphic = rightBumperImg;
+            rBtn.onClick.AddListener(() => { SelectSettingsSection((settingsSection + 1) % 4); if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick(); });
+
+            var names=SectionTabNames;
             var descriptions=new[]{
                 "Master, music and sound effects volumes.",
                 "Window mode, vertical sync and frame rate.",
@@ -126,32 +156,197 @@ namespace TheLightenRoad.Frontend
             note.rectTransform.sizeDelta=new Vector2(660,54);
             SettingsRule(comfortCard,"Comfort Bottom Rule",new Vector2(0,-48),540);
 
-            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-206),12.5f,moonlightSilver,720);
+            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-198),12.5f,moonlightSilver,720);
             settingsSaveStatus.alignment=TextAlignmentOptions.Center;
-            resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-180,-268),new Vector2(280,46),RequestSettingsReset);
-            settingsDoneButton=SettingsButton(surface,"Done",new Vector2(180,-268),new Vector2(280,46),ShowHome);
+            resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-155,-236),new Vector2(250,40),RequestSettingsReset);
+            settingsDoneButton=SettingsButton(surface,"Back",new Vector2(155,-236),new Vector2(250,40),ShowHome);
             BuildSettingsReset(surface);
+            BuildSettingsFooter(surface);
             SelectSettingsSection(0);
             SyncSettingsUI();
             ConfigureSettingsNavigation();
         }
 
+        private void BuildSettingsFooter(RectTransform parent)
+        {
+            settingsFooterBar = CreateAnchoredRect("Settings HollowKnight Footer", parent, new Vector2(880f, 36f), Vector2.one * 0.5f, new Vector2(0f, -276f));
+            var fBg = settingsFooterBar.gameObject.AddComponent<Image>();
+            fBg.sprite = softRadialSprite;
+            fBg.color = new Color(0.008f, 0.014f, 0.028f, 0.70f);
+            fBg.raycastTarget = false;
+
+            float[] xPos = { -320f, -110f, 110f, 320f };
+
+            // Slot 0: SELECT
+            var s0 = CreateAnchoredRect("Slot_Select", settingsFooterBar, new Vector2(180f, 32f), Vector2.one * 0.5f, new Vector2(xPos[0], 0f));
+            var icon0 = CreateAnchoredRect("Icon", s0, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            footerSelectIcon = icon0.gameObject.AddComponent<Image>();
+            footerSelectIcon.preserveAspect = true;
+            footerSelectIcon.raycastTarget = false;
+            footerSelectText = CreateLabel("Label", s0, "SELECT", 12f, radiantIvory, new Vector2(130f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerSelectText.fontStyle = FontStyles.Bold;
+            footerSelectText.characterSpacing = 1.2f;
+
+            // Slot 1: BACK
+            var s1 = CreateAnchoredRect("Slot_Back", settingsFooterBar, new Vector2(160f, 32f), Vector2.one * 0.5f, new Vector2(xPos[1], 0f));
+            var icon1 = CreateAnchoredRect("Icon", s1, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            footerBackIcon = icon1.gameObject.AddComponent<Image>();
+            footerBackIcon.preserveAspect = true;
+            footerBackIcon.raycastTarget = false;
+            footerBackText = CreateLabel("Label", s1, "BACK", 12f, radiantIvory, new Vector2(110f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerBackText.fontStyle = FontStyles.Bold;
+            footerBackText.characterSpacing = 1.2f;
+            var bBtn = s1.gameObject.AddComponent<Button>();
+            bBtn.onClick.AddListener(ShowHome);
+
+            // Slot 2: RESTORE DEFAULTS
+            var s2 = CreateAnchoredRect("Slot_Reset", settingsFooterBar, new Vector2(200f, 32f), Vector2.one * 0.5f, new Vector2(xPos[2], 0f));
+            var icon2 = CreateAnchoredRect("Icon", s2, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            footerResetIcon = icon2.gameObject.AddComponent<Image>();
+            footerResetIcon.preserveAspect = true;
+            footerResetIcon.raycastTarget = false;
+            footerResetText = CreateLabel("Label", s2, "RESTORE DEFAULTS", 12f, radiantIvory, new Vector2(150f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerResetText.fontStyle = FontStyles.Bold;
+            footerResetText.characterSpacing = 1.2f;
+            var rBtn = s2.gameObject.AddComponent<Button>();
+            rBtn.onClick.AddListener(RequestSettingsReset);
+
+            // Slot 3: SWITCH TAB
+            var s3 = CreateAnchoredRect("Slot_Tab", settingsFooterBar, new Vector2(180f, 32f), Vector2.one * 0.5f, new Vector2(xPos[3], 0f));
+            var icon3 = CreateAnchoredRect("Icon", s3, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            footerTabIcon = icon3.gameObject.AddComponent<Image>();
+            footerTabIcon.preserveAspect = true;
+            footerTabIcon.raycastTarget = false;
+            footerTabText = CreateLabel("Label", s3, "SWITCH TAB", 12f, radiantIvory, new Vector2(130f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerTabText.fontStyle = FontStyles.Bold;
+            footerTabText.characterSpacing = 1.2f;
+
+            RefreshSettingsFooterPrompts();
+        }
+
+        public void RefreshSettingsFooterPrompts()
+        {
+            var style = ControllerGlyphService.ActiveStyle;
+            bool isPad = ControllerGlyphService.IsGamepadActive;
+
+            if (leftBumperImg != null)
+            {
+                if (isPad)
+                {
+                    leftBumperImg.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.PrevTab, style);
+                    leftBumperImg.color = Color.white;
+                    if (leftBumperText != null) leftBumperText.text = "";
+                }
+                else
+                {
+                    leftBumperImg.sprite = null;
+                    leftBumperImg.color = Color.clear;
+                    if (leftBumperText != null) leftBumperText.text = "[ Q ]";
+                }
+            }
+
+            if (rightBumperImg != null)
+            {
+                if (isPad)
+                {
+                    rightBumperImg.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.NextTab, style);
+                    rightBumperImg.color = Color.white;
+                    if (rightBumperText != null) rightBumperText.text = "";
+                }
+                else
+                {
+                    rightBumperImg.sprite = null;
+                    rightBumperImg.color = Color.clear;
+                    if (rightBumperText != null) rightBumperText.text = "[ E ]";
+                }
+            }
+
+            if (footerSelectIcon != null)
+            {
+                if (isPad)
+                {
+                    footerSelectIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Confirm, style);
+                    footerSelectIcon.color = Color.white;
+                    if (footerSelectText != null) footerSelectText.text = "SELECT";
+                }
+                else
+                {
+                    footerSelectIcon.sprite = null;
+                    footerSelectIcon.color = Color.clear;
+                    if (footerSelectText != null) footerSelectText.text = "[ENTER / SPACE] SELECT";
+                }
+            }
+
+            if (footerBackIcon != null)
+            {
+                if (isPad)
+                {
+                    footerBackIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Cancel, style);
+                    footerBackIcon.color = Color.white;
+                    if (footerBackText != null) footerBackText.text = "BACK";
+                }
+                else
+                {
+                    footerBackIcon.sprite = null;
+                    footerBackIcon.color = Color.clear;
+                    if (footerBackText != null) footerBackText.text = "[ESC] BACK";
+                }
+            }
+
+            if (footerResetIcon != null)
+            {
+                if (isPad)
+                {
+                    footerResetIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Interact, style);
+                    footerResetIcon.color = Color.white;
+                    if (footerResetText != null) footerResetText.text = "RESTORE DEFAULTS";
+                }
+                else
+                {
+                    footerResetIcon.sprite = null;
+                    footerResetIcon.color = Color.clear;
+                    if (footerResetText != null) footerResetText.text = "[R] RESTORE DEFAULTS";
+                }
+            }
+
+            if (footerTabIcon != null)
+            {
+                if (isPad)
+                {
+                    footerTabIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.NextTab, style);
+                    footerTabIcon.color = Color.white;
+                    if (footerTabText != null) footerTabText.text = "SWITCH TAB";
+                }
+                else
+                {
+                    footerTabIcon.sprite = null;
+                    footerTabIcon.color = Color.clear;
+                    if (footerTabText != null) footerTabText.text = "[Q / E] TABS";
+                }
+            }
+        }
+
         public void SelectSettingsSection(int section)
         {
-            settingsSection=Mathf.Clamp(section,0,3);
-            if(settingsResetPanel!=null)settingsResetPanel.SetActive(false);
-            for(int i=0;i<settingsSections.Length;i++)
+            settingsSection = Mathf.Clamp(section, 0, 3);
+            if (settingsResetPanel != null) settingsResetPanel.SetActive(false);
+            for (int i = 0; i < settingsSections.Length; i++)
             {
-                bool active=(i==settingsSection);
-                if(settingsSections[i]!=null)settingsSections[i].SetActive(active);
-                if(settingsTabs[i]!=null)settingsTabs[i].interactable=true;
-                if(settingsTabLabels[i]!=null)settingsTabLabels[i].color=active?amberGold:radiantIvory;
-                var focus=settingsTabs[i]!=null?settingsTabs[i].GetComponent<SettingsLightFocus>():null;
-                if(focus!=null)focus.IsCurrent=active;
+                bool active = (i == settingsSection);
+                if (settingsSections[i] != null) settingsSections[i].SetActive(active);
+                if (settingsTabs[i] != null) settingsTabs[i].interactable = true;
+                if (settingsTabLabels[i] != null)
+                {
+                    settingsTabLabels[i].text = active ? $"<  {SectionTabNames[i].ToUpperInvariant()}  >" : SectionTabNames[i].ToUpperInvariant();
+                    settingsTabLabels[i].color = active ? amberGold : radiantIvory;
+                }
+                var focus = settingsTabs[i] != null ? settingsTabs[i].GetComponent<SettingsLightFocus>() : null;
+                if (focus != null) focus.IsCurrent = active;
             }
             if (settingsSection == 2) RefreshControllerSettingsUI();
-            if(resetSettingsButton!=null)resetSettingsButton.interactable=true;
-            if(settingsDoneButton!=null)settingsDoneButton.interactable=true;
+            if (resetSettingsButton != null) resetSettingsButton.interactable = true;
+            if (settingsDoneButton != null) settingsDoneButton.interactable = true;
+            RefreshSettingsFooterPrompts();
         }
 
         private void BuildFrameLimit(RectTransform parent)

@@ -224,10 +224,13 @@ namespace TheLightenRoad.Frontend
             {
                 SkipIntro();
             }
+
+            ControllerGlyphService.OnPromptStyleChanged += RefreshSettingsFooterPrompts;
         }
 
         private void OnDestroy()
         {
+            ControllerGlyphService.OnPromptStyleChanged -= RefreshSettingsFooterPrompts;
             MenuPreferences.Save();
             if (softRadialSprite != null)
             {
@@ -294,34 +297,46 @@ namespace TheLightenRoad.Frontend
                         RestoreViewSelection();
                     }
                 }
+            }
 
-                if (view == "settings")
+            if (view == "settings")
+            {
+                bool prevTab = (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+                            || (activePad != null && activePad.leftShoulder.wasPressedThisFrame);
+                bool nextTab = (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+                            || (activePad != null && activePad.rightShoulder.wasPressedThisFrame);
+                if (prevTab)
                 {
-                    if (activePad.leftShoulder.wasPressedThisFrame)
-                    {
-                        SelectSettingsSection((settingsSection - 1 + 4) % 4);
-                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
-                    }
-                    else if (activePad.rightShoulder.wasPressedThisFrame)
-                    {
-                        SelectSettingsSection((settingsSection + 1) % 4);
-                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
-                    }
+                    SelectSettingsSection((settingsSection - 1 + 4) % 4);
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
                 }
-                else if (view == "controls")
+                else if (nextTab)
                 {
-                    if (activePad.leftShoulder.wasPressedThisFrame || activePad.dpad.left.wasPressedThisFrame)
-                    {
-                        SetControlsDeviceTab((selectedControlsDeviceTab + 2) % 3);
-                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
-                    }
-                    else if (activePad.rightShoulder.wasPressedThisFrame || activePad.dpad.right.wasPressedThisFrame)
-                    {
-                        SetControlsDeviceTab((selectedControlsDeviceTab + 1) % 3);
-                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
-                    }
+                    SelectSettingsSection((settingsSection + 1) % 4);
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
                 }
-                else if (view == "realms")
+
+                bool resetKey = (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+                             || (activePad != null && activePad.buttonNorth.wasPressedThisFrame);
+                if (resetKey && !IsSettingsResetOpen)
+                {
+                    RequestSettingsReset();
+                }
+            }
+            else if (view == "controls" && activePad != null)
+            {
+                if (activePad.leftShoulder.wasPressedThisFrame || activePad.dpad.left.wasPressedThisFrame)
+                {
+                    SetControlsDeviceTab((selectedControlsDeviceTab + 2) % 3);
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                }
+                else if (activePad.rightShoulder.wasPressedThisFrame || activePad.dpad.right.wasPressedThisFrame)
+                {
+                    SetControlsDeviceTab((selectedControlsDeviceTab + 1) % 3);
+                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                }
+            }
+            else if (view == "realms" && activePad != null)
                 {
                     if (activePad.dpad.up.wasPressedThisFrame || (activePad.leftStick.up.wasPressedThisFrame && activePad.leftStick.ReadValue().y > 0.5f))
                     {

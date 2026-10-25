@@ -73,6 +73,13 @@ namespace TheLightenRoad.Frontend
         private Button settingsBackButton;
         private Button controlsBackButton;
 
+        // Hollow Knight Controller Footer & Bumper Badges
+        private RectTransform pauseFooterBar;
+        private Image pauseFooterSelectIcon, pauseFooterBackIcon, pauseFooterResetIcon, pauseFooterTabIcon;
+        private TMP_Text pauseFooterSelectText, pauseFooterBackText, pauseFooterResetText, pauseFooterTabText;
+        private Image pauseLeftBumperImg, pauseRightBumperImg;
+        private TMP_Text pauseLeftBumperText, pauseRightBumperText;
+
         private RectTransform modalRect;
         private RectTransform titleGlowRect;
         private CanvasGroup mainPanelGroup;
@@ -184,6 +191,7 @@ namespace TheLightenRoad.Frontend
 
             EnsureEventSystem();
             BuildUIHierarchy();
+            ControllerGlyphService.OnPromptStyleChanged += RefreshPauseFooterPrompts;
         }
 
         private void OnEnable()
@@ -196,6 +204,7 @@ namespace TheLightenRoad.Frontend
 
         private void OnDestroy()
         {
+            ControllerGlyphService.OnPromptStyleChanged -= RefreshPauseFooterPrompts;
             if (Instance == this)
             {
                 Instance = null;
@@ -283,31 +292,65 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            if (IsPaused && g != null)
+            if (IsPaused)
             {
-                if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
+                if (k != null)
                 {
-                    bool padNavIntent = g.dpad.up.wasPressedThisFrame || g.dpad.down.wasPressedThisFrame ||
-                                        g.dpad.left.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame ||
-                                        g.buttonSouth.wasPressedThisFrame ||
-                                        (g.leftStick.ReadValue().sqrMagnitude > 0.15f);
-                    if (padNavIntent)
+                    if (currentView == "controls")
                     {
-                        RestorePauseMenuSelection();
+                        if (k.qKey.wasPressedThisFrame)
+                        {
+                            SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
+                            if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                        }
+                        else if (k.eKey.wasPressedThisFrame)
+                        {
+                            SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
+                            if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                        }
+                    }
+
+                    if (k.rKey.wasPressedThisFrame)
+                    {
+                        if (currentView == "settings") ResetDefaults();
+                        else if (currentView == "main") RestartChamber();
+                        else if (currentView == "controls") TogglePauseVibration();
                     }
                 }
 
-                if (currentView == "controls")
+                if (g != null)
                 {
-                    if (g.leftShoulder.wasPressedThisFrame || g.dpad.left.wasPressedThisFrame)
+                    if (g.buttonNorth.wasPressedThisFrame)
                     {
-                        SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
-                        if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                        if (currentView == "settings") ResetDefaults();
+                        else if (currentView == "main") RestartChamber();
+                        else if (currentView == "controls") TogglePauseVibration();
                     }
-                    else if (g.rightShoulder.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame)
+
+                    if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
                     {
-                        SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
-                        if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                        bool padNavIntent = g.dpad.up.wasPressedThisFrame || g.dpad.down.wasPressedThisFrame ||
+                                            g.dpad.left.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame ||
+                                            g.buttonSouth.wasPressedThisFrame ||
+                                            (g.leftStick.ReadValue().sqrMagnitude > 0.15f);
+                        if (padNavIntent)
+                        {
+                            RestorePauseMenuSelection();
+                        }
+                    }
+
+                    if (currentView == "controls")
+                    {
+                        if (g.leftShoulder.wasPressedThisFrame || g.dpad.left.wasPressedThisFrame)
+                        {
+                            SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
+                            if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                        }
+                        else if (g.rightShoulder.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame)
+                        {
+                            SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
+                            if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                        }
                     }
                 }
             }
@@ -408,6 +451,7 @@ namespace TheLightenRoad.Frontend
             if (controlsPanel != null) controlsPanel.SetActive(false);
             UpdateChamberInfo();
             AnimateSubView(mainPanelGroup);
+            RefreshPauseFooterPrompts();
 
             if (EventSystem.current != null && resumeButton != null)
             {
@@ -424,6 +468,7 @@ namespace TheLightenRoad.Frontend
             if (controlsPanel != null) controlsPanel.SetActive(false);
             SyncSettingsValues();
             AnimateSubView(settingsPanelGroup);
+            RefreshPauseFooterPrompts();
 
             if (EventSystem.current != null && masterSlider != null)
             {
@@ -439,6 +484,7 @@ namespace TheLightenRoad.Frontend
             if (settingsPanel != null) settingsPanel.SetActive(false);
             if (controlsPanel != null) controlsPanel.SetActive(true);
             AnimateSubView(controlsPanelGroup);
+            RefreshPauseFooterPrompts();
 
             if (EventSystem.current != null && controlsBackButton != null)
             {
@@ -766,6 +812,7 @@ namespace TheLightenRoad.Frontend
             BuildMainPanel(modal.transform);
             BuildSettingsPanel(modal.transform);
             BuildControlsPanel(modal.transform);
+            BuildPauseFooter(modal.transform);
 
             ShowMainView();
             currentView = "none";
@@ -896,7 +943,34 @@ namespace TheLightenRoad.Frontend
             titleLabel.characterSpacing = 5f;
 
             // 3-way Device Switcher at top
-            var tabRow = CreateAnchoredRect("Pause Controls Tabs", controlsPanel.transform, new Vector2(680f, 36f), Vector2.one * 0.5f, new Vector2(0f, 172f));
+            var tabRow = CreateAnchoredRect("Pause Controls Tabs", controlsPanel.transform, new Vector2(740f, 36f), Vector2.one * 0.5f, new Vector2(0f, 172f));
+
+            // Left Bumper Badge [LB / Q]
+            var lBumperRect = CreateAnchoredRect("Left Bumper Badge", tabRow, new Vector2(36f, 26f), Vector2.one * 0.5f, new Vector2(-330f, 0f));
+            pauseLeftBumperImg = lBumperRect.gameObject.AddComponent<Image>();
+            pauseLeftBumperImg.preserveAspect = true;
+            pauseLeftBumperImg.raycastTarget = false;
+            pauseLeftBumperText = CreateLabel("Text", lBumperRect, Vector2.zero, new Vector2(36f, 24f), "[ Q ]", 11f, TextAlignmentOptions.Center, moonlightSilver);
+            var lBumperBtn = lBumperRect.gameObject.AddComponent<Button>();
+            lBumperBtn.onClick.AddListener(() =>
+            {
+                SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
+                if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+            });
+
+            // Right Bumper Badge [RB / E]
+            var rBumperRect = CreateAnchoredRect("Right Bumper Badge", tabRow, new Vector2(36f, 26f), Vector2.one * 0.5f, new Vector2(330f, 0f));
+            pauseRightBumperImg = rBumperRect.gameObject.AddComponent<Image>();
+            pauseRightBumperImg.preserveAspect = true;
+            pauseRightBumperImg.raycastTarget = false;
+            pauseRightBumperText = CreateLabel("Text", rBumperRect, Vector2.zero, new Vector2(36f, 24f), "[ E ]", 11f, TextAlignmentOptions.Center, moonlightSilver);
+            var rBumperBtn = rBumperRect.gameObject.AddComponent<Button>();
+            rBumperBtn.onClick.AddListener(() =>
+            {
+                SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
+                if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+            });
+
             string[] deviceTabNames = { "KEYBOARD", "XBOX CONTROLLER", "PLAYSTATION" };
             float[] tabWidths = { 180f, 190f, 180f };
             float[] tabX = { -200f, 0f, 200f };
@@ -979,10 +1053,16 @@ namespace TheLightenRoad.Frontend
         public void SetPauseControlsDeviceTab(int tab)
         {
             selectedPauseControlsDeviceTab = Mathf.Clamp(tab, 0, 2);
+            string[] rawNames = { "KEYBOARD", "XBOX CONTROLLER", "PLAYSTATION" };
             for (int i = 0; i < 3; i++)
             {
                 bool active = (i == selectedPauseControlsDeviceTab);
-                if (pauseControlsDeviceTabLabels[i] != null) pauseControlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+                if (pauseControlsDeviceTabLabels[i] != null)
+                {
+                    pauseControlsDeviceTabLabels[i].text = active ? $"< {rawNames[i]} >" : rawNames[i];
+                    pauseControlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+                    pauseControlsDeviceTabLabels[i].fontStyle = active ? FontStyles.Bold : FontStyles.Normal;
+                }
             }
 
             if (pauseControlsRowKeyLabels[0] == null) return;
@@ -1036,6 +1116,189 @@ namespace TheLightenRoad.Frontend
                 pauseControlsRowKeyLabels[3].text = "[ R2 / SQUARE ]";
                 pauseControlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
                 pauseControlsRowKeyLabels[5].text = "[ OPTIONS ]";
+            }
+        }
+
+        private void BuildPauseFooter(Transform parent)
+        {
+            pauseFooterBar = CreateAnchoredRect("Pause HollowKnight Footer", parent, new Vector2(860f, 36f), Vector2.one * 0.5f, new Vector2(0f, -365f));
+            var fBg = pauseFooterBar.gameObject.AddComponent<Image>();
+            fBg.sprite = softRadialSprite;
+            fBg.color = new Color(0.008f, 0.014f, 0.028f, 0.70f);
+            fBg.raycastTarget = false;
+
+            float[] xPos = { -300f, -100f, 100f, 300f };
+
+            // Slot 0: SELECT
+            var s0 = CreateAnchoredRect("Slot_Select", pauseFooterBar, new Vector2(170f, 32f), Vector2.one * 0.5f, new Vector2(xPos[0], 0f));
+            var icon0 = CreateAnchoredRect("Icon", s0, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            pauseFooterSelectIcon = icon0.gameObject.AddComponent<Image>();
+            pauseFooterSelectIcon.preserveAspect = true;
+            pauseFooterSelectIcon.raycastTarget = false;
+            pauseFooterSelectText = CreateLabel("Label", s0, new Vector2(24f, 0f), new Vector2(130f, 24f), "SELECT", 12f, TextAlignmentOptions.Left, radiantIvory);
+            pauseFooterSelectText.fontStyle = FontStyles.Bold;
+            pauseFooterSelectText.characterSpacing = 1.2f;
+
+            // Slot 1: RESUME / BACK
+            var s1 = CreateAnchoredRect("Slot_Back", pauseFooterBar, new Vector2(170f, 32f), Vector2.one * 0.5f, new Vector2(xPos[1], 0f));
+            var icon1 = CreateAnchoredRect("Icon", s1, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            pauseFooterBackIcon = icon1.gameObject.AddComponent<Image>();
+            pauseFooterBackIcon.preserveAspect = true;
+            pauseFooterBackIcon.raycastTarget = false;
+            pauseFooterBackText = CreateLabel("Label", s1, new Vector2(24f, 0f), new Vector2(130f, 24f), "RESUME", 12f, TextAlignmentOptions.Left, radiantIvory);
+            pauseFooterBackText.fontStyle = FontStyles.Bold;
+            pauseFooterBackText.characterSpacing = 1.2f;
+            var bBtn = s1.gameObject.AddComponent<Button>();
+            bBtn.onClick.AddListener(() =>
+            {
+                if (currentView == "settings" || currentView == "controls") ShowMainView();
+                else Resume();
+            });
+
+            // Slot 2: RESTART LEVEL / RESTORE DEFAULTS
+            var s2 = CreateAnchoredRect("Slot_Reset", pauseFooterBar, new Vector2(200f, 32f), Vector2.one * 0.5f, new Vector2(xPos[2], 0f));
+            var icon2 = CreateAnchoredRect("Icon", s2, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            pauseFooterResetIcon = icon2.gameObject.AddComponent<Image>();
+            pauseFooterResetIcon.preserveAspect = true;
+            pauseFooterResetIcon.raycastTarget = false;
+            pauseFooterResetText = CreateLabel("Label", s2, new Vector2(24f, 0f), new Vector2(160f, 24f), "RESTART LEVEL", 12f, TextAlignmentOptions.Left, radiantIvory);
+            pauseFooterResetText.fontStyle = FontStyles.Bold;
+            pauseFooterResetText.characterSpacing = 1.2f;
+            var rBtn = s2.gameObject.AddComponent<Button>();
+            rBtn.onClick.AddListener(() =>
+            {
+                if (currentView == "settings") ResetDefaults();
+                else if (currentView == "main") RestartChamber();
+                else if (currentView == "controls") TogglePauseVibration();
+            });
+
+            // Slot 3: SWITCH TAB
+            var s3 = CreateAnchoredRect("Slot_Tab", pauseFooterBar, new Vector2(180f, 32f), Vector2.one * 0.5f, new Vector2(xPos[3], 0f));
+            var icon3 = CreateAnchoredRect("Icon", s3, new Vector2(24f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 0f));
+            pauseFooterTabIcon = icon3.gameObject.AddComponent<Image>();
+            pauseFooterTabIcon.preserveAspect = true;
+            pauseFooterTabIcon.raycastTarget = false;
+            pauseFooterTabText = CreateLabel("Label", s3, new Vector2(24f, 0f), new Vector2(140f, 24f), "SWITCH TAB", 12f, TextAlignmentOptions.Left, radiantIvory);
+            pauseFooterTabText.fontStyle = FontStyles.Bold;
+            pauseFooterTabText.characterSpacing = 1.2f;
+
+            RefreshPauseFooterPrompts();
+        }
+
+        public void RefreshPauseFooterPrompts()
+        {
+            var style = ControllerGlyphService.ActiveStyle;
+            bool isPad = ControllerGlyphService.IsGamepadActive;
+
+            // Bumper badges in Controls Tab
+            if (pauseLeftBumperImg != null)
+            {
+                if (isPad)
+                {
+                    pauseLeftBumperImg.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.PrevTab, style);
+                    pauseLeftBumperImg.color = Color.white;
+                    if (pauseLeftBumperText != null) pauseLeftBumperText.text = "";
+                }
+                else
+                {
+                    pauseLeftBumperImg.sprite = null;
+                    pauseLeftBumperImg.color = Color.clear;
+                    if (pauseLeftBumperText != null) pauseLeftBumperText.text = "[ Q ]";
+                }
+            }
+
+            if (pauseRightBumperImg != null)
+            {
+                if (isPad)
+                {
+                    pauseRightBumperImg.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.NextTab, style);
+                    pauseRightBumperImg.color = Color.white;
+                    if (pauseRightBumperText != null) pauseRightBumperText.text = "";
+                }
+                else
+                {
+                    pauseRightBumperImg.sprite = null;
+                    pauseRightBumperImg.color = Color.clear;
+                    if (pauseRightBumperText != null) pauseRightBumperText.text = "[ E ]";
+                }
+            }
+
+            // Footer bar slots
+            if (pauseFooterBar == null) return;
+
+            // Slot 0: Select
+            if (pauseFooterSelectIcon != null)
+            {
+                if (isPad)
+                {
+                    pauseFooterSelectIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Confirm, style);
+                    pauseFooterSelectIcon.color = Color.white;
+                    if (pauseFooterSelectText != null) pauseFooterSelectText.text = "SELECT";
+                }
+                else
+                {
+                    pauseFooterSelectIcon.sprite = null;
+                    pauseFooterSelectIcon.color = Color.clear;
+                    if (pauseFooterSelectText != null) pauseFooterSelectText.text = "[ ENTER ] SELECT";
+                }
+            }
+
+            // Slot 1: Back / Resume
+            string backLabel = currentView == "main" ? "RESUME" : "BACK";
+            if (pauseFooterBackIcon != null)
+            {
+                if (isPad)
+                {
+                    pauseFooterBackIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Cancel, style);
+                    pauseFooterBackIcon.color = Color.white;
+                    if (pauseFooterBackText != null) pauseFooterBackText.text = backLabel;
+                }
+                else
+                {
+                    pauseFooterBackIcon.sprite = null;
+                    pauseFooterBackIcon.color = Color.clear;
+                    if (pauseFooterBackText != null) pauseFooterBackText.text = $"[ ESC ] {backLabel}";
+                }
+            }
+
+            // Slot 2: Context action (Restart / Defaults / Rumble)
+            string resetLabel = currentView == "settings" ? "RESTORE DEFAULTS" : (currentView == "controls" ? "TEST RUMBLE" : "RESTART LEVEL");
+            if (pauseFooterResetIcon != null)
+            {
+                if (isPad)
+                {
+                    pauseFooterResetIcon.sprite = ControllerGlyphService.GetGlyphSprite(style == ControllerPromptStyle.PlayStation ? "Triangle" : "Y", style);
+                    pauseFooterResetIcon.color = Color.white;
+                    if (pauseFooterResetText != null) pauseFooterResetText.text = resetLabel;
+                }
+                else
+                {
+                    pauseFooterResetIcon.sprite = null;
+                    pauseFooterResetIcon.color = Color.clear;
+                    if (pauseFooterResetText != null) pauseFooterResetText.text = $"[ R ] {resetLabel}";
+                }
+            }
+
+            // Slot 3: Switch Tab
+            if (pauseFooterTabIcon != null)
+            {
+                bool showTabSlot = (currentView == "controls");
+                pauseFooterTabIcon.transform.parent.gameObject.SetActive(showTabSlot);
+                if (showTabSlot)
+                {
+                    if (isPad)
+                    {
+                        pauseFooterTabIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.NextTab, style);
+                        pauseFooterTabIcon.color = Color.white;
+                        if (pauseFooterTabText != null) pauseFooterTabText.text = "SWITCH TAB";
+                    }
+                    else
+                    {
+                        pauseFooterTabIcon.sprite = null;
+                        pauseFooterTabIcon.color = Color.clear;
+                        if (pauseFooterTabText != null) pauseFooterTabText.text = "[ Q / E ] SWITCH TAB";
+                    }
+                }
             }
         }
 
