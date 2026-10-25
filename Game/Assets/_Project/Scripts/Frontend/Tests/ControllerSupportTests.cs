@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using TheLightenRoad.Frontend;
+using TheLightenRoad.Player;
 using TheLightenRoad.UI;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -223,6 +224,23 @@ namespace TheLightenRoad.Frontend.Tests
             pause.SetPauseControlsDeviceTab(2);
             for (int f = 0; f < 10; f++) yield return null;
             SaveCamShot(cam, rt, System.IO.Path.Combine(outDir, "pause_menu_controls_gamepad.png"));
+
+            // 5. Death Screen with PlayStation Prompt
+            ControllerGlyphService.ConfiguredStyle = ControllerPromptStyle.PlayStation;
+            var deathGo = new GameObject("DeathOverlayTest");
+            var death = deathGo.AddComponent<DeathScreenOverlay>();
+            yield return null;
+            var dCanvas = deathGo.GetComponentInChildren<Canvas>();
+            if (dCanvas != null)
+            {
+                dCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+                dCanvas.worldCamera = cam;
+                dCanvas.planeDistance = 10f;
+            }
+            death.PreviewDeath(DeathReason.Darkness);
+            for (int f = 0; f < 30; f++) yield return null;
+            SaveCamShot(cam, rt, System.IO.Path.Combine(outDir, "death_screen_playstation_prompt.png"));
+            Object.Destroy(deathGo);
 
             cam.targetTexture = null;
             RenderTexture.active = null;
