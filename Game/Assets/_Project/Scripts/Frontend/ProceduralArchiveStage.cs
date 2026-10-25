@@ -560,11 +560,10 @@ namespace TheLightenRoad.Frontend
                 topGodRayImages[i].color = new Color(0.68f, 0.80f, 0.96f, rayAlpha);
             }
 
-            // 4. Carved Pillar Ember Veins Pulse
+            // 4. Carved Pillar Ember Veins Steady Amber Glow
             if (pillarVeinGlowImage != null)
             {
-                float veinPulse = reducedMotion ? 0.60f : (0.50f + 0.24f * Mathf.Sin(time * 1.9f));
-                float veinAlpha = Mathf.Clamp01((veinPulse + surgeIntensity * 0.45f) * bloomExpansion * extinguish);
+                float veinAlpha = Mathf.Clamp01((0.36f + surgeIntensity * 0.35f) * bloomExpansion * extinguish);
                 pillarVeinGlowImage.color = new Color(1.0f, 0.68f, 0.22f, veinAlpha);
             }
 
@@ -1034,12 +1033,11 @@ namespace TheLightenRoad.Frontend
                     float nx = (x / (float)(w - 1)) * 2f - 1f;
                     float ax = Mathf.Abs(nx);
 
-                    // Ethereal tapered light blade: razor-thin intense core with smooth horizontal falloff
-                    float core = Mathf.Clamp01(1f - ay * 6.5f) * Mathf.Clamp01(1f - ax * ax);
-                    float softGlow = Mathf.Pow(Mathf.Clamp01(1f - ay), 3.0f) * Mathf.Pow(Mathf.Clamp01(1f - ax), 1.5f) * 0.40f;
-                    float centerSpark = Mathf.Clamp01(1f - (ax * 12f + ay * 3.5f)) * 0.5f;
+                    // Ethereal tapered light blade: vertically robust core with smooth horizontal falloff
+                    float core = Mathf.Clamp01(1f - ay * 1.5f) * Mathf.Clamp01(1f - ax * ax);
+                    float softGlow = Mathf.Pow(Mathf.Clamp01(1f - ay), 2.0f) * Mathf.Pow(Mathf.Clamp01(1f - ax), 1.2f) * 0.35f;
 
-                    float alpha = Mathf.Clamp01(core + softGlow + centerSpark);
+                    float alpha = Mathf.Clamp01(core + softGlow);
                     tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
                 }
             }

@@ -462,12 +462,11 @@ namespace TheLightenRoad.Frontend
             }
             else
             {
-                // Smooth ease-out cubic for ethereal entrance & gentle midnight ambient float
+                // Smooth ease-out cubic for ethereal entrance
                 float ease = 1f - Mathf.Pow(1f - transition, 3f);
                 float yRise = -18f * (1f - ease);
                 float scale = Mathf.Lerp(0.95f, 1f, ease);
-                float ambientFloat = (active && transition >= 0.96f) ? Mathf.Sin(viewAge * 1.6f) * 2.2f : 0f;
-                rect.anchoredPosition = new Vector2(0f, yRise + ambientFloat);
+                rect.anchoredPosition = new Vector2(0f, yRise);
                 rect.localScale = new Vector3(scale, scale, 1f);
             }
         }

@@ -84,11 +84,10 @@ namespace TheLightenRoad.Frontend
             bool focus = (hovered || isSelected || childSelected) && enabledState;
 
             blend = Mathf.MoveTowards(blend, focus ? 1f : 0f, Time.unscaledDeltaTime * 9f);
-            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.92f + 0.08f * Mathf.Sin(Time.unscaledTime * 3.2f));
 
             if (Glow != null)
             {
-                Glow.color = new Color(1.0f, 0.72f, 0.28f, blend * 0.32f * pulse);
+                Glow.color = new Color(1.0f, 0.72f, 0.28f, blend * 0.30f);
                 float glowScale = Mathf.Lerp(0.92f, 1.05f, blend);
                 Glow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }

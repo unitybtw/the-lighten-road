@@ -1258,12 +1258,6 @@ namespace TheLightenRoad.Frontend
             borderImg.color = new Color(0.44f, 0.58f, 0.78f, 0.18f);
             borderImg.raycastTarget = false;
 
-            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(740f, 2f), new Vector2(0.5f, 0f), Vector2.zero);
-            var divImg = divRect.gameObject.AddComponent<Image>();
-            divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.20f);
-            divImg.raycastTarget = false;
-
             var titleTxt = CreateLabel("Title", row, new Vector2(16f, 8f), new Vector2(350f, 20f),
                 title.ToUpperInvariant(), 13.5f, TextAlignmentOptions.Left, radiantIvory);
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
@@ -1362,12 +1356,6 @@ namespace TheLightenRoad.Frontend
             borderImg.type = Image.Type.Sliced;
             borderImg.color = new Color(0.44f, 0.58f, 0.78f, 0.18f);
             borderImg.raycastTarget = false;
-
-            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(740f, 2f), new Vector2(0.5f, 0f), Vector2.zero);
-            var divImg = divRect.gameObject.AddComponent<Image>();
-            divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.20f);
-            divImg.raycastTarget = false;
 
             var titleTxt = CreateLabel("Title", row, new Vector2(16f, 8f), new Vector2(450f, 20f),
                 title.ToUpperInvariant(), 13.5f, TextAlignmentOptions.Left, radiantIvory);
@@ -1662,7 +1650,7 @@ namespace TheLightenRoad.Frontend
                     float ax = Mathf.Abs(nx);
                     float ay = Mathf.Abs(ny);
 
-                    float lineThickness = Mathf.Lerp(0.08f, 0.01f, ax);
+                    float lineThickness = Mathf.Lerp(0.55f, 0.25f, ax);
                     float mainLine = Mathf.Clamp01(1f - ay / lineThickness) * Mathf.Clamp01(1f - ax);
                     float centerDiamond = Mathf.Clamp01(1f - (ax * 14f + ay * 1.8f));
 

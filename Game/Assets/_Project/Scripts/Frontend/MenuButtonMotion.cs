@@ -164,17 +164,14 @@ namespace TheLightenRoad.Frontend
             // 3. Delicate Warm Candlelight Radiance behind text and card (only when focused/hovered)
             if (SoftGlow != null)
             {
-                float targetAlpha = (IsPrimaryAction ? 0.35f : 0.26f) * pulse;
+                float targetAlpha = IsPrimaryAction ? 0.32f : 0.24f;
                 SoftGlow.color = new Color(1.0f, 0.76f, 0.30f, Mathf.Lerp(0f, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.90f, 1.08f, smooth);
+                float glowScale = Mathf.Lerp(0.90f, 1.06f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
             // 4. Symmetrical Wings (Hollow Knight / Lighten Road inward-gliding selection pointers)
-            float breathing = (smooth > 0.1f && !MenuPreferences.ReducedMotion) ? Mathf.Sin(t * 3.8f) * 2.5f : 0f;
-            float wingSlide = MenuPreferences.ReducedMotion
-                ? BaseWingOffset
-                : Mathf.Lerp(BaseWingOffset + 18f, BaseWingOffset, smooth) + breathing;
+            float wingSlide = Mathf.Lerp(BaseWingOffset + 18f, BaseWingOffset, smooth);
             if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
             if (WingGroup != null) WingGroup.alpha = smooth;

@@ -41,7 +41,7 @@ namespace TheLightenRoad.Frontend
             var shade=backdrop.gameObject.AddComponent<Image>();
             shade.sprite=softRadialSprite;shade.color=new Color(.006f,.010f,.020f,.96f);shade.raycastTarget=false;
             BuildSettingsLanterns(surface);
-            SettingsRule(surface,"Top tab rule",new Vector2(0,144),720);
+            SettingsRule(surface,"Top tab rule",new Vector2(0,150),720);
             SettingsRule(surface,"Footer rule",new Vector2(0,-230),720);
             var names=new[]{"Audio","Display","Controls","Accessibility"};
             var descriptions=new[]{
@@ -59,7 +59,7 @@ namespace TheLightenRoad.Frontend
                 settingsTabLabels[i].fontSize = 13.5f;
                 var section=CreateAnchoredRect(names[i]+" settings",surface,new Vector2(720,350),Vector2.one*.5f,new Vector2(0,-22));
                 settingsSections[i]=section.gameObject;
-                var desc=SettingsText(section,descriptions[i],new Vector2(0,145),13f,moonlightSilver,720);
+                var desc=SettingsText(section,descriptions[i],new Vector2(0,140),13f,moonlightSilver,720);
                 desc.alignment=TextAlignmentOptions.Center;
             }
             var audio=(RectTransform)settingsSections[0].transform;
@@ -148,8 +148,6 @@ namespace TheLightenRoad.Frontend
                 if(settingsTabLabels[i]!=null)settingsTabLabels[i].color=active?amberGold:radiantIvory;
                 var focus=settingsTabs[i]!=null?settingsTabs[i].GetComponent<SettingsLightFocus>():null;
                 if(focus!=null)focus.IsCurrent=active;
-                var marker=settingsTabs[i]!=null?settingsTabs[i].transform.Find("Selection rule"):null;
-                if(marker!=null)marker.gameObject.SetActive(active);
             }
             if (settingsSection == 2) RefreshControllerSettingsUI();
             if(resetSettingsButton!=null)resetSettingsButton.interactable=true;
@@ -159,9 +157,6 @@ namespace TheLightenRoad.Frontend
         private void BuildFrameLimit(RectTransform parent)
         {
             var row=CreateAnchoredRect("Target Frame Rate",parent,new Vector2(680,70),Vector2.one*.5f,new Vector2(0,-96));
-            var divRect=CreateAnchoredRect("Row Filigree Rule",row,new Vector2(680,2),new Vector2(0.5f,0f),Vector2.zero,new Vector2(0.5f,0.5f));
-            var divImg=divRect.gameObject.AddComponent<Image>();
-            divImg.sprite=filigreeSprite;divImg.color=new Color(0.62f,0.76f,0.94f,0.24f);divImg.raycastTarget=false;
 
             var titleTxt=CreateLabel("Title",row,"FRAME LIMIT",16.5f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,11),new Vector2(0,0.5f));
             titleTxt.fontStyle=FontStyles.Bold;titleTxt.characterSpacing=2.5f;
@@ -375,9 +370,6 @@ namespace TheLightenRoad.Frontend
 
             AddSettingsFocus(rect,button,label,plateImg,borderImg);
 
-            var rule=CreateAnchoredRect("Selection rule",rect,new Vector2(size.x*0.82f,2.5f),new Vector2(.5f,0),new Vector2(0,2),new Vector2(.5f,0));
-            var line=rule.gameObject.AddComponent<Image>();line.sprite=filigreeSprite;line.color=amberGold;line.raycastTarget=false;rule.gameObject.SetActive(false);
-
             button.onClick.AddListener(()=>{action();if(Application.isPlaying)SoundEffectManager.Instance?.PlayUIClick();});
             return button;
         }
@@ -434,8 +426,8 @@ namespace TheLightenRoad.Frontend
         }
         private void SettingsRule(RectTransform parent,string name,Vector2 pos,float width)
         {
-            var rect=CreateAnchoredRect(name,parent,new Vector2(width,2),Vector2.one*.5f,pos);
-            var image=rect.gameObject.AddComponent<Image>();image.sprite=filigreeSprite;image.color=new Color(.58f,.72f,.90f,.45f);image.raycastTarget=false;
+            var rect=CreateAnchoredRect(name,parent,new Vector2(width,1.5f),Vector2.one*.5f,pos);
+            var image=rect.gameObject.AddComponent<Image>();image.color=new Color(.48f,.62f,.82f,.25f);image.raycastTarget=false;
         }
     }
 }
