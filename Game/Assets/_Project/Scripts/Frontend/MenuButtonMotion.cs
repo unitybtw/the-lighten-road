@@ -110,9 +110,9 @@ namespace TheLightenRoad.Frontend
                 Color baseCol = IsPrimaryAction ? IdlePrimaryGold : IdleIvory;
                 Color targetCol = IsPrimaryAction ? FocusedAmberGold : FocusedRadiantIvory;
                 Text.color = Color.Lerp(baseCol, targetCol, smooth);
-                Text.characterSpacing = Mathf.Lerp(IsPrimaryAction ? 6.0f : 4.5f, IsPrimaryAction ? 9.5f : 7.5f, smooth);
+                Text.characterSpacing = 1.4f;
 
-                float scale = Mathf.Lerp(1f, 1.045f, smooth) - pressBlend * 0.025f;
+                float scale = Mathf.Lerp(1f, 1.012f, smooth) - pressBlend * 0.025f;
                 Text.rectTransform.localScale = new Vector3(scale, scale, 1f);
 
                 if (LeftAlignedItem)
@@ -124,7 +124,7 @@ namespace TheLightenRoad.Frontend
 
             if (!LeftAlignedItem && transform is RectTransform selfRect)
             {
-                float btnScale = MenuPreferences.ReducedMotion ? 1f : (Mathf.Lerp(1f, 1.032f, smooth) - pressBlend * 0.025f);
+                float btnScale = MenuPreferences.ReducedMotion ? 1f : (Mathf.Lerp(1f, 1.008f, smooth) - pressBlend * 0.025f);
                 selfRect.localScale = new Vector3(btnScale, btnScale, 1f);
             }
 
@@ -182,21 +182,15 @@ namespace TheLightenRoad.Frontend
                 UnderlineFiligree.color = Color.clear;
             }
 
-            // 6. Frosted Glass Card Plate & Glowing Gold Border Frame (frameless idle, subtle atmospheric focus)
+            // Keep the hit surface transparent; focus is carried by text, glow and ornaments.
             if (CardPlate != null)
             {
-                Color idlePlate = Color.clear;
-                Color focusPlate = IsPrimaryAction
-                    ? new Color(0.040f, 0.060f, 0.100f, 0.35f)
-                    : new Color(0.025f, 0.045f, 0.085f, 0.30f);
-                CardPlate.color = Color.Lerp(idlePlate, focusPlate, smooth);
+                CardPlate.color = Color.clear;
             }
 
             if (BorderFrame != null)
             {
-                Color idleBorder = Color.clear;
-                Color focusBorder = new Color(1.0f, 0.78f, 0.32f, 0.35f);
-                BorderFrame.color = Color.Lerp(idleBorder, focusBorder, smooth);
+                BorderFrame.color = Color.clear;
             }
         }
 

@@ -9,7 +9,7 @@ namespace TheLightenRoad.Frontend
     /// <summary>
     /// Shared cinematic lantern-lit focus for settings rows and controls.
     /// Handles both mouse hover and controller gamepad navigation selection,
-    /// providing clear visual feedback via card background, glowing border and audio chime.
+    /// providing clear visual feedback via a soft lantern glow, selection ornaments and audio chime.
     /// </summary>
     public sealed class SettingsLightFocus : MonoBehaviour,
         IPointerEnterHandler,
@@ -90,23 +90,19 @@ namespace TheLightenRoad.Frontend
 
             if (Glow != null)
             {
-                Glow.color = new Color(1.0f, 0.72f, 0.28f, blend * 0.30f);
+                Glow.color = new Color(1.0f, 0.72f, 0.28f, blend * 0.07f);
                 float glowScale = Mathf.Lerp(0.92f, 1.05f, blend);
                 Glow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
             if (CardPlate != null)
             {
-                Color idlePlate = Color.clear;
-                Color focusPlate = new Color(0.025f, 0.045f, 0.085f, 0.35f);
-                CardPlate.color = Color.Lerp(idlePlate, focusPlate, blend);
+                CardPlate.color = Color.clear;
             }
 
             if (BorderFrame != null)
             {
-                Color idleBorder = Color.clear;
-                Color focusBorder = new Color(1.0f, 0.78f, 0.32f, 0.35f);
-                BorderFrame.color = Color.Lerp(idleBorder, focusBorder, blend);
+                BorderFrame.color = Color.clear;
             }
 
             if (Label != null)

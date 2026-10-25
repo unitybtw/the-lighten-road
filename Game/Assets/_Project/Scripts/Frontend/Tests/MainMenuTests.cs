@@ -23,14 +23,16 @@ namespace TheLightenRoad.Frontend.Tests
             _menu = _host.AddComponent<MainMenuController>();
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator TearDown()
         {
             MenuPreferences.SetRealmCompleted(0,completed0);MenuPreferences.SetRealmCompleted(2,completed2);
             if (_host != null)
             {
                 Object.Destroy(_host);
             }
+            // Complete deferred destruction before the next menu checks for an EventSystem.
+            yield return null;
         }
 
         [UnityTest]
@@ -115,7 +117,7 @@ namespace TheLightenRoad.Frontend.Tests
         {
             yield return null;
             _menu.SkipIntro();
-            _menu.ShowSettings();
+            _menu.ShowSettings();_menu.SelectSettingsSection(0);
 
             var masterSlider = GameObject.Find("Master Volume")?.GetComponentInChildren<Slider>();
             var musicSlider = GameObject.Find("Ambient Music")?.GetComponentInChildren<Slider>();
@@ -195,7 +197,8 @@ namespace TheLightenRoad.Frontend.Tests
         public IEnumerator SettingsCategoriesAndResetConfirmationPreserveChangesUntilConfirmed()
         {
             yield return null;_menu.SkipIntro();_menu.ShowSettings();
-            Assert.That(_menu.CurrentSettingsSection,Is.EqualTo(0));
+            Assert.That(_menu.CurrentSettingsSection,Is.EqualTo(-1));
+            Assert.That(_menu.IsOptionsIndex,Is.True);
             _menu.SelectSettingsSection(1);
             Assert.That(_menu.CurrentSettingsSection,Is.EqualTo(1));
             var panels=_menu.GetComponentsInChildren<RectTransform>(true);
@@ -214,7 +217,7 @@ namespace TheLightenRoad.Frontend.Tests
         [UnityTest]
         public IEnumerator VSyncControlsFrameLimitAndAudioChangesReceiveSaveFeedback()
         {
-            yield return null;_menu.SkipIntro();_menu.ShowSettings();
+            yield return null;_menu.SkipIntro();_menu.ShowSettings();_menu.SelectSettingsSection(0);
             MenuPreferences.SetVSync(true);int before=MenuPreferences.TargetFPS;
             _menu.SetSettingsFrameRate(120);Assert.That(MenuPreferences.TargetFPS,Is.EqualTo(before));
             MenuPreferences.SetVSync(false);_menu.SetSettingsFrameRate(120);
@@ -224,6 +227,36 @@ namespace TheLightenRoad.Frontend.Tests
             var labels=_menu.GetComponentsInChildren<TMPro.TMP_Text>(true);
             Assert.That(System.Array.Exists(labels,t=>t.text=="All changes saved"),Is.True);
             _menu.ShowHome();Assert.That(_menu.CurrentView,Is.EqualTo("home"));
+        }
+
+        [UnityTest]
+        public IEnumerator OptionsIndexBackReturnsThroughHierarchyAndNeverTargetsHiddenControls()
+        {
+            yield return null;_menu.SkipIntro();_menu.ShowSettings();
+            Assert.That(_menu.IsOptionsIndex,Is.True);
+            Assert.That(GameObject.Find("Master Volume"),Is.Null);
+            _menu.SelectSettingsSection(2);
+            Assert.That(_menu.IsOptionsIndex,Is.False);
+            var selected=UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
+            Assert.That(selected,Is.Not.Null);Assert.That(selected.activeInHierarchy,Is.True);
+            _menu.BackFromSettings();Assert.That(_menu.IsOptionsIndex,Is.True);
+            selected=UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject;
+            Assert.That(selected,Is.Not.Null);Assert.That(selected.activeInHierarchy,Is.True);
+            _menu.BackFromSettings();Assert.That(_menu.CurrentView,Is.EqualTo("home"));
+        }
+
+        [UnityTest]
+        public IEnumerator ControllerGuideUsesSchematicAndKeepsKeyboardBindingsAvailable()
+        {
+            yield return null;_menu.SkipIntro();_menu.ShowControls();_menu.SetControlsDeviceTab(1);
+            var diagram=_menu.GetComponentInChildren<ControllerSchematic>();
+            Assert.That(diagram,Is.Not.Null);Assert.That(diagram.SymmetricSticks,Is.False);
+            Assert.That(diagram.GetComponent<CanvasRenderer>(),Is.Not.Null);
+            Canvas.ForceUpdateCanvases();
+            yield return null;
+            Assert.That(diagram.canvasRenderer.GetMesh().vertexCount,Is.GreaterThan(0));
+            _menu.SetControlsDeviceTab(2);Assert.That(diagram.SymmetricSticks,Is.True);
+            _menu.SetControlsDeviceTab(0);Assert.That(diagram.gameObject.activeInHierarchy,Is.False);
         }
 
     }

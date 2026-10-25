@@ -63,7 +63,7 @@ namespace TheLightenRoad.Frontend
             leftBumperImg = leftBumperBadge.gameObject.AddComponent<Image>();
             leftBumperImg.preserveAspect = true;
             leftBumperImg.raycastTarget = false;
-            leftBumperText = CreateLabel("Keycap", leftBumperBadge, "[Q]", 12f, radiantIvory, new Vector2(50f, 32f), Vector2.one * 0.5f, Vector2.zero, Vector2.one * 0.5f);
+            leftBumperText = CreateLabel("Keycap", leftBumperBadge, "[Q]", 14f, radiantIvory, new Vector2(50f, 32f), Vector2.one * 0.5f, Vector2.zero, Vector2.one * 0.5f);
             leftBumperText.alignment = TextAlignmentOptions.Center;
             leftBumperText.fontStyle = FontStyles.Bold;
             var lBtn = leftBumperBadge.gameObject.AddComponent<Button>();
@@ -74,7 +74,7 @@ namespace TheLightenRoad.Frontend
             rightBumperImg = rightBumperBadge.gameObject.AddComponent<Image>();
             rightBumperImg.preserveAspect = true;
             rightBumperImg.raycastTarget = false;
-            rightBumperText = CreateLabel("Keycap", rightBumperBadge, "[E]", 12f, radiantIvory, new Vector2(50f, 32f), Vector2.one * 0.5f, Vector2.zero, Vector2.one * 0.5f);
+            rightBumperText = CreateLabel("Keycap", rightBumperBadge, "[E]", 14f, radiantIvory, new Vector2(50f, 32f), Vector2.one * 0.5f, Vector2.zero, Vector2.one * 0.5f);
             rightBumperText.alignment = TextAlignmentOptions.Center;
             rightBumperText.fontStyle = FontStyles.Bold;
             var rBtn = rightBumperBadge.gameObject.AddComponent<Button>();
@@ -94,7 +94,7 @@ namespace TheLightenRoad.Frontend
                 float xOffset = (i - 1.5f) * 170f;
                 settingsTabs[i]=SettingsButton(surface,names[i],new Vector2(xOffset,182f),new Vector2(162,48),()=>SelectSettingsSection(index));
                 settingsTabLabels[i]=settingsTabs[i].GetComponentInChildren<TMP_Text>();
-                settingsTabLabels[i].fontSize = 13.5f;
+                settingsTabLabels[i].fontSize = 17f;
                 var section=CreateAnchoredRect(names[i]+" settings",surface,new Vector2(720,350),Vector2.one*.5f,new Vector2(0,-22));
                 settingsSections[i]=section.gameObject;
                 var desc=SettingsText(section,descriptions[i],new Vector2(0,140),13f,moonlightSilver,720);
@@ -107,8 +107,8 @@ namespace TheLightenRoad.Frontend
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
-            var audioHint=SettingsText(audio,"Adjust audio levels for music and gameplay effects.",new Vector2(0,-156),12.5f,moonlightSilver,720);
-            audioHint.alignment=TextAlignmentOptions.Center;
+            var audioHint=SettingsText(audio,"Adjust audio levels for music and gameplay effects.",new Vector2(0,-156),14f,moonlightSilver,720);
+            audioHint.alignment=TextAlignmentOptions.Center;audioHint.gameObject.SetActive(false);
 
             var display=(RectTransform)settingsSections[1].transform;
             fullscreenToggle=CreateEtherealToggle(display,"Fullscreen","Use the whole display",84,out fullscreenToggleValueText,OnFullscreenToggled);
@@ -117,24 +117,25 @@ namespace TheLightenRoad.Frontend
 
             // Controls settings section (index 2)
             var controls=(RectTransform)settingsSections[2].transform;
-            var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,92));
-            var styleTitle=CreateLabel("Title",styleRow,"PROMPT GLYPHS",15f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,10),new Vector2(0,0.5f));
+            var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,88));
+            var styleTitle=CreateLabel("Title",styleRow,"PROMPT GLYPHS",20f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,10),new Vector2(0,0.5f));
             styleTitle.fontStyle=FontStyles.Bold; styleTitle.characterSpacing=2.5f;
-            var styleSub=CreateLabel("Subtitle",styleRow,"Xbox (A/B/X/Y), PlayStation (Cross/Circle) or PC",11.5f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
+            var styleSub=CreateLabel("Subtitle",styleRow,"Button symbols shown throughout the game",14f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
             controllerStyleButton=SettingsButton(styleRow,"< AUTO-DETECT >",new Vector2(175,0),new Vector2(250,38),CycleControllerStyle);
             controllerStyleValueText=controllerStyleButton.GetComponentInChildren<TMP_Text>();
-            controllerStyleValueText.fontSize=12.5f;
+            controllerStyleValueText.fontSize=14f;
 
-            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Haptic rumble on jump, flare and impacts",22,out vibrationToggleValueText,OnVibrationToggled);
+            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Haptic rumble on jump, flare and impacts",4,out vibrationToggleValueText,OnVibrationToggled);
 
-            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-48,out deadzoneValueText);
+            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-80,out deadzoneValueText);
             deadzoneSlider.minValue=0.05f; deadzoneSlider.maxValue=0.40f;
             deadzoneSlider.onValueChanged.AddListener(OnDeadzoneSliderChanged);
 
             var guideCard=CreateAnchoredRect("Controller Mapping Preview",controls,new Vector2(700,80),Vector2.one*0.5f,new Vector2(0,-118));
             var guideBg=guideCard.gameObject.AddComponent<Image>();
-            guideBg.sprite=softRadialSprite; guideBg.color=new Color(0.012f,0.024f,0.045f,0.85f); guideBg.raycastTarget=false;
-            controllerMappingSummaryText=SettingsText(guideCard,"",new Vector2(0,22),12f,amberGold,680);
+            guideBg.sprite=softRadialSprite; guideBg.color=Color.clear; guideBg.raycastTarget=false;
+            guideCard.gameObject.SetActive(false);
+            controllerMappingSummaryText=SettingsText(guideCard,"",new Vector2(0,22),14f,amberGold,680);
             controllerMappingSummaryText.alignment=TextAlignmentOptions.Center;
             controllerMappingSummaryText.characterSpacing=1.2f;
 
@@ -149,7 +150,7 @@ namespace TheLightenRoad.Frontend
                 icon.raycastTarget = false;
                 controllerMappingIcons[i] = icon;
 
-                var lbl = CreateLabel("Label", slot, actionNames[i], 12f, radiantIvory, new Vector2(82, 24), new Vector2(0, 0.5f), new Vector2(40, 0), new Vector2(0, 0.5f));
+                var lbl = CreateLabel("Label", slot, actionNames[i], 14f, radiantIvory, new Vector2(82, 24), new Vector2(0, 0.5f), new Vector2(40, 0), new Vector2(0, 0.5f));
                 lbl.fontStyle = FontStyles.Bold;
                 lbl.characterSpacing = 1f;
             }
@@ -159,20 +160,20 @@ namespace TheLightenRoad.Frontend
             var comfortCard=CreateAnchoredRect("Motion Comfort Card",accessibility,new Vector2(680,104),Vector2.one*.5f,new Vector2(0,-36));
             var titleComfort=SettingsText(comfortCard,"MOTION COMFORT",new Vector2(0,22),15f,radiantIvory,680);
             titleComfort.alignment=TextAlignmentOptions.Center;titleComfort.fontStyle=FontStyles.Bold;titleComfort.characterSpacing=2.5f;
-            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(0,-14),12.5f,moonlightSilver,660);
+            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(0,-14),14f,moonlightSilver,660);
             note.alignment=TextAlignmentOptions.Center;
             note.rectTransform.sizeDelta=new Vector2(660,54);
             SettingsRule(comfortCard,"Comfort Bottom Rule",new Vector2(0,-48),540);
 
-            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-198),12.5f,moonlightSilver,720);
+            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-198),14f,moonlightSilver,720);
             settingsSaveStatus.alignment=TextAlignmentOptions.Center;
             resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-155,-236),new Vector2(250,40),RequestSettingsReset);
             settingsDoneButton=SettingsButton(surface,"Back",new Vector2(155,-236),new Vector2(250,40),ShowHome);
             BuildSettingsReset(surface);
             BuildSettingsFooter(surface);
-            SelectSettingsSection(0);
+            BuildOptionsIndex(surface);
             SyncSettingsUI();
-            ConfigureSettingsNavigation();
+            OpenOptionsIndex();
         }
 
         private void BuildSettingsFooter(RectTransform parent)
@@ -191,7 +192,7 @@ namespace TheLightenRoad.Frontend
             footerSelectIcon = icon0.gameObject.AddComponent<Image>();
             footerSelectIcon.preserveAspect = true;
             footerSelectIcon.raycastTarget = false;
-            footerSelectText = CreateLabel("Label", s0, "SELECT", 12f, radiantIvory, new Vector2(130f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerSelectText = CreateLabel("Label", s0, "SELECT", 14f, radiantIvory, new Vector2(130f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
             footerSelectText.fontStyle = FontStyles.Bold;
             footerSelectText.characterSpacing = 1.2f;
 
@@ -201,11 +202,11 @@ namespace TheLightenRoad.Frontend
             footerBackIcon = icon1.gameObject.AddComponent<Image>();
             footerBackIcon.preserveAspect = true;
             footerBackIcon.raycastTarget = false;
-            footerBackText = CreateLabel("Label", s1, "BACK", 12f, radiantIvory, new Vector2(110f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerBackText = CreateLabel("Label", s1, "BACK", 14f, radiantIvory, new Vector2(110f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
             footerBackText.fontStyle = FontStyles.Bold;
             footerBackText.characterSpacing = 1.2f;
             var bBtn = s1.gameObject.AddComponent<Button>();
-            bBtn.onClick.AddListener(ShowHome);
+            bBtn.onClick.AddListener(BackFromSettings);
 
             // Slot 2: RESTORE DEFAULTS
             var s2 = CreateAnchoredRect("Slot_Reset", settingsFooterBar, new Vector2(200f, 32f), Vector2.one * 0.5f, new Vector2(xPos[2], 0f));
@@ -213,7 +214,7 @@ namespace TheLightenRoad.Frontend
             footerResetIcon = icon2.gameObject.AddComponent<Image>();
             footerResetIcon.preserveAspect = true;
             footerResetIcon.raycastTarget = false;
-            footerResetText = CreateLabel("Label", s2, "RESTORE DEFAULTS", 12f, radiantIvory, new Vector2(150f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerResetText = CreateLabel("Label", s2, "RESTORE DEFAULTS", 14f, radiantIvory, new Vector2(150f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
             footerResetText.fontStyle = FontStyles.Bold;
             footerResetText.characterSpacing = 1.2f;
             var rBtn = s2.gameObject.AddComponent<Button>();
@@ -225,7 +226,7 @@ namespace TheLightenRoad.Frontend
             footerTabIcon = icon3.gameObject.AddComponent<Image>();
             footerTabIcon.preserveAspect = true;
             footerTabIcon.raycastTarget = false;
-            footerTabText = CreateLabel("Label", s3, "SWITCH TAB", 12f, radiantIvory, new Vector2(130f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
+            footerTabText = CreateLabel("Label", s3, "SWITCH TAB", 14f, radiantIvory, new Vector2(130f, 24f), new Vector2(0f, 0.5f), new Vector2(34f, 0f), new Vector2(0f, 0.5f));
             footerTabText.fontStyle = FontStyles.Bold;
             footerTabText.characterSpacing = 1.2f;
 
@@ -332,11 +333,13 @@ namespace TheLightenRoad.Frontend
                     if (footerTabText != null) footerTabText.text = "[Q / E] TABS";
                 }
             }
+            UpdateOptionsFooterLayout();
         }
 
         public void SelectSettingsSection(int section)
         {
             settingsSection = Mathf.Clamp(section, 0, 3);
+            ShowOptionsPage(settingsSection);
             if (settingsResetPanel != null) settingsResetPanel.SetActive(false);
             for (int i = 0; i < settingsSections.Length; i++)
             {
@@ -345,7 +348,7 @@ namespace TheLightenRoad.Frontend
                 if (settingsTabs[i] != null) settingsTabs[i].interactable = true;
                 if (settingsTabLabels[i] != null)
                 {
-                    settingsTabLabels[i].text = active ? $"<  {SectionTabNames[i].ToUpperInvariant()}  >" : SectionTabNames[i].ToUpperInvariant();
+                    settingsTabLabels[i].text = new[]{"Audio","Video","Controller","Accessibility"}[i];
                     settingsTabLabels[i].color = active ? amberGold : radiantIvory;
                 }
                 var focus = settingsTabs[i] != null ? settingsTabs[i].GetComponent<SettingsLightFocus>() : null;
@@ -370,7 +373,7 @@ namespace TheLightenRoad.Frontend
 
             var titleTxt=CreateLabel("Title",row,"FRAME LIMIT",16.5f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,11),new Vector2(0,0.5f));
             titleTxt.fontStyle=FontStyles.Bold;titleTxt.characterSpacing=2.5f;
-            frameRateHint=CreateLabel("Subtitle",row,"",12f,moonlightSilver,new Vector2(340,22),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
+            frameRateHint=CreateLabel("Subtitle",row,"",14f,moonlightSilver,new Vector2(340,22),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
 
             for(int i=0;i<3;i++)
             {
@@ -459,6 +462,7 @@ namespace TheLightenRoad.Frontend
 
         private void ConfigureSettingsNavigation()
         {
+            if(IsOptionsIndex){ConfigureOptionsIndexNavigation();return;}
             Selectable[] first = { masterSlider, fullscreenToggle, controllerStyleButton, motionToggle };
             Selectable lastInActiveSection = null;
 
@@ -592,6 +596,11 @@ namespace TheLightenRoad.Frontend
                 nav.selectOnDown = settingsTabs[settingsSection];
                 settingsDoneButton.navigation = nav;
             }
+            int page=Mathf.Clamp(settingsSection,0,3);
+            if(first[page]!=null){var n=first[page].navigation;n.selectOnUp=settingsDoneButton;first[page].navigation=n;}
+            if(vsyncToggle!=null){var n=vsyncToggle.navigation;n.selectOnDown=MenuPreferences.VSync?resetSettingsButton:frameRateOptions[0];vsyncToggle.navigation=n;}
+            var rn=resetSettingsButton.navigation;rn.selectOnDown=settingsDoneButton;rn.selectOnLeft=null;rn.selectOnRight=settingsDoneButton;resetSettingsButton.navigation=rn;
+            var bn=settingsDoneButton.navigation;bn.selectOnDown=first[page];bn.selectOnLeft=resetSettingsButton;bn.selectOnRight=null;settingsDoneButton.navigation=bn;
         }
 
         private void CycleControllerStyle()
@@ -628,10 +637,10 @@ namespace TheLightenRoad.Frontend
             if (controllerStyleValueText != null)
             {
                 int style = MenuPreferences.ControllerStyle;
-                string label = "< AUTO-DETECT >";
-                if (style == 1) label = "< XBOX (A / B / X / Y) >";
-                else if (style == 2) label = "< PLAYSTATION (CROSS / CIRCLE) >";
-                else if (style == 3) label = "< KEYBOARD & MOUSE >";
+                string label = "Automatic";
+                if (style == 1) label = "Xbox";
+                else if (style == 2) label = "PlayStation";
+                else if (style == 3) label = "Keyboard & mouse";
                 controllerStyleValueText.text = label;
             }
 

@@ -824,7 +824,7 @@ namespace TheLightenRoad.Frontend
             var r = mainPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.sizeDelta = new Vector2(680f, 440f);
-            r.anchoredPosition = new Vector2(0f, -80f);
+            r.anchoredPosition = new Vector2(0f, 0f);
 
             if (topFiligreeSprite != null)
             {
@@ -874,7 +874,7 @@ namespace TheLightenRoad.Frontend
             var r = settingsPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.sizeDelta = new Vector2(780f, 500f);
-            r.anchoredPosition = new Vector2(0f, -80f);
+            r.anchoredPosition = new Vector2(0f, 0f);
 
             if (topFiligreeSprite != null)
             {
@@ -993,7 +993,7 @@ namespace TheLightenRoad.Frontend
             var r = controlsPanel.GetComponent<RectTransform>();
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.sizeDelta = new Vector2(780f, 530f);
-            r.anchoredPosition = new Vector2(0f, -70f);
+            r.anchoredPosition = new Vector2(0f, 0f);
 
             if (topFiligreeSprite != null)
             {
@@ -1055,7 +1055,7 @@ namespace TheLightenRoad.Frontend
             pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y, 0);
             pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step, 1);
             pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2, 2);
-            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3, 3);
+            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3, 3);
             pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4, 4);
             pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5, 5);
 
@@ -1173,13 +1173,13 @@ namespace TheLightenRoad.Frontend
                 pauseControlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
                 pauseControlsRowKeyLabels[1].text = "[ SPACE  /  W ]";
                 pauseControlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
-                pauseControlsRowKeyLabels[3].text = "[ F  /  L-CLICK ]";
+                pauseControlsRowKeyLabels[3].text = "[ F ]";
                 pauseControlsRowKeyLabels[4].text = "[ E  (HOLD) ]";
                 pauseControlsRowKeyLabels[5].text = "[ ESC / P ]";
             }
             else if (selectedPauseControlsDeviceTab == 1) // Xbox
             {
-                string[] xbIcons = { "LeftStick", "A", "RT", "X", "Y", "Menu" };
+                string[] xbIcons = { "LeftStick", "A", "LeftStickClick", "X", "Y", "Menu" };
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                 {
                     if (pauseControlsRowIcons[i] != null)
@@ -1191,14 +1191,14 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 pauseControlsRowKeyLabels[1].text = "[ A ]  (SOUTH)";
-                pauseControlsRowKeyLabels[2].text = "[ RT / LS ]";
-                pauseControlsRowKeyLabels[3].text = "[ RT / X ]";
+                pauseControlsRowKeyLabels[2].text = "[ LS CLICK ]";
+                pauseControlsRowKeyLabels[3].text = "[ X ]";
                 pauseControlsRowKeyLabels[4].text = "[ Y / B ]";
                 pauseControlsRowKeyLabels[5].text = "[ MENU ]";
             }
             else // PlayStation
             {
-                string[] psIcons = { "LeftStick", "Cross", "R2", "Square", "Triangle", "Options" };
+                string[] psIcons = { "LeftStick", "Cross", "LeftStickClick", "Square", "Triangle", "Options" };
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                 {
                     if (pauseControlsRowIcons[i] != null)
@@ -1210,8 +1210,8 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 pauseControlsRowKeyLabels[1].text = "[ CROSS ]";
-                pauseControlsRowKeyLabels[2].text = "[ R2 / L3 ]";
-                pauseControlsRowKeyLabels[3].text = "[ R2 / SQUARE ]";
+                pauseControlsRowKeyLabels[2].text = "[ L3 ]";
+                pauseControlsRowKeyLabels[3].text = "[ SQUARE ]";
                 pauseControlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
                 pauseControlsRowKeyLabels[5].text = "[ OPTIONS ]";
             }
@@ -1475,9 +1475,10 @@ namespace TheLightenRoad.Frontend
             }
 
             var titleTxt = CreateLabel("Title", itemRect, new Vector2(0f, 8f), new Vector2(cardSize.x - 40f, 28f),
-                title.ToUpperInvariant(), isPrimary ? 20.5f : 17.5f, TextAlignmentOptions.Center, isPrimary ? amberGold : radiantIvory);
-            titleTxt.fontStyle = FontStyles.Bold;
-            titleTxt.characterSpacing = isPrimary ? 6f : 4.5f;
+                title.ToUpperInvariant(), isPrimary ? 28f : 25f, TextAlignmentOptions.Center, isPrimary ? amberGold : radiantIvory);
+            titleTxt.fontStyle = FontStyles.Normal;
+            titleTxt.characterSpacing = 1.4f;
+            wingOffset=Mathf.Clamp(titleTxt.preferredWidth*.5f+30f,90f,220f);
 
             var subTxt = CreateLabel("Subtitle", itemRect, new Vector2(0f, -12f), new Vector2(cardSize.x - 40f, 18f),
                 subtitle, 11f, TextAlignmentOptions.Center, moonlightSilver);
@@ -1656,7 +1657,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
-            titleTxt.fontStyle = FontStyles.Bold;
+            titleTxt.fontStyle = FontStyles.Normal;
             titleTxt.characterSpacing = 2.5f;
 
             var subTxt = CreateLabel("Subtitle", row, new Vector2(16f, -9f), new Vector2(350f, 16f),
@@ -1785,7 +1786,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
-            titleTxt.fontStyle = FontStyles.Bold;
+            titleTxt.fontStyle = FontStyles.Normal;
             titleTxt.characterSpacing = 2.5f;
 
             var subTxt = CreateLabel("Subtitle", row, new Vector2(16f, -9f), new Vector2(450f, 16f),
@@ -1900,6 +1901,7 @@ namespace TheLightenRoad.Frontend
             if (font != null) tmp.font = font;
             tmp.text = text;
             tmp.fontSize = fontSize;
+            ArchiveMenuStyle.Apply(tmp,name,fontSize);
             tmp.alignment = align;
             tmp.color = color;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;

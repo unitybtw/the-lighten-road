@@ -279,6 +279,8 @@ namespace TheLightenRoad.Frontend
             else if (backPressed && !loading && !quitting)
             {
                 if(view=="settings" && settingsResetPanel!=null && settingsResetPanel.activeSelf)CancelSettingsReset();
+                else if(view=="settings")BackFromSettings();
+                else if(view=="controls")BackFromControls();
                 else if (view == "home") ShowQuit();
                 else ShowHome();
             }
@@ -305,12 +307,12 @@ namespace TheLightenRoad.Frontend
                             || (activePad != null && activePad.leftShoulder.wasPressedThisFrame);
                 bool nextTab = (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
                             || (activePad != null && activePad.rightShoulder.wasPressedThisFrame);
-                if (prevTab)
+                if (prevTab && !IsOptionsIndex && !IsSettingsResetOpen)
                 {
                     SelectSettingsSection((settingsSection - 1 + 4) % 4);
                     if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
                 }
-                else if (nextTab)
+                else if (nextTab && !IsOptionsIndex && !IsSettingsResetOpen)
                 {
                     SelectSettingsSection((settingsSection + 1) % 4);
                     if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
@@ -318,7 +320,7 @@ namespace TheLightenRoad.Frontend
 
                 bool resetKey = (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
                              || (activePad != null && activePad.buttonNorth.wasPressedThisFrame);
-                if (resetKey && !IsSettingsResetOpen)
+                if (resetKey && !IsSettingsResetOpen && !IsOptionsIndex)
                 {
                     RequestSettingsReset();
                 }
@@ -517,6 +519,16 @@ namespace TheLightenRoad.Frontend
             MenuPreferences.Save();
             view = nextView;
             viewAge = 0f;
+            // Selection must be enabled before EventSystem receives the first target.
+            // Waiting until Update drops controller focus when opening a faded-out view.
+            CanvasGroup[] groups={homeGroup,realmsGroup,settingsGroup,controlsGroup,creditsGroup,quitGroup};
+            string[] views={"home","realms","settings","controls","credits","quit"};
+            for(int i=0;i<groups.Length;i++)
+            {
+                if(groups[i]==null)continue;
+                groups[i].interactable=views[i]==view && introDone;
+                groups[i].blocksRaycasts=views[i]==view;
+            }
             stage?.TriggerInteractionSurge(new Vector2(0f, 40f), stageCameraFocus, 0.9f);
 
             if (EventSystem.current != null && firstSelectable != null)
@@ -535,7 +547,7 @@ namespace TheLightenRoad.Frontend
             {
                 Selectable[] firstControls = { masterSlider, fullscreenToggle, controllerStyleButton, motionToggle };
                 int sec = Mathf.Clamp(settingsSection, 0, 3);
-                target = (firstControls[sec] != null) ? firstControls[sec].gameObject : (settingsTabs != null && settingsTabs.Length > sec && settingsTabs[sec] != null ? settingsTabs[sec].gameObject : null);
+                target = IsOptionsIndex ? settingsTabs[0].gameObject : (firstControls[sec] != null) ? firstControls[sec].gameObject : (settingsTabs != null && settingsTabs.Length > sec && settingsTabs[sec] != null ? settingsTabs[sec].gameObject : null);
             }
             else if (view == "controls" && controlsFirst != null) target = controlsFirst.gameObject;
             else if (view == "credits" && creditsFirst != null) target = creditsFirst.gameObject;
@@ -550,8 +562,8 @@ namespace TheLightenRoad.Frontend
             SetView("home", playButton, Vector2.zero);
         }
         public void ShowRealms() { RefreshRealmSelectionUI(); SetView("realms", realmsFirst, new Vector2(-28f, -14f)); }
-        public void ShowSettings() { SyncSettingsUI(); SelectSettingsSection(0); SetView("settings", masterSlider, new Vector2(24f, -18f)); }
-        public void ShowControls() => SetView("controls", controlsFirst, new Vector2(-18f, 16f));
+        public void ShowSettings() { SyncSettingsUI(); OpenOptionsIndex(); SetView("settings", settingsTabs[0], Vector2.zero); }
+        public void ShowControls() { controlsFromOptions=false; SetView("controls", controlsFirst, Vector2.zero); }
         public void ShowCredits() => SetView("credits", creditsFirst, new Vector2(18f, 16f));
         public void ShowQuit() => SetView("quit", quitFirst, new Vector2(0f, -26f));
 
@@ -1060,10 +1072,10 @@ namespace TheLightenRoad.Frontend
             eyebrow.characterSpacing = 5.5f;
 
             // Monumental Centered Title: THE LIGHTEN ROAD
-            var mainTitle = CreateLabel("Title Lighten Road", homeHeaderRect, "THE LIGHTEN ROAD", 52f, radiantIvory, new Vector2(820f, 68f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), pivot: new Vector2(0.5f, 0.5f));
+            var mainTitle = CreateLabel("Title Lighten Road", homeHeaderRect, "THE LIGHTEN ROAD", 78f, radiantIvory, new Vector2(820f, 68f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), pivot: new Vector2(0.5f, 0.5f));
             mainTitle.alignment = TextAlignmentOptions.Center;
-            mainTitle.fontStyle = FontStyles.Bold;
-            mainTitle.characterSpacing = 9.5f;
+            mainTitle.fontStyle = FontStyles.Normal;
+            mainTitle.characterSpacing = 2f;
 
             // Bottom Sacred Crest + Signature Lantern Ember Core ("Hollow Knight + Uniquely Ours")
             if (bottomCrestSprite != null)
@@ -1219,18 +1231,19 @@ namespace TheLightenRoad.Frontend
             lineImg.raycastTarget = false;
 
             // Centered Typography (Pale Moon-Ivory at rest -> Warm Radiant Gold on focus)
-            var titleTxt = CreateLabel("Title", itemRect, labelText.ToUpperInvariant(), isPrimary ? 20.5f : 17.5f, radiantIvory, new Vector2(cardSize.x - 30f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var titleTxt = CreateLabel("Title", itemRect, labelText.ToUpperInvariant(), isPrimary ? 29f : 26f, radiantIvory, new Vector2(cardSize.x - 30f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             titleTxt.alignment = TextAlignmentOptions.Center;
-            titleTxt.fontStyle = FontStyles.Bold;
-            titleTxt.characterSpacing = isPrimary ? 6.0f : 4.5f;
+            titleTxt.fontStyle = FontStyles.Normal;
+            titleTxt.characterSpacing = 1.4f;
+            customWingOffset=Mathf.Clamp(titleTxt.preferredWidth*.5f+30f,85f,220f);
 
             // Symmetrical Hollow-Knight Pointers + Signature Lantern Ember Spark Tips
             var wingContainer = CreateAnchoredRect("Wings Container", itemRect, new Vector2(cardSize.x + 80f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
             wingGroup.alpha = isPrimary ? 0.25f : 0f;
 
-            RectTransform leftWingRect = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(46f, 22f), new Vector2(0.5f, 0.5f), new Vector2(-customWingOffset, 0f), pivot: new Vector2(0.5f, 0.5f));
-            RectTransform rightWingRect = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(46f, 22f), new Vector2(0.5f, 0.5f), new Vector2(customWingOffset, 0f), pivot: new Vector2(0.5f, 0.5f));
+            RectTransform leftWingRect = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(28f, 15f), new Vector2(0.5f, 0.5f), new Vector2(-customWingOffset, 0f), pivot: new Vector2(0.5f, 0.5f));
+            RectTransform rightWingRect = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(28f, 15f), new Vector2(0.5f, 0.5f), new Vector2(customWingOffset, 0f), pivot: new Vector2(0.5f, 0.5f));
             rightWingRect.localScale = new Vector3(-1f, 1f, 1f);
 
             if (buttonPointerSprite != null)
@@ -1368,7 +1381,7 @@ namespace TheLightenRoad.Frontend
                 var titleTxt = CreateLabel("Realm Title", row, $"{r.Number}   —   {r.Title}", 20f, (i == selectedRealmIndex) ? FocusedAmberGold : radiantIvory, new Vector2(640f, 28f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f));
                 titleTxt.rectTransform.pivot = Vector2.one * 0.5f;
                 titleTxt.alignment = TextAlignmentOptions.Center;
-                titleTxt.fontStyle = FontStyles.Bold;
+                titleTxt.fontStyle = FontStyles.Normal;
                 titleTxt.characterSpacing = 3.5f;
                 realmTitles.Add(titleTxt);
 
@@ -1440,8 +1453,8 @@ namespace TheLightenRoad.Frontend
             divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.15f);
             divImg.raycastTarget = false;
 
-            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 15.5f, radiantIvory, new Vector2(340f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
-            titleTxt.fontStyle = FontStyles.Bold;
+            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 20f, radiantIvory, new Vector2(340f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
+            titleTxt.fontStyle = FontStyles.Normal;
             titleTxt.characterSpacing = 2.5f;
 
             var subTxt = CreateLabel("Subtitle", row, subtitle, 11.5f, moonlightSilver, new Vector2(350f, 20f), new Vector2(0f, 0.5f), new Vector2(16f, -12f), pivot: new Vector2(0f, 0.5f));
@@ -1535,8 +1548,8 @@ namespace TheLightenRoad.Frontend
             divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.15f);
             divImg.raycastTarget = false;
 
-            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 15.5f, radiantIvory, new Vector2(440f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
-            titleTxt.fontStyle = FontStyles.Bold;
+            var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 20f, radiantIvory, new Vector2(440f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
+            titleTxt.fontStyle = FontStyles.Normal;
             titleTxt.characterSpacing = 2.5f;
 
             var subTxt = CreateLabel("Subtitle", row, subtitle, 11.5f, moonlightSilver, new Vector2(440f, 20f), new Vector2(0f, 0.5f), new Vector2(16f, -12f), pivot: new Vector2(0f, 0.5f));
@@ -1590,11 +1603,12 @@ namespace TheLightenRoad.Frontend
             controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right across the archive", 135f, 0);
             controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Variable height jump and ledge climb", 84f, 1);
             controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f, 2);
-            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F / L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -18f, 3);
+            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -18f, 3);
             controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Channel embers into ancient conduits", -69f, 4);
             controlsRowKeyLabels[5] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f, 5);
 
-            controlsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -268f), ShowHome, isPrimary: true, width: 310f);
+            BuildControllerGuide(surface);
+            controlsFirst = CreateEtherealActionButton(surface, "Back", new Vector2(0f, -268f), BackFromControls, isPrimary: true, width: 310f);
 
             var initialStyle = ControllerGlyphService.ActiveStyle;
             int defaultTab = initialStyle == ControllerPromptStyle.PlayStation ? 2 : (initialStyle == ControllerPromptStyle.Xbox ? 1 : 0);
@@ -1608,11 +1622,15 @@ namespace TheLightenRoad.Frontend
             {
                 bool active = (i == selectedControlsDeviceTab);
                 if (controlsDeviceTabLabels[i] != null) controlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+                var focus=controlsDeviceTabs[i]!=null?controlsDeviceTabs[i].GetComponent<SettingsLightFocus>():null;
+                if(focus!=null)focus.IsCurrent=active;
+                if(controlsDeviceTabLabels[i]!=null)controlsDeviceTabLabels[i].text=active?"· "+new[]{"Keyboard","Xbox Pad","PlayStation"}[i]+" ·":new[]{"Keyboard","Xbox Pad","PlayStation"}[i];
                 var marker = controlsDeviceTabs[i] != null ? controlsDeviceTabs[i].transform.Find("Selection rule") : null;
                 if (marker != null) marker.gameObject.SetActive(active);
             }
 
             if (controlsRowKeyLabels[0] == null) return;
+            UpdateControllerGuide(selectedControlsDeviceTab);
 
             if (selectedControlsDeviceTab == 0) // Keyboard
             {
@@ -1622,13 +1640,13 @@ namespace TheLightenRoad.Frontend
                 controlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
                 controlsRowKeyLabels[1].text = "[ SPACE ]";
                 controlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
-                controlsRowKeyLabels[3].text = "[ F / L-CLICK ]";
+                controlsRowKeyLabels[3].text = "[ F ]";
                 controlsRowKeyLabels[4].text = "[ E ]";
                 controlsRowKeyLabels[5].text = "[ ESC ]";
             }
             else if (selectedControlsDeviceTab == 1) // Xbox
             {
-                string[] xbIcons = { "LeftStick", "A", "RT", "X", "Y", "Menu" };
+                string[] xbIcons = { "LeftStick", "A", "LeftStickClick", "X", "Y", "Menu" };
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                 {
                     if (controlsRowIcons[i] != null)
@@ -1640,14 +1658,14 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ A ]";
-                controlsRowKeyLabels[2].text = "[ RT / LS ]";
-                controlsRowKeyLabels[3].text = "[ RT / X ]";
+                controlsRowKeyLabels[2].text = "[ LS CLICK ]";
+                controlsRowKeyLabels[3].text = "[ X ]";
                 controlsRowKeyLabels[4].text = "[ Y / B ]";
                 controlsRowKeyLabels[5].text = "[ MENU ]";
             }
             else // PlayStation
             {
-                string[] psIcons = { "LeftStick", "Cross", "R2", "Square", "Triangle", "Options" };
+                string[] psIcons = { "LeftStick", "Cross", "LeftStickClick", "Square", "Triangle", "Options" };
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                 {
                     if (controlsRowIcons[i] != null)
@@ -1659,8 +1677,8 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ CROSS ]";
-                controlsRowKeyLabels[2].text = "[ R2 / L3 ]";
-                controlsRowKeyLabels[3].text = "[ R2 / SQUARE ]";
+                controlsRowKeyLabels[2].text = "[ L3 ]";
+                controlsRowKeyLabels[3].text = "[ SQUARE ]";
                 controlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
                 controlsRowKeyLabels[5].text = "[ OPTIONS ]";
             }
@@ -1794,7 +1812,7 @@ namespace TheLightenRoad.Frontend
                 var topCrest = CreateAnchoredRect("Quit Top Filigree", surface, new Vector2(460f, 52f), new Vector2(0.5f, 0.5f), new Vector2(0f, 148f));
                 var topImg = topCrest.gameObject.AddComponent<Image>();
                 topImg.sprite = topFiligreeSprite;
-                topImg.color = new Color(0.86f, 0.92f, 1.0f, 0.90f);
+                topImg.color = Color.clear;
                 topImg.raycastTarget = false;
             }
 
@@ -1839,22 +1857,23 @@ namespace TheLightenRoad.Frontend
                 var topCrest = CreateAnchoredRect("Header Top Filigree", container, new Vector2(480f, 52f), new Vector2(0.5f, 0.5f), new Vector2(0f, 362f));
                 var topImg = topCrest.gameObject.AddComponent<Image>();
                 topImg.sprite = topFiligreeSprite;
-                topImg.color = new Color(0.86f, 0.92f, 1.0f, 0.90f);
+                topImg.color = Color.clear;
                 topImg.raycastTarget = false;
             }
 
             var sub = CreateLabel("Subheading", container, $"-   {subheading}   -", 11f, moonlightSilver, new Vector2(860f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 322f));
             sub.rectTransform.pivot = Vector2.one * 0.5f;
             sub.alignment = TextAlignmentOptions.Center;
-            sub.characterSpacing = 5.5f;
+            sub.characterSpacing = 2f;
+            sub.gameObject.SetActive(false);
 
             var head = CreateLabel("Heading", container, heading, 36f, radiantIvory, new Vector2(900f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, 282f));
             head.rectTransform.pivot = Vector2.one * 0.5f;
             head.alignment = TextAlignmentOptions.Center;
-            head.fontStyle = FontStyles.Bold;
-            head.characterSpacing = 7.0f;
+            head.fontStyle = FontStyles.Normal;
+            head.characterSpacing = 2f;
 
-            var botCrest = CreateAnchoredRect("Header Bottom Filigree", container, new Vector2(540f, 34f), new Vector2(0.5f, 0.5f), new Vector2(0f, 238f));
+            var botCrest = CreateAnchoredRect("Header Bottom Filigree", container, new Vector2(430f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 238f));
             var botImg = botCrest.gameObject.AddComponent<Image>();
             botImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
             botImg.color = new Color(0.86f, 0.92f, 1.0f, 0.88f);
@@ -1906,7 +1925,7 @@ namespace TheLightenRoad.Frontend
             lineImg.color = Color.clear;
             lineImg.raycastTarget = false;
 
-            var txt = CreateLabel("Caption", rect, label.ToUpperInvariant(), 14.5f, radiantIvory, new Vector2(width - 20f, 36f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var txt = CreateLabel("Caption", rect, label.ToUpperInvariant(), 22f, radiantIvory, new Vector2(width - 20f, 36f), new Vector2(0.5f, 0.5f), Vector2.zero);
             txt.rectTransform.pivot = Vector2.one * 0.5f;
             txt.alignment = TextAlignmentOptions.Center;
             txt.fontStyle = FontStyles.Bold;
@@ -2030,6 +2049,7 @@ namespace TheLightenRoad.Frontend
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;
             text.raycastTarget = false;
+            ArchiveMenuStyle.Apply(text,name,fontSize);
             return text;
         }
 

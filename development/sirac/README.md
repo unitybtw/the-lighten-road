@@ -633,3 +633,7 @@ Implemented the ancient Flare rune mechanic and secret passage system (`FlareGly
 ## Checkpoint — lantern-lit Options (23 October 2026)
 
 Main-menu settings now use Audio, Display and Accessibility categories, frameless light-based focus, actual archive cage lamps/chains and calmer motion support. Direct frame-limit choices explain V-Sync interaction; settings show debounced save feedback and flush on return. Restore Defaults asks for confirmation and no longer erases realm-completion progress. The new layout is isolated in `MainMenuSettingsView.cs`; the title/stage and Credits are preserved. **14/14 frontend PlayMode tests passed** in Unity 6000.3.2f1.
+
+## Menu reference study — 2026-10-25
+
+Implemented the centered serif title menu, hierarchical Options pages, original controller schematic and consistent pause styling. See [design decisions, current previews and verification](MENU-REFERENCE-STUDY.md). Unity Editor PlayMode: **26/26 passed**; physical gamepad and standalone-build checks remain unverified.
