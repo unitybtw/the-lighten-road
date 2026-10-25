@@ -843,6 +843,7 @@ namespace TheLightenRoad.Frontend
         }
 
         private readonly TMP_Text[] pauseControlsRowKeyLabels = new TMP_Text[6];
+        private readonly Image[] pauseControlsRowIcons = new Image[6];
         private readonly Button[] pauseControlsDeviceTabs = new Button[3];
         private readonly TMP_Text[] pauseControlsDeviceTabLabels = new TMP_Text[3];
         private int selectedPauseControlsDeviceTab = 0;
@@ -882,12 +883,12 @@ namespace TheLightenRoad.Frontend
 
             float y = 120f;
             float step = 40f;
-            pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y);
-            pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step);
-            pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2);
-            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3);
-            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4);
-            pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5);
+            pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y, 0);
+            pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step, 1);
+            pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2, 2);
+            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F  /  L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3, 3);
+            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4, 4);
+            pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5, 5);
 
             // Quick options bar: Prompt Style and Vibration
             pausePromptStyleButton = CreateEtherealActionButton("PausePromptStyleBtn", r, "PROMPT: < AUTO >", new Vector2(-155f, -150f), CyclePausePromptStyle, isPrimary: false, width: 280f);
@@ -960,6 +961,9 @@ namespace TheLightenRoad.Frontend
 
             if (selectedPauseControlsDeviceTab == 0) // Keyboard
             {
+                for (int i = 0; i < pauseControlsRowIcons.Length; i++)
+                    if (pauseControlsRowIcons[i] != null) pauseControlsRowIcons[i].color = Color.clear;
+
                 pauseControlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
                 pauseControlsRowKeyLabels[1].text = "[ SPACE  /  W ]";
                 pauseControlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
@@ -969,17 +973,37 @@ namespace TheLightenRoad.Frontend
             }
             else if (selectedPauseControlsDeviceTab == 1) // Xbox
             {
+                string[] xbIcons = { "LeftStick", "A", "RT", "X", "Y", "Menu" };
+                for (int i = 0; i < pauseControlsRowIcons.Length; i++)
+                {
+                    if (pauseControlsRowIcons[i] != null)
+                    {
+                        pauseControlsRowIcons[i].sprite = ControllerGlyphService.GetGlyphSprite(xbIcons[i], ControllerPromptStyle.Xbox);
+                        pauseControlsRowIcons[i].color = Color.white;
+                    }
+                }
+
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
-                pauseControlsRowKeyLabels[1].text = "[ A ] (SOUTH)";
+                pauseControlsRowKeyLabels[1].text = "[ A ]  (SOUTH)";
                 pauseControlsRowKeyLabels[2].text = "[ RT / LS ]";
                 pauseControlsRowKeyLabels[3].text = "[ RT / X ]";
                 pauseControlsRowKeyLabels[4].text = "[ Y / B ]";
-                pauseControlsRowKeyLabels[5].text = "[ MENU / START ]";
+                pauseControlsRowKeyLabels[5].text = "[ MENU ]";
             }
             else // PlayStation
             {
+                string[] psIcons = { "LeftStick", "Cross", "R2", "Square", "Triangle", "Options" };
+                for (int i = 0; i < pauseControlsRowIcons.Length; i++)
+                {
+                    if (pauseControlsRowIcons[i] != null)
+                    {
+                        pauseControlsRowIcons[i].sprite = ControllerGlyphService.GetGlyphSprite(psIcons[i], ControllerPromptStyle.PlayStation);
+                        pauseControlsRowIcons[i].color = Color.white;
+                    }
+                }
+
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
-                pauseControlsRowKeyLabels[1].text = "[ ✕ ] (CROSS)";
+                pauseControlsRowKeyLabels[1].text = "[ ✕ ]  (CROSS)";
                 pauseControlsRowKeyLabels[2].text = "[ R2 / L3 ]";
                 pauseControlsRowKeyLabels[3].text = "[ R2 / □ ]";
                 pauseControlsRowKeyLabels[4].text = "[ △ / ○ ]";
@@ -1292,7 +1316,7 @@ namespace TheLightenRoad.Frontend
             return toggle;
         }
 
-        private TMP_Text CreateControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
+        private TMP_Text CreateControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos, int rowIndex = -1)
         {
             var row = CreateAnchoredRect(actionTitle, parent, new Vector2(740f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
@@ -1307,7 +1331,14 @@ namespace TheLightenRoad.Frontend
             badgeImg.sprite = softRadialSprite;
             badgeImg.color = new Color(1.0f, 0.72f, 0.28f, 0.16f);
 
-            var keyTxt = CreateLabel("Key Text", badge, Vector2.zero, new Vector2(200f, 28f),
+            var iconRect = CreateAnchoredRect("Glyph Icon", badge, new Vector2(22f, 22f), new Vector2(0f, 0.5f), new Vector2(18f, 0f));
+            var iconImg = iconRect.gameObject.AddComponent<Image>();
+            iconImg.color = Color.clear;
+            iconImg.raycastTarget = false;
+            if (rowIndex >= 0 && rowIndex < pauseControlsRowIcons.Length)
+                pauseControlsRowIcons[rowIndex] = iconImg;
+
+            var keyTxt = CreateLabel("Key Text", badge, new Vector2(10f, 0f), new Vector2(170f, 28f),
                 keys, 12f, TextAlignmentOptions.Center, amberGold);
             keyTxt.fontStyle = FontStyles.Bold;
             keyTxt.characterSpacing = 1.5f;

@@ -74,6 +74,28 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [Test]
+        public void ControllerGlyphService_LoadsAuthenticZackslySprites()
+        {
+            var psCross = ControllerGlyphService.GetGlyphSprite("Cross", ControllerPromptStyle.PlayStation);
+            Assert.That(psCross, Is.Not.Null, "PlayStation Cross sprite should load from Resources");
+
+            var psCircle = ControllerGlyphService.GetGlyphSprite("Circle", ControllerPromptStyle.PlayStation);
+            Assert.That(psCircle, Is.Not.Null, "PlayStation Circle sprite should load from Resources");
+
+            var xboxA = ControllerGlyphService.GetGlyphSprite("A", ControllerPromptStyle.Xbox);
+            Assert.That(xboxA, Is.Not.Null, "Xbox A sprite should load from Resources");
+
+            var xboxX = ControllerGlyphService.GetGlyphSprite("X", ControllerPromptStyle.Xbox);
+            Assert.That(xboxX, Is.Not.Null, "Xbox X sprite should load from Resources");
+
+            var psJump = ControllerGlyphService.GetActionSprite(GlyphAction.Jump, ControllerPromptStyle.PlayStation);
+            Assert.That(psJump, Is.EqualTo(psCross), "PlayStation Jump should resolve to Cross sprite");
+
+            var xboxJump = ControllerGlyphService.GetActionSprite(GlyphAction.Jump, ControllerPromptStyle.Xbox);
+            Assert.That(xboxJump, Is.EqualTo(xboxA), "Xbox Jump should resolve to A sprite");
+        }
+
+        [Test]
         public void MenuPreferences_PersistsControllerSettingsAndDefaults()
         {
             MenuPreferences.SetControllerStyle(2); // PlayStation

@@ -405,6 +405,71 @@ namespace TheLightenRoad.UI
             }
         }
 
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> spriteCache = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>
+        /// Retrieves the authentic high-resolution button glyph sprite (Zacksly pack) for the active or requested controller style.
+        /// </summary>
+        public static Sprite GetGlyphSprite(string glyphName, ControllerPromptStyle? overrideStyle = null)
+        {
+            var style = overrideStyle ?? ActiveStyle;
+            if (style == ControllerPromptStyle.Keyboard) return null;
+
+            string folder = style == ControllerPromptStyle.PlayStation ? "PlayStation" : "Xbox";
+            string path = $"UI/ControllerGlyphs/{folder}/{glyphName}";
+
+            if (spriteCache.TryGetValue(path, out var cached))
+                return cached;
+
+            var loaded = Resources.Load<Sprite>(path);
+            spriteCache[path] = loaded;
+            return loaded;
+        }
+
+        /// <summary>
+        /// Retrieves the primary action icon sprite for the current controller device.
+        /// </summary>
+        public static Sprite GetActionSprite(GlyphAction action, ControllerPromptStyle? overrideStyle = null)
+        {
+            var style = overrideStyle ?? ActiveStyle;
+            if (style == ControllerPromptStyle.Keyboard) return null;
+
+            if (style == ControllerPromptStyle.PlayStation)
+            {
+                switch (action)
+                {
+                    case GlyphAction.Confirm:
+                    case GlyphAction.Jump: return GetGlyphSprite("Cross", style);
+                    case GlyphAction.Cancel: return GetGlyphSprite("Circle", style);
+                    case GlyphAction.Move: return GetGlyphSprite("LeftStick", style);
+                    case GlyphAction.Sprint: return GetGlyphSprite("R2", style);
+                    case GlyphAction.Flare: return GetGlyphSprite("Square", style);
+                    case GlyphAction.Interact: return GetGlyphSprite("Triangle", style);
+                    case GlyphAction.Pause: return GetGlyphSprite("Options", style);
+                    case GlyphAction.NextTab: return GetGlyphSprite("R1", style);
+                    case GlyphAction.PrevTab: return GetGlyphSprite("L1", style);
+                    default: return null;
+                }
+            }
+            else
+            {
+                switch (action)
+                {
+                    case GlyphAction.Confirm:
+                    case GlyphAction.Jump: return GetGlyphSprite("A", style);
+                    case GlyphAction.Cancel: return GetGlyphSprite("B", style);
+                    case GlyphAction.Move: return GetGlyphSprite("LeftStick", style);
+                    case GlyphAction.Sprint: return GetGlyphSprite("RT", style);
+                    case GlyphAction.Flare: return GetGlyphSprite("X", style);
+                    case GlyphAction.Interact: return GetGlyphSprite("Y", style);
+                    case GlyphAction.Pause: return GetGlyphSprite("Menu", style);
+                    case GlyphAction.NextTab: return GetGlyphSprite("RB", style);
+                    case GlyphAction.PrevTab: return GetGlyphSprite("LB", style);
+                    default: return null;
+                }
+            }
+        }
+
         public static void Rumble(float lowFrequency, float highFrequency, float duration = 0.15f)
         {
             if (!VibrationEnabled) return;

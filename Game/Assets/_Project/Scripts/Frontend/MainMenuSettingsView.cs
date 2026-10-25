@@ -31,6 +31,7 @@ namespace TheLightenRoad.Frontend
         private Slider deadzoneSlider;
         private TMP_Text deadzoneValueText;
         private TMP_Text controllerMappingSummaryText;
+        private readonly Image[] controllerMappingIcons = new Image[5];
 
         private void BuildSettingsWorkspace()
         {
@@ -95,9 +96,25 @@ namespace TheLightenRoad.Frontend
             var guideCard=CreateAnchoredRect("Controller Mapping Preview",controls,new Vector2(680,68),Vector2.one*0.5f,new Vector2(0,-120));
             var guideBg=guideCard.gameObject.AddComponent<Image>();
             guideBg.sprite=softRadialSprite; guideBg.color=new Color(0.012f,0.024f,0.045f,0.85f); guideBg.raycastTarget=false;
-            controllerMappingSummaryText=SettingsText(guideCard,"",Vector2.zero,11.5f,amberGold,660);
+            controllerMappingSummaryText=SettingsText(guideCard,"",new Vector2(0,16),11.5f,amberGold,660);
             controllerMappingSummaryText.alignment=TextAlignmentOptions.Center;
             controllerMappingSummaryText.characterSpacing=1.2f;
+
+            string[] actionNames = { "JUMP", "FLARE", "SPRINT", "INTERACT", "PAUSE" };
+            float[] xOffsets = { -240f, -120f, 0f, 120f, 240f };
+            for (int i = 0; i < 5; i++)
+            {
+                var slot = CreateAnchoredRect("Slot_" + i, guideCard, new Vector2(110, 24), new Vector2(0.5f, 0.5f), new Vector2(xOffsets[i], -12));
+                var iconRect = CreateAnchoredRect("Icon", slot, new Vector2(20, 20), new Vector2(0, 0.5f), new Vector2(10, 0));
+                var icon = iconRect.gameObject.AddComponent<Image>();
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                controllerMappingIcons[i] = icon;
+
+                var lbl = CreateLabel("Label", slot, actionNames[i], 11f, radiantIvory, new Vector2(80, 20), new Vector2(0, 0.5f), new Vector2(32, 0), new Vector2(0, 0.5f));
+                lbl.fontStyle = FontStyles.Bold;
+                lbl.characterSpacing = 1f;
+            }
 
             var accessibility=(RectTransform)settingsSections[3].transform;
             motionToggle=CreateEtherealToggle(accessibility,"Reduced motion","Reduce parallax, sway and HUD motion",84,out motionToggleValueText,OnReducedMotionToggled);
@@ -294,15 +311,34 @@ namespace TheLightenRoad.Frontend
                 var active = ControllerGlyphService.ActiveStyle;
                 if (active == ControllerPromptStyle.PlayStation)
                 {
-                    controllerMappingSummaryText.text = "PLAYSTATION:  [✕] JUMP    [R2 / □] FLARE    [R2 / L3] SPRINT    [△] INTERACT    [OPTIONS] PAUSE";
+                    controllerMappingSummaryText.text = "PLAYSTATION DUALSENSE / DUALSHOCK 4 MAPPING PREVIEW";
                 }
                 else if (active == ControllerPromptStyle.Xbox)
                 {
-                    controllerMappingSummaryText.text = "XBOX:  [A] JUMP    [RT / X] FLARE    [RT / LS] SPRINT    [Y] INTERACT    [MENU] PAUSE";
+                    controllerMappingSummaryText.text = "XBOX WIRELESS CONTROLLER MAPPING PREVIEW";
                 }
                 else
                 {
-                    controllerMappingSummaryText.text = "KEYBOARD:  [SPACE] JUMP    [F / L-CLICK] FLARE    [L-SHIFT] SPRINT    [E] INTERACT    [ESC] PAUSE";
+                    controllerMappingSummaryText.text = "KEYBOARD & MOUSE: [SPACE] JUMP  [F/LMB] FLARE  [SHIFT] SPRINT  [E] INTERACT  [ESC] PAUSE";
+                }
+
+                GlyphAction[] actions = { GlyphAction.Jump, GlyphAction.Flare, GlyphAction.Sprint, GlyphAction.Interact, GlyphAction.Pause };
+                for (int i = 0; i < 5; i++)
+                {
+                    if (controllerMappingIcons[i] != null)
+                    {
+                        if (active == ControllerPromptStyle.PlayStation || active == ControllerPromptStyle.Xbox)
+                        {
+                            var sprite = ControllerGlyphService.GetActionSprite(actions[i], active);
+                            controllerMappingIcons[i].sprite = sprite;
+                            controllerMappingIcons[i].color = sprite != null ? Color.white : Color.clear;
+                            controllerMappingIcons[i].transform.parent.gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            controllerMappingIcons[i].transform.parent.gameObject.SetActive(false);
+                        }
+                    }
                 }
             }
 

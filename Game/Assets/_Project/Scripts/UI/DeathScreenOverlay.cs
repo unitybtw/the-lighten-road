@@ -131,6 +131,13 @@ namespace TheLightenRoad.UI
         private TextMeshProUGUI fallenValue;
         private Image statDivider;
         private TextMeshProUGUI hintText;
+        private GameObject hintGlyphsRoot;
+        private Image hintSelectIcon;
+        private TextMeshProUGUI hintSelectText;
+        private Image hintConfirmIcon;
+        private TextMeshProUGUI hintConfirmText;
+        private Image hintReturnIcon;
+        private TextMeshProUGUI hintReturnText;
 
         private sealed class MenuButton
         {
@@ -463,6 +470,35 @@ namespace TheLightenRoad.UI
             hintText = AddTMPText("Hint", contentRoot, new Vector2(0f, -206f), new Vector2(500f, 20f), 12f, TextAlignmentOptions.Center);
             hintText.characterSpacing = 4f;
 
+            // Authentic Controller Glyphs Footer Bar
+            hintGlyphsRoot = new GameObject("HintGlyphsBar", typeof(RectTransform));
+            hintGlyphsRoot.transform.SetParent(contentRoot, false);
+            var hgRect = hintGlyphsRoot.GetComponent<RectTransform>();
+            SetCentered(hgRect, new Vector2(0f, -206f), new Vector2(520f, 24f));
+
+            // Item 1: D-Pad Select
+            hintSelectIcon = CreateImage("SelectIcon", hintGlyphsRoot.transform, new Vector2(-195f, 0f), new Vector2(22f, 22f), null, Color.white);
+            hintSelectText = AddTMPText("SelectText", hintGlyphsRoot.transform, new Vector2(-130f, 0f), new Vector2(90f, 20f), 11.5f, TextAlignmentOptions.Left);
+            hintSelectText.text = "SELECT";
+            hintSelectText.fontStyle = FontStyles.Bold;
+            hintSelectText.characterSpacing = 2.5f;
+
+            // Item 2: Confirm Button
+            hintConfirmIcon = CreateImage("ConfirmIcon", hintGlyphsRoot.transform, new Vector2(-25f, 0f), new Vector2(22f, 22f), null, Color.white);
+            hintConfirmText = AddTMPText("ConfirmText", hintGlyphsRoot.transform, new Vector2(40f, 0f), new Vector2(90f, 20f), 11.5f, TextAlignmentOptions.Left);
+            hintConfirmText.text = "CONFIRM";
+            hintConfirmText.fontStyle = FontStyles.Bold;
+            hintConfirmText.characterSpacing = 2.5f;
+
+            // Item 3: Return Button
+            hintReturnIcon = CreateImage("ReturnIcon", hintGlyphsRoot.transform, new Vector2(145f, 0f), new Vector2(22f, 22f), null, Color.white);
+            hintReturnText = AddTMPText("ReturnText", hintGlyphsRoot.transform, new Vector2(205f, 0f), new Vector2(80f, 20f), 11.5f, TextAlignmentOptions.Left);
+            hintReturnText.text = "RETURN";
+            hintReturnText.fontStyle = FontStyles.Bold;
+            hintReturnText.characterSpacing = 2.5f;
+
+            hintGlyphsRoot.SetActive(false);
+
             ignitionFlash = CreateFullscreen("IgnitionFlash", transform, PixelSprites.White);
 
             canvas.enabled = false;
@@ -732,22 +768,38 @@ namespace TheLightenRoad.UI
             for (int i = 0; i < buttons.Length; i++)
                 UpdateButton(buttons[i], i == selectedButtonIndex, sMenu, pulse, dt, i == selectedButtonIndex ? buttonPunch : 0f);
 
-            // 7. Hint
+            // 7. Hint & Controller Glyphs
             var style = ControllerGlyphService.ActiveStyle;
-            if (style == ControllerPromptStyle.PlayStation)
+            bool isGamepad = (style == ControllerPromptStyle.PlayStation || style == ControllerPromptStyle.Xbox);
+
+            if (hintGlyphsRoot != null)
+                hintGlyphsRoot.SetActive(isGamepad);
+            if (hintText != null)
+                hintText.gameObject.SetActive(!isGamepad);
+
+            float hintAlpha = armed ? sMenu : sMenu * 0.35f;
+
+            if (isGamepad)
             {
-                hintText.text = "D-PAD / LS  SELECT        ✕  CONFIRM        ○  RETURN";
-            }
-            else if (style == ControllerPromptStyle.Xbox)
-            {
-                hintText.text = "D-PAD / LS  SELECT        A  CONFIRM        B  RETURN";
+                var selectSprite = ControllerGlyphService.GetGlyphSprite("DPad", style);
+                var confirmSprite = ControllerGlyphService.GetActionSprite(GlyphAction.Confirm, style);
+                var returnSprite = ControllerGlyphService.GetActionSprite(GlyphAction.Cancel, style);
+
+                Color iconCol = new Color(1f, 1f, 1f, hintAlpha * 0.95f);
+                Color textCol = new Color(0.78f, 0.86f, 0.92f, hintAlpha * 0.9f);
+
+                if (hintSelectIcon != null) { hintSelectIcon.sprite = selectSprite; hintSelectIcon.color = iconCol; }
+                if (hintConfirmIcon != null) { hintConfirmIcon.sprite = confirmSprite; hintConfirmIcon.color = iconCol; }
+                if (hintReturnIcon != null) { hintReturnIcon.sprite = returnSprite; hintReturnIcon.color = iconCol; }
+                if (hintSelectText != null) hintSelectText.color = textCol;
+                if (hintConfirmText != null) hintConfirmText.color = textCol;
+                if (hintReturnText != null) hintReturnText.color = textCol;
             }
             else
             {
                 hintText.text = "W / S / ARROWS  SELECT        ENTER  CONFIRM        ESC  RETURN";
+                hintText.color = new Color(0.45f, 0.58f, 0.54f, hintAlpha * 0.9f);
             }
-            float hintAlpha = armed ? sMenu : sMenu * 0.35f;
-            hintText.color = new Color(0.45f, 0.58f, 0.54f, hintAlpha * 0.9f);
 
             // 8. Re-ignition Flash
             if (ignitionAlpha > 0f)

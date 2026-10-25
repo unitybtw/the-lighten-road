@@ -1432,6 +1432,7 @@ namespace TheLightenRoad.Frontend
         // =====================================================================
 
         private readonly TMP_Text[] controlsRowKeyLabels = new TMP_Text[6];
+        private readonly Image[] controlsRowIcons = new Image[6];
         private readonly Button[] controlsDeviceTabs = new Button[3];
         private readonly TMP_Text[] controlsDeviceTabLabels = new TMP_Text[3];
         private int selectedControlsDeviceTab = 0;
@@ -1454,12 +1455,12 @@ namespace TheLightenRoad.Frontend
                 controlsDeviceTabLabels[i].fontSize = 13.5f;
             }
 
-            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right across the archive", 135f);
-            controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Variable height jump and ledge climb", 84f);
-            controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f);
-            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F / L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -18f);
-            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Channel embers into ancient conduits", -69f);
-            controlsRowKeyLabels[5] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f);
+            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right across the archive", 135f, 0);
+            controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Variable height jump and ledge climb", 84f, 1);
+            controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f, 2);
+            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F / L-CLICK ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -18f, 3);
+            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Channel embers into ancient conduits", -69f, 4);
+            controlsRowKeyLabels[5] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f, 5);
 
             controlsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -268f), ShowHome, isPrimary: true, width: 310f);
 
@@ -1483,6 +1484,9 @@ namespace TheLightenRoad.Frontend
 
             if (selectedControlsDeviceTab == 0) // Keyboard
             {
+                for (int i = 0; i < controlsRowIcons.Length; i++)
+                    if (controlsRowIcons[i] != null) controlsRowIcons[i].color = Color.clear;
+
                 controlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
                 controlsRowKeyLabels[1].text = "[ SPACE ]";
                 controlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
@@ -1492,15 +1496,35 @@ namespace TheLightenRoad.Frontend
             }
             else if (selectedControlsDeviceTab == 1) // Xbox
             {
+                string[] xbIcons = { "LeftStick", "A", "RT", "X", "Y", "Menu" };
+                for (int i = 0; i < controlsRowIcons.Length; i++)
+                {
+                    if (controlsRowIcons[i] != null)
+                    {
+                        controlsRowIcons[i].sprite = ControllerGlyphService.GetGlyphSprite(xbIcons[i], ControllerPromptStyle.Xbox);
+                        controlsRowIcons[i].color = Color.white;
+                    }
+                }
+
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ A ]";
                 controlsRowKeyLabels[2].text = "[ RT / LS ]";
                 controlsRowKeyLabels[3].text = "[ RT / X ]";
                 controlsRowKeyLabels[4].text = "[ Y / B ]";
-                controlsRowKeyLabels[5].text = "[ MENU / START ]";
+                controlsRowKeyLabels[5].text = "[ MENU ]";
             }
             else // PlayStation
             {
+                string[] psIcons = { "LeftStick", "Cross", "R2", "Square", "Triangle", "Options" };
+                for (int i = 0; i < controlsRowIcons.Length; i++)
+                {
+                    if (controlsRowIcons[i] != null)
+                    {
+                        controlsRowIcons[i].sprite = ControllerGlyphService.GetGlyphSprite(psIcons[i], ControllerPromptStyle.PlayStation);
+                        controlsRowIcons[i].color = Color.white;
+                    }
+                }
+
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ ✕ ]";
                 controlsRowKeyLabels[2].text = "[ R2 / L3 ]";
@@ -1510,7 +1534,7 @@ namespace TheLightenRoad.Frontend
             }
         }
 
-        private TMP_Text CreateCenteredControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos)
+        private TMP_Text CreateCenteredControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos, int rowIndex = -1)
         {
             var row = CreateAnchoredRect(actionTitle, parent, new Vector2(680f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
 
@@ -1528,7 +1552,14 @@ namespace TheLightenRoad.Frontend
             keyGlowImg.color = new Color(1.0f, 0.72f, 0.26f, 0.16f);
             keyGlowImg.raycastTarget = false;
 
-            var keyTxt = CreateLabel("Key Text", row, keys, 14f, amberGold, new Vector2(220f, 32f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), pivot: new Vector2(1f, 0.5f));
+            var iconRect = CreateAnchoredRect("Glyph Icon", row, new Vector2(24f, 24f), new Vector2(1f, 0.5f), new Vector2(-195f, 0f), pivot: new Vector2(0.5f, 0.5f));
+            var iconImg = iconRect.gameObject.AddComponent<Image>();
+            iconImg.color = Color.clear;
+            iconImg.raycastTarget = false;
+            if (rowIndex >= 0 && rowIndex < controlsRowIcons.Length)
+                controlsRowIcons[rowIndex] = iconImg;
+
+            var keyTxt = CreateLabel("Key Text", row, keys, 14f, amberGold, new Vector2(175f, 32f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), pivot: new Vector2(1f, 0.5f));
             keyTxt.alignment = TextAlignmentOptions.Right;
             keyTxt.fontStyle = FontStyles.Bold;
             keyTxt.characterSpacing = 2.5f;

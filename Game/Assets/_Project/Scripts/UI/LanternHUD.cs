@@ -90,6 +90,7 @@ namespace TheLightenRoad.UI
         private TextMeshProUGUI modeLabel;
         private TextMeshProUGUI detailLabel;
         private TextMeshProUGUI keyLabel;
+        private Image keyIcon;
         private TextMeshProUGUI popupLabel;
         private int lastCharges = -1;
         private int lastOverflow = -1;
@@ -402,17 +403,30 @@ namespace TheLightenRoad.UI
         {
             bool active = target.HasActiveScout;
             var style = ControllerGlyphService.ActiveStyle;
-            string keyText;
-            if (style == ControllerPromptStyle.PlayStation)
-                keyText = "R2 / □";
-            else if (style == ControllerPromptStyle.Xbox)
-                keyText = "RT / X";
-            else
-                keyText = target.ToggleFlareKey.ToString().ToUpperInvariant();
+            var flareSprite = ControllerGlyphService.GetActionSprite(GlyphAction.Flare, style);
 
-            if (keyLabel != null && keyLabel.text != keyText)
+            if (keyIcon != null)
             {
-                keyLabel.text = keyText;
+                if (flareSprite != null)
+                {
+                    keyIcon.sprite = flareSprite;
+                    keyIcon.color = active ? Gold : Ivory;
+                    if (keyLabel != null && keyLabel.text != "") keyLabel.text = "";
+                }
+                else
+                {
+                    keyIcon.color = Color.clear;
+                    string keyText = target.ToggleFlareKey.ToString().ToUpperInvariant();
+                    if (keyLabel != null && keyLabel.text != keyText)
+                    {
+                        keyLabel.text = keyText;
+                    }
+                }
+            }
+            else if (keyLabel != null)
+            {
+                string keyText = style == ControllerPromptStyle.PlayStation ? "R2 / □" : (style == ControllerPromptStyle.Xbox ? "RT / X" : target.ToggleFlareKey.ToString().ToUpperInvariant());
+                if (keyLabel.text != keyText) keyLabel.text = keyText;
             }
 
             string mode = active ? (target.IsDimming ? "DIMMING" : "FLARE ACTIVE") : charges <= 0 ? "NO EMBERS" : "FLARE";
@@ -660,6 +674,7 @@ namespace TheLightenRoad.UI
             promptContainer = Rect("Prompt Labels", panel, new Vector2(0f, -38f), new Vector2(Width, 14f));
             promptGroup = promptContainer.gameObject.AddComponent<CanvasGroup>();
             keyLabel = Text("Bound key", promptContainer, new Vector2(0f, 0f), new Vector2(10f, 12f), 7f, "F", Muted);
+            keyIcon = Picture("Bound key icon", promptContainer, new Vector2(0f, 1f), new Vector2(12f, 12f), null, Color.clear);
             modeLabel = Text("Action", promptContainer, new Vector2(16f, 0f), new Vector2(85f, 12f), 7f, "FLARE", Muted);
             detailLabel = Text("Ember wear", promptContainer, new Vector2(100f, 0f), new Vector2(70f, 12f), 7f, "", Muted);
             detailLabel.alignment = TextAlignmentOptions.MidlineRight;

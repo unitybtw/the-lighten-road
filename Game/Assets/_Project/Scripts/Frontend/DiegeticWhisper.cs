@@ -55,6 +55,7 @@ namespace TheLightenRoad.Frontend
         private CanvasGroup canvasGroup;
         private Image glowImage;
         private Image keycapBg;
+        private Image keycapIcon;
         private TextMeshProUGUI keycapText;
         private TextMeshProUGUI promptText;
 
@@ -259,6 +260,19 @@ namespace TheLightenRoad.Frontend
             keycapText.characterSpacing = 15f;
             keycapText.raycastTarget = false;
 
+            // Authentic Controller Button Icon (Zacksly Pack)
+            var iconGo = new GameObject("KeyIcon");
+            iconGo.transform.SetParent(badgeGo.transform, false);
+            var iconRect = iconGo.AddComponent<RectTransform>();
+            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.sizeDelta = new Vector2(24f, 24f);
+            iconRect.anchoredPosition = Vector2.zero;
+
+            keycapIcon = iconGo.AddComponent<Image>();
+            keycapIcon.raycastTarget = false;
+            keycapIcon.color = Color.clear;
+
             // Action prompt text (sub-whisper)
             var promptGo = new GameObject("PromptText");
             promptGo.transform.SetParent(canvasGo.transform, false);
@@ -303,14 +317,60 @@ namespace TheLightenRoad.Frontend
 
         private void RefreshText()
         {
+            var style = ControllerGlyphService.ActiveStyle;
+            Sprite icon = null;
+            if (style != ControllerPromptStyle.Keyboard)
+            {
+                switch (requiredAction)
+                {
+                    case WhisperAction.Jump:
+                        icon = ControllerGlyphService.GetActionSprite(GlyphAction.Jump, style);
+                        break;
+                    case WhisperAction.Flare:
+                        icon = ControllerGlyphService.GetActionSprite(GlyphAction.Flare, style);
+                        break;
+                    case WhisperAction.Sprint:
+                        icon = ControllerGlyphService.GetActionSprite(GlyphAction.Sprint, style);
+                        break;
+                    case WhisperAction.Interact:
+                        icon = ControllerGlyphService.GetActionSprite(GlyphAction.Interact, style);
+                        break;
+                    case WhisperAction.Move:
+                        icon = ControllerGlyphService.GetActionSprite(GlyphAction.Move, style);
+                        break;
+                }
+            }
+
+            if (keycapIcon != null)
+            {
+                if (icon != null)
+                {
+                    keycapIcon.sprite = icon;
+                    keycapIcon.color = Color.white;
+                }
+                else
+                {
+                    keycapIcon.color = Color.clear;
+                }
+            }
+
             if (keycapText != null)
             {
-                string hint = GetEffectiveKeyHint();
-                keycapText.text = hint;
-                if (keycapBg != null)
+                if (icon != null)
                 {
-                    float width = Mathf.Max(70f, hint.Length * 16f + 30f);
-                    keycapBg.rectTransform.sizeDelta = new Vector2(width, 32f);
+                    keycapText.text = "";
+                    if (keycapBg != null)
+                        keycapBg.rectTransform.sizeDelta = new Vector2(44f, 32f);
+                }
+                else
+                {
+                    string hint = GetEffectiveKeyHint();
+                    keycapText.text = hint;
+                    if (keycapBg != null)
+                    {
+                        float width = Mathf.Max(70f, hint.Length * 16f + 30f);
+                        keycapBg.rectTransform.sizeDelta = new Vector2(width, 32f);
+                    }
                 }
             }
             if (promptText != null)
