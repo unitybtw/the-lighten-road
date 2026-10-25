@@ -279,6 +279,8 @@ namespace TheLightenRoad.UI
             armed = false;
             busy = false;
             buttonPunch = 0f;
+            if (Mouse.current != null)
+                lastMousePosition = Mouse.current.position.ReadValue();
             SetSelectedButton(0, silent: true);
 
             totalDeaths++;
@@ -463,18 +465,18 @@ namespace TheLightenRoad.UI
             statDivider = CreateImage("StatDivider", contentRoot, new Vector2(0f, -64f), new Vector2(1f, 32f), PixelSprites.White, Color.clear);
 
             // --- Buttons ---
-            buttons[0] = BuildButton(contentRoot, 0, new Vector2(0f, -120f), new Vector2(300f, 38f), "REIGNITE FLAME");
-            buttons[1] = BuildButton(contentRoot, 1, new Vector2(0f, -164f), new Vector2(300f, 38f), "RETURN TO ARCHIVE");
+            buttons[0] = BuildButton(contentRoot, 0, new Vector2(0f, -116f), new Vector2(380f, 50f), "REIGNITE FLAME");
+            buttons[1] = BuildButton(contentRoot, 1, new Vector2(0f, -172f), new Vector2(380f, 46f), "RETURN TO ARCHIVE");
 
             // --- Hint & Ignition Flash ---
-            hintText = AddTMPText("Hint", contentRoot, new Vector2(0f, -206f), new Vector2(500f, 20f), 12f, TextAlignmentOptions.Center);
+            hintText = AddTMPText("Hint", contentRoot, new Vector2(0f, -225f), new Vector2(500f, 20f), 12.5f, TextAlignmentOptions.Center);
             hintText.characterSpacing = 4f;
 
             // Authentic Controller Glyphs Footer Bar
             hintGlyphsRoot = new GameObject("HintGlyphsBar", typeof(RectTransform));
             hintGlyphsRoot.transform.SetParent(contentRoot, false);
             var hgRect = hintGlyphsRoot.GetComponent<RectTransform>();
-            SetCentered(hgRect, new Vector2(0f, -206f), new Vector2(620f, 38f));
+            SetCentered(hgRect, new Vector2(0f, -225f), new Vector2(620f, 38f));
 
             // Item 1: D-Pad Select
             hintSelectIcon = CreateImage("SelectIcon", hintGlyphsRoot.transform, new Vector2(-235f, 0f), new Vector2(34f, 34f), null, Color.white);
@@ -1086,9 +1088,9 @@ namespace TheLightenRoad.UI
             if (mouse == null) return;
 
             Vector2 pos = mouse.position.ReadValue();
-            bool moved = (pos - lastMousePosition).sqrMagnitude > 4f;
-            if (moved)
-                lastMousePosition = pos;
+            bool moved = (pos - lastMousePosition).sqrMagnitude > 16f;
+            if (!moved) return;
+            lastMousePosition = pos;
 
             int hover = -1;
             for (int i = 0; i < buttons.Length; i++)
@@ -1097,10 +1099,9 @@ namespace TheLightenRoad.UI
                     hover = i;
             }
 
-            if (hover < 0) return;
-            if (moved && hover != selectedButtonIndex)
+            if (hover >= 0 && hover != selectedButtonIndex)
                 SetSelectedButton(hover);
-            if (mouse.leftButton.wasPressedThisFrame)
+            if (hover >= 0 && mouse.leftButton.wasPressedThisFrame)
             {
                 SetSelectedButton(hover);
                 Activate(hover);
@@ -1154,13 +1155,13 @@ namespace TheLightenRoad.UI
         {
             if (b?.Rect == null) return;
 
-            b.Blend = Mathf.MoveTowards(b.Blend, selected ? 1f : 0f, 8f * dt);
-            float scale = (1f + b.Blend * 0.035f) * (1f - punch * 0.06f);
+            b.Blend = Mathf.MoveTowards(b.Blend, selected ? 1f : 0f, 9f * dt);
+            float scale = (1f + b.Blend * 0.045f) * (1f - punch * 0.06f);
             b.Rect.localScale = new Vector3(scale, scale, 1f);
 
-            Color restPlate = new Color(0.06f, 0.09f, 0.08f, 0.55f);
-            Color restRim = new Color(0.35f, 0.48f, 0.44f, 0.35f);
-            Color restText = new Color(0.65f, 0.78f, 0.73f, 0.85f);
+            Color restPlate = new Color(0.012f, 0.020f, 0.038f, 0.70f);
+            Color restRim = new Color(0.45f, 0.58f, 0.78f, 0.28f);
+            Color restText = new Color(0.85f, 0.90f, 0.98f, 0.88f);
 
             Color pCol = Color.Lerp(restPlate, b.SelectedPlate, b.Blend);
             pCol.a *= stage;
@@ -1176,6 +1177,7 @@ namespace TheLightenRoad.UI
             Color tCol = Color.Lerp(restText, b.SelectedText, b.Blend);
             tCol.a *= stage;
             b.Label.color = tCol;
+            b.Label.characterSpacing = Mathf.Lerp(4.5f, 6.5f, b.Blend);
 
             if (b.Marker != null)
             {

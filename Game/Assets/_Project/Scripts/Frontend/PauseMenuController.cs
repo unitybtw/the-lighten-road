@@ -1068,23 +1068,35 @@ namespace TheLightenRoad.Frontend
             UnityAction onClick,
             bool isPrimary = false)
         {
-            var itemRect = CreateAnchoredRect(name, parent, new Vector2(540f, isPrimary ? 60f : 52f), new Vector2(0.5f, 0.5f), pos);
+            var cardSize = new Vector2(isPrimary ? 540f : 500f, isPrimary ? 62f : 54f);
+            var itemRect = CreateAnchoredRect(name, parent, cardSize, new Vector2(0.5f, 0.5f), pos);
 
-            var hitGraphic = itemRect.gameObject.AddComponent<Image>();
-            hitGraphic.color = Color.clear;
-
-            var glowRect = CreateAnchoredRect("Soft Lantern Aura", itemRect, new Vector2(460f, 68f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var glowRect = CreateAnchoredRect("Soft Lantern Aura", itemRect, new Vector2(cardSize.x + 80f, cardSize.y + 36f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var glowImg = glowRect.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
             glowImg.color = Color.clear;
             glowImg.raycastTarget = false;
+
+            var plateRect = CreateStretchRect("Card Plate", itemRect);
+            var plateImg = plateRect.gameObject.AddComponent<Image>();
+            plateImg.sprite = thinBorderSprite;
+            plateImg.type = Image.Type.Sliced;
+            plateImg.color = isPrimary ? new Color(0.025f, 0.040f, 0.065f, 0.78f) : new Color(0.012f, 0.020f, 0.038f, 0.68f);
+            plateImg.raycastTarget = true;
+
+            var borderRect = CreateStretchRect("Card Border", itemRect);
+            var borderImg = borderRect.gameObject.AddComponent<Image>();
+            borderImg.sprite = thinBorderSprite;
+            borderImg.type = Image.Type.Sliced;
+            borderImg.color = isPrimary ? new Color(0.92f, 0.68f, 0.28f, 0.45f) : new Color(0.48f, 0.62f, 0.82f, 0.25f);
+            borderImg.raycastTarget = false;
 
             var wingContainer = CreateStretchRect("Ornate Wings", itemRect);
             var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
             wingGroup.alpha = isPrimary ? 0.25f : 0f;
             wingGroup.blocksRaycasts = false;
 
-            float wingOffset = Mathf.Max(140f, title.Length * 9.0f + 46f);
+            float wingOffset = isPrimary ? 295f : 275f;
             RectTransform leftWing = null;
             RectTransform rightWing = null;
 
@@ -1121,23 +1133,23 @@ namespace TheLightenRoad.Frontend
                 rightWing = CreateOrnateWingGraphic("Right Wing", wingContainer, new Vector2(wingOffset, 0f), isLeft: false);
             }
 
-            var titleTxt = CreateLabel("Title", itemRect, new Vector2(0f, 6f), new Vector2(500f, 28f),
-                title.ToUpperInvariant(), isPrimary ? 21f : 18f, TextAlignmentOptions.Center, isPrimary ? amberGold : radiantIvory);
+            var titleTxt = CreateLabel("Title", itemRect, new Vector2(0f, 8f), new Vector2(cardSize.x - 40f, 28f),
+                title.ToUpperInvariant(), isPrimary ? 20.5f : 17.5f, TextAlignmentOptions.Center, isPrimary ? amberGold : radiantIvory);
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.characterSpacing = isPrimary ? 6f : 4.5f;
 
-            var subTxt = CreateLabel("Subtitle", itemRect, new Vector2(0f, -13f), new Vector2(500f, 18f),
-                subtitle, 10.5f, TextAlignmentOptions.Center, moonlightSilver);
+            var subTxt = CreateLabel("Subtitle", itemRect, new Vector2(0f, -12f), new Vector2(cardSize.x - 40f, 18f),
+                subtitle, 11f, TextAlignmentOptions.Center, moonlightSilver);
             subTxt.characterSpacing = 1.5f;
 
-            var lineRect = CreateAnchoredRect("Underline Filigree", itemRect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -22f));
+            var lineRect = CreateAnchoredRect("Underline Filigree", itemRect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, isPrimary ? -23f : -20f));
             var lineImg = lineRect.gameObject.AddComponent<Image>();
             lineImg.sprite = filigreeSprite;
             lineImg.color = Color.clear;
             lineImg.raycastTarget = false;
 
             var btn = itemRect.gameObject.AddComponent<Button>();
-            btn.targetGraphic = hitGraphic;
+            btn.targetGraphic = plateImg;
             btn.transition = Selectable.Transition.None;
             if (onClick != null)
             {
@@ -1149,6 +1161,8 @@ namespace TheLightenRoad.Frontend
             }
 
             var motion = itemRect.gameObject.AddComponent<MenuButtonMotion>();
+            motion.CardPlate = plateImg;
+            motion.BorderFrame = borderImg;
             motion.Text = titleTxt;
             motion.SubtitleText = subTxt;
             motion.SoftGlow = glowImg;
@@ -1190,29 +1204,41 @@ namespace TheLightenRoad.Frontend
             bool isPrimary = false,
             float width = 300f)
         {
-            var rect = CreateAnchoredRect(name, parent, new Vector2(width, 46f), new Vector2(0.5f, 0.5f), anchoredPos);
-            var hit = rect.gameObject.AddComponent<Image>();
-            hit.color = Color.clear;
+            var rect = CreateAnchoredRect(name, parent, new Vector2(width, 48f), new Vector2(0.5f, 0.5f), anchoredPos);
 
-            var glowRect = CreateAnchoredRect("Soft Glow", rect, new Vector2(width + 40f, 54f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var glowRect = CreateAnchoredRect("Soft Glow", rect, new Vector2(width + 60f, 64f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var glowImg = glowRect.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
             glowImg.color = isPrimary ? new Color(1.0f, 0.66f, 0.20f, 0.22f) : Color.clear;
             glowImg.raycastTarget = false;
 
-            var lineRect = CreateAnchoredRect("Filigree Underline", rect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -16f));
+            var plateRect = CreateStretchRect("Card Plate", rect);
+            var plateImg = plateRect.gameObject.AddComponent<Image>();
+            plateImg.sprite = thinBorderSprite;
+            plateImg.type = Image.Type.Sliced;
+            plateImg.color = isPrimary ? new Color(0.025f, 0.040f, 0.065f, 0.78f) : new Color(0.012f, 0.020f, 0.038f, 0.68f);
+            plateImg.raycastTarget = true;
+
+            var borderRect = CreateStretchRect("Card Border", rect);
+            var borderImg = borderRect.gameObject.AddComponent<Image>();
+            borderImg.sprite = thinBorderSprite;
+            borderImg.type = Image.Type.Sliced;
+            borderImg.color = isPrimary ? new Color(0.92f, 0.68f, 0.28f, 0.45f) : new Color(0.48f, 0.62f, 0.82f, 0.25f);
+            borderImg.raycastTarget = false;
+
+            var lineRect = CreateAnchoredRect("Filigree Underline", rect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -17f));
             var lineImg = lineRect.gameObject.AddComponent<Image>();
             lineImg.sprite = filigreeSprite;
             lineImg.color = Color.clear;
             lineImg.raycastTarget = false;
 
-            var txt = CreateLabel("Caption", rect, Vector2.zero, new Vector2(width, 36f),
+            var txt = CreateLabel("Caption", rect, Vector2.zero, new Vector2(width - 20f, 36f),
                 label.ToUpperInvariant(), 14f, TextAlignmentOptions.Center, isPrimary ? amberGold : radiantIvory);
             txt.fontStyle = FontStyles.Bold;
             txt.characterSpacing = 3.5f;
 
             var btn = rect.gameObject.AddComponent<Button>();
-            btn.targetGraphic = hit;
+            btn.targetGraphic = plateImg;
             btn.transition = Selectable.Transition.None;
             if (onClick != null)
             {
@@ -1224,6 +1250,8 @@ namespace TheLightenRoad.Frontend
             }
 
             var motion = rect.gameObject.AddComponent<MenuButtonMotion>();
+            motion.CardPlate = plateImg;
+            motion.BorderFrame = borderImg;
             motion.Text = txt;
             motion.SoftGlow = glowImg;
             motion.UnderlineFiligree = lineImg;
@@ -1234,15 +1262,29 @@ namespace TheLightenRoad.Frontend
 
         private Slider CreateSlider(string name, RectTransform parent, Vector2 pos, string title, string subtitle, UnityAction<float> onValueChanged)
         {
-            var row = CreateAnchoredRect(name, parent, new Vector2(740f, 44f), new Vector2(0.5f, 0.5f), pos);
+            var row = CreateAnchoredRect(name, parent, new Vector2(740f, 48f), new Vector2(0.5f, 0.5f), pos);
+
+            var plateRect = CreateStretchRect("Row Plate", row);
+            var plateImg = plateRect.gameObject.AddComponent<Image>();
+            plateImg.sprite = thinBorderSprite;
+            plateImg.type = Image.Type.Sliced;
+            plateImg.color = new Color(0.010f, 0.016f, 0.030f, 0.60f);
+            plateImg.raycastTarget = false;
+
+            var borderRect = CreateStretchRect("Row Border", row);
+            var borderImg = borderRect.gameObject.AddComponent<Image>();
+            borderImg.sprite = thinBorderSprite;
+            borderImg.type = Image.Type.Sliced;
+            borderImg.color = new Color(0.44f, 0.58f, 0.78f, 0.18f);
+            borderImg.raycastTarget = false;
 
             var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(740f, 2f), new Vector2(0.5f, 0f), Vector2.zero);
             var divImg = divRect.gameObject.AddComponent<Image>();
             divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.22f);
+            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.20f);
             divImg.raycastTarget = false;
 
-            var titleTxt = CreateLabel("Title", row, new Vector2(8f, 8f), new Vector2(350f, 20f),
+            var titleTxt = CreateLabel("Title", row, new Vector2(16f, 8f), new Vector2(350f, 20f),
                 title.ToUpperInvariant(), 13.5f, TextAlignmentOptions.Left, radiantIvory);
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
@@ -1250,7 +1292,7 @@ namespace TheLightenRoad.Frontend
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.characterSpacing = 2.5f;
 
-            var subTxt = CreateLabel("Subtitle", row, new Vector2(8f, -9f), new Vector2(350f, 16f),
+            var subTxt = CreateLabel("Subtitle", row, new Vector2(16f, -9f), new Vector2(350f, 16f),
                 subtitle, 10.5f, TextAlignmentOptions.Left, moonlightSilver);
             subTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             subTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
@@ -1263,7 +1305,7 @@ namespace TheLightenRoad.Frontend
             sRect.anchorMax = new Vector2(1f, 0.5f);
             sRect.pivot = new Vector2(1f, 0.5f);
             sRect.sizeDelta = new Vector2(350f, 28f);
-            sRect.anchoredPosition = new Vector2(-8f, 0f);
+            sRect.anchoredPosition = new Vector2(-16f, 0f);
 
             // Rounded capsule track
             var track = CreateAnchoredRect("Track", sRect, new Vector2(270f, 6f), new Vector2(0f, 0.5f), Vector2.zero);
@@ -1310,6 +1352,11 @@ namespace TheLightenRoad.Frontend
             slider.handleRect = handle;
             slider.targetGraphic = handleImg;
 
+            var focus = row.gameObject.AddComponent<SettingsLightFocus>();
+            focus.Label = titleTxt;
+            focus.CardPlate = plateImg;
+            focus.BorderFrame = borderImg;
+
             if (onValueChanged != null)
             {
                 slider.onValueChanged.AddListener(onValueChanged);
@@ -1320,17 +1367,29 @@ namespace TheLightenRoad.Frontend
 
         private Toggle CreateToggle(string name, RectTransform parent, Vector2 pos, string title, string subtitle, UnityAction<bool> onValueChanged)
         {
-            var row = CreateAnchoredRect(name, parent, new Vector2(740f, 44f), new Vector2(0.5f, 0.5f), pos);
-            var hit = row.gameObject.AddComponent<Image>();
-            hit.color = Color.clear;
+            var row = CreateAnchoredRect(name, parent, new Vector2(740f, 48f), new Vector2(0.5f, 0.5f), pos);
+
+            var plateRect = CreateStretchRect("Row Plate", row);
+            var plateImg = plateRect.gameObject.AddComponent<Image>();
+            plateImg.sprite = thinBorderSprite;
+            plateImg.type = Image.Type.Sliced;
+            plateImg.color = new Color(0.010f, 0.016f, 0.030f, 0.60f);
+            plateImg.raycastTarget = true;
+
+            var borderRect = CreateStretchRect("Row Border", row);
+            var borderImg = borderRect.gameObject.AddComponent<Image>();
+            borderImg.sprite = thinBorderSprite;
+            borderImg.type = Image.Type.Sliced;
+            borderImg.color = new Color(0.44f, 0.58f, 0.78f, 0.18f);
+            borderImg.raycastTarget = false;
 
             var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(740f, 2f), new Vector2(0.5f, 0f), Vector2.zero);
             var divImg = divRect.gameObject.AddComponent<Image>();
             divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.22f);
+            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.20f);
             divImg.raycastTarget = false;
 
-            var titleTxt = CreateLabel("Title", row, new Vector2(8f, 8f), new Vector2(450f, 20f),
+            var titleTxt = CreateLabel("Title", row, new Vector2(16f, 8f), new Vector2(450f, 20f),
                 title.ToUpperInvariant(), 13.5f, TextAlignmentOptions.Left, radiantIvory);
             titleTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             titleTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
@@ -1338,13 +1397,13 @@ namespace TheLightenRoad.Frontend
             titleTxt.fontStyle = FontStyles.Bold;
             titleTxt.characterSpacing = 2.5f;
 
-            var subTxt = CreateLabel("Subtitle", row, new Vector2(8f, -9f), new Vector2(450f, 16f),
+            var subTxt = CreateLabel("Subtitle", row, new Vector2(16f, -9f), new Vector2(450f, 16f),
                 subtitle, 10.5f, TextAlignmentOptions.Left, moonlightSilver);
             subTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             subTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             subTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
 
-            var pill = CreateAnchoredRect("Pill", row, new Vector2(110f, 28f), new Vector2(1f, 0.5f), new Vector2(-62f, 0f));
+            var pill = CreateAnchoredRect("Pill", row, new Vector2(110f, 28f), new Vector2(1f, 0.5f), new Vector2(-16f, 0f));
             var pillImg = pill.gameObject.AddComponent<Image>();
             pillImg.sprite = softRadialSprite;
             pillImg.color = Color.clear;
@@ -1355,12 +1414,18 @@ namespace TheLightenRoad.Frontend
             valTxt.characterSpacing = 2f;
 
             var toggle = row.gameObject.AddComponent<Toggle>();
-            toggle.targetGraphic = hit;
+            toggle.targetGraphic = plateImg;
             toggle.graphic = null;
             if (onValueChanged != null)
             {
                 toggle.onValueChanged.AddListener(onValueChanged);
             }
+
+            var focus = row.gameObject.AddComponent<SettingsLightFocus>();
+            focus.Label = titleTxt;
+            focus.CardPlate = plateImg;
+            focus.BorderFrame = borderImg;
+
             return toggle;
         }
 

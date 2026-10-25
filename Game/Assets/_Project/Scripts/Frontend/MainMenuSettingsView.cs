@@ -351,23 +351,48 @@ namespace TheLightenRoad.Frontend
         private Button SettingsButton(RectTransform parent,string text,Vector2 position,Vector2 size,UnityEngine.Events.UnityAction action)
         {
             var rect=CreateAnchoredRect(text,parent,size,Vector2.one*.5f,position);
-            var image=rect.gameObject.AddComponent<Image>();image.color=Color.clear;
-            var button=rect.gameObject.AddComponent<Button>();button.targetGraphic=image;
-            var label=CreateLabel("Caption",rect,text.ToUpperInvariant(),15.5f,radiantIvory,size,Vector2.one*.5f,Vector2.zero,Vector2.one*.5f);
+
+            var plateRect=CreateStretchRect("Card Plate",rect);
+            var plateImg=plateRect.gameObject.AddComponent<Image>();
+            plateImg.sprite=thinBorderSprite;
+            plateImg.type=Image.Type.Sliced;
+            plateImg.color=new Color(0.012f,0.020f,0.038f,0.65f);
+            plateImg.raycastTarget=true;
+
+            var borderRect=CreateStretchRect("Card Border",rect);
+            var borderImg=borderRect.gameObject.AddComponent<Image>();
+            borderImg.sprite=thinBorderSprite;
+            borderImg.type=Image.Type.Sliced;
+            borderImg.color=new Color(0.48f,0.62f,0.82f,0.25f);
+            borderImg.raycastTarget=false;
+
+            var button=rect.gameObject.AddComponent<Button>();
+            button.targetGraphic=plateImg;
+            button.transition=Selectable.Transition.None;
+
+            var label=CreateLabel("Caption",rect,text.ToUpperInvariant(),14.5f,radiantIvory,size,Vector2.one*.5f,Vector2.zero,Vector2.one*.5f);
             label.alignment=TextAlignmentOptions.Center;label.fontStyle=FontStyles.Bold;label.characterSpacing=2.8f;
-            AddSettingsFocus(rect,button,label);
-            var rule=CreateAnchoredRect("Selection rule",rect,new Vector2(size.x*0.85f,2.5f),new Vector2(.5f,0),new Vector2(0,3),new Vector2(.5f,0));
+
+            AddSettingsFocus(rect,button,label,plateImg,borderImg);
+
+            var rule=CreateAnchoredRect("Selection rule",rect,new Vector2(size.x*0.82f,2.5f),new Vector2(.5f,0),new Vector2(0,2),new Vector2(.5f,0));
             var line=rule.gameObject.AddComponent<Image>();line.sprite=filigreeSprite;line.color=amberGold;line.raycastTarget=false;rule.gameObject.SetActive(false);
+
             button.onClick.AddListener(()=>{action();if(Application.isPlaying)SoundEffectManager.Instance?.PlayUIClick();});
             return button;
         }
-        private void AddSettingsFocus(RectTransform rect,Selectable control,TMP_Text label)
+
+        private void AddSettingsFocus(RectTransform rect,Selectable control,TMP_Text label,Image plate=null,Image border=null)
         {
             control.transition=Selectable.Transition.None;
-            var halo=CreateAnchoredRect("Lantern focus",rect,new Vector2(rect.sizeDelta.x*1.15f,rect.sizeDelta.y*1.8f),Vector2.one*.5f,Vector2.zero);
+            var halo=CreateAnchoredRect("Lantern focus",rect,new Vector2(rect.sizeDelta.x+60f,rect.sizeDelta.y+36f),Vector2.one*.5f,Vector2.zero);
             halo.SetAsFirstSibling();
             var glow=halo.gameObject.AddComponent<Image>();glow.sprite=softRadialSprite;glow.color=Color.clear;glow.raycastTarget=false;
-            var focus=rect.gameObject.AddComponent<SettingsLightFocus>();focus.Glow=glow;focus.Label=label;
+            var focus=rect.gameObject.AddComponent<SettingsLightFocus>();
+            focus.Glow=glow;
+            focus.Label=label;
+            focus.CardPlate=plate;
+            focus.BorderFrame=border;
         }
         private void BuildSettingsLanterns(RectTransform parent)
         {

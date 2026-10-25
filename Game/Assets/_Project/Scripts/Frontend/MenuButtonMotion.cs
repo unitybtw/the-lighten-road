@@ -32,6 +32,7 @@ namespace TheLightenRoad.Frontend
         public CanvasGroup WingGroup;
         public Image UnderlineFiligree;
         public Image BorderFrame;
+        public Image CardPlate;
         public bool IsPrimaryAction;
         public bool LeftAlignedItem;
         public float BaseWingOffset = 145f;
@@ -161,12 +162,12 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // 3. Delicate Warm Candlelight Radiance behind text (only when focused/hovered)
+            // 3. Delicate Warm Candlelight Radiance behind text and card (only when focused/hovered)
             if (SoftGlow != null)
             {
-                float targetAlpha = (IsPrimaryAction ? 0.22f : 0.16f) * pulse;
-                SoftGlow.color = new Color(1.0f, 0.78f, 0.36f, Mathf.Lerp(0f, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.84f, 1.06f, smooth);
+                float targetAlpha = (IsPrimaryAction ? 0.35f : 0.26f) * pulse;
+                SoftGlow.color = new Color(1.0f, 0.76f, 0.30f, Mathf.Lerp(0f, targetAlpha, smooth));
+                float glowScale = Mathf.Lerp(0.90f, 1.08f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
@@ -177,14 +178,14 @@ namespace TheLightenRoad.Frontend
                 : Mathf.Lerp(BaseWingOffset + 18f, BaseWingOffset, smooth) + breathing;
             if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
-            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.18f : 0f, 1f, smooth);
+            if (WingGroup != null) WingGroup.alpha = Mathf.Lerp(IsPrimaryAction ? 0.25f : 0f, 1f, smooth);
 
             // 5. Center-Expanding Ember-Vein Filigree Underline
             if (UnderlineFiligree != null)
             {
                 var r = UnderlineFiligree.rectTransform;
                 float idleW = IsPrimaryAction ? 110f : 0f;
-                float targetW = LeftAlignedItem ? 300f : 260f;
+                float targetW = LeftAlignedItem ? 320f : 280f;
                 float width = Mathf.Lerp(idleW, targetW, smooth);
                 r.sizeDelta = new Vector2(width, 2.5f);
                 Color idleLine = new Color(0.66f, 0.78f, 0.94f, IsPrimaryAction ? 0.35f : 0f);
@@ -192,10 +193,24 @@ namespace TheLightenRoad.Frontend
                 UnderlineFiligree.color = Color.Lerp(idleLine, focusLine, smooth);
             }
 
+            // 6. Frosted Glass Card Plate & Glowing Gold Border Frame
+            if (CardPlate != null)
+            {
+                Color idlePlate = IsPrimaryAction
+                    ? new Color(0.025f, 0.040f, 0.065f, 0.78f)
+                    : new Color(0.012f, 0.020f, 0.038f, 0.68f);
+                Color focusPlate = IsPrimaryAction
+                    ? new Color(0.12f, 0.075f, 0.028f, 0.94f)
+                    : new Color(0.075f, 0.050f, 0.022f, 0.90f);
+                CardPlate.color = Color.Lerp(idlePlate, focusPlate, smooth);
+            }
+
             if (BorderFrame != null)
             {
-                Color idleBorder = new Color(0.56f, 0.70f, 0.88f, IsPrimaryAction ? 0.35f : 0.18f);
-                Color focusBorder = new Color(1.0f, 0.74f, 0.30f, 0.88f);
+                Color idleBorder = IsPrimaryAction
+                    ? new Color(0.92f, 0.68f, 0.28f, 0.45f)
+                    : new Color(0.48f, 0.62f, 0.82f, 0.25f);
+                Color focusBorder = new Color(1.0f, 0.78f, 0.32f, 0.98f);
                 BorderFrame.color = Color.Lerp(idleBorder, focusBorder, smooth);
             }
         }
