@@ -266,7 +266,7 @@ namespace TheLightenRoad.Frontend
             var iconRect = iconGo.AddComponent<RectTransform>();
             iconRect.anchorMin = new Vector2(0.5f, 0.5f);
             iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-            iconRect.sizeDelta = new Vector2(24f, 24f);
+            iconRect.sizeDelta = new Vector2(36f, 36f);
             iconRect.anchoredPosition = Vector2.zero;
 
             keycapIcon = iconGo.AddComponent<Image>();
@@ -360,7 +360,7 @@ namespace TheLightenRoad.Frontend
                 {
                     keycapText.text = "";
                     if (keycapBg != null)
-                        keycapBg.rectTransform.sizeDelta = new Vector2(44f, 32f);
+                        keycapBg.rectTransform.sizeDelta = new Vector2(52f, 44f);
                 }
                 else
                 {

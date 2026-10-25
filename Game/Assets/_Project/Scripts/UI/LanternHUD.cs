@@ -671,12 +671,12 @@ namespace TheLightenRoad.UI
 
             overflowBadge = Text("Overflow", panel, new Vector2(maxDisplaySlots * 28f, -10f), new Vector2(30f, 16f), 10f, "", Gold);
 
-            promptContainer = Rect("Prompt Labels", panel, new Vector2(0f, -38f), new Vector2(Width, 14f));
+            promptContainer = Rect("Prompt Labels", panel, new Vector2(0f, -40f), new Vector2(Width, 22f));
             promptGroup = promptContainer.gameObject.AddComponent<CanvasGroup>();
-            keyLabel = Text("Bound key", promptContainer, new Vector2(0f, 0f), new Vector2(10f, 12f), 7f, "F", Muted);
-            keyIcon = Picture("Bound key icon", promptContainer, new Vector2(0f, 1f), new Vector2(12f, 12f), null, Color.clear);
-            modeLabel = Text("Action", promptContainer, new Vector2(16f, 0f), new Vector2(85f, 12f), 7f, "FLARE", Muted);
-            detailLabel = Text("Ember wear", promptContainer, new Vector2(100f, 0f), new Vector2(70f, 12f), 7f, "", Muted);
+            keyLabel = Text("Bound key", promptContainer, new Vector2(0f, 0f), new Vector2(16f, 16f), 8.5f, "F", Muted);
+            keyIcon = Picture("Bound key icon", promptContainer, new Vector2(0f, 0f), new Vector2(22f, 22f), null, Color.clear);
+            modeLabel = Text("Action", promptContainer, new Vector2(26f, 0f), new Vector2(85f, 16f), 8.5f, "FLARE", Muted);
+            detailLabel = Text("Ember wear", promptContainer, new Vector2(110f, 0f), new Vector2(70f, 16f), 8.5f, "", Muted);
             detailLabel.alignment = TextAlignmentOptions.MidlineRight;
 
             popupLabel = Text("Pickup receipt", panel, new Vector2(0f, -Height - 5f), new Vector2(Width, 16f), 8f, "", Color.clear, 0.4f);

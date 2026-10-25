@@ -474,25 +474,25 @@ namespace TheLightenRoad.UI
             hintGlyphsRoot = new GameObject("HintGlyphsBar", typeof(RectTransform));
             hintGlyphsRoot.transform.SetParent(contentRoot, false);
             var hgRect = hintGlyphsRoot.GetComponent<RectTransform>();
-            SetCentered(hgRect, new Vector2(0f, -206f), new Vector2(520f, 24f));
+            SetCentered(hgRect, new Vector2(0f, -206f), new Vector2(620f, 38f));
 
             // Item 1: D-Pad Select
-            hintSelectIcon = CreateImage("SelectIcon", hintGlyphsRoot.transform, new Vector2(-195f, 0f), new Vector2(22f, 22f), null, Color.white);
-            hintSelectText = AddTMPText("SelectText", hintGlyphsRoot.transform, new Vector2(-130f, 0f), new Vector2(90f, 20f), 11.5f, TextAlignmentOptions.Left);
+            hintSelectIcon = CreateImage("SelectIcon", hintGlyphsRoot.transform, new Vector2(-235f, 0f), new Vector2(34f, 34f), null, Color.white);
+            hintSelectText = AddTMPText("SelectText", hintGlyphsRoot.transform, new Vector2(-155f, 0f), new Vector2(100f, 24f), 13.5f, TextAlignmentOptions.Left);
             hintSelectText.text = "SELECT";
             hintSelectText.fontStyle = FontStyles.Bold;
             hintSelectText.characterSpacing = 2.5f;
 
             // Item 2: Confirm Button
-            hintConfirmIcon = CreateImage("ConfirmIcon", hintGlyphsRoot.transform, new Vector2(-25f, 0f), new Vector2(22f, 22f), null, Color.white);
-            hintConfirmText = AddTMPText("ConfirmText", hintGlyphsRoot.transform, new Vector2(40f, 0f), new Vector2(90f, 20f), 11.5f, TextAlignmentOptions.Left);
+            hintConfirmIcon = CreateImage("ConfirmIcon", hintGlyphsRoot.transform, new Vector2(-40f, 0f), new Vector2(34f, 34f), null, Color.white);
+            hintConfirmText = AddTMPText("ConfirmText", hintGlyphsRoot.transform, new Vector2(40f, 0f), new Vector2(100f, 24f), 13.5f, TextAlignmentOptions.Left);
             hintConfirmText.text = "CONFIRM";
             hintConfirmText.fontStyle = FontStyles.Bold;
             hintConfirmText.characterSpacing = 2.5f;
 
             // Item 3: Return Button
-            hintReturnIcon = CreateImage("ReturnIcon", hintGlyphsRoot.transform, new Vector2(145f, 0f), new Vector2(22f, 22f), null, Color.white);
-            hintReturnText = AddTMPText("ReturnText", hintGlyphsRoot.transform, new Vector2(205f, 0f), new Vector2(80f, 20f), 11.5f, TextAlignmentOptions.Left);
+            hintReturnIcon = CreateImage("ReturnIcon", hintGlyphsRoot.transform, new Vector2(155f, 0f), new Vector2(34f, 34f), null, Color.white);
+            hintReturnText = AddTMPText("ReturnText", hintGlyphsRoot.transform, new Vector2(235f, 0f), new Vector2(90f, 24f), 13.5f, TextAlignmentOptions.Left);
             hintReturnText.text = "RETURN";
             hintReturnText.fontStyle = FontStyles.Bold;
             hintReturnText.characterSpacing = 2.5f;
@@ -1044,7 +1044,7 @@ namespace TheLightenRoad.UI
         private void HandleNavigation()
         {
             var k = Keyboard.current;
-            var pad = Gamepad.current;
+            var pad = ControllerGlyphService.GetActiveGamepad();
 
             if (k != null && k.rKey.wasPressedThisFrame)
             {
@@ -1053,9 +1053,9 @@ namespace TheLightenRoad.UI
             }
 
             bool navDown = (k != null && (k.sKey.wasPressedThisFrame || k.downArrowKey.wasPressedThisFrame))
-                        || (pad != null && (pad.dpad.down.wasPressedThisFrame || pad.leftStick.down.wasPressedThisFrame));
+                        || (pad != null && (pad.dpad.down.wasPressedThisFrame || pad.leftStick.down.wasPressedThisFrame || (pad.leftStick.ReadValue().y < -0.5f && Mathf.Abs(pad.leftStick.ReadValue().x) < 0.5f)));
             bool navUp = (k != null && (k.wKey.wasPressedThisFrame || k.upArrowKey.wasPressedThisFrame))
-                      || (pad != null && (pad.dpad.up.wasPressedThisFrame || pad.leftStick.up.wasPressedThisFrame));
+                      || (pad != null && (pad.dpad.up.wasPressedThisFrame || pad.leftStick.up.wasPressedThisFrame || (pad.leftStick.ReadValue().y > 0.5f && Mathf.Abs(pad.leftStick.ReadValue().x) < 0.5f)));
 
             if (navDown) SetSelectedButton(1);
             else if (navUp) SetSelectedButton(0);
@@ -1190,7 +1190,7 @@ namespace TheLightenRoad.UI
             var k = Keyboard.current;
             if (k != null && (k.enterKey.isPressed || k.spaceKey.isPressed || k.rKey.isPressed))
                 return true;
-            var pad = Gamepad.current;
+            var pad = ControllerGlyphService.GetActiveGamepad();
             if (pad != null && pad.buttonSouth.isPressed)
                 return true;
             return false;

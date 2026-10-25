@@ -93,25 +93,25 @@ namespace TheLightenRoad.Frontend
             deadzoneSlider.minValue=0.05f; deadzoneSlider.maxValue=0.40f;
             deadzoneSlider.onValueChanged.AddListener(OnDeadzoneSliderChanged);
 
-            var guideCard=CreateAnchoredRect("Controller Mapping Preview",controls,new Vector2(680,68),Vector2.one*0.5f,new Vector2(0,-120));
+            var guideCard=CreateAnchoredRect("Controller Mapping Preview",controls,new Vector2(700,80),Vector2.one*0.5f,new Vector2(0,-118));
             var guideBg=guideCard.gameObject.AddComponent<Image>();
             guideBg.sprite=softRadialSprite; guideBg.color=new Color(0.012f,0.024f,0.045f,0.85f); guideBg.raycastTarget=false;
-            controllerMappingSummaryText=SettingsText(guideCard,"",new Vector2(0,16),11.5f,amberGold,660);
+            controllerMappingSummaryText=SettingsText(guideCard,"",new Vector2(0,22),12f,amberGold,680);
             controllerMappingSummaryText.alignment=TextAlignmentOptions.Center;
             controllerMappingSummaryText.characterSpacing=1.2f;
 
             string[] actionNames = { "JUMP", "FLARE", "SPRINT", "INTERACT", "PAUSE" };
-            float[] xOffsets = { -240f, -120f, 0f, 120f, 240f };
+            float[] xOffsets = { -252f, -126f, 0f, 126f, 252f };
             for (int i = 0; i < 5; i++)
             {
-                var slot = CreateAnchoredRect("Slot_" + i, guideCard, new Vector2(110, 24), new Vector2(0.5f, 0.5f), new Vector2(xOffsets[i], -12));
-                var iconRect = CreateAnchoredRect("Icon", slot, new Vector2(20, 20), new Vector2(0, 0.5f), new Vector2(10, 0));
+                var slot = CreateAnchoredRect("Slot_" + i, guideCard, new Vector2(124, 36), new Vector2(0.5f, 0.5f), new Vector2(xOffsets[i], -14));
+                var iconRect = CreateAnchoredRect("Icon", slot, new Vector2(32, 32), new Vector2(0, 0.5f), new Vector2(18, 0));
                 var icon = iconRect.gameObject.AddComponent<Image>();
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
                 controllerMappingIcons[i] = icon;
 
-                var lbl = CreateLabel("Label", slot, actionNames[i], 11f, radiantIvory, new Vector2(80, 20), new Vector2(0, 0.5f), new Vector2(32, 0), new Vector2(0, 0.5f));
+                var lbl = CreateLabel("Label", slot, actionNames[i], 12f, radiantIvory, new Vector2(82, 24), new Vector2(0, 0.5f), new Vector2(40, 0), new Vector2(0, 0.5f));
                 lbl.fontStyle = FontStyles.Bold;
                 lbl.characterSpacing = 1f;
             }

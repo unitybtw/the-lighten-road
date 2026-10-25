@@ -245,7 +245,7 @@ namespace TheLightenRoad.Frontend
         private void Update()
         {
             var k = Keyboard.current;
-            var g = Gamepad.current;
+            var g = ControllerGlyphService.GetActiveGamepad();
 
             bool escapePressed = k != null && (k.escapeKey.wasPressedThisFrame || k.pKey.wasPressedThisFrame);
             bool startPressed = g != null && g.startButton.wasPressedThisFrame;
@@ -283,19 +283,44 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            if (IsPaused && currentView == "controls" && g != null)
+            if (IsPaused && g != null)
             {
-                if (g.leftShoulder.wasPressedThisFrame)
+                if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
                 {
-                    SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
-                    if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                    bool padNavIntent = g.dpad.up.wasPressedThisFrame || g.dpad.down.wasPressedThisFrame ||
+                                        g.dpad.left.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame ||
+                                        g.buttonSouth.wasPressedThisFrame ||
+                                        (g.leftStick.ReadValue().sqrMagnitude > 0.15f);
+                    if (padNavIntent)
+                    {
+                        RestorePauseMenuSelection();
+                    }
                 }
-                else if (g.rightShoulder.wasPressedThisFrame)
+
+                if (currentView == "controls")
                 {
-                    SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
-                    if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                    if (g.leftShoulder.wasPressedThisFrame || g.dpad.left.wasPressedThisFrame)
+                    {
+                        SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
+                        if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                    }
+                    else if (g.rightShoulder.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame)
+                    {
+                        SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
+                        if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                    }
                 }
             }
+        }
+
+        private void RestorePauseMenuSelection()
+        {
+            if (EventSystem.current == null) return;
+            GameObject target = null;
+            if (currentView == "main" && resumeButton != null) target = resumeButton.gameObject;
+            else if (currentView == "controls" && controlsBackButton != null) target = controlsBackButton.gameObject;
+            else if (currentView == "settings" && masterSlider != null) target = masterSlider.gameObject;
+            if (target != null) EventSystem.current.SetSelectedGameObject(target);
         }
 
         public void Pause()
@@ -774,10 +799,22 @@ namespace TheLightenRoad.Frontend
             float stepY = 66f;
 
             resumeButton = CreateFramelessMenuButton("ResumeButton", r, "Resume", "Return to game", new Vector2(0f, startY), Resume, isPrimary: true);
-            CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
-            CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
-            CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
-            CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
+            var controlsBtn = CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
+            var settingsBtn = CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
+            var restartBtn = CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
+            var quitBtn = CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
+
+            var navButtons = new[] { resumeButton, controlsBtn, settingsBtn, restartBtn, quitBtn };
+            for (int i = 0; i < navButtons.Length; i++)
+            {
+                var nav = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnUp = navButtons[(i - 1 + navButtons.Length) % navButtons.Length],
+                    selectOnDown = navButtons[(i + 1) % navButtons.Length]
+                };
+                navButtons[i].navigation = nav;
+            }
         }
 
         private void BuildSettingsPanel(Transform parent)
@@ -1329,7 +1366,7 @@ namespace TheLightenRoad.Frontend
 
         private TMP_Text CreateControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos, int rowIndex = -1)
         {
-            var row = CreateAnchoredRect(actionTitle, parent, new Vector2(740f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
+            var row = CreateAnchoredRect(actionTitle, parent, new Vector2(740f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
 
             var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(740f, 2f), new Vector2(0.5f, 0f), Vector2.zero);
             var divImg = divRect.gameObject.AddComponent<Image>();
@@ -1337,33 +1374,33 @@ namespace TheLightenRoad.Frontend
             divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.22f);
             divImg.raycastTarget = false;
 
-            var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(210f, 28f), new Vector2(0f, 0.5f), new Vector2(105f, 0f));
+            var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(240f, 36f), new Vector2(0f, 0.5f), new Vector2(120f, 0f));
             var badgeImg = badge.gameObject.AddComponent<Image>();
             badgeImg.sprite = softRadialSprite;
             badgeImg.color = new Color(1.0f, 0.72f, 0.28f, 0.16f);
 
-            var iconRect = CreateAnchoredRect("Glyph Icon", badge, new Vector2(22f, 22f), new Vector2(0f, 0.5f), new Vector2(18f, 0f));
+            var iconRect = CreateAnchoredRect("Glyph Icon", badge, new Vector2(34f, 34f), new Vector2(0f, 0.5f), new Vector2(24f, 0f));
             var iconImg = iconRect.gameObject.AddComponent<Image>();
             iconImg.color = Color.clear;
             iconImg.raycastTarget = false;
             if (rowIndex >= 0 && rowIndex < pauseControlsRowIcons.Length)
                 pauseControlsRowIcons[rowIndex] = iconImg;
 
-            var keyTxt = CreateLabel("Key Text", badge, new Vector2(10f, 0f), new Vector2(170f, 28f),
-                keys, 12f, TextAlignmentOptions.Center, amberGold);
+            var keyTxt = CreateLabel("Key Text", badge, new Vector2(15f, 0f), new Vector2(180f, 32f),
+                keys, 12.5f, TextAlignmentOptions.Center, amberGold);
             keyTxt.fontStyle = FontStyles.Bold;
             keyTxt.characterSpacing = 1.5f;
 
-            var actTxt = CreateLabel("Action", row, new Vector2(230f, 7f), new Vector2(480f, 18f),
-                actionTitle, 13f, TextAlignmentOptions.Left, radiantIvory);
+            var actTxt = CreateLabel("Action", row, new Vector2(255f, 9f), new Vector2(460f, 20f),
+                actionTitle, 13.5f, TextAlignmentOptions.Left, radiantIvory);
             actTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             actTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             actTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
             actTxt.fontStyle = FontStyles.Bold;
             actTxt.characterSpacing = 2f;
 
-            var descTxt = CreateLabel("Description", row, new Vector2(230f, -8f), new Vector2(480f, 16f),
-                desc, 10.5f, TextAlignmentOptions.Left, moonlightSilver);
+            var descTxt = CreateLabel("Description", row, new Vector2(255f, -9f), new Vector2(460f, 18f),
+                desc, 11.5f, TextAlignmentOptions.Left, moonlightSilver);
             descTxt.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             descTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             descTxt.rectTransform.pivot = new Vector2(0f, 0.5f);

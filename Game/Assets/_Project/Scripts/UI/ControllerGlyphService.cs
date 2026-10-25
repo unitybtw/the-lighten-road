@@ -80,6 +80,13 @@ namespace TheLightenRoad.UI
             }
         }
 
+        public static Gamepad GetActiveGamepad()
+        {
+            if (Gamepad.current != null) return Gamepad.current;
+            if (Gamepad.all.Count > 0) return Gamepad.all[0];
+            return null;
+        }
+
         public static ControllerPromptStyle ActiveStyle
         {
             get
@@ -90,7 +97,7 @@ namespace TheLightenRoad.UI
                     return configuredStyle;
                 }
 
-                if (lastUsedGamepad || (Gamepad.current != null && (Keyboard.current == null || !Keyboard.current.anyKey.isPressed)))
+                if (lastUsedGamepad || GetActiveGamepad() != null)
                 {
                     return DetectGamepadHardware();
                 }
@@ -252,7 +259,7 @@ namespace TheLightenRoad.UI
 
         private void CheckActiveInputDevice()
         {
-            var gp = Gamepad.current;
+            var gp = GetActiveGamepad();
             if (gp != null)
             {
                 bool padActivity = gp.buttonSouth.wasPressedThisFrame ||
@@ -263,13 +270,14 @@ namespace TheLightenRoad.UI
                                    gp.selectButton.wasPressedThisFrame ||
                                    gp.leftShoulder.wasPressedThisFrame ||
                                    gp.rightShoulder.wasPressedThisFrame ||
-                                   gp.leftTrigger.wasPressedThisFrame ||
-                                   gp.rightTrigger.wasPressedThisFrame ||
+                                   gp.leftTrigger.ReadValue() > 0.15f ||
+                                   gp.rightTrigger.ReadValue() > 0.15f ||
                                    gp.dpad.left.wasPressedThisFrame ||
                                    gp.dpad.right.wasPressedThisFrame ||
                                    gp.dpad.up.wasPressedThisFrame ||
                                    gp.dpad.down.wasPressedThisFrame ||
-                                   gp.leftStick.ReadValue().sqrMagnitude > 0.08f;
+                                   gp.leftStick.ReadValue().sqrMagnitude > 0.04f ||
+                                   gp.rightStick.ReadValue().sqrMagnitude > 0.04f;
 
                 if (padActivity)
                 {
@@ -288,11 +296,17 @@ namespace TheLightenRoad.UI
             }
 
             var kb = Keyboard.current;
-            var ms = Mouse.current;
-            bool pcActivity = (kb != null && kb.anyKey.wasPressedThisFrame) ||
-                              (ms != null && (ms.leftButton.wasPressedThisFrame || ms.rightButton.wasPressedThisFrame));
+            bool deliberateKey = kb != null && (
+                kb.wKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame ||
+                kb.sKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame ||
+                kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame ||
+                kb.escapeKey.wasPressedThisFrame || kb.fKey.wasPressedThisFrame ||
+                kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame ||
+                kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame ||
+                kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame
+            );
 
-            if (pcActivity)
+            if (deliberateKey)
             {
                 if (lastUsedGamepad)
                 {
@@ -307,7 +321,7 @@ namespace TheLightenRoad.UI
 
         public static ControllerPromptStyle DetectGamepadHardware()
         {
-            var pad = Gamepad.current;
+            var pad = GetActiveGamepad();
             if (pad == null) return ControllerPromptStyle.Xbox;
 
             string info = (pad.description.manufacturer + " " + pad.description.product + " " + pad.name + " " + pad.displayName).ToLowerInvariant();

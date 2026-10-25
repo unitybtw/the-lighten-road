@@ -280,17 +280,57 @@ namespace TheLightenRoad.Frontend
                 else ShowHome();
             }
 
-            if (view == "settings" && Gamepad.current != null)
+            var activePad = ControllerGlyphService.GetActiveGamepad();
+            if (activePad != null)
             {
-                if (Gamepad.current.leftShoulder.wasPressedThisFrame)
+                if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
                 {
-                    SelectSettingsSection((settingsSection - 1 + 4) % 4);
-                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                    bool padNavIntent = activePad.dpad.up.wasPressedThisFrame || activePad.dpad.down.wasPressedThisFrame ||
+                                        activePad.dpad.left.wasPressedThisFrame || activePad.dpad.right.wasPressedThisFrame ||
+                                        activePad.buttonSouth.wasPressedThisFrame ||
+                                        (activePad.leftStick.ReadValue().sqrMagnitude > 0.25f);
+                    if (padNavIntent)
+                    {
+                        RestoreViewSelection();
+                    }
                 }
-                else if (Gamepad.current.rightShoulder.wasPressedThisFrame)
+
+                if (view == "settings")
                 {
-                    SelectSettingsSection((settingsSection + 1) % 4);
-                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                    if (activePad.leftShoulder.wasPressedThisFrame)
+                    {
+                        SelectSettingsSection((settingsSection - 1 + 4) % 4);
+                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                    }
+                    else if (activePad.rightShoulder.wasPressedThisFrame)
+                    {
+                        SelectSettingsSection((settingsSection + 1) % 4);
+                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                    }
+                }
+                else if (view == "controls")
+                {
+                    if (activePad.leftShoulder.wasPressedThisFrame || activePad.dpad.left.wasPressedThisFrame)
+                    {
+                        SetControlsDeviceTab((selectedControlsDeviceTab + 2) % 3);
+                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                    }
+                    else if (activePad.rightShoulder.wasPressedThisFrame || activePad.dpad.right.wasPressedThisFrame)
+                    {
+                        SetControlsDeviceTab((selectedControlsDeviceTab + 1) % 3);
+                        if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
+                    }
+                }
+                else if (view == "realms")
+                {
+                    if (activePad.dpad.up.wasPressedThisFrame || (activePad.leftStick.up.wasPressedThisFrame && activePad.leftStick.ReadValue().y > 0.5f))
+                    {
+                        SelectRealm(Mathf.Clamp(selectedRealmIndex - 1, 0, AvailableRealms.Length - 1));
+                    }
+                    else if (activePad.dpad.down.wasPressedThisFrame || (activePad.leftStick.down.wasPressedThisFrame && activePad.leftStick.ReadValue().y < -0.5f))
+                    {
+                        SelectRealm(Mathf.Clamp(selectedRealmIndex + 1, 0, AvailableRealms.Length - 1));
+                    }
                 }
             }
 
@@ -470,6 +510,20 @@ namespace TheLightenRoad.Frontend
             {
                 EventSystem.current.SetSelectedGameObject(firstSelectable.gameObject);
             }
+        }
+
+        private void RestoreViewSelection()
+        {
+            if (EventSystem.current == null) return;
+            GameObject target = null;
+            if (view == "home" && playButton != null) target = playButton.gameObject;
+            else if (view == "realms" && realmButtons.Count > selectedRealmIndex && realmButtons[selectedRealmIndex] != null) target = realmButtons[selectedRealmIndex].gameObject;
+            else if (view == "settings") target = settingsTabs != null && settingsTabs.Length > settingsSection && settingsTabs[settingsSection] != null ? settingsTabs[settingsSection].gameObject : null;
+            else if (view == "controls" && controlsFirst != null) target = controlsFirst.gameObject;
+            else if (view == "credits" && creditsFirst != null) target = creditsFirst.gameObject;
+            else if (view == "quit" && quitFirst != null) target = quitFirst.gameObject;
+
+            if (target != null) EventSystem.current.SetSelectedGameObject(target);
         }
 
         public void ShowHome()
@@ -1032,7 +1086,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: true,
                 customWingOffset: 148f);
 
-            CreateFramelessMenuButton(
+            var realmsBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Realms & Chapters",
                 labelText: "REALMS & CHAPTERS",
@@ -1042,7 +1096,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 185f);
 
-            CreateFramelessMenuButton(
+            var settingsBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Settings",
                 labelText: "OPTIONS",
@@ -1052,7 +1106,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 118f);
 
-            CreateFramelessMenuButton(
+            var controlsBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Controls & Guide",
                 labelText: "CONTROLS",
@@ -1062,7 +1116,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 124f);
 
-            CreateFramelessMenuButton(
+            var creditsBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Credits",
                 labelText: "CREDITS",
@@ -1072,7 +1126,7 @@ namespace TheLightenRoad.Frontend
                 isPrimary: false,
                 customWingOffset: 115f);
 
-            CreateFramelessMenuButton(
+            var quitBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Leave the Light",
                 labelText: "QUIT GAME",
@@ -1081,6 +1135,18 @@ namespace TheLightenRoad.Frontend
                 onClick: ShowQuit,
                 isPrimary: false,
                 customWingOffset: 132f);
+
+            Button[] menuBtns = { playButton, realmsBtn, settingsBtn, controlsBtn, creditsBtn, quitBtn };
+            for (int i = 0; i < menuBtns.Length; i++)
+            {
+                var nav = new Navigation
+                {
+                    mode = Navigation.Mode.Explicit,
+                    selectOnUp = i > 0 ? menuBtns[i - 1] : menuBtns[menuBtns.Length - 1],
+                    selectOnDown = i < menuBtns.Length - 1 ? menuBtns[i + 1] : menuBtns[0]
+                };
+                menuBtns[i].navigation = nav;
+            }
         }
 
         private Button CreateFramelessMenuButton(
@@ -1536,26 +1602,27 @@ namespace TheLightenRoad.Frontend
 
         private TMP_Text CreateCenteredControlRow(RectTransform parent, string keys, string actionTitle, string desc, float yPos, int rowIndex = -1)
         {
-            var row = CreateAnchoredRect(actionTitle, parent, new Vector2(680f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
+            var row = CreateAnchoredRect(actionTitle, parent, new Vector2(700f, 52f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos), pivot: new Vector2(0.5f, 0.5f));
 
             // Left of center: Action Title & Whispered Mechanic Description
-            var actTxt = CreateLabel("Action", row, actionTitle, 15.5f, radiantIvory, new Vector2(380f, 22f), new Vector2(0f, 0.5f), new Vector2(12f, 8f), pivot: new Vector2(0f, 0.5f));
+            var actTxt = CreateLabel("Action", row, actionTitle, 16f, radiantIvory, new Vector2(380f, 24f), new Vector2(0f, 0.5f), new Vector2(12f, 9f), pivot: new Vector2(0f, 0.5f));
             actTxt.fontStyle = FontStyles.Bold;
             actTxt.characterSpacing = 3.0f;
 
-            var descTxt = CreateLabel("Description", row, desc, 11.5f, moonlightSilver, new Vector2(420f, 20f), new Vector2(0f, 0.5f), new Vector2(12f, -10f), pivot: new Vector2(0f, 0.5f));
+            var descTxt = CreateLabel("Description", row, desc, 12f, moonlightSilver, new Vector2(420f, 20f), new Vector2(0f, 0.5f), new Vector2(12f, -11f), pivot: new Vector2(0f, 0.5f));
 
             // Right of center: Ornate Keybinding Emblem with Warm Lantern Glow
-            var keyGlow = CreateAnchoredRect("Key Lantern Aura", row, new Vector2(210f, 34f), new Vector2(1f, 0.5f), new Vector2(-110f, 0f), pivot: new Vector2(0.5f, 0.5f));
+            var keyGlow = CreateAnchoredRect("Key Lantern Aura", row, new Vector2(240f, 42f), new Vector2(1f, 0.5f), new Vector2(-120f, 0f), pivot: new Vector2(0.5f, 0.5f));
             var keyGlowImg = keyGlow.gameObject.AddComponent<Image>();
             keyGlowImg.sprite = softRadialSprite;
             keyGlowImg.color = new Color(1.0f, 0.72f, 0.26f, 0.16f);
             keyGlowImg.raycastTarget = false;
 
-            var iconRect = CreateAnchoredRect("Glyph Icon", row, new Vector2(24f, 24f), new Vector2(1f, 0.5f), new Vector2(-195f, 0f), pivot: new Vector2(0.5f, 0.5f));
+            var iconRect = CreateAnchoredRect("Glyph Icon", row, new Vector2(38f, 38f), new Vector2(1f, 0.5f), new Vector2(-215f, 0f), pivot: new Vector2(0.5f, 0.5f));
             var iconImg = iconRect.gameObject.AddComponent<Image>();
             iconImg.color = Color.clear;
             iconImg.raycastTarget = false;
+            iconImg.preserveAspect = true;
             if (rowIndex >= 0 && rowIndex < controlsRowIcons.Length)
                 controlsRowIcons[rowIndex] = iconImg;
 
@@ -1565,10 +1632,10 @@ namespace TheLightenRoad.Frontend
             keyTxt.characterSpacing = 2.5f;
 
             // Tapered Filigree Divider under row
-            var div = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(680f, 2f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var div = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(700f, 2f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var divImg = div.gameObject.AddComponent<Image>();
             divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.22f);
+            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.24f);
             divImg.raycastTarget = false;
 
             return keyTxt;
