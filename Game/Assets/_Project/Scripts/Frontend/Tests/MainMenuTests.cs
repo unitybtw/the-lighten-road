@@ -246,16 +246,21 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
-        public IEnumerator ControllerGuideUsesSchematicAndKeepsKeyboardBindingsAvailable()
+        public IEnumerator ControllerGuideLoadsLicensedArtworkAndKeepsKeyboardBindingsAvailable()
         {
             yield return null;_menu.SkipIntro();_menu.ShowControls();_menu.SetControlsDeviceTab(1);
             var diagram=_menu.GetComponentInChildren<ControllerSchematic>();
             Assert.That(diagram,Is.Not.Null);Assert.That(diagram.SymmetricSticks,Is.False);
+            Assert.That(diagram.CurrentArtwork,Is.EqualTo(Resources.Load<Sprite>("UI/ControllerArtwork/XboxSeries")));
+            Assert.That(diagram.CurrentArtwork,Is.Not.Null);
+            Assert.That(diagram.GetComponentInChildren<Image>().raycastTarget,Is.False);
             Assert.That(diagram.GetComponent<CanvasRenderer>(),Is.Not.Null);
             Canvas.ForceUpdateCanvases();
             yield return null;
             Assert.That(diagram.canvasRenderer.GetMesh().vertexCount,Is.GreaterThan(0));
             _menu.SetControlsDeviceTab(2);Assert.That(diagram.SymmetricSticks,Is.True);
+            Assert.That(diagram.CurrentArtwork,Is.EqualTo(Resources.Load<Sprite>("UI/ControllerArtwork/PlayStation5")));
+            Assert.That(diagram.CurrentArtwork,Is.Not.Null);
             _menu.SetControlsDeviceTab(0);Assert.That(diagram.gameObject.activeInHierarchy,Is.False);
         }
 

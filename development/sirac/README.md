@@ -636,4 +636,4 @@ Main-menu settings now use Audio, Display and Accessibility categories, frameles
 
 ## Menu reference study — 2026-10-25
 
-Implemented the centered serif title menu, hierarchical Options pages, original controller schematic and consistent pause styling. See [design decisions, current previews and verification](MENU-REFERENCE-STUDY.md). Unity Editor PlayMode: **26/26 passed**; physical gamepad and standalone-build checks remain unverified.
+Implemented the centered serif title menu, hierarchical Options pages, licensed Xbox Series / PlayStation 5 controller illustrations and consistent pause styling. See [design decisions, current previews and verification](MENU-REFERENCE-STUDY.md). Unity Editor PlayMode: **26/26 passed**; physical gamepad and standalone-build checks remain unverified.
