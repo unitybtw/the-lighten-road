@@ -1011,7 +1011,19 @@ namespace TheLightenRoad.UI
             bool confirm = (k != null && (k.enterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame))
                         || (pad != null && pad.buttonSouth.wasPressedThisFrame);
             if (confirm)
+            {
                 Activate(selectedButtonIndex);
+                return;
+            }
+
+            bool cancelOrReturn = (k != null && k.escapeKey.wasPressedThisFrame)
+                               || (pad != null && pad.buttonEast.wasPressedThisFrame);
+            if (cancelOrReturn)
+            {
+                SetSelectedButton(1);
+                Activate(1);
+                return;
+            }
         }
 
         private void HandlePointer()

@@ -22,8 +22,13 @@ namespace TheLightenRoad.Interaction
 
         private void Update()
         {
-            // Yeni Input Sistemi ile E tuşunu dinliyoruz
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
+            // Support both Keyboard (E) and Gamepad (North: Y/△, West: X/□, East: B/○)
+            var kb = Keyboard.current;
+            var pad = Gamepad.current;
+            bool interactPressed = (kb != null && kb.eKey.wasPressedThisFrame)
+                                || (pad != null && (pad.buttonNorth.wasPressedThisFrame || pad.buttonWest.wasPressedThisFrame || pad.buttonEast.wasPressedThisFrame));
+
+            if (interactPressed)
             {
                 var lantern = FindFirstObjectByType<LanternFuel>();
 

@@ -43,7 +43,10 @@ namespace TheLightenRoad.Sirac.LevelMap
 
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.backspaceKey.wasPressedThisFrame) RestartRoute();
+            var pad = Gamepad.current;
+            bool restart = (Keyboard.current != null && Keyboard.current.backspaceKey.wasPressedThisFrame)
+                        || (pad != null && pad.selectButton.wasPressedThisFrame);
+            if (restart) RestartRoute();
             noteTime = Mathf.Max(0f, noteTime - Time.unscaledDeltaTime);
             if (note != null) note.alpha = Mathf.MoveTowards(note.alpha, Mathf.Min(1f, noteTime), Time.unscaledDeltaTime * 3f);
         }

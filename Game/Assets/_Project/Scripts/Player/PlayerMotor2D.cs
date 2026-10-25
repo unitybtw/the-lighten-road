@@ -183,9 +183,9 @@ namespace TheLightenRoad.Player
         private void OnEnable()
         {
             if (ActiveInstance == null) ActiveInstance = this;
-            move.Enable();
-            jump.Enable();
-            sprint.Enable();
+            move?.Enable();
+            jump?.Enable();
+            sprint?.Enable();
             groundStateInitialized = false;
             IsGrounded = CheckGrounded();
         }
@@ -480,9 +480,9 @@ namespace TheLightenRoad.Player
         private void OnDisable()
         {
             if (ActiveInstance == this) ActiveInstance = null;
-            move.Disable();
-            jump.Disable();
-            sprint.Disable();
+            move?.Disable();
+            jump?.Disable();
+            sprint?.Disable();
             horizontalInput = 0f;
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;

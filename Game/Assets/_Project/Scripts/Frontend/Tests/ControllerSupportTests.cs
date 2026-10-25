@@ -161,6 +161,23 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
+        public IEnumerator DeathScreenOverlay_CancelInputSelectsReturnToArchive()
+        {
+            var deathGo = new GameObject("TestDeathOverlay");
+            var death = deathGo.AddComponent<DeathScreenOverlay>();
+            yield return null;
+
+            death.PreviewDeath(DeathReason.Hazard);
+            yield return null;
+
+            Assert.That(death.SelectedButtonIndex, Is.EqualTo(0));
+            death.SetSelectedButton(1);
+            Assert.That(death.SelectedButtonIndex, Is.EqualTo(1));
+
+            Object.Destroy(deathGo);
+        }
+
+        [UnityTest]
         public IEnumerator ExportControllerScreenshots()
         {
             const string outDir = "/Users/siracsimsek/.gemini/antigravity/brain/8f3d549c-7f35-4ab1-8e4f-82e26f75a440/";

@@ -281,6 +281,20 @@ namespace TheLightenRoad.Frontend
                     }
                 }
             }
+
+            if (IsPaused && currentView == "controls" && g != null)
+            {
+                if (g.leftShoulder.wasPressedThisFrame)
+                {
+                    SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
+                    if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                }
+                else if (g.rightShoulder.wasPressedThisFrame)
+                {
+                    SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
+                    if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
+                }
+            }
         }
 
         public void Pause()

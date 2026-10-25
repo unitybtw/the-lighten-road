@@ -57,7 +57,8 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         {
             if(Completion!=null && Completion.IsRunning)return;
             var k=Keyboard.current;
-            if(k!=null && k.backspaceKey.wasPressedThisFrame)Restart();
+            var pad=Gamepad.current;
+            if((k!=null && k.backspaceKey.wasPressedThisFrame) || (pad!=null && pad.selectButton.wasPressedThisFrame))Restart();
             if(Player.State!=RespawnState.Alive)return;
             ArchiveCircuitNode closest=null;float distance=2.1f;
             foreach(var n in Nodes)
@@ -67,14 +68,16 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             }
             if(closest!=null)
             {
-                if(k!=null && k.eKey.wasPressedThisFrame)
+                bool interactPressed = (k!=null && k.eKey.wasPressedThisFrame) || (pad!=null && (pad.buttonNorth.wasPressedThisFrame || pad.buttonWest.wasPressedThisFrame));
+                if(interactPressed)
                 {
                     bool changed=Circuit.TryTransfer(Player.GetComponent<LanternFuel>());
                     Show(changed?(Circuit.Powered?"CIRCUIT POWERED\nOne ember is stored in the circuit. The platform is moving.":"EMBER RECOVERED\nThe platform freezes exactly where it is."):(Circuit.Powered?"LANTERN FULL\nMake room before recovering the circuit's ember.":"NO EMBERS\nAn ember is needed to power this circuit."),5f);
                 }
-                if(promptTime<=0 && Prompt!=null)Prompt.text=Circuit.Powered?"E / RECOVER EMBER - FREEZE PLATFORM":"E / DEPOSIT ONE EMBER - POWER PLATFORM";
+                string interactKey = pad!=null ? "Y / E" : "E";
+                if(promptTime<=0 && Prompt!=null)Prompt.text=Circuit.Powered?$"{interactKey} / RECOVER EMBER - FREEZE PLATFORM":$"{interactKey} / DEPOSIT ONE EMBER - POWER PLATFORM";
             }
-            else if(promptTime<=0 && Prompt!=null)Prompt.text=IsComplete?"CHAMBERS COMPLETE / BACKSPACE TO RESTART":"F / SCOUT WITH ONE EMBER     BACKSPACE / RESTART";
+            else if(promptTime<=0 && Prompt!=null)Prompt.text=IsComplete?"CHAMBERS COMPLETE / BACKSPACE TO RESTART":(pad!=null?"RT / SCOUT WITH ONE EMBER     BACKSPACE / RESTART":"F / SCOUT WITH ONE EMBER     BACKSPACE / RESTART");
             promptTime=Mathf.Max(0,promptTime-Time.unscaledDeltaTime);
         }
         public void Show(string text,float seconds){promptTime=seconds;if(Prompt!=null)Prompt.text=text;}

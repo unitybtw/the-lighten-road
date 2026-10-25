@@ -403,18 +403,22 @@ namespace TheLightenRoad.Frontend
         private void CheckContinuousActions(float dt)
         {
             var kb = Keyboard.current;
+            var pad = Gamepad.current;
 
             switch (requiredAction)
             {
                 case WhisperAction.Sprint:
-                    if ((playerMotor != null && playerMotor.IsSprinting) || (kb != null && (kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed)))
+                    if ((playerMotor != null && playerMotor.IsSprinting) || (kb != null && (kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed))
+                        || (pad != null && (pad.leftStickButton.isPressed || pad.rightTrigger.isPressed)))
                     {
                         TriggerActionFulfillment();
                     }
                     break;
 
                 case WhisperAction.Interact:
-                    if (kb != null && kb.eKey.wasPressedThisFrame)
+                    bool interactTriggered = (kb != null && kb.eKey.wasPressedThisFrame)
+                                          || (pad != null && (pad.buttonNorth.wasPressedThisFrame || pad.buttonWest.wasPressedThisFrame || pad.buttonEast.wasPressedThisFrame));
+                    if (interactTriggered)
                     {
                         TriggerActionFulfillment();
                     }

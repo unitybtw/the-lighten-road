@@ -67,7 +67,10 @@ namespace TheLightenRoad.Sirac.TestChamber
 
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.backspaceKey.wasPressedThisFrame)
+            var pad = Gamepad.current;
+            bool restart = (Keyboard.current != null && Keyboard.current.backspaceKey.wasPressedThisFrame)
+                        || (pad != null && pad.selectButton.wasPressedThisFrame);
+            if (restart)
                 RestartRoute();
             noteTimer = Mathf.Max(0f, noteTimer - Time.unscaledDeltaTime);
             if (note != null)
