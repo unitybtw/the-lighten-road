@@ -641,3 +641,7 @@ Implemented the centered serif title menu, hierarchical Options pages, licensed 
 ## Controller haptics — 2026-10-25
 
 Added short, fading feedback for jump/landing, Flare, ember pickup/break, death and chamber completion, with safe stop behavior and the existing saved Vibration toggle. See [cue tuning and verification](CONTROLLER-HAPTICS.md). **36/36 PlayMode tests passed** using a synthetic gamepad for motor-command verification; physical feel remains unverified.
+
+## DualSense Bluetooth correction — 2026-10-25
+
+Fixed the stock Input System USB-only output path for the connected DualSense using correctly sized Bluetooth packets and CRC. The user confirmed a real Bluetooth test pulse; **40/40 PlayMode tests passed**. See [transport diagnosis and evidence](DUALSENSE-BLUETOOTH-FIX.md).

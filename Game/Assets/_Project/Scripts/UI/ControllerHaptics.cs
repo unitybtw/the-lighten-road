@@ -82,7 +82,15 @@ namespace TheLightenRoad.UI
         private static void SetMotors(Gamepad pad, float low, float high)
         {
             if (pad == null) return;
-            try { pad.SetMotorSpeeds(low, high); }
+            try
+            {
+                if (DualSenseBluetoothRumble.IsBluetooth(pad))
+                {
+                    DualSenseBluetoothRumble.Send(pad, low, high);
+                    return;
+                }
+                pad.SetMotorSpeeds(low, high);
+            }
             catch (System.Exception) { /* Unsupported/disconnected drivers must not interrupt gameplay. */ }
         }
 
