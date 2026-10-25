@@ -296,7 +296,7 @@ namespace TheLightenRoad.UI
             // Configure archetype-specific visual groups and reset particles
             ConfigureArchetype(reason);
 
-            ControllerGlyphService.Rumble(0.65f, 0.85f, 0.40f);
+            ControllerGlyphService.PlayHaptic(HapticCue.Death);
 
             if (SoundEffectManager.HasInstance)
                 SoundEffectManager.Instance.PlayFlareExtinguish();

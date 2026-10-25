@@ -35,7 +35,7 @@ namespace TheLightenRoad.UI
     /// and PC Keyboard & Mouse. Also manages haptic gamepad rumble feedback and stick deadzone.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class ControllerGlyphService : MonoBehaviour
+    public sealed partial class ControllerGlyphService : MonoBehaviour
     {
         public const string StylePrefKey = "TLR.Menu.ControllerStyle";
         public const string VibrationPrefKey = "TLR.Menu.VibrationEnabled";
@@ -126,6 +126,7 @@ namespace TheLightenRoad.UI
             {
                 EnsureInitialized();
                 PlayerPrefs.SetInt(VibrationPrefKey, value ? 1 : 0);
+                if (!value) StopRumble();
                 PlayerPrefs.Save();
             }
         }
@@ -196,11 +197,19 @@ namespace TheLightenRoad.UI
         {
             LanternController.AnyFlareChanged -= HandleAnyFlareChanged;
             LanternController.AnyFlareChanged += HandleAnyFlareChanged;
+            EmberPickup.EmberCollected += HandleEmberCollected;
+            InputSystem.onDeviceChange += HandleHapticDeviceChange;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += HandleHapticSceneChange;
+            CheckPlayerBinding();
+            CheckLanternBinding();
         }
 
         private void OnDisable()
         {
             LanternController.AnyFlareChanged -= HandleAnyFlareChanged;
+            EmberPickup.EmberCollected -= HandleEmberCollected;
+            InputSystem.onDeviceChange -= HandleHapticDeviceChange;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= HandleHapticSceneChange;
             UnbindPlayer();
             HaltRumble();
         }
@@ -209,6 +218,8 @@ namespace TheLightenRoad.UI
         {
             CheckActiveInputDevice();
             CheckPlayerBinding();
+            CheckLanternBinding();
+            if (rumblePad != null && GetActiveGamepad() != rumblePad) HaltRumble();
         }
 
         private void CheckPlayerBinding()
@@ -228,6 +239,8 @@ namespace TheLightenRoad.UI
 
         private void UnbindPlayer()
         {
+            if (boundLantern != null) boundLantern.EmberBroken -= HandleEmberBroken;
+            boundLantern = null;
             if (boundPlayer != null)
             {
                 boundPlayer.OnJumped -= HandlePlayerJumped;
@@ -238,14 +251,14 @@ namespace TheLightenRoad.UI
 
         private void HandlePlayerJumped()
         {
-            Rumble(0.20f, 0.35f, 0.08f);
+            PlayHaptic(HapticCue.Jump);
         }
 
         private void HandlePlayerLanded(float velocity)
         {
             if (Mathf.Abs(velocity) > 8f)
             {
-                Rumble(0.40f, 0.20f, 0.12f);
+                PlayHaptic(HapticCue.Landing, Mathf.Lerp(.25f, 1f, Mathf.InverseLerp(8f, 22f, Mathf.Abs(velocity))));
             }
         }
 
@@ -253,7 +266,7 @@ namespace TheLightenRoad.UI
         {
             if (isFlared)
             {
-                Rumble(0.35f, 0.55f, 0.16f);
+                PlayHaptic(HapticCue.Flare);
             }
         }
 
@@ -482,86 +495,6 @@ namespace TheLightenRoad.UI
                     default: return null;
                 }
             }
-        }
-
-        public static void Rumble(float lowFrequency, float highFrequency, float duration = 0.15f)
-        {
-            if (!VibrationEnabled) return;
-            EnsureExists();
-            if (instance != null)
-            {
-                instance.TriggerRumble(lowFrequency, highFrequency, duration);
-            }
-        }
-
-        public static void StopRumble()
-        {
-            if (instance != null)
-            {
-                instance.HaltRumble();
-            }
-        }
-
-        private void TriggerRumble(float lowFreq, float highFreq, float duration)
-        {
-            if (Gamepad.current == null) return;
-            if (activeRumbleRoutine != null)
-            {
-                StopCoroutine(activeRumbleRoutine);
-                activeRumbleRoutine = null;
-            }
-            if (isActiveAndEnabled)
-            {
-                activeRumbleRoutine = StartCoroutine(RumbleRoutine(lowFreq, highFreq, duration));
-            }
-        }
-
-        private void HaltRumble()
-        {
-            if (activeRumbleRoutine != null)
-            {
-                StopCoroutine(activeRumbleRoutine);
-                activeRumbleRoutine = null;
-            }
-            var pad = Gamepad.current;
-            if (pad != null)
-            {
-                try
-                {
-                    pad.SetMotorSpeeds(0f, 0f);
-                }
-                catch { }
-            }
-        }
-
-        private IEnumerator RumbleRoutine(float lowFreq, float highFreq, float duration)
-        {
-            var pad = Gamepad.current;
-            if (pad != null)
-            {
-                try
-                {
-                    pad.SetMotorSpeeds(Mathf.Clamp01(lowFreq), Mathf.Clamp01(highFreq));
-                }
-                catch { }
-            }
-
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            if (pad != null)
-            {
-                try
-                {
-                    pad.SetMotorSpeeds(0f, 0f);
-                }
-                catch { }
-            }
-            activeRumbleRoutine = null;
         }
 
         private void OnDestroy()

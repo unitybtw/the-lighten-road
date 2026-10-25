@@ -620,7 +620,7 @@ namespace TheLightenRoad.Frontend
             UpdateSwitchVisual(vibrationToggle);
             if (value && Application.isPlaying)
             {
-                ControllerGlyphService.Rumble(0.4f, 0.6f, 0.15f);
+                ControllerGlyphService.PlayHaptic(HapticCue.Preview);
                 SoundEffectManager.Instance?.PlayUIClick();
             }
         }

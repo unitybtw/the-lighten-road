@@ -637,3 +637,7 @@ Main-menu settings now use Audio, Display and Accessibility categories, frameles
 ## Menu reference study — 2026-10-25
 
 Implemented the centered serif title menu, hierarchical Options pages, licensed Xbox Series / PlayStation 5 controller illustrations and consistent pause styling. See [design decisions, current previews and verification](MENU-REFERENCE-STUDY.md). Unity Editor PlayMode: **26/26 passed**; physical gamepad and standalone-build checks remain unverified.
+
+## Controller haptics — 2026-10-25
+
+Added short, fading feedback for jump/landing, Flare, ember pickup/break, death and chamber completion, with safe stop behavior and the existing saved Vibration toggle. See [cue tuning and verification](CONTROLLER-HAPTICS.md). **36/36 PlayMode tests passed** using a synthetic gamepad for motor-command verification; physical feel remains unverified.

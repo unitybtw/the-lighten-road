@@ -391,6 +391,7 @@ namespace TheLightenRoad.Frontend
             }
 
             PlaySound(pauseOpenSound, 520f, 392f, isOpen: true);
+            ControllerGlyphService.StopRumble();
             OnPauseToggled.Invoke(true);
 
             if (isActiveAndEnabled)
@@ -1126,7 +1127,7 @@ namespace TheLightenRoad.Frontend
             RefreshPauseControlsQuickOptions();
             if (!current && Application.isPlaying)
             {
-                ControllerGlyphService.Rumble(0.4f, 0.6f, 0.15f);
+                ControllerGlyphService.PlayHaptic(HapticCue.Preview);
                 SoundEffectManager.Instance?.PlayUIClick();
             }
         }

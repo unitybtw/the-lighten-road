@@ -2,6 +2,7 @@ using System.Collections;
 using TheLightenRoad.Audio;
 using TheLightenRoad.Frontend;
 using TheLightenRoad.Lantern;
+using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -84,6 +85,7 @@ namespace TheLightenRoad.Player.Completion
         {
             string completedScene = SceneManager.GetActiveScene().name;
             Phase = "Reveal";
+            ControllerGlyphService.PlayHaptic(HapticCue.ChamberComplete);
             Started.Invoke();
             if (sound.clip != null) sound.Play();
             yield return Animate(Profile.RevealSeconds, t => ApplyReveal(t));
