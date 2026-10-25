@@ -182,20 +182,20 @@ namespace TheLightenRoad.Frontend
                 UnderlineFiligree.color = Color.clear;
             }
 
-            // 6. Frosted Glass Card Plate & Glowing Gold Border Frame
+            // 6. Frosted Glass Card Plate & Glowing Gold Border Frame (frameless idle, subtle atmospheric focus)
             if (CardPlate != null)
             {
-                Color idlePlate = new Color(0.012f, 0.020f, 0.038f, 0.68f);
+                Color idlePlate = Color.clear;
                 Color focusPlate = IsPrimaryAction
-                    ? new Color(0.12f, 0.075f, 0.028f, 0.94f)
-                    : new Color(0.075f, 0.050f, 0.022f, 0.90f);
+                    ? new Color(0.040f, 0.060f, 0.100f, 0.35f)
+                    : new Color(0.025f, 0.045f, 0.085f, 0.30f);
                 CardPlate.color = Color.Lerp(idlePlate, focusPlate, smooth);
             }
 
             if (BorderFrame != null)
             {
-                Color idleBorder = new Color(0.48f, 0.62f, 0.82f, 0.25f);
-                Color focusBorder = new Color(1.0f, 0.78f, 0.32f, 0.98f);
+                Color idleBorder = Color.clear;
+                Color focusBorder = new Color(1.0f, 0.78f, 0.32f, 0.35f);
                 BorderFrame.color = Color.Lerp(idleBorder, focusBorder, smooth);
             }
         }

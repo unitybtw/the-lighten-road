@@ -1423,21 +1423,21 @@ namespace TheLightenRoad.Frontend
             var plateImg = rowPlate.gameObject.AddComponent<Image>();
             plateImg.sprite = thinBorderSprite;
             plateImg.type = Image.Type.Sliced;
-            plateImg.color = new Color(0.010f, 0.016f, 0.030f, 0.60f);
+            plateImg.color = Color.clear;
             plateImg.raycastTarget = false;
 
             var rowBorder = CreateStretchRect("Row Border", row);
             var borderImg = rowBorder.gameObject.AddComponent<Image>();
             borderImg.sprite = thinBorderSprite;
             borderImg.type = Image.Type.Sliced;
-            borderImg.color = new Color(0.44f, 0.58f, 0.78f, 0.18f);
+            borderImg.color = Color.clear;
             borderImg.raycastTarget = false;
 
             // Tapered Bottom Filigree Divider
-            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(680f, 2f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(680f, 1.5f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var divImg = divRect.gameObject.AddComponent<Image>();
             divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.20f);
+            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.15f);
             divImg.raycastTarget = false;
 
             var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 15.5f, radiantIvory, new Vector2(340f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
@@ -1456,24 +1456,30 @@ namespace TheLightenRoad.Frontend
             sRect.sizeDelta = new Vector2(310f, 40f);
             sRect.anchoredPosition = new Vector2(-16f, 0f);
 
-            var track = CreateAnchoredRect("Track", sRect, new Vector2(225f, 6f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
+            // Thin Hollow Knight Luminous Track Line (2.5px tall)
+            var track = CreateAnchoredRect("Track", sRect, new Vector2(225f, 2.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), pivot: new Vector2(0f, 0.5f));
             var trackImg = track.gameObject.AddComponent<Image>();
             trackImg.sprite = roundTrackSprite;
             trackImg.type = Image.Type.Sliced;
-            trackImg.color = Color.white;
+            trackImg.color = new Color(0.75f, 0.85f, 0.98f, 0.40f);
 
             var fillArea = CreateStretchRect("Fill Area", track);
             var fill = CreateStretchRect("Fill", fillArea);
             var fillImg = fill.gameObject.AddComponent<Image>();
             fillImg.sprite = roundFillSprite;
             fillImg.type = Image.Type.Sliced;
-            fillImg.color = Color.white;
+            fillImg.color = new Color(1.0f, 0.80f, 0.35f, 0.85f);
 
             var handleSlide = CreateStretchRect("Handle Slide Area", track);
-            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(18f, 18f), new Vector2(0f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(16f, 26f), new Vector2(0f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             handle.localEulerAngles = Vector3.zero;
 
-            var handleGlow = CreateAnchoredRect("Handle Glow", handle, new Vector2(30f, 30f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            // Downward Chevron Needle Arrow pointing directly onto the line track
+            var needle = CreateLabel("Needle", handle, "▼", 10.5f, amberGold, new Vector2(16f, 16f), new Vector2(0.5f, 0.5f), new Vector2(0f, 9f), pivot: new Vector2(0.5f, 0.5f));
+            needle.alignment = TextAlignmentOptions.Center;
+            needle.raycastTarget = false;
+
+            var handleGlow = CreateAnchoredRect("Handle Glow", handle, new Vector2(26f, 26f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var hGlowImg = handleGlow.gameObject.AddComponent<Image>();
             hGlowImg.sprite = softRadialSprite;
             hGlowImg.color = new Color(1.0f, 0.75f, 0.30f, 0.45f);
@@ -1481,7 +1487,7 @@ namespace TheLightenRoad.Frontend
 
             var handleImg = handle.gameObject.AddComponent<Image>();
             handleImg.sprite = roundHandleSprite;
-            handleImg.color = Color.white;
+            handleImg.color = radiantIvory;
 
             valueText = CreateLabel("Value", sRect, "85%", 15f, amberGold, new Vector2(68f, 24f), new Vector2(1f, 0.5f), Vector2.zero, pivot: new Vector2(1f, 0.5f));
             valueText.alignment = TextAlignmentOptions.Right;
@@ -1512,21 +1518,21 @@ namespace TheLightenRoad.Frontend
             var plateImg = rowPlate.gameObject.AddComponent<Image>();
             plateImg.sprite = thinBorderSprite;
             plateImg.type = Image.Type.Sliced;
-            plateImg.color = new Color(0.010f, 0.016f, 0.030f, 0.60f);
+            plateImg.color = Color.clear;
             plateImg.raycastTarget = false;
 
             var rowBorder = CreateStretchRect("Row Border", row);
             var borderImg = rowBorder.gameObject.AddComponent<Image>();
             borderImg.sprite = thinBorderSprite;
             borderImg.type = Image.Type.Sliced;
-            borderImg.color = new Color(0.44f, 0.58f, 0.78f, 0.18f);
+            borderImg.color = Color.clear;
             borderImg.raycastTarget = false;
 
             // Tapered Bottom Filigree Divider
-            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(680f, 2f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var divRect = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(680f, 1.5f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var divImg = divRect.gameObject.AddComponent<Image>();
             divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.20f);
+            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.15f);
             divImg.raycastTarget = false;
 
             var titleTxt = CreateLabel("Title", row, title.ToUpperInvariant(), 15.5f, radiantIvory, new Vector2(440f, 24f), new Vector2(0f, 0.5f), new Vector2(16f, 10f), pivot: new Vector2(0f, 0.5f));
@@ -1535,12 +1541,12 @@ namespace TheLightenRoad.Frontend
 
             var subTxt = CreateLabel("Subtitle", row, subtitle, 11.5f, moonlightSilver, new Vector2(440f, 20f), new Vector2(0f, 0.5f), new Vector2(16f, -12f), pivot: new Vector2(0f, 0.5f));
 
-            var pill = CreateAnchoredRect("Pill", row, new Vector2(130f, 36f), new Vector2(1f, 0.5f), new Vector2(-16f, 0f), pivot: new Vector2(1f, 0.5f));
+            var pill = CreateAnchoredRect("Pill", row, new Vector2(140f, 36f), new Vector2(1f, 0.5f), new Vector2(-16f, 0f), pivot: new Vector2(1f, 0.5f));
             var pillImg = pill.gameObject.AddComponent<Image>();
             pillImg.sprite = softRadialSprite;
             pillImg.color = Color.clear;
 
-            valText = CreateLabel("Value", pill, "<  OFF  >", 15f, moonlightSilver, new Vector2(130f, 36f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            valText = CreateLabel("Value", pill, "<  OFF  >", 15f, moonlightSilver, new Vector2(140f, 36f), new Vector2(0.5f, 0.5f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             valText.alignment = TextAlignmentOptions.Center;
             valText.fontStyle = FontStyles.Bold;
             valText.characterSpacing = 2.5f;
@@ -1884,14 +1890,14 @@ namespace TheLightenRoad.Frontend
             var plateImg = plateRect.gameObject.AddComponent<Image>();
             plateImg.sprite = thinBorderSprite;
             plateImg.type = Image.Type.Sliced;
-            plateImg.color = isPrimary ? new Color(0.025f, 0.040f, 0.065f, 0.78f) : new Color(0.012f, 0.020f, 0.038f, 0.68f);
+            plateImg.color = Color.clear;
             plateImg.raycastTarget = true;
 
             var borderRect = CreateStretchRect("Card Border", rect);
             var borderImg = borderRect.gameObject.AddComponent<Image>();
             borderImg.sprite = thinBorderSprite;
             borderImg.type = Image.Type.Sliced;
-            borderImg.color = isPrimary ? new Color(0.92f, 0.68f, 0.28f, 0.45f) : new Color(0.48f, 0.62f, 0.82f, 0.25f);
+            borderImg.color = Color.clear;
             borderImg.raycastTarget = false;
 
             var lineRect = CreateAnchoredRect("Filigree Underline", rect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -17f));

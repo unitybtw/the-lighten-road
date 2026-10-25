@@ -48,6 +48,14 @@ namespace TheLightenRoad.Frontend
             shade.sprite=softRadialSprite;shade.color=new Color(.006f,.010f,.020f,.96f);shade.raycastTarget=false;
             BuildSettingsLanterns(surface);
             SettingsRule(surface,"Top tab rule",new Vector2(0,150),720);
+            var crest = CreateAnchoredRect("Settings Bottom Filigree", surface, new Vector2(340f, 22f), Vector2.one * 0.5f, new Vector2(0f, -215f));
+            if (bottomCrestSprite != null)
+            {
+                var cImg = crest.gameObject.AddComponent<Image>();
+                cImg.sprite = bottomCrestSprite;
+                cImg.color = new Color(0.86f, 0.92f, 1.0f, 0.60f);
+                cImg.raycastTarget = false;
+            }
             SettingsRule(surface,"Footer rule",new Vector2(0,-218),720);
 
             // Hollow Knight Bumper Indicators for switching tabs
@@ -677,14 +685,14 @@ namespace TheLightenRoad.Frontend
             var plateImg=plateRect.gameObject.AddComponent<Image>();
             plateImg.sprite=thinBorderSprite;
             plateImg.type=Image.Type.Sliced;
-            plateImg.color=new Color(0.012f,0.020f,0.038f,0.65f);
+            plateImg.color=Color.clear;
             plateImg.raycastTarget=true;
 
             var borderRect=CreateStretchRect("Card Border",rect);
             var borderImg=borderRect.gameObject.AddComponent<Image>();
             borderImg.sprite=thinBorderSprite;
             borderImg.type=Image.Type.Sliced;
-            borderImg.color=new Color(0.48f,0.62f,0.82f,0.25f);
+            borderImg.color=Color.clear;
             borderImg.raycastTarget=false;
 
             var button=rect.gameObject.AddComponent<Button>();
@@ -711,6 +719,28 @@ namespace TheLightenRoad.Frontend
             focus.Label=label;
             focus.CardPlate=plate;
             focus.BorderFrame=border;
+
+            if (buttonPointerSprite != null)
+            {
+                float halfWidth = rect.sizeDelta.x * 0.5f;
+                float offset = halfWidth + 24f;
+                var leftPointer = CreateAnchoredRect("Left Pointer", rect, new Vector2(36f, 18f), new Vector2(0.5f, 0.5f), new Vector2(-offset, 0f));
+                var lImg = leftPointer.gameObject.AddComponent<Image>();
+                lImg.sprite = buttonPointerSprite;
+                lImg.color = Color.clear;
+                lImg.raycastTarget = false;
+
+                var rightPointer = CreateAnchoredRect("Right Pointer", rect, new Vector2(36f, 18f), new Vector2(0.5f, 0.5f), new Vector2(offset, 0f));
+                rightPointer.localScale = new Vector3(-1f, 1f, 1f);
+                var rImg = rightPointer.gameObject.AddComponent<Image>();
+                rImg.sprite = buttonPointerSprite;
+                rImg.color = Color.clear;
+                rImg.raycastTarget = false;
+
+                focus.LeftPointer = leftPointer;
+                focus.RightPointer = rightPointer;
+                focus.PointerOffset = offset;
+            }
         }
         private void BuildSettingsLanterns(RectTransform parent)
         {
