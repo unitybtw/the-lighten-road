@@ -138,6 +138,8 @@ Counts cover GitHub-linked commit authors on `main`, excluding merge commits and
 
 Team credit describes authorship of the design; GitHub access and commit-based contributor listings are managed separately.
 
-## Rights
+## Rights and License
 
-No open-source license has been selected. Public visibility does not grant a general license to reuse the project's code, artwork, audio, or design materials. Third-party assets must retain their own license and attribution information.
+This project is protected under a strict **Proprietary & All Rights Reserved License**. See [LICENSE.md](LICENSE.md) for full terms.
+
+Public visibility on GitHub does not grant permission to copy, reuse, modify, redistribute, publish, or commercially exploit any code, artwork, audio, or design materials from this game. All rights are strictly reserved. Third-party assets retain their own respective licenses and attributions.
