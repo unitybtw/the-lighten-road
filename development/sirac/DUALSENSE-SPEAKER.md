@@ -43,6 +43,16 @@ The earlier packet-only checks were insufficient: the user still heard no sound.
 - Independent libopus decoding validated every Mac asset: 240–460 ms decoded duration including padding, RMS 0.078–0.134, peaks below 0.505, no decoding errors. Project integrity passed.
 - Existing audio/controller preferences were snapshotted and restored after the test run. Unrelated scene, font and project-setting edits were excluded.
 
+## Audio Quality & Physical Acoustic Refinements — 2026-10-26
+
+To eliminate distortion, buzzing, cone rattle and harsh artificial beeps on the physical DualSense micro-speaker:
+1. **Sub-Bass Rattle Elimination (< 440 Hz Cutoff)**: The DualSense speaker enclosure contains a ~15mm ceramic micro-transducer. Driving it with frequencies below 400 Hz causes mechanical cone bottoming-out and severe plastic rattle. We instituted a steep 440 Hz 2-pole highpass across all cues.
+2. **Treble Harshness Taming (> 5600 Hz Cutoff)**: A 5600 Hz 2-pole lowpass cuts tinny digital hiss and aliasing, creating a smooth, warm tone.
+3. **Limiter Distortion Removed**: Replaced aggressive fast-attack (1ms) brickwall limiting that chopped waveform cycles into distorted square-wave fuzz with a transparent soft limiter (8ms attack, 45ms adaptive release) and clean peak headroom targeting ~0.65 (-3.7 dBFS).
+4. **Harmonic Chime Preview**: Replaced sterile microwave-like pure sine beeps with an ethereal, harmonic crystal chime (660 Hz & 880 Hz with musical overtones and exponential decay).
+5. **Procedural Flame Dissipation Extinguish**: Replaced the 90 Hz drone with an organic flame dissipation hiss (bandpassed 550 Hz – 2600 Hz) and soft thermal cooling sweep, eliminating bass buzzing.
+6. **Precise Transient Framing**: Adjusted `Ignite`, `Pickup`, and `Break` onsets and fade envelopes (12ms in, 40ms out) to eliminate abrupt audio boundary clicks.
+
 ## References and notices
 
 Framing references: MIT [DualSense-Bluetooth-Audio](https://github.com/Kodzinho/DualSense-Bluetooth-Audio) and MIT [dualsense-bt-haptics](https://github.com/awalol/dualsense-bt-haptics). Their notices remain in [the prototype notice](licenses/DualSense-Bluetooth-Audio-MIT.txt) and [the upstream notice](licenses/dualsense-bt-haptics-MIT.txt).

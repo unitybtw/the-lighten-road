@@ -119,7 +119,10 @@ public sealed class FurkanTutorialTests
     [UnityTest] public IEnumerator CompactCrossingAndMovingShelfLeadToTheExit()
     {
         var motor=level.Player.GetComponent<PlayerMotor2D>();
-        level.EnterSecondChamber(level.SecondSpawn);motor.Body.position=level.SecondSpawn;
+        level.EnterSecondChamber(level.SecondSpawn);
+        level.Player.transform.position = level.SecondSpawn;
+        motor.Body.position = level.SecondSpawn;
+        Physics2D.SyncTransforms();
         yield return new WaitForSeconds(.4f);
         Assert.That(level.Player.GetComponent<LanternController>().SetFlared(true),Is.True);
         yield return Move(18.65f);yield return Move(20.65f,true);
@@ -161,7 +164,9 @@ public sealed class FurkanTutorialTests
         var platform=level.Circuit.Platform;
         platform.GetComponent<Rigidbody2D>().position=platform.Waypoints[1];
         var motor=level.Player.GetComponent<PlayerMotor2D>();
+        level.Player.transform.position=new Vector2(34f,6.35f);
         motor.Body.position=new Vector2(34f,6.35f);
+        Physics2D.SyncTransforms();
         yield return new WaitForSeconds(.3f);
         float timeout=Time.time+2f;
         while(!level.HasMemento && Time.time<timeout)
@@ -214,11 +219,12 @@ public sealed class FurkanTutorialTests
         pause.Pause();
         Assert.That(TheLightenRoad.Frontend.PauseMenuController.IsPaused, Is.True);
         Assert.That(Time.timeScale, Is.Zero);
-        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled, Is.False);
+        Assert.That(TheLightenRoad.Input.GameControls.GameplayAllowed, Is.False, "Pause menu must block gameplay input.");
         pause.Resume();
         Assert.That(TheLightenRoad.Frontend.PauseMenuController.IsPaused, Is.False);
         Assert.That(Time.timeScale, Is.EqualTo(1f));
-        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled, Is.True);
         yield return null;
+        yield return null;
+        Assert.That(TheLightenRoad.Input.GameControls.GameplayAllowed, Is.True, "Gameplay input must be restored after menu resume.");
     }
 }

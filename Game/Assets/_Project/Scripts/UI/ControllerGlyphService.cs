@@ -219,6 +219,7 @@ namespace TheLightenRoad.UI
             CheckActiveInputDevice();
             CheckPlayerBinding();
             CheckLanternBinding();
+            EvaluateAdaptiveTriggers();
             if (rumblePad != null && GetActiveGamepad() != rumblePad) HaltRumble();
         }
 
@@ -247,6 +248,7 @@ namespace TheLightenRoad.UI
                 boundPlayer.OnLanded -= HandlePlayerLanded;
                 boundPlayer = null;
             }
+            EvaluateAdaptiveTriggers(true);
         }
 
         private void HandlePlayerJumped()
@@ -269,6 +271,7 @@ namespace TheLightenRoad.UI
             {
                 PlayHaptic(HapticCue.Flare);
             }
+            EvaluateAdaptiveTriggers(true);
         }
 
         private void CheckActiveInputDevice()

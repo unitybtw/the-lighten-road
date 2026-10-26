@@ -205,6 +205,7 @@ namespace TheLightenRoad.Audio
 
             EnsureClipsLoaded();
             BuildPool();
+            EnsureAudioListener();
         }
 
         private void OnEnable()
@@ -224,6 +225,42 @@ namespace TheLightenRoad.Audio
             StopTransientSounds();
             sceneGraceTimer = 0.65f;
             lastPlayTimes.Clear();
+            EnsureAudioListener();
+        }
+
+        private void EnsureAudioListener()
+        {
+            var listeners = Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
+            bool hasExternalListener = false;
+            if (listeners != null)
+            {
+                for (int i = 0; i < listeners.Length; i++)
+                {
+                    if (listeners[i] != null && listeners[i].gameObject != gameObject && listeners[i].enabled)
+                    {
+                        hasExternalListener = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasExternalListener)
+            {
+                var fallbackListener = gameObject.GetComponent<AudioListener>();
+                if (fallbackListener == null)
+                {
+                    fallbackListener = gameObject.AddComponent<AudioListener>();
+                }
+                fallbackListener.enabled = true;
+            }
+            else
+            {
+                var fallbackListener = gameObject.GetComponent<AudioListener>();
+                if (fallbackListener != null)
+                {
+                    fallbackListener.enabled = false;
+                }
+            }
         }
 
         public void StopTransientSounds()

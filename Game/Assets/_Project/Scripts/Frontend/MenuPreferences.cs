@@ -29,6 +29,8 @@ namespace TheLightenRoad.Frontend
         public static void SetControllerSpeaker(bool enabled) => DualSenseSpeaker.Enabled = enabled;
         public static bool AdaptiveTriggers => ControllerGlyphService.AdaptiveTriggersEnabled;
         public static void SetAdaptiveTriggers(bool enabled) => ControllerGlyphService.AdaptiveTriggersEnabled=enabled;
+        public static bool ControllerLightbar => TheLightenRoad.UI.ControllerLightbar.Enabled;
+        public static void SetControllerLightbar(bool enabled) => TheLightenRoad.UI.ControllerLightbar.Enabled = enabled;
         public static float StickDeadzone => PlayerPrefs.GetFloat(Prefix + "StickDeadzone", 0.15f);
 
         public static void EnsureActive()
@@ -147,6 +149,7 @@ namespace TheLightenRoad.Frontend
             SetVibration(true);
             SetAdaptiveTriggers(true);
             SetControllerSpeaker(true);
+            SetControllerLightbar(true);
             SetStickDeadzone(0.15f);
             // Restoring presentation preferences must never erase chapter progress.
             Save();

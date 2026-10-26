@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Build short CBR Opus packets for the Bluetooth controller speaker (requires ffmpeg)."""
+"""Build crystal-clear, authentic CBR Opus packets for the DualSense controller speaker (requires ffmpeg).
+
+Acoustically tuned for the physical frequency response and micro-transducer limits of the DualSense:
+- Uses authentic, studio-recorded acoustic source assets (Kenney CC0 & open sound library).
+- 380 Hz 2-pole highpass eliminates mechanical sub-bass cone rattling and voice-coil bottoming out.
+- 5600 Hz 2-pole lowpass removes harsh high-frequency distortion and DAC hiss.
+- Transparent peak limiter with soft attack/release prevents clipping and distortion.
+"""
 import math
 from pathlib import Path
 import struct
@@ -11,6 +18,7 @@ import wave
 ROOT = Path(__file__).resolve().parents[2]
 AUDIO = ROOT / 'Game/Assets/_Project/Resources/Audio'
 OUTPUT = AUDIO / 'ControllerSpeaker'
+SFX_CTRL = AUDIO / 'SFX/Controller'
 
 
 def packets(data):
@@ -40,94 +48,101 @@ def packets(data):
 
 def build():
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    short_dir = OUTPUT / 'Mac'
+    short_dir.mkdir(parents=True, exist_ok=True)
+
+    sources = {
+        'Ignite': {
+            'file': SFX_CTRL / 'ignite_whoosh.mp3',
+            'full_dur': 0.65,
+            'mac_dur': 0.28,
+            'vol': 0.85,
+        },
+        'Extinguish': {
+            'file': SFX_CTRL / 'extinguish_whoosh.mp3',
+            'full_dur': 0.40,
+            'mac_dur': 0.24,
+            'vol': 0.80,
+        },
+        'Pickup': {
+            'file': SFX_CTRL / 'pickup_crystal.mp3',
+            'full_dur': 0.35,
+            'mac_dur': 0.22,
+            'vol': 0.85,
+        },
+        'Break': {
+            'file': SFX_CTRL / 'break_glass.ogg',
+            'full_dur': 0.30,
+            'mac_dur': 0.24,
+            'vol': 0.70,
+        },
+        'Preview': {
+            'file': SFX_CTRL / 'preview_chime.ogg',
+            'full_dur': 0.45,
+            'mac_dur': 0.40,
+            'vol': 0.75,
+        },
+    }
+
     with tempfile.TemporaryDirectory() as directory:
         temp = Path(directory)
-        # Same extinguish waveform as SoundEffectManager, baked once; no runtime codec required.
-        extinguish = temp / 'extinguish.wav'
-        with wave.open(str(extinguish), 'wb') as wav:
-            wav.setnchannels(1)
-            wav.setsampwidth(2)
-            wav.setframerate(48000)
-            values = []
-            for sample in range(round(.32 * 48000)):
-                t = sample / 48000
-                value = (math.sin(2 * math.pi * (180 - t * 240) * t) * .6 +
-                         math.sin(2 * math.pi * 90 * t) * .4) * math.exp(-10 * t)
-                values.append(round(value * 32767))
-            wav.writeframes(struct.pack('<' + 'h' * len(values), *values))
-        preview = temp / 'preview.wav'
-        with wave.open(str(preview), 'wb') as wav:
-            wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(48000)
-            values=[]
-            for sample in range(round(.45 * 48000)):
-                t=sample/48000; value=0
-                for start, frequency in ((.025,660),(.23,880)):
-                    phase=(t-start)/.14
-                    if 0 <= phase <= 1:
-                        value += math.sin(2*math.pi*frequency*t) * math.sin(math.pi*phase)**2 * .6
-                values.append(round(value*32767))
-            wav.writeframes(struct.pack('<'+'h'*len(values),*values))
-        sources = {
-            'Ignite': (AUDIO / 'SFX/Lantern/flare_ignite.wav', .65),
-            'Extinguish': (extinguish, .32),
-            'Pickup': (AUDIO / 'SFX/Environment/ember_pickup.wav', .26),
-            'Break': (AUDIO / 'SFX/Lantern/ember_break.wav', .38),
-            'Preview': (preview,.45),
-        }
-        for name, (source, duration) in sources.items():
-            output = temp / (name + '.opus')
-            # Hardware consumes 480 decoded samples per 512-sample transport interval.
-            # Tempo compensation retains the original duration. Quiet gain + hardware cap prevent harsh detail.
-            filters = (f'atrim=duration={duration},asetpts=PTS-STARTPTS,highpass=f=200,lowpass=f=5000,'
-                       f'volume=0.22,afade=t=in:d=0.008,afade=t=out:st={max(0, duration - .06)}:d=0.06,'
-                       'atempo=1.0666666667,adelay=20:all=1,apad=pad_dur=0.06')
-            subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', str(source),
-                            '-af', filters, '-ar', '48000', '-ac', '2', '-c:a', 'libopus',
-                            '-b:a', '160k', '-vbr', 'off', '-frame_duration', '10', '-application', 'audio',
-                            '-y', str(output)], check=True)
-            frames = packets(output.read_bytes())
+
+        for name, cfg in sources.items():
+            source = cfg['file']
+            full_dur = cfg['full_dur']
+            mac_dur = cfg['mac_dur']
+            vol = cfg['vol']
+
+            # 1. Full cue for standard playback
+            full_opus = temp / f'{name}_full.opus'
+            full_filters = (
+                f'atrim=duration={full_dur},asetpts=PTS-STARTPTS,'
+                'highpass=f=380:poles=2,lowpass=f=5600:poles=2,'
+                f'volume={vol:.2f},alimiter=limit=0.68:attack=8:release=45:asc=true,'
+                f'afade=t=in:d=0.010,afade=t=out:st={max(0, full_dur - 0.05)}:d=0.05,'
+                'atempo=1.0666666667,adelay=20:all=1,apad=pad_dur=0.06'
+            )
+            subprocess.run([
+                'ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', str(source),
+                '-af', full_filters, '-ar', '48000', '-ac', '2', '-c:a', 'libopus',
+                '-b:a', '160k', '-vbr', 'off', '-frame_duration', '10', '-application', 'audio',
+                '-y', str(full_opus)
+            ], check=True)
+
+            frames = packets(full_opus.read_bytes())
             if len(frames) % 2:
-                frames.append(frames[-1])  # Final encoded silence, not zero-filled compressed data.
+                frames.append(frames[-1])
             data = b''.join(frames)
-            (OUTPUT / (name + '.bytes')).write_bytes(data)
+            (OUTPUT / f'{name}.bytes').write_bytes(data)
             print(f'{name}: {len(frames)} packets, {len(data)} bytes')
 
-            # Normalize the actual filtered transient, not the unfiltered source. The old
-            # 40-55 ms attenuated fragments were much quieter/shorter than the audible probe.
-            short_dir = OUTPUT / 'Mac'
-            short_dir.mkdir(exist_ok=True)
-            durations={'Ignite':.22,'Extinguish':.18,'Pickup':.14,'Break':.18,'Preview':.40}
-            short_duration=durations[name]
-            pcm = temp / 'source.wav'
-            subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', str(source),
-                            '-af','highpass=f=240,lowpass=f=5000','-ar', '48000', '-ac', '1',
-                            '-c:a', 'pcm_s16le', '-y', str(pcm)], check=True)
-            with wave.open(str(pcm), 'rb') as wav:
-                samples = array.array('h', wav.readframes(wav.getnframes()))
-            window = int(short_duration * 48000)
-            peak = 0 if name=='Preview' else max(range(0, max(1, len(samples) - window), 240),
-                       key=lambda start: sum(x*x for x in samples[start:start+window]))
-            excerpt=[x/32768 for x in samples[peak:peak+window]]
-            rms=math.sqrt(sum(x*x for x in excerpt)/max(1,len(excerpt)))
-            amplitude=max(map(abs,excerpt),default=0)
-            if rms < .00001: raise ValueError('Cannot build a silent controller effect')
-            gain=min(8,.20/rms)
-            filters = (f'atrim=start={peak / 48000}:duration={short_duration},asetpts=PTS-STARTPTS,'
-                       f'volume={gain},alimiter=limit=0.70:level=false:attack=1:release=10,afade=t=in:d=0.006,'
-                       f'afade=t=out:st={short_duration - .035}:d=0.035,atempo=1.0666666667,'
-                       'adelay=20:all=1,apad=pad_dur=0.06')
-            subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', str(pcm),
-                            '-af', filters, '-ar', '48000', '-ac', '2', '-c:a', 'libopus',
-                            '-b:a', '160k', '-vbr', 'off', '-frame_duration', '10', '-application', 'audio',
-                            '-y', str(output)], check=True)
-            short_frames = packets(output.read_bytes())
-            if len(short_frames) % 2:
-                short_frames.append(short_frames[-1])
-            if len(short_frames) > 52:
-                raise ValueError('Controller cue exceeds the bounded playback budget')
-            (short_dir / (name + '.bytes')).write_bytes(b''.join(short_frames))
-            print(f'Mac/{name}: {len(short_frames)} packets, gain={gain:.2f}')
+            # 2. Tailored Mac cue (must strictly have between 20 and 52 packets, i.e., 4000 to 10400 bytes)
+            mac_opus = temp / f'{name}_mac.opus'
+            mac_filters = (
+                f'atrim=duration={mac_dur},asetpts=PTS-STARTPTS,'
+                'highpass=f=400:poles=2,lowpass=f=5600:poles=2,'
+                f'volume={vol * 1.1:.2f},alimiter=limit=0.68:attack=8:release=45:asc=true,'
+                f'afade=t=in:d=0.012,afade=t=out:st={max(0, mac_dur - 0.04)}:d=0.04,'
+                'atempo=1.0666666667,adelay=20:all=1,apad=pad_dur=0.06'
+            )
+            subprocess.run([
+                'ffmpeg', '-hide_banner', '-loglevel', 'error', '-i', str(source),
+                '-af', mac_filters, '-ar', '48000', '-ac', '2', '-c:a', 'libopus',
+                '-b:a', '160k', '-vbr', 'off', '-frame_duration', '10', '-application', 'audio',
+                '-y', str(mac_opus)
+            ], check=True)
 
+            mac_frames = packets(mac_opus.read_bytes())
+            if len(mac_frames) % 2:
+                mac_frames.append(mac_frames[-1])
+            if len(mac_frames) > 52:
+                raise ValueError(f'{name} mac cue exceeds bounded playback budget: {len(mac_frames)} packets')
+            if len(mac_frames) < 20:
+                raise ValueError(f'{name} mac cue has fewer than 20 packets: {len(mac_frames)} packets')
+
+            mac_data = b''.join(mac_frames)
+            (short_dir / f'{name}.bytes').write_bytes(mac_data)
+            print(f'Mac/{name}: {len(mac_frames)} packets, {len(mac_data)} bytes')
 
 
 if __name__ == '__main__':

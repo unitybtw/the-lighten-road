@@ -392,6 +392,7 @@ namespace TheLightenRoad.Frontend
             PlaySound(pauseOpenSound, 520f, 392f, isOpen: true);
             ControllerGlyphService.StopRumble();
             DualSenseSpeaker.Stop();
+            TheLightenRoad.UI.ControllerLightbar.SetAmbientColor(TheLightenRoad.UI.ControllerLightbar.ArchiveBlue);
             OnPauseToggled.Invoke(true);
 
             if (isActiveAndEnabled)
@@ -425,6 +426,7 @@ namespace TheLightenRoad.Frontend
             }
 
             PlaySound(pauseCloseSound, 392f, 520f, isOpen: false);
+            TheLightenRoad.UI.ControllerLightbar.SetAmbientColor(TheLightenRoad.UI.ControllerLightbar.AmberLantern);
             OnPauseToggled.Invoke(false);
 
             if (transitionRoutine != null)

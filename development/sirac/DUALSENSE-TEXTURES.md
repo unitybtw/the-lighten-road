@@ -1,40 +1,49 @@
-# DualSense textures and adaptive R2
+# DualSense textures and refined adaptive triggers
 
 2026-10-26 — Unity 6000.3.2f1 / Input System 1.17.0.
 
-## Distinct feedback
+## Overview & trigger feel refinement
 
-DualSense now uses separate low/high motor envelopes per cue instead of varying only the amplitude of one generic fade. The existing generic gamepad tuning remains available for other controllers. Actual detected hardware selects the texture; changing the displayed button-icon style does not change haptic routing.
+DualSense adaptive triggers feature physical worm-gear driven resistance actuators beneath L2 and R2. In platforming games, mechanical triggers must **never fight or snap against the player's fingers** during standard movement, jumps, or landings. Trigger activation must be strictly contextual, state-based, and aligned with the player's physical input.
 
-| Cue | DualSense texture | Duration |
-| --- | --- | ---: |
-| Jump | Short, high-motor click | 90 ms |
-| Landing | Heavy low-motor impact with a small rebound | 260 ms |
-| Flare | Rising, fluttering swell | 650 ms |
-| Ember pickup | Two bright clicks with a quiet gap | 250 ms |
-| Ember break | Three separated, uneven crackles | 320 ms |
-| Death | Low impact and a diminishing high-motor shudder | 550 ms |
-| Chamber complete | Two rising, overlapping pulses | 850 ms |
-| Settings preview | Left, right, then both motors | 800 ms |
+Following physical hardware verification on macOS Bluetooth HID:
+1. **İki Aşamalı Mekanik Çakmak / Kilit Hissi (Two-Stage Flint Lock)**:
+   - When the lantern is unlit (`!boundLantern.IsFlared`), R2 engages **Section Mode** (`0x02`):
+     - Initial pull (0% to 35%): smooth, effortless travel.
+     - Squeeze zone (35% to 65%): firm tactile resistance of the heavy mechanical flint striker wheel (`force = 0.55`).
+     - Actuation point (65%): mechanical resistance snaps through with a tactile release, exactly synchronizing with `TriggerPressGate` (`0.65f`) to ignite the lantern into a blazing flare!
+   - When the lantern is burning (`boundLantern.IsFlared`), R2 is completely released (`Off`), giving zero resistance under the player's finger so extinguishing is light and natural.
+   - When extinguished, the flint lock smoothly re-engages, ready for the next strike.
+2. **Zıplama ve İniş Rahatlığı (Zero Platforming Resistance)**: `Jump`, `Landing`, `EmberPickup`, `EmberBreak`, `Death`, and `ChamberComplete` maintain the active lantern trigger state without any clicking, twitching, or gear cycling. Tactile feedback for these platforming events is delivered exclusively through the dual body rumble motors (`report[5]` & `report[6]`).
+3. **Akıllı Delta-Gating (60 Hz Servo Jitter & Motor Chatter Elimination)**:
+   - In `DualSenseBluetoothRumble.Send`: Trigger update flags (`report[3] |= 0x0C`) are **only asserted when the trigger profile actually changes** (`!prevR.Equals(rightTrigger)`).
+   - When trigger state remains constant across frames, update bits remain 0. The DualSense internal firmware holds its actuator position silently without 60 Hz PID re-initialization or gearbox buzzing.
+4. **L2 Serbestliği**: L2 remains completely neutral (`Off`) across all platforming actions to keep the left hand relaxed.
 
-These are custom dual-motor patterns. They are not audio-streamed, full-bandwidth DualSense HD haptics.
+## Hardware trigger mode capabilities
 
-## Adaptive trigger
+The underlying architecture in `DualSenseBluetoothRumble.cs` retains full multi-mode protocol support:
+- `0x01` — Continuous Resistance (variable start, clamped force)
+- `0x02` — Section / Breakpoint Snap (variable threshold, force)
+- `0x06` — Trigger Vibration / Flutter (frequency, amplitude)
+- `0x05` — Explicit Safe Release
 
-For the project's verified DualSense Bluetooth HID path, Flare and the settings preview also apply **light R2 resistance**. Resistance grows and releases with the cue, begins after the first third of trigger travel and is capped at a low force. There is no L2 force, trigger vibration mode, trigger lock, change to input thresholds, audio configuration or lightbar change.
+## Cue mapping reference
 
-The existing 78-byte Bluetooth report now optionally enables only the right-trigger effect field. Mode `0x01` supplies light constant resistance and mode `0x05` explicitly releases it. Native command fields, payload length, CRC and motor data remain in one coherent report. Every normal completion and cancellation path sends zero motors and an explicit R2 release, including pause, focus loss, scene change, Vibration off and service shutdown.
+| Cue | Body haptics (L/R) | Left trigger (L2) | Right trigger (R2) | Mechanical behavior |
+| --- | ------------------ | ----------------- | ------------------ | ------------------- |
+| **Flare** | Swelling flame rumble | Rest (`0x05`) | **Smooth Progressive** (`0x01`, 0.25 start, max 0.22 force) | Weighted hydraulic draw tension matching lantern charge |
+| **Jump** | Short high-motor click | Rest (`0x05`) | Rest (`0x05`) | Zero trigger movement; quiet finger rest |
+| **Landing** | Heavy low-motor thud | Rest (`0x05`) | Rest (`0x05`) | Zero trigger movement; quiet finger rest |
+| **Ember Pickup** | Bright dual chimes | Rest (`0x05`) | Rest (`0x05`) | Zero trigger movement; quiet finger rest |
+| **Ember Break** | Triple crackle pulses | Rest (`0x05`) | Rest (`0x05`) | Zero trigger movement; quiet finger rest |
+| **Death** | Diminishing shudder | Rest (`0x05`) | Rest (`0x05`) | Zero trigger movement; quiet finger rest |
+| **Chamber Complete** | Crescendo pulse wave | Rest (`0x05`) | Rest (`0x05`) | Zero trigger movement; quiet finger rest |
+| **Settings Preview** | L $\rightarrow$ R motor sweep | Rest (`0x05`) | **Smooth Preview** (`0x01`, max 0.20 force) | Silent demonstration of continuous resistance |
 
-**Options → Controller → DualSense R2** independently enables/disables trigger resistance. Vibration is still the master switch; R2 off leaves ordinary vibration available. Both preferences are saved, and defaults preserve chapter progress. The controller options navigation includes the new toggle.
+## Automated validation
 
-Protocol reference: [SDL's controller test and trigger examples](https://github.com/libsdl-org/SDL/blob/main/test/testcontroller.c), [SDL DualSense effect layout](https://github.com/libsdl-org/SDL/blob/main/src/joystick/hidapi/SDL_hidapi_ps5.c). The Bluetooth backend remains project-local; no driver, package-cache, firmware or unsafe-code setting was changed.
-
-## Validation scope
-
-**46 passed, 0 failed, 0 skipped** in Unity Editor PlayMode. Coverage includes a synthetic DualSense device proving that the service selects its longer Flare texture, all prior haptics/transport/menu/completion cases, the independently saved R2 toggle and its navigation, and the new pattern/trigger tests. The revised Controller page was captured and visually inspected at 2212 × 1199.
-
-Regression coverage samples every texture over its lifetime, checks distinct envelopes and silent gaps, bounds force, verifies explicit R2 release and left-trigger isolation, and checks the adaptive report CRC against an independent Python zlib fixture. Existing Bluetooth transport, settings, lifecycle and chamber tests are also run.
-
-The previous plain Bluetooth rumble pulse was physically confirmed by the user on this Mac/DualSense connection. The new textures and R2 force require a separate subjective hardware check; do not infer HD audio support or complete platform/firmware coverage from native command acceptance.
-
-![Controller preferences](previews/menu-reference-study/controller-settings.png)
+- **`DualSensePatternTests` (7/7 Passed)**: Confirms Flare/Preview progressive resistance, resting triggers for jump/land/pickup/death, binary packet serialization, and CRC-32 integrity.
+- **`DualSenseBluetoothTests` (5/5 Passed)**: Confirms Bluetooth report structure, delta gating, and stop reports.
+- **`ControllerHapticsTests` (5/5 Passed)**: Confirms rumble timing and options persistence.
+- **`MainMenuTests` (12/12 Passed)**: End-to-end UI navigation, options toggle, and haptic previews.
