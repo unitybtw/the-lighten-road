@@ -1461,7 +1461,7 @@ namespace TheLightenRoad.Frontend
 
             var subTxt = CreateLabel("Subtitle", row, subtitle, 11.5f, moonlightSilver, new Vector2(350f, 20f), new Vector2(0f, 0.5f), new Vector2(16f, -12f), pivot: new Vector2(0f, 0.5f));
 
-            var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Image), typeof(Slider));
+            var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Image), typeof(MenuSlider));
             sliderGo.GetComponent<Image>().color = Color.clear;
             sliderGo.transform.SetParent(row, false);
             var sRect = (RectTransform)sliderGo.transform;
@@ -1636,7 +1636,7 @@ namespace TheLightenRoad.Frontend
             }
             else if (selectedControlsDeviceTab == 1) // Xbox
             {
-                string[] xbIcons = { "LeftStick", "A", "LeftStickClick", "X", "Y", "Menu" };
+                string[] xbIcons = { "LeftStick", "A", "LB", "RT", "Y", "Menu" };
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                 {
                     if (controlsRowIcons[i] != null)
@@ -1648,14 +1648,14 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ A ]";
-                controlsRowKeyLabels[2].text = "[ LS CLICK ]";
-                controlsRowKeyLabels[3].text = "[ X ]";
-                controlsRowKeyLabels[4].text = "[ Y / B ]";
+                controlsRowKeyLabels[2].text = "[ LB HOLD / LS TOGGLE ]";
+                controlsRowKeyLabels[3].text = "[ RT ]";
+                controlsRowKeyLabels[4].text = "[ Y ]";
                 controlsRowKeyLabels[5].text = "[ MENU ]";
             }
             else // PlayStation
             {
-                string[] psIcons = { "LeftStick", "Cross", "LeftStickClick", "Square", "Triangle", "Options" };
+                string[] psIcons = { "LeftStick", "Cross", "L1", "R2", "Triangle", "Options" };
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                 {
                     if (controlsRowIcons[i] != null)
@@ -1667,9 +1667,9 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ CROSS ]";
-                controlsRowKeyLabels[2].text = "[ L3 ]";
-                controlsRowKeyLabels[3].text = "[ SQUARE ]";
-                controlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
+                controlsRowKeyLabels[2].text = "[ L1 HOLD / L3 TOGGLE ]";
+                controlsRowKeyLabels[3].text = "[ R2 ]";
+                controlsRowKeyLabels[4].text = "[ TRIANGLE ]";
                 controlsRowKeyLabels[5].text = "[ OPTIONS ]";
             }
         }

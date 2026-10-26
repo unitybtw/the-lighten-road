@@ -1,0 +1,5 @@
+{
+  "name": "TheLightenRoad.Input",
+  "rootNamespace": "TheLightenRoad.Input",
+  "references": ["Unity.InputSystem"]
+}

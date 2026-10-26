@@ -1,3 +1,4 @@
+using TheLightenRoad.Input;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -105,8 +106,9 @@ namespace TheLightenRoad.Frontend
 
         private string currentView = "none";
         private float previousTimeScale = 1f;
-        private readonly Dictionary<PlayerMotor2D, bool> suspendedMotors = new Dictionary<PlayerMotor2D, bool>();
-        private readonly Dictionary<LanternController, bool> suspendedLanterns = new Dictionary<LanternController, bool>();
+        private readonly List<MonoBehaviour> suspendedInteractions = new List<MonoBehaviour>();
+        private Coroutine restoreInteractions;
+        private bool destroying;
 
         public string CurrentView => currentView;
         public GameObject MainPanel => mainPanel;
@@ -202,6 +204,7 @@ namespace TheLightenRoad.Frontend
 
         private void OnDestroy()
         {
+            destroying = true;
             ControllerGlyphService.OnPromptStyleChanged -= RefreshPauseFooterPrompts;
             if (Instance == this)
             {
@@ -223,6 +226,8 @@ namespace TheLightenRoad.Frontend
                 Resume();
             }
             IsPaused = false;
+            GameControls.BlockGameplay(this, false);
+            RestoreInteractions();
 
             for (int i = 0; i < proceduralSprites.Count; i++)
             {
@@ -279,7 +284,7 @@ namespace TheLightenRoad.Frontend
                 }
                 else
                 {
-                    if (currentView == "settings" || currentView == "controls")
+                    if (!startPressed && (currentView == "settings" || currentView == "controls"))
                     {
                         ShowMainView();
                     }
@@ -310,9 +315,7 @@ namespace TheLightenRoad.Frontend
 
                     if (k.rKey.wasPressedThisFrame)
                     {
-                        if (currentView == "settings") ResetDefaults();
-                        else if (currentView == "main") RestartChamber();
-                        else if (currentView == "controls") TogglePauseVibration();
+                        if (currentView == "controls") TogglePauseVibration();
                     }
                 }
 
@@ -320,9 +323,7 @@ namespace TheLightenRoad.Frontend
                 {
                     if (g.buttonNorth.wasPressedThisFrame)
                     {
-                        if (currentView == "settings") ResetDefaults();
-                        else if (currentView == "main") RestartChamber();
-                        else if (currentView == "controls") TogglePauseVibration();
+                        if (currentView == "controls") TogglePauseVibration();
                     }
 
                     if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
@@ -339,12 +340,12 @@ namespace TheLightenRoad.Frontend
 
                     if (currentView == "controls")
                     {
-                        if (g.leftShoulder.wasPressedThisFrame || g.dpad.left.wasPressedThisFrame)
+                        if (g.leftShoulder.wasPressedThisFrame)
                         {
                             SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 2) % 3);
                             if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
                         }
-                        else if (g.rightShoulder.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame)
+                        else if (g.rightShoulder.wasPressedThisFrame)
                         {
                             SetPauseControlsDeviceTab((selectedPauseControlsDeviceTab + 1) % 3);
                             if (SoundEffectManager.HasInstance) SoundEffectManager.Instance.PlayUIHover(0.7f);
@@ -554,53 +555,41 @@ namespace TheLightenRoad.Frontend
 
         private void SuspendPlayerInput(bool suspend)
         {
-            var motors = FindObjectsByType<PlayerMotor2D>(FindObjectsSortMode.None);
-            foreach (var motor in motors)
+            GameControls.BlockGameplay(this, suspend);
+            if (restoreInteractions != null)
             {
-                if (motor == null) continue;
-                if (suspend)
-                {
-                    suspendedMotors[motor] = motor.enabled;
-                    motor.enabled = false;
-                    var rb = motor.GetComponent<Rigidbody2D>();
-                    if (rb != null) rb.linearVelocity = Vector2.zero;
-                }
-                else
-                {
-                    if (suspendedMotors.TryGetValue(motor, out bool wasEnabled))
-                    {
-                        motor.enabled = wasEnabled;
-                    }
-                    else
-                    {
-                        motor.enabled = true;
-                    }
-                }
+                StopCoroutine(restoreInteractions);
+                restoreInteractions = null;
             }
-            if (!suspend) suspendedMotors.Clear();
+            if (suspend)
+            {
+                // Legacy vein scripts poll buttons directly. Suspend only their polling component;
+                // the shared circuit state and linked mechanisms remain untouched.
+                foreach (var actor in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+                    if (actor.enabled && actor.GetType().FullName == "TheLightenRoad.Interaction.EmberVein")
+                    {
+                        suspendedInteractions.Add(actor);
+                        actor.enabled = false;
+                    }
+            }
+            else if (destroying) RestoreInteractions();
+            else restoreInteractions = StartCoroutine(RestoreInteractionsAfterMenuInput());
+        }
 
-            var lanterns = FindObjectsByType<LanternController>(FindObjectsSortMode.None);
-            foreach (var lantern in lanterns)
-            {
-                if (lantern == null) continue;
-                if (suspend)
-                {
-                    suspendedLanterns[lantern] = lantern.enabled;
-                    lantern.enabled = false;
-                }
-                else
-                {
-                    if (suspendedLanterns.TryGetValue(lantern, out bool wasEnabled))
-                    {
-                        lantern.enabled = wasEnabled;
-                    }
-                    else
-                    {
-                        lantern.enabled = true;
-                    }
-                }
-            }
-            if (!suspend) suspendedLanterns.Clear();
+        private IEnumerator RestoreInteractionsAfterMenuInput()
+        {
+            // Wait past both the menu submit frame and the gameplay input suppression frame.
+            yield return null;
+            yield return null;
+            RestoreInteractions();
+            restoreInteractions = null;
+        }
+
+        private void RestoreInteractions()
+        {
+            foreach (var actor in suspendedInteractions)
+                if (actor != null) actor.enabled = true;
+            suspendedInteractions.Clear();
         }
 
         private void UpdateChamberInfo()
@@ -1053,10 +1042,10 @@ namespace TheLightenRoad.Frontend
             float y = 120f;
             float step = 40f;
             pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y, 0);
-            pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE  /  W ]", "JUMP", "Jump and variable jump height", y - step, 1);
+            pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE ]", "JUMP", "Jump and variable jump height", y - step, 1);
             pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2, 2);
             pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3, 3);
-            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E  (HOLD) ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4, 4);
+            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4, 4);
             pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5, 5);
 
             // Quick options bar: Prompt Style and Vibration
@@ -1171,15 +1160,15 @@ namespace TheLightenRoad.Frontend
                     if (pauseControlsRowIcons[i] != null) pauseControlsRowIcons[i].color = Color.clear;
 
                 pauseControlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
-                pauseControlsRowKeyLabels[1].text = "[ SPACE  /  W ]";
+                pauseControlsRowKeyLabels[1].text = "[ SPACE ]";
                 pauseControlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
                 pauseControlsRowKeyLabels[3].text = "[ F ]";
-                pauseControlsRowKeyLabels[4].text = "[ E  (HOLD) ]";
+                pauseControlsRowKeyLabels[4].text = "[ E ]";
                 pauseControlsRowKeyLabels[5].text = "[ ESC / P ]";
             }
             else if (selectedPauseControlsDeviceTab == 1) // Xbox
             {
-                string[] xbIcons = { "LeftStick", "A", "LeftStickClick", "X", "Y", "Menu" };
+                string[] xbIcons = { "LeftStick", "A", "LB", "RT", "Y", "Menu" };
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                 {
                     if (pauseControlsRowIcons[i] != null)
@@ -1191,14 +1180,14 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 pauseControlsRowKeyLabels[1].text = "[ A ]  (SOUTH)";
-                pauseControlsRowKeyLabels[2].text = "[ LS CLICK ]";
-                pauseControlsRowKeyLabels[3].text = "[ X ]";
-                pauseControlsRowKeyLabels[4].text = "[ Y / B ]";
+                pauseControlsRowKeyLabels[2].text = "[ LB HOLD / LS TOGGLE ]";
+                pauseControlsRowKeyLabels[3].text = "[ RT ]";
+                pauseControlsRowKeyLabels[4].text = "[ Y ]";
                 pauseControlsRowKeyLabels[5].text = "[ MENU ]";
             }
             else // PlayStation
             {
-                string[] psIcons = { "LeftStick", "Cross", "LeftStickClick", "Square", "Triangle", "Options" };
+                string[] psIcons = { "LeftStick", "Cross", "L1", "R2", "Triangle", "Options" };
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                 {
                     if (pauseControlsRowIcons[i] != null)
@@ -1210,9 +1199,9 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 pauseControlsRowKeyLabels[1].text = "[ CROSS ]";
-                pauseControlsRowKeyLabels[2].text = "[ L3 ]";
-                pauseControlsRowKeyLabels[3].text = "[ SQUARE ]";
-                pauseControlsRowKeyLabels[4].text = "[ TRIANGLE / CIRCLE ]";
+                pauseControlsRowKeyLabels[2].text = "[ L1 HOLD / L3 TOGGLE ]";
+                pauseControlsRowKeyLabels[3].text = "[ R2 ]";
+                pauseControlsRowKeyLabels[4].text = "[ TRIANGLE ]";
                 pauseControlsRowKeyLabels[5].text = "[ OPTIONS ]";
             }
         }
@@ -1359,7 +1348,9 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // Slot 2: Context action (Restart / Defaults / Rumble)
+            // Destructive actions remain deliberate menu selections, never a spare face-button shortcut.
+            if (pauseFooterResetIcon != null) pauseFooterResetIcon.transform.parent.gameObject.SetActive(currentView == "controls");
+            // Slot 2: Rumble preview
             string resetLabel = currentView == "settings" ? "RESTORE DEFAULTS" : (currentView == "controls" ? "TEST RUMBLE" : "RESTART LEVEL");
             if (pauseFooterResetIcon != null)
             {
@@ -1666,7 +1657,7 @@ namespace TheLightenRoad.Frontend
             subTxt.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             subTxt.rectTransform.pivot = new Vector2(0f, 0.5f);
 
-            var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
+            var sliderGo = new GameObject("Slider", typeof(RectTransform), typeof(MenuSlider));
             sliderGo.transform.SetParent(row, false);
             var sRect = (RectTransform)sliderGo.transform;
             sRect.anchorMin = new Vector2(1f, 0.5f);

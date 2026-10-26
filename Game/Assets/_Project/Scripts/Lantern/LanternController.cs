@@ -1,4 +1,5 @@
 using UnityEngine;
+using TheLightenRoad.Input;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering.Universal;
 
@@ -125,6 +126,9 @@ namespace TheLightenRoad.Lantern
             ActiveInstance = this;
         }
 
+        private TriggerPressGate flareTrigger;
+        private int flarePadId=-1;
+
         private void OnDisable()
         {
             if (ActiveInstance == this) ActiveInstance = null;
@@ -133,9 +137,12 @@ namespace TheLightenRoad.Lantern
         private void Update()
         {
             keyboard = Keyboard.current;
-            var pad = Gamepad.current;
-            bool gamepadFlare = pad != null && (pad.buttonWest.wasPressedThisFrame || pad.rightTrigger.wasPressedThisFrame || pad.rightShoulder.wasPressedThisFrame);
-            if ((keyboard != null && keyboard[toggleFlareKey].wasPressedThisFrame) || gamepadFlare)
+            var pad = GameControls.ActivePad;
+            int padId=pad!=null?pad.deviceId:-1;
+            float trigger=pad!=null?pad.rightTrigger.ReadValue():0;
+            if(padId!=flarePadId){flareTrigger.Seed(trigger);flarePadId=padId;}
+            bool gamepadFlare=flareTrigger.Read(trigger);
+            if (GameControls.GameplayAllowed && ((keyboard != null && keyboard[toggleFlareKey].wasPressedThisFrame) || gamepadFlare))
                 ToggleFlare();
 
             TickScout(Time.deltaTime);

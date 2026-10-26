@@ -297,8 +297,8 @@ namespace TheLightenRoad.Frontend
                 switch (requiredAction)
                 {
                     case WhisperAction.Jump: return "CROSS";
-                    case WhisperAction.Flare: return "R2 / SQUARE";
-                    case WhisperAction.Sprint: return "R2 / L3";
+                    case WhisperAction.Flare: return "R2";
+                    case WhisperAction.Sprint: return "L1 HOLD / L3 TOGGLE";
                     case WhisperAction.Interact: return "TRIANGLE";
                 }
             }
@@ -307,8 +307,8 @@ namespace TheLightenRoad.Frontend
                 switch (requiredAction)
                 {
                     case WhisperAction.Jump: return "A";
-                    case WhisperAction.Flare: return "RT / X";
-                    case WhisperAction.Sprint: return "RT / LS";
+                    case WhisperAction.Flare: return "RT";
+                    case WhisperAction.Sprint: return "LB HOLD / LS TOGGLE";
                     case WhisperAction.Interact: return "Y";
                 }
             }
@@ -469,7 +469,7 @@ namespace TheLightenRoad.Frontend
             {
                 case WhisperAction.Sprint:
                     if ((playerMotor != null && playerMotor.IsSprinting) || (kb != null && (kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed))
-                        || (pad != null && (pad.leftStickButton.isPressed || pad.rightTrigger.isPressed)))
+                        || (pad != null && (pad.leftStickButton.isPressed || pad.leftShoulder.isPressed)))
                     {
                         TriggerActionFulfillment();
                     }

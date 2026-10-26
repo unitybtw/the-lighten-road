@@ -1,5 +1,14 @@
 {
   "name": "TheLightenRoad.Frontend",
   "rootNamespace": "TheLightenRoad.Frontend",
-  "references": ["TheLightenRoad.Audio", "TheLightenRoad.UI", "TheLightenRoad.Player", "TheLightenRoad.Lantern", "UnityEngine.UI", "Unity.TextMeshPro", "Unity.InputSystem"]
+  "references": [
+    "TheLightenRoad.Audio",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "Unity.InputSystem",
+    "TheLightenRoad.Input"
+  ]
 }

@@ -41,10 +41,10 @@ namespace TheLightenRoad.Frontend
             vh.Clear();
             // Native PNG coordinates; convert against the artwork's displayed size.
             Vector2[] anchors = SymmetricSticks
-                ? new[] { new Vector2(310,447), new Vector2(500,645), new Vector2(1050,307),
-                    new Vector2(1155,357), new Vector2(1055,444), new Vector2(1155,535) }
-                : new[] { new Vector2(550,620), new Vector2(375,420), new Vector2(830,414),
-                    new Vector2(1090,320), new Vector2(995,405), new Vector2(1090,490) };
+                ? new[] { new Vector2(310,447), new Vector2(400,200), new Vector2(1050,307),
+                    new Vector2(1155,357), new Vector2(1050,160), new Vector2(1155,535) }
+                : new[] { new Vector2(550,620), new Vector2(370,240), new Vector2(830,414),
+                    new Vector2(1090,320), new Vector2(1070,175), new Vector2(1090,490) };
             float[] heights = {65, -15, 100, 48, -8, -65};
             for (int i = 0; i < anchors.Length; i++)
             {

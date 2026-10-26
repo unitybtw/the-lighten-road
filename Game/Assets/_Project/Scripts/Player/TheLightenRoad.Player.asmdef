@@ -3,6 +3,7 @@
   "rootNamespace": "TheLightenRoad.Player",
   "references": [
     "Unity.InputSystem",
-    "TheLightenRoad.Lantern"
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.Input"
   ]
 }

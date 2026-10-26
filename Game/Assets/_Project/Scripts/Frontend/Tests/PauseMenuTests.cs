@@ -1,3 +1,4 @@
+using TheLightenRoad.Input;
 using System.Collections;
 using NUnit.Framework;
 using TheLightenRoad.Player;
@@ -109,10 +110,15 @@ namespace TheLightenRoad.Frontend.Tests
             yield return null;
 
             pauseMenu.Pause();
-            Assert.That(motor.enabled, Is.False, "Player motor must be suspended during pause.");
+            Assert.That(motor.enabled, Is.True, "Pause should preserve component lifecycle and movement state.");
+            Assert.That(GameControls.GameplayAllowed, Is.False);
 
             pauseMenu.Resume();
-            Assert.That(motor.enabled, Is.True, "Player motor must be restored on resume.");
+            Assert.That(motor.enabled, Is.True);
+            Assert.That(GameControls.GameplayAllowed, Is.False, "Resume must consume the menu input frame.");
+            yield return null;
+            yield return null;
+            Assert.That(GameControls.GameplayAllowed, Is.True);
 
             Object.DestroyImmediate(playerGo);
         }

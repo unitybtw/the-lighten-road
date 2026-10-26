@@ -234,7 +234,7 @@ namespace TheLightenRoad.Frontend.Tests
                 Assert.That(toggle, Is.Not.Null);
                 toggle.isOn=false;
                 Assert.That(MenuPreferences.ControllerSpeaker, Is.False);
-                Assert.That(toggle.navigation.selectOnUp, Is.TypeOf<Slider>());
+                Assert.That(toggle.navigation.selectOnUp, Is.InstanceOf<Slider>());
                 Assert.That(toggle.navigation.selectOnUp.navigation.selectOnDown, Is.EqualTo(toggle));
                 Assert.That(toggle.navigation.selectOnDown, Is.TypeOf<Button>());
                 var test=(Button)toggle.navigation.selectOnDown;

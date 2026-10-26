@@ -1,3 +1,4 @@
+using TheLightenRoad.Input;
 using System;
 using System.Collections;
 using TheLightenRoad.Lantern;
@@ -82,9 +83,7 @@ namespace TheLightenRoad.UI
 
         public static Gamepad GetActiveGamepad()
         {
-            if (Gamepad.current != null) return Gamepad.current;
-            if (Gamepad.all.Count > 0) return Gamepad.all[0];
-            return null;
+            return GameControls.ActivePad;
         }
 
         public static ControllerPromptStyle ActiveStyle
@@ -97,7 +96,7 @@ namespace TheLightenRoad.UI
                     return configuredStyle;
                 }
 
-                if (lastUsedGamepad || GetActiveGamepad() != null)
+                if (lastUsedGamepad && GetActiveGamepad() != null)
                 {
                     return DetectGamepadHardware();
                 }
@@ -168,6 +167,7 @@ namespace TheLightenRoad.UI
         {
             if (isInitialized) return;
             configuredStyle = (ControllerPromptStyle)PlayerPrefs.GetInt(StylePrefKey, 0);
+            lastUsedGamepad = GetActiveGamepad() != null;
             isInitialized = true;
         }
 
@@ -273,64 +273,20 @@ namespace TheLightenRoad.UI
 
         private void CheckActiveInputDevice()
         {
-            var gp = GetActiveGamepad();
-            if (gp != null)
-            {
-                bool padActivity = gp.buttonSouth.wasPressedThisFrame ||
-                                   gp.buttonEast.wasPressedThisFrame ||
-                                   gp.buttonWest.wasPressedThisFrame ||
-                                   gp.buttonNorth.wasPressedThisFrame ||
-                                   gp.startButton.wasPressedThisFrame ||
-                                   gp.selectButton.wasPressedThisFrame ||
-                                   gp.leftShoulder.wasPressedThisFrame ||
-                                   gp.rightShoulder.wasPressedThisFrame ||
-                                   gp.leftTrigger.ReadValue() > 0.15f ||
-                                   gp.rightTrigger.ReadValue() > 0.15f ||
-                                   gp.dpad.left.wasPressedThisFrame ||
-                                   gp.dpad.right.wasPressedThisFrame ||
-                                   gp.dpad.up.wasPressedThisFrame ||
-                                   gp.dpad.down.wasPressedThisFrame ||
-                                   gp.leftStick.ReadValue().sqrMagnitude > 0.04f ||
-                                   gp.rightStick.ReadValue().sqrMagnitude > 0.04f;
-
-                if (padActivity)
-                {
-                    var detected = DetectGamepadHardware();
-                    if (!lastUsedGamepad || detected != lastDetectedPad)
-                    {
-                        lastUsedGamepad = true;
-                        lastDetectedPad = detected;
-                        if (configuredStyle == ControllerPromptStyle.Auto)
-                        {
-                            NotifyStyleChanged();
-                        }
-                    }
-                    return;
-                }
-            }
-
             var kb = Keyboard.current;
-            bool deliberateKey = kb != null && (
-                kb.wKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame ||
-                kb.sKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame ||
-                kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame ||
-                kb.escapeKey.wasPressedThisFrame || kb.fKey.wasPressedThisFrame ||
-                kb.eKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame ||
-                kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame ||
-                kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame
-            );
-
-            if (deliberateKey)
-            {
-                if (lastUsedGamepad)
-                {
-                    lastUsedGamepad = false;
-                    if (configuredStyle == ControllerPromptStyle.Auto)
-                    {
-                        NotifyStyleChanged();
-                    }
-                }
-            }
+            var mouse = Mouse.current;
+            bool desktopActivity = (kb != null && kb.anyKey.wasPressedThisFrame) ||
+                (mouse != null && (mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame ||
+                                  mouse.scroll.ReadValue().sqrMagnitude > .01f));
+            var pad = GetActiveGamepad();
+            bool next = lastUsedGamepad;
+            if (desktopActivity || pad == null) next = false;
+            else if (GameControls.HasDeliberateActivity(pad)) next = true;
+            var detected = pad != null ? DetectGamepadHardware() : lastDetectedPad;
+            bool changed = next != lastUsedGamepad || (next && detected != lastDetectedPad);
+            lastUsedGamepad = next;
+            lastDetectedPad = detected;
+            if (changed && configuredStyle == ControllerPromptStyle.Auto) NotifyStyleChanged();
         }
 
         public static ControllerPromptStyle DetectGamepadHardware()
@@ -361,8 +317,8 @@ namespace TheLightenRoad.UI
                         case GlyphAction.Cancel: return "CIRCLE  BACK";
                         case GlyphAction.Move: return "LEFT STICK / D-PAD";
                         case GlyphAction.Jump: return "CROSS";
-                        case GlyphAction.Sprint: return "R2 / L3";
-                        case GlyphAction.Flare: return "R2 / SQUARE";
+                        case GlyphAction.Sprint: return "L1 HOLD / L3 TOGGLE";
+                        case GlyphAction.Flare: return "R2";
                         case GlyphAction.Interact: return "TRIANGLE";
                         case GlyphAction.Pause: return "OPTIONS";
                         case GlyphAction.NextTab: return "R1";
@@ -377,9 +333,9 @@ namespace TheLightenRoad.UI
                         case GlyphAction.Cancel: return "B  BACK";
                         case GlyphAction.Move: return "LEFT STICK / D-PAD";
                         case GlyphAction.Jump: return "A";
-                        case GlyphAction.Sprint: return "RT / LS";
-                        case GlyphAction.Flare: return "RT / X";
-                        case GlyphAction.Interact: return "Y / B";
+                        case GlyphAction.Sprint: return "LB HOLD / LS TOGGLE";
+                        case GlyphAction.Flare: return "RT";
+                        case GlyphAction.Interact: return "Y";
                         case GlyphAction.Pause: return "MENU";
                         case GlyphAction.NextTab: return "RB";
                         case GlyphAction.PrevTab: return "LB";
@@ -395,8 +351,8 @@ namespace TheLightenRoad.UI
                         case GlyphAction.Move: return "A / D  or  ARROWS";
                         case GlyphAction.Jump: return "SPACE";
                         case GlyphAction.Sprint: return "L-SHIFT";
-                        case GlyphAction.Flare: return "F / L-CLICK";
-                        case GlyphAction.Interact: return "E (HOLD)";
+                        case GlyphAction.Flare: return "F";
+                        case GlyphAction.Interact: return "E";
                         case GlyphAction.Pause: return "ESC";
                         case GlyphAction.NextTab: return "E";
                         case GlyphAction.PrevTab: return "Q";
@@ -470,8 +426,8 @@ namespace TheLightenRoad.UI
                     case GlyphAction.Jump: return GetGlyphSprite("Cross", style);
                     case GlyphAction.Cancel: return GetGlyphSprite("Circle", style);
                     case GlyphAction.Move: return GetGlyphSprite("LeftStick", style);
-                    case GlyphAction.Sprint: return GetGlyphSprite("R2", style);
-                    case GlyphAction.Flare: return GetGlyphSprite("Square", style);
+                    case GlyphAction.Sprint: return GetGlyphSprite("L1", style);
+                    case GlyphAction.Flare: return GetGlyphSprite("R2", style);
                     case GlyphAction.Interact: return GetGlyphSprite("Triangle", style);
                     case GlyphAction.Pause: return GetGlyphSprite("Options", style);
                     case GlyphAction.NextTab: return GetGlyphSprite("R1", style);
@@ -487,8 +443,8 @@ namespace TheLightenRoad.UI
                     case GlyphAction.Jump: return GetGlyphSprite("A", style);
                     case GlyphAction.Cancel: return GetGlyphSprite("B", style);
                     case GlyphAction.Move: return GetGlyphSprite("LeftStick", style);
-                    case GlyphAction.Sprint: return GetGlyphSprite("RT", style);
-                    case GlyphAction.Flare: return GetGlyphSprite("X", style);
+                    case GlyphAction.Sprint: return GetGlyphSprite("LB", style);
+                    case GlyphAction.Flare: return GetGlyphSprite("RT", style);
                     case GlyphAction.Interact: return GetGlyphSprite("Y", style);
                     case GlyphAction.Pause: return GetGlyphSprite("Menu", style);
                     case GlyphAction.NextTab: return GetGlyphSprite("RB", style);

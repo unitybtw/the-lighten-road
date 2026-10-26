@@ -1,4 +1,5 @@
 using UnityEngine;
+using TheLightenRoad.Input;
 using UnityEngine.InputSystem;
 
 namespace TheLightenRoad.Player
@@ -78,6 +79,8 @@ namespace TheLightenRoad.Player
         private InputAction jump;
         private InputAction sprint;
         private float horizontalInput;
+        private bool sprintToggle;
+        private int controlPadId=-1;
 
         private float coyoteTimer;
         private float jumpBufferTimer;
@@ -164,20 +167,15 @@ namespace TheLightenRoad.Player
             move.AddCompositeBinding("1DAxis")
                 .With("Negative", "<Keyboard>/leftArrow")
                 .With("Positive", "<Keyboard>/rightArrow");
-            move.AddBinding("<Gamepad>/leftStick/x");
-            move.AddCompositeBinding("1DAxis")
-                .With("Negative", "<Gamepad>/dpad/left")
-                .With("Positive", "<Gamepad>/dpad/right");
+
 
             jump = new InputAction("Jump", InputActionType.Button, "<Keyboard>/space");
-            jump.AddBinding("<Gamepad>/buttonSouth");
+            jump.AddBinding(GameControls.JumpPath);
 
             sprint = new InputAction("Sprint", InputActionType.Button);
             sprint.AddBinding("<Keyboard>/leftShift");
             sprint.AddBinding("<Keyboard>/rightShift");
-            sprint.AddBinding("<Gamepad>/leftStickPress");
-            sprint.AddBinding("<Gamepad>/rightTrigger");
-            sprint.AddBinding("<Gamepad>/buttonEast");
+            sprint.AddBinding(GameControls.SprintHoldPath);
         }
 
         private void OnEnable()
@@ -192,17 +190,19 @@ namespace TheLightenRoad.Player
 
         private void Update()
         {
-            float rawMove = move.ReadValue<float>();
-            float deadzone = Mathf.Clamp(PlayerPrefs.GetFloat("TLR.Menu.StickDeadzone", 0.15f), 0.05f, 0.40f);
-            if (Mathf.Abs(rawMove) < deadzone)
+            if(!GameControls.GameplayAllowed)
             {
-                horizontalInput = 0f;
+                horizontalInput=0; jumpBufferTimer=0; jumpReleased=false;
+                return;
             }
-            else
-            {
-                float sign = Mathf.Sign(rawMove);
-                horizontalInput = sign * ((Mathf.Abs(rawMove) - deadzone) / (1f - deadzone));
-            }
+            var pad=GameControls.ActivePad;
+            int padId=pad!=null?pad.deviceId:-1;
+            if(padId!=controlPadId){sprintToggle=false;controlPadId=padId;}
+            float keyboardMove=move.ReadValue<float>();
+            float padMove=GameControls.MoveAxis(pad);
+            horizontalInput=Mathf.Abs(keyboardMove)>.01f?keyboardMove:padMove;
+            if(Mathf.Abs(horizontalInput)<.05f)sprintToggle=false;
+            else if(pad!=null && pad.leftStickButton.wasPressedThisFrame)sprintToggle=!sprintToggle;
 
             if (jump.WasPressedThisFrame())
             {
@@ -239,6 +239,7 @@ namespace TheLightenRoad.Player
 
         private void FixedUpdate()
         {
+            if(!GameControls.GameplayAllowed)return;
             bool wasGrounded = IsGrounded;
             IsGrounded = CheckGrounded();
 
@@ -269,7 +270,7 @@ namespace TheLightenRoad.Player
                 jumpBufferTimer -= Time.fixedDeltaTime;
             }
 
-            bool sprintHeld = (sprint != null && (sprint.IsPressed() || sprint.ReadValue<float>() > 0.5f))
+            bool sprintHeld = sprintToggle || (sprint != null && (sprint.IsPressed() || sprint.ReadValue<float>() > 0.5f))
                 || (Keyboard.current != null && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed));
             bool hasHorizontalInput = Mathf.Abs(horizontalInput) > 0.05f;
 
@@ -484,6 +485,7 @@ namespace TheLightenRoad.Player
             jump?.Disable();
             sprint?.Disable();
             horizontalInput = 0f;
+            sprintToggle=false;
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;
             jumpReleased = false;

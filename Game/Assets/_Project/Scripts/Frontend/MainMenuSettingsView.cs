@@ -149,6 +149,7 @@ namespace TheLightenRoad.Frontend
             });
 
             deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-98,out deadzoneValueText);
+            ((MenuSlider)deadzoneSlider).NavigationStep=.01f;
             deadzoneSlider.minValue=0.05f; deadzoneSlider.maxValue=0.40f;
             deadzoneSlider.onValueChanged.AddListener(OnDeadzoneSliderChanged);
 

@@ -41,7 +41,7 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(ControllerGlyphService.GetConfirmPrompt(), Does.Contain("CROSS"));
             Assert.That(ControllerGlyphService.GetCancelPrompt(), Does.Contain("CIRCLE"));
             Assert.That(ControllerGlyphService.GetJumpPrompt(), Is.EqualTo("CROSS"));
-            Assert.That(ControllerGlyphService.GetFlarePrompt(), Does.Contain("SQUARE"));
+            Assert.That(ControllerGlyphService.GetFlarePrompt(), Is.EqualTo("R2"));
             Assert.That(ControllerGlyphService.GetTabCyclePrompt(), Is.EqualTo("L1 / R1"));
             Assert.That(ControllerGlyphService.GetControllerName(), Does.Contain("PlayStation"));
         }
@@ -55,7 +55,7 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(ControllerGlyphService.GetConfirmPrompt(), Does.Contain("A"));
             Assert.That(ControllerGlyphService.GetCancelPrompt(), Does.Contain("B"));
             Assert.That(ControllerGlyphService.GetJumpPrompt(), Is.EqualTo("A"));
-            Assert.That(ControllerGlyphService.GetFlarePrompt(), Does.Contain("X"));
+            Assert.That(ControllerGlyphService.GetFlarePrompt(), Is.EqualTo("RT"));
             Assert.That(ControllerGlyphService.GetTabCyclePrompt(), Is.EqualTo("LB / RB"));
             Assert.That(ControllerGlyphService.GetControllerName(), Does.Contain("Xbox"));
         }
