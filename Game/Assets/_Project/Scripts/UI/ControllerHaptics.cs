@@ -122,8 +122,8 @@ namespace TheLightenRoad.UI
             boundLantern = lantern;
             if (boundLantern != null) boundLantern.EmberBroken += HandleEmberBroken;
         }
-        private void HandleEmberCollected() => PlayHaptic(HapticCue.EmberPickup);
-        private void HandleEmberBroken() => PlayHaptic(HapticCue.EmberBreak);
+        private void HandleEmberCollected() { PlayHaptic(HapticCue.EmberPickup); DualSenseSpeaker.Play(SpeakerCue.Pickup); }
+        private void HandleEmberBroken() { PlayHaptic(HapticCue.EmberBreak); DualSenseSpeaker.Play(SpeakerCue.Break); }
         private void HandleHapticSceneChange(Scene previous, Scene next) => HaltRumble();
         private void HandleHapticDeviceChange(InputDevice device, InputDeviceChange change)
         {

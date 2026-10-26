@@ -653,3 +653,5 @@ Added separate DualSense feedback patterns per game event and optional light R2 
 ## Animated lantern sliders — 2026-10-26
 
 Replaced title/pause settings slider knobs with miniature player-lantern art, animated flames and warm focus/drag light. A stable 44 × 44 input target preserves slider behavior; Reduced motion freezes the artwork. **27/27 UI PlayMode tests passed.** See [previews and verification](SLIDER-LANTERNS.md).
+
+- [DualSense controller speaker](DUALSENSE-SPEAKER.md): short Bluetooth lantern sounds, settings, protocol attribution and verification.

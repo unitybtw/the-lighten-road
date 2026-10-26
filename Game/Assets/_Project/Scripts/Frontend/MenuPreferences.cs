@@ -25,6 +25,8 @@ namespace TheLightenRoad.Frontend
         public static int SelectedRealmIndex => PlayerPrefs.GetInt(Prefix + "SelectedRealm", 0);
         public static int ControllerStyle => PlayerPrefs.GetInt(Prefix + "ControllerStyle", 0);
         public static bool Vibration => PlayerPrefs.GetInt(Prefix + "VibrationEnabled", 1) == 1;
+        public static bool ControllerSpeaker => DualSenseSpeaker.Enabled;
+        public static void SetControllerSpeaker(bool enabled) => DualSenseSpeaker.Enabled = enabled;
         public static bool AdaptiveTriggers => ControllerGlyphService.AdaptiveTriggersEnabled;
         public static void SetAdaptiveTriggers(bool enabled) => ControllerGlyphService.AdaptiveTriggersEnabled=enabled;
         public static float StickDeadzone => PlayerPrefs.GetFloat(Prefix + "StickDeadzone", 0.15f);
@@ -144,6 +146,7 @@ namespace TheLightenRoad.Frontend
             SetControllerStyle(0);
             SetVibration(true);
             SetAdaptiveTriggers(true);
+            SetControllerSpeaker(true);
             SetStickDeadzone(0.15f);
             // Restoring presentation preferences must never erase chapter progress.
             Save();

@@ -390,6 +390,7 @@ namespace TheLightenRoad.Frontend
 
             PlaySound(pauseOpenSound, 520f, 392f, isOpen: true);
             ControllerGlyphService.StopRumble();
+            DualSenseSpeaker.Stop();
             OnPauseToggled.Invoke(true);
 
             if (isActiveAndEnabled)

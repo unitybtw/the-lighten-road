@@ -32,7 +32,8 @@ namespace TheLightenRoad.Frontend
         private TMP_Text footerSelectText, footerBackText, footerResetText, footerTabText;
         private Button controllerStyleButton;
         private TMP_Text controllerStyleValueText;
-        private Toggle vibrationToggle, adaptiveTriggersToggle;
+        private Toggle vibrationToggle, adaptiveTriggersToggle, controllerSpeakerToggle;
+        private TMP_Text controllerSpeakerValueText;
         private TMP_Text adaptiveTriggersValueText;
         private TMP_Text vibrationToggleValueText;
         private Slider deadzoneSlider;
@@ -102,9 +103,14 @@ namespace TheLightenRoad.Frontend
                 desc.alignment=TextAlignmentOptions.Center;
             }
             var audio=(RectTransform)settingsSections[0].transform;
-            masterSlider=CreateEtherealSlider(audio,"Master Volume","Overall audio level",84,out masterValueText);
-            musicSlider=CreateEtherealSlider(audio,"Ambient Music","Music and atmospheric score",-6,out musicValueText);
-            effectsSlider=CreateEtherealSlider(audio,"Sound Effects (SFX)","Footsteps, lantern and interactions",-96,out effectsValueText);
+            masterSlider=CreateEtherealSlider(audio,"Master Volume","Overall audio level",100,out masterValueText);
+            musicSlider=CreateEtherealSlider(audio,"Ambient Music","Music and atmospheric score",34,out musicValueText);
+            effectsSlider=CreateEtherealSlider(audio,"Sound Effects (SFX)","Footsteps, lantern and interactions",-32,out effectsValueText);
+            controllerSpeakerToggle=CreateEtherealToggle(audio,"DualSense Speaker","Quiet lantern details over Bluetooth",-98,out controllerSpeakerValueText,value =>
+            {
+                MenuPreferences.SetControllerSpeaker(value);MarkSettingsChanged();UpdateSwitchVisual(controllerSpeakerToggle);
+                if(value)DualSenseSpeaker.Play(SpeakerCue.Pickup);
+            });
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
@@ -509,9 +515,18 @@ namespace TheLightenRoad.Frontend
                 var nav = effectsSlider.navigation;
                 nav.mode = Navigation.Mode.Explicit;
                 nav.selectOnUp = musicSlider;
-                nav.selectOnDown = resetSettingsButton;
+                nav.selectOnDown = controllerSpeakerToggle;
                 effectsSlider.navigation = nav;
-                if (settingsSection == 0) lastInActiveSection = effectsSlider;
+                if (settingsSection == 0) lastInActiveSection = controllerSpeakerToggle;
+            }
+
+            if (controllerSpeakerToggle != null)
+            {
+                var nav = controllerSpeakerToggle.navigation;
+                nav.mode = Navigation.Mode.Explicit;
+                nav.selectOnUp = effectsSlider;
+                nav.selectOnDown = resetSettingsButton;
+                controllerSpeakerToggle.navigation = nav;
             }
 
             // Section 1: Display

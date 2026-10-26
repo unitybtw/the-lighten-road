@@ -264,6 +264,7 @@ namespace TheLightenRoad.UI
 
         private void HandleAnyFlareChanged(LanternController lantern, bool isFlared)
         {
+            DualSenseSpeaker.Play(isFlared ? SpeakerCue.Ignite : SpeakerCue.Extinguish);
             if (isFlared)
             {
                 PlayHaptic(HapticCue.Flare);

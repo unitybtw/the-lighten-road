@@ -13,6 +13,7 @@ namespace TheLightenRoad.UI
     /// <summary>DualSense Bluetooth output for the Input System 1.17 USB-only haptics path.</summary>
     public static class DualSenseBluetoothRumble
     {
+        private static readonly Dictionary<int, double> NextMotorWrite = new Dictionary<int, double>();
         private static readonly Dictionary<int, byte> Sequences = new Dictionary<int, byte>();
         public static long LastCommandResult { get; private set; }
 
@@ -38,11 +39,25 @@ namespace TheLightenRoad.UI
         public static bool Send(Gamepad pad, float low, float high, float rightTrigger = 0f)
         {
             if (pad == null || !pad.added) return false;
-            Sequences.TryGetValue(pad.deviceId, out byte sequence);
+            // The Editor can render hundreds of frames per second. Limit motor traffic so it
+            // cannot crowd out the 47 Hz speaker stream. Zero output always releases immediately.
+            bool stopping = low <= 0f && high <= 0f && rightTrigger <= 0f;
+            double now = Time.realtimeSinceStartupAsDouble;
+            if (!stopping && NextMotorWrite.TryGetValue(pad.deviceId, out double next) && now < next) return true;
+            NextMotorWrite[pad.deviceId] = stopping ? 0 : now + (DualSenseSpeaker.IsPlaying ? 1.0 / 30 : 1.0 / 60);
+            byte sequence=NextSequence(pad.deviceId);
             var command = BluetoothOutputCommand.Create(low, high, sequence,rightTrigger,true);
-            Sequences[pad.deviceId] = (byte)((sequence + 1) & 15);
             LastCommandResult = pad.ExecuteCommand(ref command);
             return LastCommandResult >= 0;
+        }
+
+        public static byte NextSequence(int deviceId)
+        {
+            lock (Sequences)
+            {
+                Sequences.TryGetValue(deviceId,out byte sequence);
+                Sequences[deviceId]=(byte)((sequence+1)&15);return sequence;
+            }
         }
 
         // Optional light R2 resistance shares the motor packet. L2, LEDs and audio levels are never configured.
