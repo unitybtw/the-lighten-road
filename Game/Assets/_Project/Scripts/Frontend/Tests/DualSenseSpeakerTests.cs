@@ -17,13 +17,14 @@ namespace TheLightenRoad.Frontend.Tests
         public void SetupUsesSpeakerAudioFlagsAndAnIndependentCrcFixture()
         {
             var report = DualSenseSpeakerProtocol.Setup(3, 255);
-            Assert.That(report.Length, Is.EqualTo(142));
-            Assert.That(report[9], Is.EqualTo(64), "Speaker output is capped.");
-            Assert.That(report[4] & 0x50, Is.Zero, "Microphone volume is never configured.");
-            Assert.That(report[4] & 0x0f, Is.Zero, "Motor and trigger fields are not updated.");
-            Assert.That(report[5] & 0x14, Is.Zero, "LED state is not updated.");
-            Assert.That(Crc(report), Is.EqualTo(0x380f0e06u), "Independent Python zlib fixture.");
-            Assert.That(DualSenseSpeakerProtocol.Setup(0, 0)[9], Is.Zero);
+            Assert.That(report.Length, Is.EqualTo(78));
+            Assert.That(report[8], Is.EqualTo(100), "Speaker output is capped.");
+            Assert.That(report[10], Is.EqualTo(0x30), "The controller must explicitly route to its speaker.");
+            Assert.That(report[3] & 0x50, Is.Zero, "Microphone and headset levels are not configured.");
+            Assert.That(report[3] & 0x0f, Is.Zero, "Motor and trigger fields are not updated.");
+            Assert.That(report[4] & 0x14, Is.Zero, "LED state is not updated.");
+            Assert.That(Crc(report), Is.EqualTo(0x56e02f92u), "Independent Python zlib fixture.");
+            Assert.That(DualSenseSpeakerProtocol.Setup(0, 0)[8], Is.Zero);
         }
         [Test]
         public void StreamHasTwoExactOpusPacketsSilentHapticsAndNoDuplexMicrophone()
@@ -39,9 +40,20 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(Crc(report), Is.EqualTo(0xeee7729eu), "Independent Python zlib fixture.");
         }
         [Test]
+        public void CompatibilityAudioUsesOneOpusFrameAndNoHapticOrMicrophoneStream()
+        {
+            var frame=new byte[200];for(int i=0;i<200;i++)frame[i]=(byte)i;
+            var report=DualSenseSpeakerProtocol.LegacyAudio(3,7,frame,0);
+            Assert.That(report.Length,Is.EqualTo(334));Assert.That(report[0],Is.EqualTo(0x35));
+            Assert.That(report[4]&1,Is.Zero);Assert.That(report[11],Is.EqualTo(0x93));
+            for(int i=0;i<200;i++)Assert.That(report[13+i],Is.EqualTo(frame[i]));
+            Assert.That(Crc(report),Is.EqualTo(0x26399459u));
+            Assert.Throws<ArgumentException>(()=>DualSenseSpeakerProtocol.LegacyAudio(0,0,new byte[199],0));
+        }
+        [Test]
         public void NativeCommandHasCorrectFourCcHeaderLengthAndEveryPayloadByte()
         {
-            foreach(var report in new[]{DualSenseSpeakerProtocol.Setup(0,24), DualSenseSpeakerProtocol.Audio(0,2,new byte[400],0)})
+            foreach(var report in new[]{DualSenseSpeakerProtocol.Setup(0,24), DualSenseSpeakerProtocol.Audio(0,2,new byte[400],0),DualSenseSpeakerProtocol.LegacyAudio(0,0,new byte[200],0)})
             {
                 var command = DualSenseSpeakerProtocol.Command.Create(report);
                 Assert.That(Marshal.SizeOf<DualSenseSpeakerProtocol.Command>(), Is.EqualTo(555));
@@ -76,7 +88,7 @@ namespace TheLightenRoad.Frontend.Tests
                 Assert.That(resource.bytes.Length % 400, Is.Zero);
                 var shortResource=Resources.Load<TextAsset>("Audio/ControllerSpeaker/Mac/"+cue);
                 Assert.That(shortResource, Is.Not.Null);
-                Assert.That(shortResource.bytes.Length, Is.InRange(400,1600), "Mac details must fit at most four reports.");
+                Assert.That(shortResource.bytes.Length, Is.InRange(4000,10400), "Mac cues need enough audible content and a bounded playback budget.");
                 Assert.That(shortResource.bytes.Length % 400, Is.Zero);
             }
         }
@@ -92,8 +104,10 @@ namespace TheLightenRoad.Frontend.Tests
                 PlayerPrefs.SetFloat("TLR.Menu.Master",.5f);PlayerPrefs.SetFloat("TLR.Menu.Effects",.4f);
                 Assert.That(DualSenseSpeaker.OutputGain, Is.EqualTo(.2f).Within(.001));
                 Assert.That(DualSenseSpeaker.Enabled, Is.True);
+                PlayerPrefs.SetFloat("TLR.Menu.Master",.69f);PlayerPrefs.SetFloat("TLR.Menu.Effects",.90f);
+                Assert.That(DualSenseSpeaker.NativeVolume,Is.InRange(95,97),"Use the calibrated speaker range at ordinary listening settings.");
                 PlayerPrefs.SetFloat("TLR.Menu.Master",0);
-                Assert.That(DualSenseSpeaker.OutputGain, Is.Zero);
+                Assert.That(DualSenseSpeaker.OutputGain, Is.Zero);Assert.That(DualSenseSpeaker.NativeVolume,Is.Zero);
                 PlayerPrefs.SetFloat("TLR.Menu.Master",float.NaN);
                 Assert.That(DualSenseSpeaker.OutputGain, Is.Zero);
                 DualSenseSpeaker.Enabled=false;
@@ -148,6 +162,62 @@ namespace TheLightenRoad.Frontend.Tests
             }
         }
 #endif
+        [Test]
+        public void SlowNativeWritesDoNotBuildAnImpossibleCatchupSchedule()
+        {
+            double scheduled=0;
+            for(int i=0;i<40;i++)
+            {
+                double completed=scheduled+.055;
+                scheduled=MacDualSenseSpeakerTransport.NextReportTime(scheduled,completed);
+                Assert.That(scheduled,Is.GreaterThanOrEqualTo(completed));
+            }
+            double fast=MacDualSenseSpeakerTransport.NextReportTime(1,1.001);
+            Assert.That(fast,Is.EqualTo(1+DualSenseSpeakerProtocol.LegacyReportSeconds).Within(.000001));
+        }
+        [Test]
+        public void DisabledMutedAndPausedRequestsExplainWhyTheyDoNotPlay()
+        {
+            bool enabled=DualSenseSpeaker.Enabled;
+            float master=MenuPreferences.Master,scale=Time.timeScale;
+            try
+            {
+                DualSenseSpeaker.Enabled=false;
+                Assert.That(DualSenseSpeaker.TryPlay(SpeakerCue.Preview,true),Is.False);
+                Assert.That(DualSenseSpeaker.LastStatus,Does.Contain("Turn on"));
+                DualSenseSpeaker.Enabled=true;PlayerPrefs.SetFloat("TLR.Menu.Master",0);
+                Assert.That(DualSenseSpeaker.TryPlay(SpeakerCue.Preview,true),Is.False);
+                Assert.That(DualSenseSpeaker.LastStatus,Does.Contain("muted"));
+                PlayerPrefs.SetFloat("TLR.Menu.Master",1);Time.timeScale=0;
+                Assert.That(DualSenseSpeaker.TryPlay(SpeakerCue.Ignite),Is.False);
+                Assert.That(DualSenseSpeaker.LastStatus,Does.Contain("paused"));
+            }
+            finally {PlayerPrefs.SetFloat("TLR.Menu.Master",master);Time.timeScale=scale;DualSenseSpeaker.Enabled=enabled;}
+        }
+        [UnityTest]
+        public IEnumerator RealLanternStateChangesReachTheSpeakerFeedbackBinding()
+        {
+            bool enabled=DualSenseSpeaker.Enabled,vibration=ControllerGlyphService.VibrationEnabled;
+            float scale=Time.timeScale;
+            DualSenseSpeaker.Enabled=false;ControllerGlyphService.VibrationEnabled=false;Time.timeScale=1;
+            ControllerGlyphService.EnsureExists();
+            var host=new GameObject("Lantern speaker binding review");
+            var lantern=host.AddComponent<TheLightenRoad.Lantern.LanternController>();
+            yield return null;
+            try
+            {
+                int requests=DualSenseSpeaker.RequestCount;
+                Assert.That(lantern.SetFlared(true),Is.True);
+                Assert.That(DualSenseSpeaker.RequestCount,Is.GreaterThan(requests));
+                Assert.That(DualSenseSpeaker.LastStatus,Does.Contain("Turn on"));
+            }
+            finally
+            {
+                UnityEngine.Object.Destroy(host);
+                DualSenseSpeaker.Enabled=enabled;ControllerGlyphService.VibrationEnabled=vibration;Time.timeScale=scale;
+            }
+            yield return null;
+        }
         [UnityTest]
         public IEnumerator AudioSettingsExposeAndPersistASpeakerSwitchWithGamepadNavigation()
         {
@@ -167,6 +237,11 @@ namespace TheLightenRoad.Frontend.Tests
                 Assert.That(toggle.navigation.selectOnUp, Is.TypeOf<Slider>());
                 Assert.That(toggle.navigation.selectOnUp.navigation.selectOnDown, Is.EqualTo(toggle));
                 Assert.That(toggle.navigation.selectOnDown, Is.TypeOf<Button>());
+                var test=(Button)toggle.navigation.selectOnDown;
+                Assert.That(test.gameObject.name,Is.EqualTo("Test DualSense Speaker"));
+                Assert.That(test.navigation.selectOnLeft,Is.EqualTo(toggle));
+                test.onClick.Invoke();
+                Assert.That(DualSenseSpeaker.LastStatus,Does.Contain("Turn on"));
             }
             finally { DualSenseSpeaker.Enabled=enabled;UnityEngine.Object.Destroy(host); }
             yield return null;

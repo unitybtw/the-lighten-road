@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace TheLightenRoad.UI
 {
-    public enum SpeakerCue { Ignite, Extinguish, Pickup, Break }
+    public enum SpeakerCue { Ignite, Extinguish, Pickup, Break, Preview }
 
     /// <summary>Short, quiet controller-speaker details. Normal game audio remains the fallback.</summary>
     public sealed class DualSenseSpeaker : MonoBehaviour
@@ -17,7 +17,9 @@ namespace TheLightenRoad.UI
         private int offset, setupCount;
         private byte counter;
         private double nextReport, failedUntil;
-        private bool focused = true, suspended;
+        private bool suspended, allowPaused;
+        public static string LastStatus { get; private set; } = "Ready";
+        public static int RequestCount { get; private set; }
         private int failedDevice = -1, consecutiveFailures;
         public static int SuccessfulReports { get; private set; }
         public static int FailedReports { get; private set; }
@@ -44,30 +46,43 @@ namespace TheLightenRoad.UI
                 return float.IsNaN(value) || float.IsInfinity(value) ? 0f : Mathf.Clamp01(value);
             }
         }
-        public static void Play(SpeakerCue cue)
+        // A perceptual curve keeps normal mixer levels out of the controller's near-silent
+        // register range. Hard mute remains exact; source peaks are limited offline.
+        public static byte NativeVolume => OutputGain <= 0f ? (byte)0 : (byte)Mathf.Clamp(
+            Mathf.RoundToInt(DualSenseSpeakerProtocol.MaxSpeakerVolume + 20f * Mathf.Log10(OutputGain)),
+            0, DualSenseSpeakerProtocol.MaxSpeakerVolume);
+        public static void Play(SpeakerCue cue) => TryPlay(cue);
+        public static bool TryPlay(SpeakerCue cue, bool previewWhilePaused = false)
         {
-            if (!Application.isPlaying || !Enabled || Time.timeScale <= 0f || OutputGain <= 0f) return;
+            RequestCount++;
+            if (!Application.isPlaying) return Reject("Start the game to test the speaker.");
+            if (!Enabled) return Reject("Turn on DualSense Speaker first.");
+            if (Time.timeScale <= 0f && !(previewWhilePaused && cue == SpeakerCue.Preview)) return Reject("Game is paused.");
+            if (OutputGain <= 0f) return Reject("Master Volume or Sound Effects is muted.");
             var pad = ControllerGlyphService.GetActiveGamepad();
-            if (!DualSenseBluetoothRumble.IsBluetooth(pad) || !pad.added) return;
+            if (pad == null || !pad.added) return Reject("Connect your DualSense using Bluetooth.");
+            if (!DualSenseBluetoothRumble.IsBluetooth(pad)) return Reject("The active controller is not a Bluetooth DualSense.");
             if (instance == null)
             {
                 var go = new GameObject("DualSense Speaker");
                 instance = go.AddComponent<DualSenseSpeaker>();
                 DontDestroyOnLoad(go);
             }
-            if (!instance.focused || instance.suspended ||
-                (instance.failedDevice == pad.deviceId && Time.realtimeSinceStartupAsDouble < instance.failedUntil)) return;
+            if (!Application.isFocused || instance.suspended) return Reject("Focus the game window and try again.");
+            if (instance.failedDevice == pad.deviceId && Time.realtimeSinceStartupAsDouble < instance.failedUntil)
+                return Reject("Controller is busy. Try again in a moment.");
             // Do not accumulate a delayed queue. Pickup never interrupts a more important lantern cue.
-            if (instance.recipient != null && cue == SpeakerCue.Pickup) return;
+            if (instance.recipient != null && cue == SpeakerCue.Pickup) return Reject("Another controller sound is playing.");
             #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
             const string resourcePath = "Audio/ControllerSpeaker/Mac/";
 #else
             const string resourcePath = "Audio/ControllerSpeaker/";
 #endif
             var asset = Resources.Load<TextAsset>(resourcePath + cue);
-            if (asset == null || asset.bytes.Length == 0 || asset.bytes.Length % 400 != 0) return;
+            if (asset == null || asset.bytes.Length == 0 || asset.bytes.Length % 400 != 0) return Reject("Controller sound asset is unavailable.");
             instance.Halt();
             instance.recipient = pad;
+            instance.allowPaused = previewWhilePaused && cue == SpeakerCue.Preview;
             instance.frames = asset.bytes;
             instance.offset = instance.setupCount = instance.consecutiveFailures = 0;
             SuccessfulReports = FailedReports = 0;
@@ -75,21 +90,23 @@ namespace TheLightenRoad.UI
             LastPlaybackComplete = false;
             instance.counter = 0;
             instance.nextReport = Time.realtimeSinceStartupAsDouble;
-            MacDualSenseSpeakerTransport.TryPlay(pad, instance.frames, (byte)Mathf.RoundToInt(64 * OutputGain), out instance.nativePlayback);
+            MacDualSenseSpeakerTransport.TryPlay(pad, instance.frames, NativeVolume, out instance.nativePlayback);
+            LastStatus = "Playing controller sound...";
+            return true;
         }
+        private static bool Reject(string reason) { LastStatus = reason; LastPlaybackComplete=false; return false; }
         public static void Stop() { if (instance != null) instance.Halt(); }
         private void Awake()
         {
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
-            focused = Application.isFocused;
             SceneManager.activeSceneChanged += SceneChanged;
             InputSystem.onDeviceChange += DeviceChanged;
         }
         private void Update()
         {
             if (recipient == null) return;
-            if (!Enabled || !recipient.added || !focused || suspended || Time.timeScale <= 0f ||
+            if (!Enabled || !recipient.added || !Application.isFocused || suspended || (Time.timeScale <= 0f && !allowPaused) ||
                 OutputGain <= 0f || ControllerGlyphService.GetActiveGamepad() != recipient) { Halt(); return; }
             if (nativePlayback != null)
             {
@@ -97,7 +114,13 @@ namespace TheLightenRoad.UI
                 SuccessfulReports = nativePlayback.SuccessfulReports;
                 FailedReports = nativePlayback.FailedReports;
                 LastErrorReportId = (byte)nativePlayback.LastErrorReportId;
-                if (nativePlayback.Finished) { LastPlaybackComplete = nativePlayback.Completed; nativePlayback = null; recipient = null; frames = null; }
+                if (nativePlayback.Finished)
+                {
+                    LastPlaybackComplete = nativePlayback.Completed;
+                    LastStatus = nativePlayback.Completed ? "Sound sent. Listen to your controller." :
+                        "Controller audio was interrupted. Reconnect and test again.";
+                    nativePlayback = null; recipient = null; frames = null;
+                }
                 return;
             }
             double now = Time.realtimeSinceStartupAsDouble;
@@ -106,7 +129,7 @@ namespace TheLightenRoad.UI
             if (now - nextReport > .15) { Halt(); return; }
             if (setupCount < 3)
             {
-                if (!Send(DualSenseSpeakerProtocol.Setup(Sequence(), (byte)Mathf.RoundToInt(64 * OutputGain)))) return;
+                if (!Send(DualSenseSpeakerProtocol.Setup(Sequence(), NativeVolume))) return;
                 setupCount++;
                 nextReport = now + .02;
                 return;
@@ -121,7 +144,7 @@ namespace TheLightenRoad.UI
                 nextReport += DualSenseSpeakerProtocol.ReportSeconds;
             }
             // Wait until the final packet has played before muting the hardware speaker.
-            if (offset >= frames.Length && now >= nextReport) { LastPlaybackComplete = true; Halt(); }
+            if (offset >= frames.Length && now >= nextReport) { LastPlaybackComplete = true; Halt(); LastStatus = "Sound sent. Listen to your controller."; }
         }
         private byte Sequence() => DualSenseBluetoothRumble.NextSequence(recipient.deviceId);
         private bool Send(byte[] report)
@@ -134,15 +157,19 @@ namespace TheLightenRoad.UI
             // macOS Bluetooth can temporarily reject a write while another output is in flight.
             // Retry this packet at most three times; never accumulate stale sounds.
             if (++consecutiveFailures < 3) nextReport = Time.realtimeSinceStartupAsDouble + .02;
-            else { failedDevice = recipient.deviceId; failedUntil = Time.realtimeSinceStartupAsDouble + .5; Halt(); }
+            else { failedDevice = recipient.deviceId; failedUntil = Time.realtimeSinceStartupAsDouble + .5; Halt(); LastStatus = "Controller audio could not be delivered. Reconnect and test again."; }
             return false;
         }
         private void Halt()
         {
             var pad = recipient;
+            if (recipient != null) LastStatus = "Controller sound stopped.";
             recipient = null;
             if (nativePlayback != null)
             {
+                SuccessfulReports = nativePlayback.SuccessfulReports;
+                FailedReports = nativePlayback.FailedReports;
+                LastCommandResult = nativePlayback.Result;
                 nativePlayback.Cancel();
                 nativePlayback = null;
                 frames = null;
@@ -160,7 +187,7 @@ namespace TheLightenRoad.UI
             if (device == recipient && (change == InputDeviceChange.Disconnected || change == InputDeviceChange.Removed ||
                 change == InputDeviceChange.Disabled || change == InputDeviceChange.SoftReset || change == InputDeviceChange.HardReset)) Halt();
         }
-        private void OnApplicationFocus(bool value) { focused = value; if (!value) Halt(); }
+        private void OnApplicationFocus(bool value) { if (!value) Halt(); }
         private void OnApplicationPause(bool value) { suspended = value; if (value) Halt(); }
         private void OnDisable() => Halt();
         private void OnApplicationQuit() { Halt(); MacDualSenseSpeakerTransport.StopAll(); }

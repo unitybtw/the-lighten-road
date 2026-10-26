@@ -33,7 +33,9 @@ namespace TheLightenRoad.Frontend
         private Button controllerStyleButton;
         private TMP_Text controllerStyleValueText;
         private Toggle vibrationToggle, adaptiveTriggersToggle, controllerSpeakerToggle;
-        private TMP_Text controllerSpeakerValueText;
+        private TMP_Text controllerSpeakerValueText, speakerTestStatus;
+        private Button speakerTestButton;
+        private bool speakerTestPending;
         private TMP_Text adaptiveTriggersValueText;
         private TMP_Text vibrationToggleValueText;
         private Slider deadzoneSlider;
@@ -109,8 +111,14 @@ namespace TheLightenRoad.Frontend
             controllerSpeakerToggle=CreateEtherealToggle(audio,"DualSense Speaker","Quiet lantern details over Bluetooth",-98,out controllerSpeakerValueText,value =>
             {
                 MenuPreferences.SetControllerSpeaker(value);MarkSettingsChanged();UpdateSwitchVisual(controllerSpeakerToggle);
-                if(value)DualSenseSpeaker.Play(SpeakerCue.Pickup);
             });
+            var speakerPill=controllerSpeakerToggle.transform.Find("Pill") as RectTransform;
+            if(speakerPill!=null)speakerPill.anchoredPosition=new Vector2(-146,0);
+            speakerTestButton=SettingsButton(audio,"TEST",new Vector2(278,-98),new Vector2(112,44),TestControllerSpeaker);
+            speakerTestButton.gameObject.name="Test DualSense Speaker";
+            speakerTestButton.GetComponentInChildren<TMP_Text>().fontSize=14;
+            speakerTestStatus=SettingsText(audio,"",new Vector2(0,-153),12.5f,moonlightSilver,700);
+            speakerTestStatus.alignment=TextAlignmentOptions.Center;
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
@@ -461,8 +469,18 @@ namespace TheLightenRoad.Frontend
             settingsSaveDelay=.45f;
             if(settingsSaveStatus!=null)settingsSaveStatus.text="Applying changes...";
         }
+        public void TestControllerSpeaker()
+        {
+            speakerTestPending=DualSenseSpeaker.TryPlay(SpeakerCue.Preview,true);
+            if(speakerTestStatus!=null)speakerTestStatus.text=DualSenseSpeaker.LastStatus;
+        }
         private void TickSettingsSave(float dt)
         {
+            if(speakerTestPending)
+            {
+                if(speakerTestStatus!=null)speakerTestStatus.text=DualSenseSpeaker.LastStatus;
+                if(!DualSenseSpeaker.IsPlaying)speakerTestPending=false;
+            }
             if(settingsSaveDelay<0f)return;
             settingsSaveDelay-=dt;
             if(settingsSaveDelay<=0f)FlushSettingsSave();
@@ -517,7 +535,7 @@ namespace TheLightenRoad.Frontend
                 nav.selectOnUp = musicSlider;
                 nav.selectOnDown = controllerSpeakerToggle;
                 effectsSlider.navigation = nav;
-                if (settingsSection == 0) lastInActiveSection = controllerSpeakerToggle;
+                if (settingsSection == 0) lastInActiveSection = speakerTestButton;
             }
 
             if (controllerSpeakerToggle != null)
@@ -525,8 +543,16 @@ namespace TheLightenRoad.Frontend
                 var nav = controllerSpeakerToggle.navigation;
                 nav.mode = Navigation.Mode.Explicit;
                 nav.selectOnUp = effectsSlider;
-                nav.selectOnDown = resetSettingsButton;
+                nav.selectOnDown = speakerTestButton;
+                nav.selectOnRight = speakerTestButton;
                 controllerSpeakerToggle.navigation = nav;
+            }
+
+            if(speakerTestButton!=null)
+            {
+                var nav=speakerTestButton.navigation;nav.mode=Navigation.Mode.Explicit;
+                nav.selectOnUp=controllerSpeakerToggle;nav.selectOnLeft=controllerSpeakerToggle;
+                nav.selectOnDown=resetSettingsButton;speakerTestButton.navigation=nav;
             }
 
             // Section 1: Display

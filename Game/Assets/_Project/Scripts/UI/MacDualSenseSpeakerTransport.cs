@@ -24,6 +24,12 @@ namespace TheLightenRoad.UI
         internal sealed class Target { public int Product, DeviceId; public string Serial; }
         private static readonly AutoResetEvent Wake = new AutoResetEvent(false);
         public static int LastNativeError { get; private set; }
+        public const double DrainSeconds = .35;
+        public const double MaxPlaybackSeconds = 3.5;
+        // A synchronous macOS HID write can take longer than one codec interval. Do not
+        // classify the transport's own blocking time as a rendering stall or discard the cue.
+        public static double NextReportTime(double scheduled, double writeFinished) =>
+            Math.Max(scheduled + DualSenseSpeakerProtocol.LegacyReportSeconds, writeFinished);
 #if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
         private const string Hid = "/System/Library/Frameworks/IOKit.framework/IOKit";
         private const string Cf = "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
@@ -84,6 +90,7 @@ namespace TheLightenRoad.UI
                         {
                             var mute = DualSenseSpeakerProtocol.Setup(DualSenseBluetoothRumble.NextSequence(job.Target.DeviceId), 0);
                             LastNativeError = IOHIDDeviceSetReport(device, 1, (IntPtr)mute[0], mute, (IntPtr)mute.Length);
+                            if(LastNativeError!=0){job.Result=-1;job.FailedReports++;job.Completed=false;}
                         }
                     }
                     finally { Release(); job.Finished = true; lock (Gate) { if (active == job) active = null; } }
@@ -117,22 +124,24 @@ namespace TheLightenRoad.UI
         {
             if (job.Cancelled) return;
             if (!Acquire(job.Target)) { job.Result = -1; job.FailedReports++; return; }
-            for (int i = 0; i < 3; i++)
-            {
+            // Match the initialization sequence verified on the physical Bluetooth controller.
+            for(int i=0;i<3;i++)
                 if (!Write(job, DualSenseSpeakerProtocol.Setup(DualSenseBluetoothRumble.NextSequence(job.Target.DeviceId), job.Volume)) ||
                     !Wait(job, Now + .02)) return;
-            }
             Counters.TryGetValue(job.Target.DeviceId, out byte counter);
             double next = Now;
-            for (int offset = 0; offset < job.Frames.Length; offset += 400)
+            double deadline = Now + MaxPlaybackSeconds;
+            for (int offset = 0; offset < job.Frames.Length; offset += 200)
             {
-                if (!Wait(job, next) || Now - next > .15) return;
-                counter = unchecked((byte)(counter + 2));
-                if (!Write(job, DualSenseSpeakerProtocol.Audio(DualSenseBluetoothRumble.NextSequence(job.Target.DeviceId), counter, job.Frames, offset))) return;
+                if (!Wait(job, next)) return;
+                if (Now > deadline) { job.Result = -1; job.FailedReports++; return; }
+                if (!Write(job, DualSenseSpeakerProtocol.LegacyAudio(DualSenseBluetoothRumble.NextSequence(job.Target.DeviceId), counter, job.Frames, offset))) return;
+                counter = unchecked((byte)(counter + 1));
                 Counters[job.Target.DeviceId] = counter;
-                next += DualSenseSpeakerProtocol.ReportSeconds;
+                next = NextReportTime(next, Now);
             }
-            job.Completed = Wait(job, next); // Let the last packet finish before muting.
+            // Native acceptance is not playback completion. Allow the decoder/output queue to drain.
+            job.Completed = Wait(job, Math.Max(next, Now + DrainSeconds));
         }
         private static bool Acquire(Target target)
         {

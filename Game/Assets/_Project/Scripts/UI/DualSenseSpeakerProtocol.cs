@@ -11,15 +11,27 @@ namespace TheLightenRoad.UI
     {
         public const int OpusBytes=200;
         public const double ReportSeconds=1024.0/48000.0;
+        public const int MaxSpeakerVolume = 100;
+        public const double LegacyReportSeconds = 512.0/48000.0;
         public static byte[] Setup(byte sequence,byte volume)
         {
-            var report=new byte[142];report[0]=0x32;report[1]=(byte)((sequence&15)<<4);report[2]=0x90;report[3]=0x3f;
-            report[4]=0xa0; // Speaker level and audio route only; microphone and headset-volume flags are clear.
-            report[5]=0x82; // Audio preamp and mute-control validity; no LED or trigger update.
-            report[9]=(byte)Math.Min(64,(int)volume);
-            report[11]=0; // Controller speaker output path.
-            report[13]=0; // Speaker not muted.
-            report[41]=3; // Modest speaker preamp.
+            // 0x31 is the normal state-control report supported by the macOS Bluetooth HID path.
+            var report=new byte[78];report[0]=0x31;report[1]=(byte)((sequence&15)<<4);report[2]=0x10;
+            report[3]=0xa0; // Speaker level + output route; no microphone/headset-volume update.
+            report[4]=0x82; // Preamp + mute controls; preserve LEDs and triggers.
+            report[8]=(byte)Math.Min(MaxSpeakerVolume,(int)volume);
+            report[10]=0x30; // Speaker-only route (0x00 selects headphones).
+            report[12]=0; // Audio/speaker power save and speaker mute are off.
+            report[40]=3;
+            FinishCrc(report);return report;
+        }
+        public static byte[] LegacyAudio(byte sequence,byte counter,byte[] frames,int offset)
+        {
+            if(frames==null || offset<0 || offset>frames.Length-200)throw new ArgumentException("One complete 200-byte Opus frame is required.");
+            var report=new byte[334];report[0]=0x35;report[1]=(byte)((sequence&15)<<4);
+            report[2]=0x91;report[3]=7;report[4]=0xfe; // Microphone capture remains off.
+            report[9]=0xff;report[10]=counter;report[11]=0x93;report[12]=200;
+            Buffer.BlockCopy(frames,offset,report,13,200);
             FinishCrc(report);return report;
         }
         public static byte[] Audio(byte sequence,byte counter,byte[] frames,int offset)
