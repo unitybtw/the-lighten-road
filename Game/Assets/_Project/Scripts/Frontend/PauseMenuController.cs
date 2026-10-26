@@ -96,7 +96,6 @@ namespace TheLightenRoad.Frontend
         private Sprite vignetteBlurSprite;
         private Sprite roundTrackSprite;
         private Sprite roundFillSprite;
-        private Sprite roundHandleSprite;
         private Sprite thinBorderSprite;
 
         private readonly List<Sprite> proceduralSprites = new List<Sprite>();
@@ -186,7 +185,6 @@ namespace TheLightenRoad.Frontend
             vignetteBlurSprite = CreateVignetteBlurSprite(256);
             roundTrackSprite = CreateRoundedCapsuleSprite(24, 8, new Color(0.55f, 0.68f, 0.86f, 0.35f), 4);
             roundFillSprite = CreateRoundedCapsuleSprite(24, 8, amberGold, 4);
-            roundHandleSprite = CreateCircularHandleSprite(32);
             thinBorderSprite = CreateThinBorderBoxSprite(36, 36, 4, 2f);
 
             EnsureEventSystem();
@@ -1692,22 +1690,10 @@ namespace TheLightenRoad.Frontend
             fillImg.color = new Color(1.0f, 0.80f, 0.35f, 0.85f);
 
             var handleSlide = CreateStretchRect("Handle Slide Area", track);
-            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(16f, 26f), new Vector2(0f, 0.5f), Vector2.zero);
-            handle.localEulerAngles = Vector3.zero;
-
-            // Downward Chevron Needle Arrow pointing directly onto the line track
-            var needle = CreateLabel("Needle", handle, new Vector2(0f, 9f), new Vector2(16f, 16f), "▼", 10.5f, TextAlignmentOptions.Center, amberGold);
-            needle.raycastTarget = false;
-
-            var handleGlow = CreateAnchoredRect("Handle Glow", handle, new Vector2(26f, 26f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            var hGlowImg = handleGlow.gameObject.AddComponent<Image>();
-            hGlowImg.sprite = softRadialSprite;
-            hGlowImg.color = new Color(1.0f, 0.75f, 0.30f, 0.35f);
-            hGlowImg.raycastTarget = false;
-
+            var handle = CreateAnchoredRect("Handle", handleSlide, new Vector2(44f, 44f), new Vector2(0f, 0.5f), Vector2.zero);
             var handleImg = handle.gameObject.AddComponent<Image>();
-            handleImg.sprite = roundHandleSprite;
-            handleImg.color = radiantIvory;
+            handleImg.color = Color.clear;
+            handleImg.raycastTarget = true;
 
             var valTxt = CreateLabel("Value", sRect, Vector2.zero, new Vector2(60f, 24f),
                 "100%", 13f, TextAlignmentOptions.Right, amberGold);
@@ -1722,6 +1708,7 @@ namespace TheLightenRoad.Frontend
             slider.fillRect = fill;
             slider.handleRect = handle;
             slider.targetGraphic = handleImg;
+            LanternSliderHandle.Attach(slider,handle);
 
             var focus = row.gameObject.AddComponent<SettingsLightFocus>();
             focus.Label = titleTxt;
@@ -2039,44 +2026,6 @@ namespace TheLightenRoad.Frontend
             int slice = Mathf.Max(cornerRadius + 2, 6);
             Vector4 border = new Vector4(slice, slice, slice, slice);
             var sprite = Sprite.Create(tex, new Rect(0, 0, width, height), Vector2.one * 0.5f, 100f, 0, SpriteMeshType.FullRect, border);
-            proceduralSprites.Add(sprite);
-            return sprite;
-        }
-
-        private Sprite CreateCircularHandleSprite(int size)
-        {
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
-            {
-                wrapMode = TextureWrapMode.Clamp,
-                filterMode = FilterMode.Bilinear
-            };
-            float half = (size - 1f) * 0.5f;
-            float radius = half - 0.5f;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - half;
-                    float dy = y - half;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                    float cov = Mathf.Clamp01(radius + 0.5f - dist);
-                    if (cov <= 0.001f)
-                    {
-                        tex.SetPixel(x, y, Color.clear);
-                        continue;
-                    }
-
-                    float t = dist / radius;
-                    Color core = new Color(0.98f, 0.98f, 1.0f, 1f);
-                    Color rim = amberGold;
-                    Color c = Color.Lerp(core, rim, t * 0.75f);
-                    c.a *= cov;
-                    tex.SetPixel(x, y, c);
-                }
-            }
-            tex.Apply();
-            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), Vector2.one * 0.5f, 100f);
             proceduralSprites.Add(sprite);
             return sprite;
         }

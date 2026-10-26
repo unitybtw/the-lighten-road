@@ -649,3 +649,7 @@ Fixed the stock Input System USB-only output path for the connected DualSense us
 ## DualSense textures and adaptive R2 — 2026-10-26
 
 Added separate DualSense feedback patterns per game event and optional light R2 resistance for Flare/preview over Bluetooth. The controller options include a separately saved DualSense R2 toggle. See [textures, trigger behavior and verification scope](DUALSENSE-TEXTURES.md).
+
+## Animated lantern sliders — 2026-10-26
+
+Replaced title/pause settings slider knobs with miniature player-lantern art, animated flames and warm focus/drag light. A stable 44 × 44 input target preserves slider behavior; Reduced motion freezes the artwork. **27/27 UI PlayMode tests passed.** See [previews and verification](SLIDER-LANTERNS.md).
