@@ -264,5 +264,21 @@ namespace TheLightenRoad.Frontend.Tests
             _menu.SetControlsDeviceTab(0);Assert.That(diagram.gameObject.activeInHierarchy,Is.False);
         }
 
+        [UnityTest]
+        public IEnumerator DualSenseTriggerOptionPersistsIndependentlyOfVibration()
+        {
+            yield return null;_menu.SkipIntro();_menu.ShowSettings();_menu.SelectSettingsSection(2);
+            var adaptive=GameObject.Find("DualSense R2").GetComponentInChildren<Toggle>();
+            var vibration=GameObject.Find("Vibration (Rumble)").GetComponentInChildren<Toggle>();
+            Assert.That(adaptive,Is.Not.Null);Assert.That(vibration,Is.Not.Null);
+            adaptive.isOn=false;
+            Assert.That(MenuPreferences.AdaptiveTriggers,Is.False);
+            Assert.That(MenuPreferences.Vibration,Is.True);
+            Assert.That(adaptive.navigation.selectOnUp,Is.EqualTo(vibration));
+            _menu.ShowHome();_menu.ShowSettings();_menu.SelectSettingsSection(2);
+            Assert.That(adaptive.isOn,Is.False);
+            adaptive.isOn=true;
+        }
+
     }
 }

@@ -645,3 +645,7 @@ Added short, fading feedback for jump/landing, Flare, ember pickup/break, death 
 ## DualSense Bluetooth correction — 2026-10-25
 
 Fixed the stock Input System USB-only output path for the connected DualSense using correctly sized Bluetooth packets and CRC. The user confirmed a real Bluetooth test pulse; **40/40 PlayMode tests passed**. See [transport diagnosis and evidence](DUALSENSE-BLUETOOTH-FIX.md).
+
+## DualSense textures and adaptive R2 — 2026-10-26
+
+Added separate DualSense feedback patterns per game event and optional light R2 resistance for Flare/preview over Bluetooth. The controller options include a separately saved DualSense R2 toggle. See [textures, trigger behavior and verification scope](DUALSENSE-TEXTURES.md).

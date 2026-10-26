@@ -32,7 +32,8 @@ namespace TheLightenRoad.Frontend
         private TMP_Text footerSelectText, footerBackText, footerResetText, footerTabText;
         private Button controllerStyleButton;
         private TMP_Text controllerStyleValueText;
-        private Toggle vibrationToggle;
+        private Toggle vibrationToggle, adaptiveTriggersToggle;
+        private TMP_Text adaptiveTriggersValueText;
         private TMP_Text vibrationToggleValueText;
         private Slider deadzoneSlider;
         private TMP_Text deadzoneValueText;
@@ -117,7 +118,7 @@ namespace TheLightenRoad.Frontend
 
             // Controls settings section (index 2)
             var controls=(RectTransform)settingsSections[2].transform;
-            var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,88));
+            var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,100));
             var styleTitle=CreateLabel("Title",styleRow,"PROMPT GLYPHS",20f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,10),new Vector2(0,0.5f));
             styleTitle.fontStyle=FontStyles.Bold; styleTitle.characterSpacing=2.5f;
             var styleSub=CreateLabel("Subtitle",styleRow,"Button symbols shown throughout the game",14f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
@@ -125,9 +126,15 @@ namespace TheLightenRoad.Frontend
             controllerStyleValueText=controllerStyleButton.GetComponentInChildren<TMP_Text>();
             controllerStyleValueText.fontSize=14f;
 
-            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Haptic rumble on jump, flare and impacts",4,out vibrationToggleValueText,OnVibrationToggled);
+            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Contextual vibration and DualSense textures",34,out vibrationToggleValueText,OnVibrationToggled);
 
-            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-80,out deadzoneValueText);
+            adaptiveTriggersToggle=CreateEtherealToggle(controls,"DualSense R2","Light Flare resistance (Bluetooth)",-32,out adaptiveTriggersValueText,value=>
+            {
+                MenuPreferences.SetAdaptiveTriggers(value);MarkSettingsChanged();UpdateSwitchVisual(adaptiveTriggersToggle);
+                if(value && Application.isPlaying)ControllerGlyphService.PlayHaptic(HapticCue.Preview);
+            });
+
+            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-98,out deadzoneValueText);
             deadzoneSlider.minValue=0.05f; deadzoneSlider.maxValue=0.40f;
             deadzoneSlider.onValueChanged.AddListener(OnDeadzoneSliderChanged);
 
@@ -553,14 +560,18 @@ namespace TheLightenRoad.Frontend
                 var nav = vibrationToggle.navigation;
                 nav.mode = Navigation.Mode.Explicit;
                 nav.selectOnUp = controllerStyleButton;
-                nav.selectOnDown = deadzoneSlider;
+                nav.selectOnDown = adaptiveTriggersToggle;
                 vibrationToggle.navigation = nav;
             }
+            if(adaptiveTriggersToggle!=null)adaptiveTriggersToggle.navigation=new Navigation
+            {
+                mode=Navigation.Mode.Explicit,selectOnUp=vibrationToggle,selectOnDown=deadzoneSlider
+            };
             if (deadzoneSlider != null)
             {
                 var nav = deadzoneSlider.navigation;
                 nav.mode = Navigation.Mode.Explicit;
-                nav.selectOnUp = vibrationToggle;
+                nav.selectOnUp = adaptiveTriggersToggle;
                 nav.selectOnDown = resetSettingsButton;
                 deadzoneSlider.navigation = nav;
                 if (settingsSection == 2) lastInActiveSection = deadzoneSlider;

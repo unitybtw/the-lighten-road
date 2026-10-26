@@ -2,6 +2,7 @@ using System.Collections;
 using TheLightenRoad.Lantern;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.SceneManagement;
 
 namespace TheLightenRoad.UI
@@ -18,6 +19,12 @@ namespace TheLightenRoad.UI
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void BootstrapHaptics() => EnsureExists();
+
+        public static bool AdaptiveTriggersEnabled
+        {
+            get => PlayerPrefs.GetInt("TLR.Menu.AdaptiveTriggersEnabled",1)==1;
+            set { PlayerPrefs.SetInt("TLR.Menu.AdaptiveTriggersEnabled",value?1:0);PlayerPrefs.Save();if(!value)StopRumble(); }
+        }
 
         public static void PlayHaptic(HapticCue cue, float strength = 1f)
         {
@@ -37,7 +44,7 @@ namespace TheLightenRoad.UI
             if (!IsFinite(strength) || strength <= 0f || !VibrationEnabled) return;
             EnsureExists();
             instance.TriggerRumble(low*Mathf.Clamp01(strength), high*Mathf.Clamp01(strength), duration,
-                priority, cue == HapticCue.Preview, cue == HapticCue.Flare ? .045f : .008f);
+                priority, cue == HapticCue.Preview, cue == HapticCue.Flare ? .045f : .008f, cue, Mathf.Clamp01(strength));
         }
 
         // Compatibility entry point for external callers; new game feedback should use named cues.
@@ -51,7 +58,7 @@ namespace TheLightenRoad.UI
         public static void StopRumble() { if (instance != null) instance.HaltRumble(); }
         private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
-        private void TriggerRumble(float low, float high, float duration, int priority, bool allowPaused, float attack)
+        private void TriggerRumble(float low, float high, float duration, int priority, bool allowPaused, float attack, HapticCue? cue = null, float strength = 1f)
         {
             var pad = GetActiveGamepad();
             if (pad == null || !pad.added || !isActiveAndEnabled || HapticsSuspended || duration <= 0f ||
@@ -60,17 +67,21 @@ namespace TheLightenRoad.UI
             HaltRumble();
             rumblePad = pad;
             rumblePriority = priority;
-            activeRumbleRoutine = StartCoroutine(RumbleRoutine(pad, low, high, Mathf.Min(duration, 2f), allowPaused, attack));
+            bool dualSense=pad is DualSenseGamepadHID && cue.HasValue;
+            if(dualSense)duration=DualSenseHapticPatterns.Duration(cue.Value);
+            activeRumbleRoutine = StartCoroutine(RumbleRoutine(pad, low, high, Mathf.Min(duration, 2f), allowPaused, attack, dualSense?cue:null,strength));
         }
 
-        private IEnumerator RumbleRoutine(Gamepad pad, float low, float high, float duration, bool allowPaused, float attack)
+        private IEnumerator RumbleRoutine(Gamepad pad, float low, float high, float duration, bool allowPaused, float attack, HapticCue? cue, float strength)
         {
             float elapsed = 0f;
             while (elapsed < duration && VibrationEnabled && pad.added && GetActiveGamepad() == pad &&
                 (!HapticsSuspended) && (allowPaused || Time.timeScale > 0f))
             {
                 float envelope = Mathf.Clamp01((elapsed + .004f) / attack) * Mathf.Pow(1f - elapsed / duration, 1.4f);
-                SetMotors(pad, low*envelope, high*envelope);
+                Vector2 texture=cue.HasValue?DualSenseHapticPatterns.Sample(cue.Value,elapsed/duration):Vector2.one*envelope;
+                float resistance=cue.HasValue && AdaptiveTriggersEnabled?DualSenseHapticPatterns.RightTrigger(cue.Value,elapsed/duration)*strength:0f;
+                SetMotors(pad, low*texture.x, high*texture.y,resistance);
                 yield return null;
                 elapsed += Time.unscaledDeltaTime;
             }
@@ -79,14 +90,14 @@ namespace TheLightenRoad.UI
             activeRumbleRoutine = null;
         }
 
-        private static void SetMotors(Gamepad pad, float low, float high)
+        private static void SetMotors(Gamepad pad, float low, float high, float rightTrigger = 0f)
         {
             if (pad == null) return;
             try
             {
                 if (DualSenseBluetoothRumble.IsBluetooth(pad))
                 {
-                    DualSenseBluetoothRumble.Send(pad, low, high);
+                    DualSenseBluetoothRumble.Send(pad, low, high, rightTrigger);
                     return;
                 }
                 pad.SetMotorSpeeds(low, high);

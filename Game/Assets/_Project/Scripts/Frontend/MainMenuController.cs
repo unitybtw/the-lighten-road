@@ -818,6 +818,7 @@ namespace TheLightenRoad.Frontend
             if (vsyncToggle != null) vsyncToggle.SetIsOnWithoutNotify(MenuPreferences.VSync);
             if (motionToggle != null) motionToggle.SetIsOnWithoutNotify(MenuPreferences.ReducedMotion);
             if (vibrationToggle != null) vibrationToggle.SetIsOnWithoutNotify(MenuPreferences.Vibration);
+            if (adaptiveTriggersToggle != null) adaptiveTriggersToggle.SetIsOnWithoutNotify(MenuPreferences.AdaptiveTriggers);
 
             if (masterSlider != null) UpdateSliderPercentLabel(masterSlider);
             if (musicSlider != null) UpdateSliderPercentLabel(musicSlider);
@@ -826,6 +827,7 @@ namespace TheLightenRoad.Frontend
             UpdateSwitchVisual(vsyncToggle);
             UpdateSwitchVisual(motionToggle);
             UpdateSwitchVisual(vibrationToggle);
+            UpdateSwitchVisual(adaptiveTriggersToggle);
             RefreshSettingsFrameRate();
             RefreshControllerSettingsUI();
         }

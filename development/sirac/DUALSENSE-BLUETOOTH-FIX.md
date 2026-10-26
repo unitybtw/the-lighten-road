@@ -12,7 +12,7 @@ The installed Input System's `DualShockGamepadHID.cs` explicitly leaves Bluetoot
 
 `DualSenseBluetoothRumble` routes recognized Sony DualSense / Edge Bluetooth HID devices through a dedicated **78-byte** `HIDO` output command. It uses report ID `0x31`, the four-bit sequence tag, marker `0x10`, rumble-emulation flags, correctly ordered high/low motor bytes and little-endian CRC-32 over transaction prefix `0xA2` plus the first 74 report bytes. Zero-motor stop packets use the same complete transport and checksum.
 
-Detection accepts the observed 78/547 descriptor as well as a literal 78-byte output descriptor. USB, Xbox, other vendors and non-DualSense layouts retain the normal Input System motor path. Only rumble-control flags are enabled; lightbar, trigger resistance and audio levels are not configured. No package-cache files, native drivers, unsafe-code settings or Unity package versions were changed.
+Detection accepts the observed 78/547 descriptor as well as a literal 78-byte output descriptor. USB, Xbox, other vendors and non-DualSense layouts retain the normal Input System motor path. The initial correction enabled only rumble-control flags. The later [DualSense texture extension](DUALSENSE-TEXTURES.md) optionally controls light R2 resistance and explicitly releases it; lightbar and audio levels remain untouched. No package-cache files, native drivers, unsafe-code settings or Unity package versions were changed.
 
 Every existing contextual cue and safe-stop path in `ControllerHaptics.SetMotors` uses this transport selection, including the Vibration settings preview.
 

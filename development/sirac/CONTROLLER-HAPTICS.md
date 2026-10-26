@@ -17,7 +17,7 @@ Feedback is brief and selective for the ruined archive's quiet atmosphere. There
 | Chamber complete | 0.28 | 0.36 | 480 ms | Exit presentation starts |
 | Settings preview | 0.18 | 0.28 | 160 ms | Vibration is enabled in title/pause settings |
 
-Named cues are available through `ControllerGlyphService.PlayHaptic(HapticCue.Flare, strength)`. Existing `Rumble(low, high, seconds)` callers remain supported. Named priority prevents jump/pickup feedback from replacing a death or chamber-completion cue. These are traditional dual-motor effects, not adaptive-trigger resistance or bespoke DualSense waveforms.
+Named cues are available through `ControllerGlyphService.PlayHaptic(HapticCue.Flare, strength)`. Existing `Rumble(low, high, seconds)` callers remain supported. Named priority prevents jump/pickup feedback from replacing a death or chamber-completion cue. The base profiles are traditional dual-motor effects. The later [DualSense extension](DUALSENSE-TEXTURES.md) adds per-cue textures and optional light adaptive R2 resistance on Bluetooth; neither path streams bespoke audio haptic waveforms.
 
 ## Lifecycle and settings
 

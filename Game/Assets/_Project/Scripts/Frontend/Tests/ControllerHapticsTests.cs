@@ -4,6 +4,7 @@ using TheLightenRoad.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 
@@ -18,10 +19,17 @@ namespace TheLightenRoad.Frontend.Tests
         { Low=lowFrequency; High=highFrequency; Writes++; }
     }
 
+    public class RecordingDualSenseGamepad : DualSenseGamepadHID
+    {
+        public float Low,High;
+        public override void SetMotorSpeeds(float lowFrequency,float highFrequency){Low=lowFrequency;High=highFrequency;}
+    }
+
     public sealed class ControllerHapticsTests
     {
         private RecordingRumbleGamepad pad, other;
         private Gamepad previous;
+        private RecordingDualSenseGamepad dualSense;
         private bool previousVibration;
         private float previousScale;
         [UnitySetUp]
@@ -44,6 +52,7 @@ namespace TheLightenRoad.Frontend.Tests
             ControllerGlyphService.StopRumble();
             if(pad!=null && pad.added)InputSystem.RemoveDevice(pad);
             if(other!=null && other.added)InputSystem.RemoveDevice(other);
+            if(dualSense!=null && dualSense.added)InputSystem.RemoveDevice(dualSense);
             if(previous!=null && previous.added)previous.MakeCurrent();
             ControllerGlyphService.VibrationEnabled=previousVibration;Time.timeScale=previousScale;
             ControllerGlyphService.Instance.SendMessage("OnApplicationFocus",true);
@@ -106,5 +115,17 @@ namespace TheLightenRoad.Frontend.Tests
             ControllerGlyphService.PlayHaptic(HapticCue.Death);yield return null;
             InputSystem.RemoveDevice(pad);Assert.That(pad.Low+pad.High,Is.Zero);
         }
+        [UnityTest]
+        public IEnumerator DualSenseFlareUsesItsLongerTextureAndStillStops()
+        {
+            InputSystem.RegisterLayout<RecordingDualSenseGamepad>();
+            dualSense=InputSystem.AddDevice<RecordingDualSenseGamepad>();dualSense.MakeCurrent();
+            ControllerGlyphService.PlayHaptic(HapticCue.Flare);
+            yield return new WaitForSecondsRealtime(.38f);
+            Assert.That(dualSense.Low+dualSense.High,Is.GreaterThan(0),"DualSense Flare must outlast the 280 ms generic effect.");
+            yield return new WaitForSecondsRealtime(.4f);
+            Assert.That(dualSense.Low+dualSense.High,Is.Zero);
+        }
+
     }
 }
