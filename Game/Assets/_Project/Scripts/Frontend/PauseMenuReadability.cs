@@ -29,15 +29,17 @@ namespace TheLightenRoad.Frontend
             var tabs=(RectTransform)controlsRoot.Find("Pause Controls Tabs");tabs.anchoredPosition=new Vector2(0,232);tabs.sizeDelta=new Vector2(1040,56);
             for(int i=0;i<3;i++)
             {
-                MenuReadability.Place((RectTransform)pauseControlsDeviceTabs[i].transform,new Vector2((i-1)*260,0),new Vector2(240,56));
+                MenuReadability.Place((RectTransform)pauseControlsDeviceTabs[i].transform,new Vector2((i-1)*300,0),new Vector2(260,56));
                 pauseControlsDeviceTabLabels[i].fontSize=20;
+                pauseControlsDeviceTabLabels[i].rectTransform.sizeDelta=new Vector2(240,36);
+                MenuReadability.CompactDeviceTab(pauseControlsDeviceTabs[i]);
             }
             foreach(var name in new[]{"Left Bumper Badge","Right Bumper Badge"})
             {
                 var r=tabs.Find(name) as RectTransform;
                 if(r!=null)
                 {
-                    MenuReadability.Place(r,new Vector2(name.StartsWith("Left")?-460:460,0),new Vector2(64,52));
+                    MenuReadability.Place(r,new Vector2(name.StartsWith("Left")?-500:500,0),new Vector2(64,52));
                     r.GetComponent<Image>().raycastTarget=true;
                 }
             }
@@ -60,6 +62,7 @@ namespace TheLightenRoad.Frontend
             MenuReadability.Place((RectTransform)controlsBackButton.transform,new Vector2(0,-300),new Vector2(360,56));
             MenuReadability.Footer(pauseFooterBar);pauseFooterBar.anchoredPosition=new Vector2(0,-378);
             MenuReadability.RefreshFocus(modalRect);
+            SetPauseControlsDeviceTab(selectedPauseControlsDeviceTab);
         }
     }
 }

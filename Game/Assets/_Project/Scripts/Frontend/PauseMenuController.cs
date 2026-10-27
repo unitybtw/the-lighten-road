@@ -1148,6 +1148,8 @@ namespace TheLightenRoad.Frontend
             for (int i = 0; i < 3; i++)
             {
                 bool active = (i == selectedPauseControlsDeviceTab);
+                var marker = pauseControlsDeviceTabs[i].transform.Find("Selection rule");
+                if (marker != null) marker.gameObject.SetActive(active);
                 if (pauseControlsDeviceTabLabels[i] != null)
                 {
                     pauseControlsDeviceTabLabels[i].text = active ? $"< {rawNames[i]} >" : rawNames[i];

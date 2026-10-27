@@ -59,22 +59,43 @@ namespace TheLightenRoad.Frontend
         private void ApplyControlsReadability()
         {
             MenuReadability.EnlargeText(controls);
+            var surface=(RectTransform)controllerDiagram.transform.parent.parent;
+            var tabs=(RectTransform)surface.Find("Controls Device Tabs");
+            MenuReadability.Place(tabs,new Vector2(0,205),new Vector2(1040,56));
+            var heading=surface.Find("Heading") as RectTransform;
+            if(heading!=null)heading.anchoredPosition=new Vector2(0,312);
+            var ornament=surface.Find("Header Bottom Filigree") as RectTransform;
+            if(ornament!=null)ornament.anchoredPosition=new Vector2(0,260);
+            var spark=surface.Find("Header Lantern Spark") as RectTransform;
+            if(spark!=null)spark.anchoredPosition=new Vector2(0,266);
             for(int i=0;i<controlsDeviceTabs.Length;i++)
             {
-                MenuReadability.Place((RectTransform)controlsDeviceTabs[i].transform,new Vector2((i-1)*260,0),new Vector2(240,56));
+                MenuReadability.Place((RectTransform)controlsDeviceTabs[i].transform,new Vector2((i-1)*300,0),new Vector2(260,56));
                 controlsDeviceTabLabels[i].fontSize=22;
+                controlsDeviceTabLabels[i].rectTransform.sizeDelta=new Vector2(240,36);
+                MenuReadability.CompactDeviceTab(controlsDeviceTabs[i]);
             }
             for(int i=0;i<controlsRowKeyLabels.Length;i++)
             {
                 var key=controlsRowKeyLabels[i];var row=(RectTransform)key.transform.parent;
-                MenuReadability.Place(row,new Vector2(0,152-i*64),new Vector2(960,60));
+                MenuReadability.Place(row,new Vector2(0,130-i*60),new Vector2(960,60));
                 var description=row.Find("Description") as RectTransform;if(description!=null)description.sizeDelta=new Vector2(520,30);
                 key.rectTransform.sizeDelta=new Vector2(280,36);
                 var title=row.Find("Action")?.GetComponent<TMP_Text>();if(title!=null)title.fontSize=22;
             }
-            if(diagramLabels!=null)foreach(var label in diagramLabels)
-            { label.fontSize=20;label.rectTransform.sizeDelta=new Vector2(300,60);label.textWrappingMode=TextWrappingModes.Normal; }
+            var guide=(RectTransform)controllerGuide.transform;guide.anchoredPosition=new Vector2(0,-16);
+            MenuReadability.Place((RectTransform)controllerDiagram.transform,Vector2.zero,new Vector2(960,432));
+            var artwork=controllerDiagram.transform.Find("Device artwork") as RectTransform;
+            if(artwork!=null)artwork.sizeDelta=new Vector2(552,552f*940f/1452f);
+            controllerDiagram.SetVerticesDirty();
+            Vector2[] positions={new Vector2(-490,78),new Vector2(-490,-18),new Vector2(490,120),new Vector2(490,57.6f),new Vector2(490,-9.6f),new Vector2(490,-78)};
+            if(diagramLabels!=null)for(int i=0;i<diagramLabels.Length;i++)
+            {
+                var label=diagramLabels[i];label.fontSize=20;label.textWrappingMode=TextWrappingModes.Normal;
+                MenuReadability.Place(label.rectTransform,positions[i],new Vector2(220,i<2?64:50));
+            }
             MenuReadability.RefreshFocus(controls);
+            SetControlsDeviceTab(selectedControlsDeviceTab);
         }
     }
 }

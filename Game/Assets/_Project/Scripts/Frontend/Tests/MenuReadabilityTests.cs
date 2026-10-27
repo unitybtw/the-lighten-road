@@ -83,6 +83,43 @@ namespace TheLightenRoad.Frontend.Tests
                 AssertVisibleControlsFit(canvas,menu.transform);
             }
         }
+        [UnityTest] public IEnumerator DeviceTabsAndControllerGuideStaySeparated()
+        {
+            menu.ShowControls();menu.SetControlsDeviceTab(0);yield return new WaitForSecondsRealtime(.25f);
+            var canvas=menu.GetComponentInChildren<Canvas>();
+            var tabs=menu.GetComponentsInChildren<RectTransform>(true).Single(r=>r.name=="Controls Device Tabs");
+            var buttons=tabs.GetComponentsInChildren<Button>();
+            Assert.That(buttons.Length,Is.EqualTo(3));
+            EventSystem.current.SetSelectedGameObject(buttons[0].gameObject);
+            ExecuteEvents.Execute<IPointerEnterHandler>(buttons[1].gameObject,new PointerEventData(EventSystem.current),(target,data)=>target.OnPointerEnter((PointerEventData)data));
+            yield return null;
+            var labels=buttons.Select(b=>b.GetComponentInChildren<TMP_Text>()).ToArray();
+            for(int i=0;i<buttons.Length;i++)
+            {
+                var focus=buttons[i].GetComponent<SettingsLightFocus>();
+                Assert.That(focus.LeftPointer.gameObject.activeSelf,Is.False);
+                Assert.That(focus.RightPointer.gameObject.activeSelf,Is.False);
+                Assert.That(buttons[i].transform.Find("Selection rule").gameObject.activeSelf,Is.EqualTo(i==0));
+                if(i>0)Assert.That(RectOf(labels[i-1].rectTransform,canvas.transform).Overlaps(RectOf(labels[i].rectTransform,canvas.transform)),Is.False);
+            }
+            var firstRow=menu.GetComponentsInChildren<TMP_Text>().Single(t=>t.name=="Action" && t.text=="MOVE").transform.parent as RectTransform;
+            Assert.That(RectOf(tabs,canvas.transform).Overlaps(RectOf(firstRow,canvas.transform)),Is.False);
+            Capture(canvas,1280,720,"keyboard-tabs-720p");
+            for(int tab=1;tab<=2;tab++)
+            {
+                menu.SetControlsDeviceTab(tab);yield return null;
+                for(int i=0;i<buttons.Length;i++)Assert.That(buttons[i].transform.Find("Selection rule").gameObject.activeSelf,Is.EqualTo(i==tab));
+                var artwork=menu.GetComponentsInChildren<RectTransform>().Single(r=>r.name=="Device artwork");
+                Assert.That(artwork.rect.width,Is.GreaterThan(500));
+                foreach(var callout in menu.GetComponentsInChildren<TMP_Text>().Where(t=>t.name.StartsWith("Controller callout")))
+                {
+                    Assert.That(callout.GetPreferredValues(callout.text,callout.rectTransform.rect.width,0).y,Is.LessThanOrEqualTo(callout.rectTransform.rect.height+2),callout.text);
+                    Assert.That(RectOf(callout.rectTransform,canvas.transform).Overlaps(RectOf(artwork,canvas.transform)),Is.False,callout.text);
+                }
+                Capture(canvas,1280,720,tab==1?"xbox-guide-720p":"playstation-guide-720p");
+                AssertVisibleControlsFit(canvas,menu.transform);
+            }
+        }
         [UnityTest] public IEnumerator PauseSettingsAndTabsHaveReadableRowsAt720p()
         {
             menu.ShowHome();yield return null;
@@ -91,6 +128,9 @@ namespace TheLightenRoad.Frontend.Tests
             var canvas=pause.GetComponentInChildren<Canvas>();
             Capture(canvas,1280,720,"pause-settings-720p");AssertVisibleControlsFit(canvas,pause.transform);
             pause.ShowControlsView();pause.SetPauseControlsDeviceTab(2);yield return new WaitForSecondsRealtime(.25f);
+            var deviceTabs=pause.ControlsPanel.transform.Find("Pause Controls Tabs").GetComponentsInChildren<Button>();
+            Assert.That(deviceTabs.Count(b=>b.transform.Find("Selection rule")!=null && b.transform.Find("Selection rule").gameObject.activeSelf),Is.EqualTo(1));
+            Assert.That(deviceTabs.Where(b=>b.transform.Find("Wings Container")!=null).All(b=>!b.transform.Find("Wings Container").gameObject.activeSelf),Is.True);
             Capture(canvas,1280,720,"pause-controls-720p");AssertVisibleControlsFit(canvas,pause.transform);
             foreach(var badge in pause.ControlsPanel.GetComponentsInChildren<RectTransform>().Where(r=>r.name.EndsWith("Bumper Badge")))
                 Assert.That(badge.GetComponent<Image>().raycastTarget,Is.True);

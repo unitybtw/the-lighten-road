@@ -85,6 +85,25 @@ namespace TheLightenRoad.Frontend
                 if(focus.Glow!=null)focus.Glow.rectTransform.sizeDelta=rect.sizeDelta+new Vector2(60,36);
             }
         }
+        // Dense device tabs retain their focus glow without decorative wings crossing adjacent labels.
+        public static void CompactDeviceTab(Button button)
+        {
+            var focus=button.GetComponent<SettingsLightFocus>();
+            if(focus!=null)
+            {
+                if(focus.LeftPointer!=null)focus.LeftPointer.gameObject.SetActive(false);
+                if(focus.RightPointer!=null)focus.RightPointer.gameObject.SetActive(false);
+            }
+            var wings=button.transform.Find("Wings Container");if(wings!=null)wings.gameObject.SetActive(false);
+            if(button.transform.Find("Selection rule")!=null)return;
+            var marker=new GameObject("Selection rule",typeof(RectTransform),typeof(CanvasRenderer),typeof(Image));
+            marker.transform.SetParent(button.transform,false);
+            var rect=(RectTransform)marker.transform;
+            rect.anchorMin=rect.anchorMax=new Vector2(.5f,0);rect.pivot=new Vector2(.5f,.5f);
+            Place(rect,new Vector2(0,5),new Vector2(90,2.5f));
+            var image=marker.GetComponent<Image>();image.color=new Color(1f,.75f,.3f,.9f);image.raycastTarget=false;
+            marker.SetActive(false);
+        }
         public static void Footer(RectTransform footer)
         {
             footer.sizeDelta=new Vector2(1040,44);

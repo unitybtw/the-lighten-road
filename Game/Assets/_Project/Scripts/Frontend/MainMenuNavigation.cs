@@ -113,7 +113,7 @@ namespace TheLightenRoad.Frontend
             for(int i=0;i<controlsRowKeyLabels.Length;i++)if(controlsRowKeyLabels[i]!=null)controlsRowKeyLabels[i].transform.parent.gameObject.SetActive(!pad);
             if(!pad)return;
             bool ps=tab==2;controllerDiagram.SetSymmetric(ps);
-            string[] text={"Move  /  Left stick or D-pad",ps?"Sprint  /  L1 hold or L3 toggle":"Sprint  /  LB hold or LS toggle",ps?"Pause  /  Options":"Pause  /  Menu",ps?"Interact  /  Triangle":"Interact  /  Y",ps?"Flare  /  R2":"Flare  /  RT",ps?"Jump  /  Cross":"Jump  /  A"};
+            string[] text={"Move\nLeft stick or D-pad",ps?"Sprint\nL1 hold or L3 toggle":"Sprint\nLB hold or LS toggle",ps?"Pause  /  Options":"Pause  /  Menu",ps?"Interact  /  Triangle":"Interact  /  Y",ps?"Flare  /  R2":"Flare  /  RT",ps?"Jump  /  Cross":"Jump  /  A"};
             for(int i=0;i<6;i++)diagramLabels[i].text=text[i];
         }
     }

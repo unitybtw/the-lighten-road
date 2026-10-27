@@ -20,3 +20,9 @@ New layout checks cover 1920×1080, 1280×720, 1280×800, 1024×768 and 2560×10
 Native Game-view review also confirmed the enlarged Controller page after mouse/keyboard navigation, with separated rows, saved status and footer controls.
 
 These are Editor layout/rendering and software-input checks, not physical-monitor, handheld, TV or controller-device certification. Chapter progress and saved preferences are restored after the test suite. Project-facing copy remains English.
+
+## Device guide spacing update
+
+The main and pause device tabs now have more separation and a compact underline for the selected device. The controls heading, tabs and first keyboard row no longer collide. The Xbox and PlayStation artwork is 20% larger, with separate, readable callouts and matching leader lines. Focus glow and keyboard/controller navigation remain available.
+
+Unity 6000.3.2f1: **97/97 frontend Play Mode tests passed**, including device-tab focus/hover separation, selected markers, callout fit and rendered 720p previews. Project integrity passed. These are Editor and off-screen layout checks; physical-display and controller-device use were not retested for this change.
