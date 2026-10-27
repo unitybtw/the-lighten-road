@@ -53,7 +53,7 @@ namespace TheLightenRoad.Frontend
             MenuReadability.Place((RectTransform)keyboardSettingsButton.transform,new Vector2(0,-132),new Vector2(480,60));
             // The reset dialog is a modal: keep its buttons comfortably sized without changing focus ownership.
             foreach(var button in settingsResetPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true))
-            { var r=(RectTransform)button.transform;r.sizeDelta=new Vector2(290,56); }
+            { var r=(RectTransform)button.transform;r.sizeDelta=new Vector2(320,56); }
             MenuReadability.RefreshFocus(surface);
         }
         private void ApplyControlsReadability()

@@ -57,7 +57,7 @@ namespace TheLightenRoad.Frontend
         private void UpdateOptionsFooterLayout()
         {
             if(settingsFooterBar==null)return;
-            bool index=IsOptionsIndex;
+            bool index=IsOptionsIndex || IsSettingsResetOpen;
             var reset=settingsFooterBar.Find("Slot_Reset");if(reset!=null)reset.gameObject.SetActive(!index);
             var tabs=settingsFooterBar.Find("Slot_Tab");if(tabs!=null)tabs.gameObject.SetActive(!index);
             var select=settingsFooterBar.Find("Slot_Select");if(select!=null)((RectTransform)select).anchoredPosition=new Vector2(index?-150:-390,0);
@@ -66,6 +66,7 @@ namespace TheLightenRoad.Frontend
         private void OpenOptionsIndex()
         {
             settingsSection=-1;optionsIndex.SetActive(true);settingsResetPanel.SetActive(false);
+            settingsDoneButton.gameObject.SetActive(true);
             ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(0,-306);
             foreach(var section in settingsSections)section.SetActive(false);
             foreach(var tab in settingsTabs){tab.interactable=true;var focus=tab.GetComponent<SettingsLightFocus>();if(focus!=null)focus.IsCurrent=false;}
@@ -78,6 +79,7 @@ namespace TheLightenRoad.Frontend
         {
             if(optionsIndex==null)return;
             optionsIndex.SetActive(false);
+            settingsDoneButton.gameObject.SetActive(true);
             ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(196,-306);
             optionsHeading.text=new[]{"Audio","Video","Controller","Accessibility"}[page];
             optionsSubheading.gameObject.SetActive(false);

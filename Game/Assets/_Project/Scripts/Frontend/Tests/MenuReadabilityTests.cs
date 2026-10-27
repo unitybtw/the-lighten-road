@@ -144,6 +144,53 @@ namespace TheLightenRoad.Frontend.Tests
             }
             pause.Resume();
         }
+        [UnityTest] public IEnumerator CreditsIncludeTheWholeTeamAndFitSmallScreens()
+        {
+            menu.ShowCredits();yield return new WaitForSecondsRealtime(.25f);
+            var root=menu.CreditsGroup.transform;
+            var names=root.GetComponentsInChildren<TMP_Text>().Where(t=>t.name=="Name").ToArray();
+            foreach(var handle in new[]{"unitybtw","kemal-berke","benesas","Ichnolith","aeshmacodex"})
+                Assert.That(names.Any(t=>t.text.Contains(handle)),Is.True,handle);
+            Assert.That(root.GetComponentsInChildren<TMP_Text>().Count(t=>t.name=="Role" && t.text=="Artist"),Is.EqualTo(2));
+            var canvas=menu.GetComponentInChildren<Canvas>();
+            foreach(var resolution in new[]{new Vector2Int(1280,720),new Vector2Int(1024,768)})
+            {
+                Capture(canvas,resolution.x,resolution.y,"credits-"+resolution.x);
+                AssertVisibleControlsFit(canvas,root);
+                foreach(var name in names)
+                    Assert.That(name.GetPreferredValues().x,Is.LessThanOrEqualTo(name.rectTransform.rect.width+2),name.text);
+            }
+        }
+        [UnityTest] public IEnumerator ConfirmationsKeepFocusInsideAndCancelWithoutChangingPreferences()
+        {
+            menu.ShowSettings();menu.SelectSettingsSection(2);menu.RequestSettingsReset();
+            yield return new WaitForSecondsRealtime(.25f);
+            var panel=menu.GetComponentsInChildren<RectTransform>().Single(r=>r.name=="Restore settings confirmation");
+            bool vibration=MenuPreferences.Vibration;
+            AssertConfirmationFocus(panel);
+            var footer=menu.GetComponentsInChildren<RectTransform>(true).Single(r=>r.Find("Slot_Reset")!=null && r.Find("Slot_Tab")!=null);
+            Assert.That(footer.Find("Slot_Reset").gameObject.activeSelf,Is.False);
+            Assert.That(footer.Find("Slot_Tab").gameObject.activeSelf,Is.False);
+            var canvas=menu.GetComponentInChildren<Canvas>();
+            Capture(canvas,1280,720,"restore-confirmation-720p");
+            menu.CancelSettingsReset();Assert.That(MenuPreferences.Vibration,Is.EqualTo(vibration));
+            menu.ShowQuit();yield return new WaitForSecondsRealtime(.25f);
+            var quit=menu.QuitGroup.transform;AssertConfirmationFocus(quit);
+            Capture(canvas,1280,720,"quit-confirmation-720p");AssertVisibleControlsFit(canvas,quit);
+            var cancel=quit.GetComponentsInChildren<Button>().Single(b=>b.name=="Cancel");
+            cancel.onClick.Invoke();Assert.That(menu.CurrentView,Is.EqualTo("home"));
+        }
+        private static void AssertConfirmationFocus(Transform root)
+        {
+            var buttons=root.GetComponentsInChildren<Button>();Assert.That(buttons.Length,Is.EqualTo(2));
+            foreach(var button in buttons)
+            {
+                Assert.That(button.navigation.mode,Is.EqualTo(Navigation.Mode.Explicit));
+                Assert.That(buttons.Contains(button.navigation.selectOnLeft),Is.True);
+                Assert.That(buttons.Contains(button.navigation.selectOnRight),Is.True);
+            }
+            Assert.That(RectOf((RectTransform)buttons[0].transform,root).Overlaps(RectOf((RectTransform)buttons[1].transform,root)),Is.False);
+        }
         private static Rect RectOf(RectTransform rect,Transform relative)
         {
             var points=new Vector3[4];rect.GetWorldCorners(points);

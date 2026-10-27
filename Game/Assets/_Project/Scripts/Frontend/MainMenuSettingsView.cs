@@ -322,13 +322,13 @@ namespace TheLightenRoad.Frontend
                 {
                     footerBackIcon.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Cancel, style);
                     footerBackIcon.color = Color.white;
-                    if (footerBackText != null) footerBackText.text = "BACK";
+                    if (footerBackText != null) footerBackText.text = IsSettingsResetOpen ? "CANCEL" : "BACK";
                 }
                 else
                 {
                     footerBackIcon.sprite = null;
                     footerBackIcon.color = Color.clear;
-                    if (footerBackText != null) footerBackText.text = "[ESC] BACK";
+                    if (footerBackText != null) footerBackText.text = IsSettingsResetOpen ? "[ESC] CANCEL" : "[ESC] BACK";
                 }
             }
 
@@ -439,21 +439,24 @@ namespace TheLightenRoad.Frontend
 
         private void BuildSettingsReset(RectTransform parent)
         {
-            var panel=CreateAnchoredRect("Restore settings confirmation",parent,new Vector2(720,300),Vector2.one*.5f,new Vector2(0,-22));
+            var panel=CreateAnchoredRect("Restore settings confirmation",parent,new Vector2(900,360),Vector2.one*.5f,new Vector2(0,-22));
             var panelBg=panel.gameObject.AddComponent<Image>();
             panelBg.sprite=softRadialSprite;
             panelBg.color=new Color(0.008f,0.014f,0.028f,0.96f);
 
             settingsResetPanel=panel.gameObject;
-            SettingsRule(panel,"Reset Top Rule",new Vector2(0,122),520);
-            var head=SettingsText(panel,"RESTORE DEFAULT SETTINGS?",new Vector2(0,82),24,radiantIvory,660);
+            SettingsRule(panel,"Reset Top Rule",new Vector2(0,148),680);
+            var head=SettingsText(panel,"RESTORE DEFAULT SETTINGS?",new Vector2(0,100),26,radiantIvory,820);
             head.alignment=TextAlignmentOptions.Center;head.fontStyle=FontStyles.Bold;head.characterSpacing=4f;
-            var note=SettingsText(panel,"Restore audio, display and accessibility options.\nYour chapter progress will be kept.",new Vector2(0,18),14.5f,moonlightSilver,660);
+            var note=SettingsText(panel,"Restore audio, display, controller and accessibility options.\nYour chapter progress will be kept.",new Vector2(0,24),20f,moonlightSilver,820);
             note.alignment=TextAlignmentOptions.Center;
-            note.rectTransform.sizeDelta=new Vector2(660,72);
-            SettingsRule(panel,"Reset Bottom Rule",new Vector2(0,-32),520);
-            cancelResetButton=SettingsButton(panel,"Keep my settings",new Vector2(-155,-76),new Vector2(270,46),CancelSettingsReset);
-            SettingsButton(panel,"Restore defaults",new Vector2(155,-76),new Vector2(270,46),ResetDefaults);
+            note.rectTransform.sizeDelta=new Vector2(820,84);
+            SettingsRule(panel,"Reset Bottom Rule",new Vector2(0,-44),680);
+            cancelResetButton=SettingsButton(panel,"Keep my settings",new Vector2(-190,-108),new Vector2(320,56),CancelSettingsReset);
+            var confirm=SettingsButton(panel,"Restore defaults",new Vector2(190,-108),new Vector2(320,56),ResetDefaults);
+            MenuReadability.HideFocusWings(cancelResetButton);MenuReadability.HideFocusWings(confirm);
+            cancelResetButton.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=confirm,selectOnRight=confirm};
+            confirm.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=cancelResetButton,selectOnRight=cancelResetButton};
             settingsResetPanel.SetActive(false);
         }
         public void RequestSettingsReset()
@@ -463,6 +466,8 @@ namespace TheLightenRoad.Frontend
             foreach(var tab in settingsTabs)if(tab!=null)tab.interactable=false;
             resetSettingsButton.interactable=false;settingsDoneButton.interactable=false;
             settingsResetPanel.SetActive(true);
+            settingsDoneButton.gameObject.SetActive(false);resetSettingsButton.gameObject.SetActive(false);settingsSaveStatus.gameObject.SetActive(false);
+            RefreshSettingsFooterPrompts();
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(cancelResetButton.gameObject);
         }
         public void CancelSettingsReset()

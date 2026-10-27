@@ -1594,10 +1594,10 @@ namespace TheLightenRoad.Frontend
             }
 
             controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right across the archive", 135f, 0);
-            controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Variable height jump and ledge climb", 84f, 1);
+            controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Hold to jump higher; release for a short hop", 84f, 1);
             controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f, 2);
-            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Light pulse to reveal hidden runes", -18f, 3);
-            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Channel embers into ancient conduits", -69f, 4);
+            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", -18f, 3);
+            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", -69f, 4);
             controlsRowKeyLabels[5] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f, 5);
 
             BuildControllerGuide(surface);
@@ -1726,68 +1726,23 @@ namespace TheLightenRoad.Frontend
         {
             var surface = CreateEtherealSubViewFrame(credits, "CREDITS", "THE LIGHTEN ROAD TEAM");
 
-            CreateCenteredCreditEntry(
-                surface,
-                "SİRAÇ GÖKTUĞ ŞİMŞEK",
-                "GAME DESIGN, MOVEMENT, LANTERN & UI SYSTEMS",
-                "Player motor, lantern mechanics, audio architecture & user interface",
-                148f);
-
-            CreateCenteredCreditEntry(
-                surface,
-                "KEMAL",
-                "LEVEL DESIGN, FLOODED MECHANISMS & PUZZLES",
-                "Ember vein conduits, electrified water hazards & puzzle chambers",
-                52f);
-
-            CreateCenteredCreditEntry(
-                surface,
-                "FURKAN",
-                "TUTORIAL CHAMBER DESIGN & MECHANICS PROTOTYPE",
-                "Opening sanctuary layout, rune crossings & player onboarding flow",
-                -44f);
-
-            CreateCenteredCreditEntry(
-                surface,
-                "AUDIO & ART ASSETS",
-                "SOUND DESIGN, MUSIC & SPECIAL THANKS",
-                "Atmospheric score, foley sound effects, pixel art & visual resources",
-                -140f);
-
-            creditsFirst = CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(0f, -268f), ShowHome, isPrimary: true, width: 310f);
+            CreateCenteredCreditEntry(surface,"SİRAÇ GÖKTUĞ ŞİMŞEK  ·  @unitybtw","Game Developer",178);
+            CreateCenteredCreditEntry(surface,"KEMAL  ·  @kemal-berke","Game Developer",88);
+            CreateCenteredCreditEntry(surface,"CAN  ·  @benesas","Artist",-2);
+            CreateCenteredCreditEntry(surface,"MAKSIM  ·  @Ichnolith","Artist",-92);
+            CreateCenteredCreditEntry(surface,"FURKAN  ·  @aeshmacodex","Game Designer",-182);
+            var attribution=CreateLabel("Team signature",surface,"Made by The Lighten Road team.",18f,moonlightSilver,new Vector2(1040,30),Vector2.one*.5f,new Vector2(0,-254),Vector2.one*.5f);
+            attribution.alignment=TextAlignmentOptions.Center;
+            creditsFirst=CreateEtherealActionButton(surface,"Back",new Vector2(0,-322),ShowHome,isPrimary:true,width:360);
         }
 
-        private void CreateCenteredCreditEntry(RectTransform parent, string name, string role, string details, float yPos)
+        private void CreateCenteredCreditEntry(RectTransform parent,string name,string role,float yPos)
         {
-            var entry = CreateAnchoredRect(name, parent, new Vector2(760f, 84f), new Vector2(0.5f, 0.5f), new Vector2(0f, yPos));
-
-            var aura = CreateAnchoredRect("Credit Lantern Glow", entry, new Vector2(480f, 64f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            var auraImg = aura.gameObject.AddComponent<Image>();
-            auraImg.sprite = softRadialSprite;
-            auraImg.color = new Color(1.0f, 0.72f, 0.28f, 0.08f);
-            auraImg.raycastTarget = false;
-
-            var nameTxt = CreateLabel("Name", entry, name, 20f, radiantIvory, new Vector2(720f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 22f));
-            nameTxt.rectTransform.pivot = Vector2.one * 0.5f;
-            nameTxt.alignment = TextAlignmentOptions.Center;
-            nameTxt.fontStyle = FontStyles.Bold;
-            nameTxt.characterSpacing = 4.5f;
-
-            var roleTxt = CreateLabel("Role", entry, role, 11f, amberGold, new Vector2(720f, 18f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
-            roleTxt.rectTransform.pivot = Vector2.one * 0.5f;
-            roleTxt.alignment = TextAlignmentOptions.Center;
-            roleTxt.fontStyle = FontStyles.Bold;
-            roleTxt.characterSpacing = 3.0f;
-
-            var detTxt = CreateLabel("Details", entry, details, 12f, moonlightSilver, new Vector2(720f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -20f));
-            detTxt.rectTransform.pivot = Vector2.one * 0.5f;
-            detTxt.alignment = TextAlignmentOptions.Center;
-
-            var div = CreateAnchoredRect("Divider", entry, new Vector2(440f, 2f), new Vector2(0.5f, 0.5f), new Vector2(0f, -38f));
-            var divImg = div.gameObject.AddComponent<Image>();
-            divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.66f, 0.78f, 0.94f, 0.30f);
-            divImg.raycastTarget = false;
+            var entry=CreateAnchoredRect(name,parent,new Vector2(1080,76),Vector2.one*.5f,new Vector2(0,yPos));
+            var nameTxt=CreateLabel("Name",entry,name,24f,radiantIvory,new Vector2(1040,34),Vector2.one*.5f,new Vector2(0,20),Vector2.one*.5f);
+            nameTxt.alignment=TextAlignmentOptions.Center;nameTxt.characterSpacing=.6f;
+            var roleTxt=CreateLabel("Role",entry,role,20f,amberGold,new Vector2(1040,30),Vector2.one*.5f,new Vector2(0,-16),Vector2.one*.5f);
+            roleTxt.alignment=TextAlignmentOptions.Center;
         }
 
         // =====================================================================
@@ -1799,6 +1754,7 @@ namespace TheLightenRoad.Frontend
             var surface = CreateAnchoredRect("Quit Ethereal Frame", quit, new Vector2(760f, 420f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var surfHit = surface.gameObject.AddComponent<Image>();
             surfHit.color = Color.clear;
+            surface.gameObject.AddComponent<MenuReadability>().ContentSize=new Vector2(1000,560);
 
             if (topFiligreeSprite != null)
             {
@@ -1809,7 +1765,7 @@ namespace TheLightenRoad.Frontend
                 topImg.raycastTarget = false;
             }
 
-            var tag = CreateLabel("Quit Tag", surface, "-   EXIT GAME   -", 11.5f, moonlightSilver, new Vector2(620f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 102f));
+            var tag = CreateLabel("Quit Tag", surface, "-   EXIT GAME   -", 20f, moonlightSilver, new Vector2(800f, 32f), new Vector2(0.5f, 0.5f), new Vector2(0f, 122f));
             tag.rectTransform.pivot = Vector2.one * 0.5f;
             tag.alignment = TextAlignmentOptions.Center;
             tag.characterSpacing = 6f;
@@ -1826,12 +1782,16 @@ namespace TheLightenRoad.Frontend
             botImg.color = new Color(0.86f, 0.92f, 1.0f, 0.85f);
             botImg.raycastTarget = false;
 
-            var note = CreateLabel("Quit Note", surface, "Any unsaved progress will be lost.\nYour settings will remain saved.", 14f, moonlightSilver, new Vector2(620f, 54f), new Vector2(0.5f, 0.5f), new Vector2(0f, -45f));
+            var note = CreateLabel("Quit Note", surface, "Your completed chapters and settings are saved.\nProgress within the current chamber is not saved.", 20f, moonlightSilver, new Vector2(850f, 72f), new Vector2(0.5f, 0.5f), new Vector2(0f, -45f));
             note.rectTransform.pivot = Vector2.one * 0.5f;
             note.alignment = TextAlignmentOptions.Center;
 
-            quitFirst = CreateEtherealActionButton(surface, "Cancel", new Vector2(-165f, -135f), ShowHome, isPrimary: true, width: 260f);
-            CreateEtherealActionButton(surface, "Quit", new Vector2(165f, -135f), ConfirmQuit, isPrimary: false, width: 260f);
+            quitFirst = CreateEtherealActionButton(surface, "Cancel", new Vector2(-190f, -145f), ShowHome, isPrimary: true, width: 320f);
+            var confirm=CreateEtherealActionButton(surface,"Quit",new Vector2(190f,-145f),ConfirmQuit,isPrimary:false,width:320f);
+            MenuReadability.HideFocusWings((Button)quitFirst);MenuReadability.HideFocusWings(confirm);
+            var cancel=(Button)quitFirst;
+            cancel.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=confirm,selectOnRight=confirm};
+            confirm.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=cancel,selectOnRight=cancel};
         }
 
         // =====================================================================
@@ -1841,7 +1801,7 @@ namespace TheLightenRoad.Frontend
         private RectTransform CreateEtherealSubViewFrame(RectTransform viewRoot, string heading, string subheading)
         {
             var container = CreateAnchoredRect("Ethereal Subview Container", viewRoot, new Vector2(1040f, 800f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            if (viewRoot == settings || viewRoot == controls) container.gameObject.AddComponent<MenuReadability>();
+            if (viewRoot == settings || viewRoot == controls || viewRoot == credits) container.gameObject.AddComponent<MenuReadability>();
             var containerHit = container.gameObject.AddComponent<Image>();
             containerHit.color = Color.clear;
 

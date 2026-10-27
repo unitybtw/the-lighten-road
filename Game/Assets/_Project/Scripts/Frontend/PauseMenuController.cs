@@ -1048,8 +1048,8 @@ namespace TheLightenRoad.Frontend
             pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y, 0);
             pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE ]", "JUMP", "Jump and variable jump height", y - step, 1);
             pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2, 2);
-            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Light pulse to reveal hidden surroundings", y - step * 3, 3);
-            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E ]", "INTERACT", "Activate ember veins and mechanisms", y - step * 4, 4);
+            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", y - step * 3, 3);
+            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", y - step * 4, 4);
             pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5, 5);
 
             // Quick options bar: Prompt Style and Vibration

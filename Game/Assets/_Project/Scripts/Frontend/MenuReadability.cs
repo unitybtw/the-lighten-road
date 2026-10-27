@@ -86,7 +86,7 @@ namespace TheLightenRoad.Frontend
             }
         }
         // Dense device tabs retain their focus glow without decorative wings crossing adjacent labels.
-        public static void CompactDeviceTab(Button button)
+        public static void HideFocusWings(Button button)
         {
             var focus=button.GetComponent<SettingsLightFocus>();
             if(focus!=null)
@@ -95,6 +95,10 @@ namespace TheLightenRoad.Frontend
                 if(focus.RightPointer!=null)focus.RightPointer.gameObject.SetActive(false);
             }
             var wings=button.transform.Find("Wings Container");if(wings!=null)wings.gameObject.SetActive(false);
+        }
+        public static void CompactDeviceTab(Button button)
+        {
+            HideFocusWings(button);
             if(button.transform.Find("Selection rule")!=null)return;
             var marker=new GameObject("Selection rule",typeof(RectTransform),typeof(CanvasRenderer),typeof(Image));
             marker.transform.SetParent(button.transform,false);
