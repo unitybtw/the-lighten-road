@@ -60,12 +60,13 @@ namespace TheLightenRoad.Frontend
             bool index=IsOptionsIndex;
             var reset=settingsFooterBar.Find("Slot_Reset");if(reset!=null)reset.gameObject.SetActive(!index);
             var tabs=settingsFooterBar.Find("Slot_Tab");if(tabs!=null)tabs.gameObject.SetActive(!index);
-            var select=settingsFooterBar.Find("Slot_Select");if(select!=null)((RectTransform)select).anchoredPosition=new Vector2(index?-110:-320,0);
-            var back=settingsFooterBar.Find("Slot_Back");if(back!=null)((RectTransform)back).anchoredPosition=new Vector2(index?110:-110,0);
+            var select=settingsFooterBar.Find("Slot_Select");if(select!=null)((RectTransform)select).anchoredPosition=new Vector2(index?-150:-390,0);
+            var back=settingsFooterBar.Find("Slot_Back");if(back!=null)((RectTransform)back).anchoredPosition=new Vector2(index?150:-130,0);
         }
         private void OpenOptionsIndex()
         {
             settingsSection=-1;optionsIndex.SetActive(true);settingsResetPanel.SetActive(false);
+            ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(0,-306);
             foreach(var section in settingsSections)section.SetActive(false);
             foreach(var tab in settingsTabs){tab.interactable=true;var focus=tab.GetComponent<SettingsLightFocus>();if(focus!=null)focus.IsCurrent=false;}
             settingsDoneButton.interactable=true;resetSettingsButton.gameObject.SetActive(false);settingsSaveStatus.gameObject.SetActive(false);
@@ -77,6 +78,7 @@ namespace TheLightenRoad.Frontend
         {
             if(optionsIndex==null)return;
             optionsIndex.SetActive(false);
+            ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(196,-306);
             optionsHeading.text=new[]{"Audio","Video","Controller","Accessibility"}[page];
             optionsSubheading.gameObject.SetActive(false);
             resetSettingsButton.gameObject.SetActive(true);settingsSaveStatus.gameObject.SetActive(true);

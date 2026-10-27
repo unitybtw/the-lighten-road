@@ -201,6 +201,7 @@ namespace TheLightenRoad.Frontend
             BuildSettingsReset(surface);
             BuildSettingsFooter(surface);
             BuildOptionsIndex(surface);
+            ApplySettingsReadability(surface);
             SyncSettingsUI();
             OpenOptionsIndex();
         }
@@ -311,7 +312,7 @@ namespace TheLightenRoad.Frontend
                 {
                     footerSelectIcon.sprite = null;
                     footerSelectIcon.color = Color.clear;
-                    if (footerSelectText != null) footerSelectText.text = "[ENTER / SPACE] SELECT";
+                    if (footerSelectText != null) footerSelectText.text = "[ENTER] SELECT";
                 }
             }
 
@@ -343,7 +344,7 @@ namespace TheLightenRoad.Frontend
                 {
                     footerResetIcon.sprite = null;
                     footerResetIcon.color = Color.clear;
-                    if (footerResetText != null) footerResetText.text = "[R] RESTORE DEFAULTS";
+                    if (footerResetText != null) footerResetText.text = "[R] DEFAULTS";
                 }
             }
 
@@ -432,7 +433,7 @@ namespace TheLightenRoad.Frontend
                 if(marker!=null)marker.gameObject.SetActive(active);
             }
             if(frameRateHint!=null)frameRateHint.text=MenuPreferences.VSync
-                ?"Controlled by V-Sync. Turn it off to choose a limit."
+                ?"Turn off V-Sync to set a limit."
                 :"Maximum frame rate limit.";
         }
 
@@ -447,7 +448,7 @@ namespace TheLightenRoad.Frontend
             SettingsRule(panel,"Reset Top Rule",new Vector2(0,122),520);
             var head=SettingsText(panel,"RESTORE DEFAULT SETTINGS?",new Vector2(0,82),24,radiantIvory,660);
             head.alignment=TextAlignmentOptions.Center;head.fontStyle=FontStyles.Bold;head.characterSpacing=4f;
-            var note=SettingsText(panel,"Audio, display and accessibility preferences will return to their defaults.\nYour chapter progress will be kept.",new Vector2(0,18),14.5f,moonlightSilver,660);
+            var note=SettingsText(panel,"Restore audio, display and accessibility options.\nYour chapter progress will be kept.",new Vector2(0,18),14.5f,moonlightSilver,660);
             note.alignment=TextAlignmentOptions.Center;
             note.rectTransform.sizeDelta=new Vector2(660,72);
             SettingsRule(panel,"Reset Bottom Rule",new Vector2(0,-32),520);

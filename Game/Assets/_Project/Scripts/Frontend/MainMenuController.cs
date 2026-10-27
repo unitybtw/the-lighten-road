@@ -989,6 +989,7 @@ namespace TheLightenRoad.Frontend
             BuildFramelessControlsView();
             BuildFramelessCreditsView();
             BuildFramelessQuitView();
+            ApplyControlsReadability();
 
             homeGroup.alpha = 0f;
             realmsGroup.alpha = 0f;
@@ -1840,6 +1841,7 @@ namespace TheLightenRoad.Frontend
         private RectTransform CreateEtherealSubViewFrame(RectTransform viewRoot, string heading, string subheading)
         {
             var container = CreateAnchoredRect("Ethereal Subview Container", viewRoot, new Vector2(1040f, 800f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            if (viewRoot == settings || viewRoot == controls) container.gameObject.AddComponent<MenuReadability>();
             var containerHit = container.gameObject.AddComponent<Image>();
             containerHit.color = Color.clear;
 

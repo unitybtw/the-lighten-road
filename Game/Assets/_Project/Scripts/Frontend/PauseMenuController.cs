@@ -26,7 +26,7 @@ namespace TheLightenRoad.Frontend
     /// dynamic chamber title and memento recovery badges, and audio/display/motion settings.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PauseMenuController : MonoBehaviour
+    public sealed partial class PauseMenuController : MonoBehaviour
     {
         public const string MainMenuScenePath = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
 
@@ -753,7 +753,9 @@ namespace TheLightenRoad.Frontend
 
             // Central Frameless Modal Container
             var modal = new GameObject("ModalContainer", typeof(RectTransform));
-            modal.transform.SetParent(canvasGo.transform, false);
+            var readableLayer = CreateStretchRect("Readable menu safe canvas", (RectTransform)canvasGo.transform);
+            readableLayer.gameObject.AddComponent<MenuReadability>();
+            modal.transform.SetParent(readableLayer, false);
             var mRect = modal.GetComponent<RectTransform>();
             mRect.anchorMin = mRect.anchorMax = new Vector2(0.5f, 0.5f);
             mRect.pivot = new Vector2(0.5f, 0.5f);
@@ -801,6 +803,7 @@ namespace TheLightenRoad.Frontend
             BuildSettingsPanel(modal.transform);
             BuildControlsPanel(modal.transform);
             BuildPauseFooter(modal.transform);
+            ApplyPauseReadability();
 
             ShowMainView();
             currentView = "none";
