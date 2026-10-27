@@ -194,23 +194,21 @@ namespace TheLightenRoad.Frontend
             ControllerGlyphService.OnPromptStyleChanged += RefreshPauseFooterPrompts;
         }
 
-        private void OnEnable()
+        private void OnDisable()
         {
-            if (!IsPaused)
-            {
-                Time.timeScale = 1f;
-            }
+            if (Instance != this) return;
+            if (IsPaused) Resume();
+            if (restoreInteractions != null) StopCoroutine(restoreInteractions);
+            restoreInteractions = null;
+            GameControls.BlockGameplay(this, false);
+            RestoreInteractions();
         }
 
         private void OnDestroy()
         {
             destroying = true;
             ControllerGlyphService.OnPromptStyleChanged -= RefreshPauseFooterPrompts;
-            if (Instance == this)
-            {
-                Instance = null;
-            }
-            Time.timeScale = 1f;
+            bool ownsPause = Instance == this;
             if (transitionRoutine != null)
             {
                 StopCoroutine(transitionRoutine);
@@ -221,11 +219,12 @@ namespace TheLightenRoad.Frontend
                 StopCoroutine(subViewRoutine);
                 subViewRoutine = null;
             }
-            if (IsPaused)
+            if (ownsPause)
             {
-                Resume();
+                if (IsPaused) Resume();
+                IsPaused = false;
+                Instance = null;
             }
-            IsPaused = false;
             GameControls.BlockGameplay(this, false);
             RestoreInteractions();
 
@@ -574,7 +573,7 @@ namespace TheLightenRoad.Frontend
                         actor.enabled = false;
                     }
             }
-            else if (destroying) RestoreInteractions();
+            else if (destroying || !isActiveAndEnabled) RestoreInteractions();
             else restoreInteractions = StartCoroutine(RestoreInteractionsAfterMenuInput());
         }
 

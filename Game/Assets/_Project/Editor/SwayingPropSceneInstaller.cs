@@ -5,40 +5,26 @@ using TheLightenRoad.Effects;
 
 namespace TheLightenRoad.Editor
 {
-    [InitializeOnLoad]
     public static class SwayingPropSceneInstaller
     {
         public const string PrefabPath = "Assets/_Project/Prefabs/HangingCageLamp.prefab";
-        private const string InstalledKey = "TheLightenRoad.SwayingPropsInstalled_v2";
-
-        static SwayingPropSceneInstaller()
-        {
-            EditorApplication.delayCall += AutoInstallOnce;
-        }
-
-        private static void AutoInstallOnce()
-        {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-            if (SessionState.GetBool(InstalledKey, false)) return;
-            SessionState.SetBool(InstalledKey, true);
-            InstallAll();
-        }
-
         [MenuItem("Tools/The Lighten Road/Install Swaying Props to Scenes")]
         public static void InstallAll()
         {
-            string originalScene = EditorSceneManager.GetActiveScene().path;
-
-            var prefab = CreateOrUpdatePrefab();
-            InstallToArchiveTestChamber(prefab);
-            InstallToFurkanTutorial(prefab);
-
-            if (!string.IsNullOrEmpty(originalScene) && System.IO.File.Exists(originalScene))
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            var originalSetup = EditorSceneManager.GetSceneManagerSetup();
+            try
             {
-                EditorSceneManager.OpenScene(originalScene, OpenSceneMode.Single);
+                var prefab = CreateOrUpdatePrefab();
+                InstallToArchiveTestChamber(prefab);
+                InstallToFurkanTutorial(prefab);
+                AssetDatabase.SaveAssets();
             }
-
-            AssetDatabase.SaveAssets();
+            finally
+            {
+                EditorSceneManager.RestoreSceneManagerSetup(originalSetup);
+            }
             AssetDatabase.Refresh();
             Debug.Log("[SwayingPropSceneInstaller] Successfully installed Hanging Cage Lamps and positioned test ember in scenes.");
         }

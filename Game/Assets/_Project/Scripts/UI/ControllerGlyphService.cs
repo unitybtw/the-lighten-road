@@ -212,6 +212,7 @@ namespace TheLightenRoad.UI
             UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= HandleHapticSceneChange;
             UnbindPlayer();
             HaltRumble();
+            ReleaseAdaptiveTriggers();
         }
 
         private void Update()

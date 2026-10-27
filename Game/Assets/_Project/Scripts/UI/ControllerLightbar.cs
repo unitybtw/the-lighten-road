@@ -36,6 +36,9 @@ namespace TheLightenRoad.UI
         private Coroutine activeSpecialSequence;
         private double nextBluetoothUpdate;
         private Color lastSentColor = Color.black;
+        private int lastSentPadId = -1;
+        private bool focusLost, applicationPaused;
+        private bool Suspended => focusLost || applicationPaused;
 
         public static bool Enabled
         {
@@ -76,6 +79,7 @@ namespace TheLightenRoad.UI
             instance = this;
             baseAmbientColor = AmberLantern;
             currentDisplayedColor = AmberLantern;
+            DualSenseBluetoothRumble.LightbarEnabled = Enabled;
 
             LanternController.AnyFlareChanged += HandleAnyFlareChanged;
             EmberPickup.EmberCollected += HandleEmberCollected;
@@ -87,14 +91,31 @@ namespace TheLightenRoad.UI
             LanternController.AnyFlareChanged -= HandleAnyFlareChanged;
             EmberPickup.EmberCollected -= HandleEmberCollected;
             SceneManager.sceneLoaded -= HandleSceneLoaded;
-            ApplyColorImmediate(ExtinguishedBlack);
-            if (instance == this) instance = null;
+            if (instance == this)
+            {
+                ApplyColorImmediate(ExtinguishedBlack);
+                instance = null;
+            }
         }
 
         private void OnApplicationPause(bool paused)
         {
-            if (paused) ApplyColorImmediate(ExtinguishedBlack);
-            else ApplyColorImmediate(currentDisplayedColor);
+            applicationPaused = paused;
+            ApplyColorImmediate(currentDisplayedColor);
+        }
+
+        private void OnApplicationFocus(bool focused)
+        {
+            focusLost = !focused;
+            ApplyColorImmediate(currentDisplayedColor);
+        }
+
+        private void OnDisable()
+        {
+            if (instance != this) return;
+            if (activeSpecialSequence != null) StopCoroutine(activeSpecialSequence);
+            activeSpecialSequence = null;
+            ApplyColorImmediate(ExtinguishedBlack);
         }
 
         private void OnApplicationQuit()
@@ -248,7 +269,7 @@ namespace TheLightenRoad.UI
 
         private void Update()
         {
-            if (!Enabled) return;
+            if (!Enabled || Suspended) return;
             if (activeSpecialSequence != null) return;
 
             Color targetColor = baseAmbientColor;
@@ -289,7 +310,7 @@ namespace TheLightenRoad.UI
             double now = Time.realtimeSinceStartupAsDouble;
             if (now >= nextBluetoothUpdate)
             {
-                if (ColorDistance(currentDisplayedColor, lastSentColor) > 0.015f)
+                if ((ControllerGlyphService.GetActiveGamepad()?.deviceId ?? -1) != lastSentPadId || ColorDistance(currentDisplayedColor, lastSentColor) > 0.015f)
                 {
                     ApplyColorImmediate(currentDisplayedColor);
                     nextBluetoothUpdate = now + 0.040; // 25 Hz
@@ -300,9 +321,9 @@ namespace TheLightenRoad.UI
         public void ApplyColorImmediate(Color color)
         {
             currentDisplayedColor = color;
-            lastSentColor = color;
+            DualSenseBluetoothRumble.LightbarEnabled = Enabled;
 
-            if (!Enabled && color != ExtinguishedBlack)
+            if (!Enabled || Suspended || !isActiveAndEnabled)
             {
                 color = ExtinguishedBlack;
             }
@@ -317,12 +338,15 @@ namespace TheLightenRoad.UI
             {
                 if (DualSenseBluetoothRumble.IsBluetooth(pad))
                 {
-                    DualSenseBluetoothRumble.SetLightbarColor(pad, c32);
+                    if (!DualSenseBluetoothRumble.SetLightbarColor(pad, c32)) return;
                 }
                 else if (pad is DualShockGamepad ds)
                 {
                     ds.SetLightBarColor(color);
                 }
+                else return;
+                lastSentColor = color;
+                lastSentPadId = pad.deviceId;
             }
             catch (System.Exception)
             {

@@ -16,6 +16,8 @@ namespace TheLightenRoad.UI
         private bool hapticsFocusLost, hapticsAppPaused;
         private bool HapticsSuspended => hapticsFocusLost || hapticsAppPaused;
         private LanternController boundLantern;
+        private Gamepad adaptiveTriggerPad;
+        private bool adaptiveTriggerPending;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void BootstrapHaptics() => EnsureExists();
@@ -43,6 +45,7 @@ namespace TheLightenRoad.UI
         public void EvaluateAdaptiveTriggers(bool force = false)
         {
             var pad = GetActiveGamepad();
+            if (adaptiveTriggerPad != null && adaptiveTriggerPad != pad) ReleaseAdaptiveTriggers();
             if (pad == null || !pad.added || !DualSenseBluetoothRumble.IsBluetooth(pad))
             {
                 activeLanternTrigger = DualSenseTriggerEffect.Off;
@@ -50,7 +53,7 @@ namespace TheLightenRoad.UI
             }
 
             DualSenseTriggerEffect target = DualSenseTriggerEffect.Off;
-            if (AdaptiveTriggersEnabled && !HapticsSuspended && Time.timeScale > 0f && boundLantern != null)
+            if (isActiveAndEnabled && VibrationEnabled && AdaptiveTriggersEnabled && !HapticsSuspended && Time.timeScale > 0f && boundLantern != null && boundLantern.isActiveAndEnabled)
             {
                 // When lantern is unlit: Two-Stage Mechanical Flint Lock (Section mode: 0.35 to 0.65 threshold)
                 // When lantern is flared (burning): Trigger is released and completely free (Off)
@@ -64,13 +67,18 @@ namespace TheLightenRoad.UI
                 }
             }
 
-            if (force || !activeLanternTrigger.Equals(target))
+            bool changedPad = adaptiveTriggerPad != pad;
+            adaptiveTriggerPad = pad;
+            if (force || changedPad || adaptiveTriggerPending || !activeLanternTrigger.Equals(target))
             {
                 activeLanternTrigger = target;
                 if (activeRumbleRoutine == null)
                 {
-                    DualSenseBluetoothRumble.Send(pad, 0f, 0f, DualSenseTriggerEffect.Off, activeLanternTrigger);
+                    // Keep ownership even on failure so switching pads can still release the old one.
+                    adaptiveTriggerPending = !DualSenseBluetoothRumble.Send(pad, 0f, 0f,
+                        DualSenseTriggerEffect.Off, activeLanternTrigger);
                 }
+                else adaptiveTriggerPending = true;
             }
         }
 
@@ -104,7 +112,22 @@ namespace TheLightenRoad.UI
             instance.TriggerRumble(Mathf.Clamp01(lowFrequency), Mathf.Clamp01(highFrequency), duration, 1, false, .008f);
         }
 
-        public static void StopRumble() { if (instance != null) instance.HaltRumble(); }
+        public static void StopRumble()
+        {
+            if (instance == null) return;
+            instance.HaltRumble();
+            instance.ReleaseAdaptiveTriggers();
+        }
+
+        private void ReleaseAdaptiveTriggers()
+        {
+            var previous = adaptiveTriggerPad;
+            adaptiveTriggerPad = null;
+            adaptiveTriggerPending = false;
+            activeLanternTrigger = DualSenseTriggerEffect.Off;
+            if (previous != null && previous.added)
+                SetMotors(previous, 0f, 0f, DualSenseTriggerEffect.Off, DualSenseTriggerEffect.Off);
+        }
         private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         private void TriggerRumble(float low, float high, float duration, int priority, bool allowPaused, float attack, HapticCue? cue = null, float strength = 1f)
@@ -194,7 +217,7 @@ namespace TheLightenRoad.UI
         }
         private void HandleEmberCollected() { PlayHaptic(HapticCue.EmberPickup); DualSenseSpeaker.Play(SpeakerCue.Pickup); }
         private void HandleEmberBroken() { PlayHaptic(HapticCue.EmberBreak); DualSenseSpeaker.Play(SpeakerCue.Break); }
-        private void HandleHapticSceneChange(Scene previous, Scene next) { HaltRumble(); EvaluateAdaptiveTriggers(true); }
+        private void HandleHapticSceneChange(Scene previous, Scene next) { HaltRumble(); ReleaseAdaptiveTriggers(); }
         private void HandleHapticDeviceChange(InputDevice device, InputDeviceChange change)
         {
             if (device == rumblePad && (change == InputDeviceChange.Removed || change == InputDeviceChange.Disconnected ||
@@ -203,6 +226,6 @@ namespace TheLightenRoad.UI
         }
         private void OnApplicationFocus(bool focused) { hapticsFocusLost = !focused; if (!focused) HaltRumble(); EvaluateAdaptiveTriggers(true); }
         private void OnApplicationPause(bool paused) { hapticsAppPaused = paused; if (paused) HaltRumble(); EvaluateAdaptiveTriggers(true); }
-        private void OnApplicationQuit() => HaltRumble();
+        private void OnApplicationQuit() { HaltRumble(); ReleaseAdaptiveTriggers(); }
     }
 }

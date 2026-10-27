@@ -1,5 +1,6 @@
 using System;
 using TheLightenRoad.Lantern;
+using TheLightenRoad.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -99,6 +100,7 @@ namespace TheLightenRoad.Player
 
         private void OnEnable()
         {
+            GameControls.BlockGameplay(this, state != RespawnState.Alive);
             if (fuel != null)
             {
                 fuel.FuelDepleted += HandleFuelDepleted;
@@ -108,6 +110,7 @@ namespace TheLightenRoad.Player
 
         private void OnDisable()
         {
+            GameControls.BlockGameplay(this, false);
             if (fuel != null)
             {
                 fuel.FuelDepleted -= HandleFuelDepleted;
@@ -176,6 +179,7 @@ namespace TheLightenRoad.Player
                 return;
 
             state = RespawnState.Dying;
+            GameControls.BlockGameplay(this, true);
             lastDeathReason = reason;
             stateTimer = 0f;
 
@@ -242,6 +246,7 @@ namespace TheLightenRoad.Player
                 motor.enabled = true;
 
             state = RespawnState.Alive;
+            GameControls.BlockGameplay(this, false);
         }
 
         public void SetCheckpoint(Vector3 newSpawn)

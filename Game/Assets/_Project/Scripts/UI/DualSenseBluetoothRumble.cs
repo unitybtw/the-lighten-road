@@ -118,7 +118,7 @@ namespace TheLightenRoad.UI
         public static void ResetState()
         {
             NextMotorWrite.Clear();
-            Sequences.Clear();
+            lock (Sequences) Sequences.Clear();
             LastSentLeftTrigger.Clear();
             LastSentRightTrigger.Clear();
         }
@@ -146,20 +146,23 @@ namespace TheLightenRoad.UI
         {
             if (pad == null || !pad.added) return false;
             Color32 activeColor = lightbar ?? (LightbarEnabled ? CurrentLightbarColor : new Color32(0, 0, 0, 255));
+            bool needUpdateRight = !LastSentRightTrigger.TryGetValue(pad.deviceId, out var prevR) || !prevR.Equals(rightTrigger);
+            bool needUpdateLeft = !LastSentLeftTrigger.TryGetValue(pad.deviceId, out var prevL) || !prevL.Equals(leftTrigger);
             bool stopping = low <= 0f && high <= 0f && !leftTrigger.IsActive && !rightTrigger.IsActive;
             double now = Time.realtimeSinceStartupAsDouble;
-            if (!stopping && NextMotorWrite.TryGetValue(pad.deviceId, out double next) && now < next) return true;
+            if (!stopping && NextMotorWrite.TryGetValue(pad.deviceId, out double next) && now < next)
+                return !needUpdateLeft && !needUpdateRight;
             NextMotorWrite[pad.deviceId] = stopping ? 0 : now + (DualSenseSpeaker.IsPlaying ? 1.0 / 30 : 1.0 / 60);
             byte sequence = NextSequence(pad.deviceId);
 
-            bool needUpdateRight = !LastSentRightTrigger.TryGetValue(pad.deviceId, out var prevR) || !prevR.Equals(rightTrigger);
-            bool needUpdateLeft = !LastSentLeftTrigger.TryGetValue(pad.deviceId, out var prevL) || !prevL.Equals(leftTrigger);
-
-            LastSentRightTrigger[pad.deviceId] = rightTrigger;
-            LastSentLeftTrigger[pad.deviceId] = leftTrigger;
-
             var command = BluetoothOutputCommand.Create(low, high, sequence, leftTrigger, rightTrigger, needUpdateLeft, needUpdateRight, activeColor);
             LastCommandResult = pad.ExecuteCommand(ref command);
+            if (LastCommandResult >= 0)
+            {
+                LastSentRightTrigger[pad.deviceId] = rightTrigger;
+                LastSentLeftTrigger[pad.deviceId] = leftTrigger;
+            }
+            else NextMotorWrite.Remove(pad.deviceId);
             return LastCommandResult >= 0;
         }
 
@@ -169,7 +172,11 @@ namespace TheLightenRoad.UI
             if (pad == null || !pad.added) return false;
             if (IsBluetooth(pad))
             {
-                return Send(pad, 0f, 0f, DualSenseTriggerEffect.Off, DualSenseTriggerEffect.Off, color);
+                // LED updates must not write motors or trigger effects: those channels have their own owner.
+                var command = BluetoothOutputCommand.Create(0f, 0f, NextSequence(pad.deviceId),
+                    DualSenseTriggerEffect.Off, DualSenseTriggerEffect.Off, false, false, color, false);
+                LastCommandResult = pad.ExecuteCommand(ref command);
+                return LastCommandResult >= 0;
             }
             if (pad is DualShockGamepad ds)
             {
@@ -203,13 +210,13 @@ namespace TheLightenRoad.UI
         }
 
         /// <summary>Constructs a 78-byte DualSense Bluetooth output report with independent left and right adaptive trigger configurations and RGB lightbar support.</summary>
-        public static byte[] BuildReport(float low, float high, byte sequence, DualSenseTriggerEffect leftTrigger, DualSenseTriggerEffect rightTrigger, bool updateLeft, bool updateRight, Color32? lightbarColor = null)
+        public static byte[] BuildReport(float low, float high, byte sequence, DualSenseTriggerEffect leftTrigger, DualSenseTriggerEffect rightTrigger, bool updateLeft, bool updateRight, Color32? lightbarColor = null, bool updateMotors = true)
         {
             var report = new byte[78];
             report[0] = 0x31;
             report[1] = (byte)((sequence & 15) << 4);
             report[2] = 0x10;
-            report[3] = 0x03; // Rumble emulation flag
+            report[3] = updateMotors ? (byte)0x03 : (byte)0; // Leave motor channels untouched for LED-only updates.
 
             report[5] = EncodeMotor(high);
             report[6] = EncodeMotor(low);
@@ -341,9 +348,9 @@ namespace TheLightenRoad.UI
                 return FromReport(report);
             }
 
-            public static BluetoothOutputCommand Create(float low, float high, byte sequence, DualSenseTriggerEffect leftTrigger, DualSenseTriggerEffect rightTrigger, bool updateLeft, bool updateRight, Color32? lightbarColor = null)
+            public static BluetoothOutputCommand Create(float low, float high, byte sequence, DualSenseTriggerEffect leftTrigger, DualSenseTriggerEffect rightTrigger, bool updateLeft, bool updateRight, Color32? lightbarColor = null, bool updateMotors = true)
             {
-                var report = BuildReport(low, high, sequence, leftTrigger, rightTrigger, updateLeft, updateRight, lightbarColor);
+                var report = BuildReport(low, high, sequence, leftTrigger, rightTrigger, updateLeft, updateRight, lightbarColor, updateMotors);
                 return FromReport(report);
             }
 
