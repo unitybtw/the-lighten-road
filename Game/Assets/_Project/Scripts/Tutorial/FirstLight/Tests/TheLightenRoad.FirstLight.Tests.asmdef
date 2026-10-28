@@ -1,0 +1,1 @@
+{"name":"TheLightenRoad.FirstLight.Tests","references":["TheLightenRoad.FirstLight","TheLightenRoad.Player","TheLightenRoad.Lantern","TheLightenRoad.Frontend","TheLightenRoad.Input","TheLightenRoad.UI","Unity.InputSystem","UnityEngine.UI","Unity.TextMeshPro","Unity.RenderPipelines.Universal.2D.Runtime"],"optionalUnityReferences":["TestAssemblies"]}
