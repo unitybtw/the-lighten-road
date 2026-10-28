@@ -1,0 +1,16 @@
+Offline archive narrator
+
+Kokoro v1.0 FP16 weights: Apache-2.0
+https://huggingface.co/hexgrad/Kokoro-82M
+
+kokoro-onnx: MIT
+https://github.com/thewh1teagle/kokoro-onnx
+
+ONNX Runtime: MIT
+https://github.com/microsoft/onnxruntime
+
+espeak-ng: GPL-3.0
+https://github.com/espeak-ng/espeak-ng
+Source and license: https://github.com/espeak-ng/espeak-ng/tree/1.52.0
+
+See scripts/narration/README.md and the packaged dependency notices for distribution details.

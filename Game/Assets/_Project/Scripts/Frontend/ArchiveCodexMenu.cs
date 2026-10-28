@@ -35,6 +35,10 @@ namespace TheLightenRoad.Frontend
         private const float OpeningDuration = 2.1f;
         private Button previous,next,close;
         private AudioSource audioSource;
+        private ArchiveNarration narration;
+        private ArchiveLog narrationLog;
+        private bool narrationRequested;
+        public bool IsNarrationPlaying=>audioSource!=null && audioSource.isPlaying;
         private int selected,page;
         private float previousTime;
         private GameObject previousSelection;
@@ -48,6 +52,12 @@ namespace TheLightenRoad.Frontend
             new GameObject("Archive Codex").AddComponent<ArchiveCodexMenu>();
         }
         void Awake(){Build();}
+        void Start()
+        {
+            var catalog=CodexSession.Catalog;
+            if(catalog!=null && catalog==Resources.Load<ArchiveCatalog>("Codex/ArchiveCatalog"))
+                foreach(var log in catalog.Logs)narration.Prepare(log);
+        }
         void OnEnable()
         {
             CodexSession.Ensure();channel=CodexSession.Channel;entries.Clear();
@@ -72,21 +82,30 @@ namespace TheLightenRoad.Frontend
             }
             panel.SetActive(true);revealTime=0;opening=!wasOpen && !MenuPreferences.ReducedMotion;turnTime=1;
             Redraw();RefreshShortcuts();AnimateBook(0);
-            var log=CodexSession.Catalog.Find(id);audioSource.Stop();
-            if(log.Audio!=null){audioSource.volume=MenuPreferences.Master*MenuPreferences.Effects;audioSource.clip=log.Audio;audioSource.Play();}
+            QueueNarration(CodexSession.Catalog.Find(id));
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(close.gameObject);
         }
         public void Close()
         {
             if(panel!=null)panel.SetActive(false);
-            opening=false;turnTime=1;
+            opening=false;turnTime=1;narrationRequested=false; narrationLog=null;
             if(!IsOpen)return;
             audioSource.Stop();Time.timeScale=previousTime;GameControls.BlockGameplay(this,false);IsOpen=false;closedFrame=Time.frameCount;
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(previousSelection);
         }
         void Update()
         {
-            if(IsOpen)AnimateBook(Time.unscaledDeltaTime);
+            if(IsOpen)
+            {
+                AnimateBook(Time.unscaledDeltaTime);
+                audioSource.volume=MenuPreferences.Master*MenuPreferences.Effects;
+                if(narrationRequested && !IsAnimating)
+                {
+                    var clip=narration.GetReadyClip(narrationLog);
+                    if(clip!=null){audioSource.clip=clip;audioSource.Play();narrationRequested=false;}
+                    else if(!narration.IsPending(narrationLog))narrationRequested=false;
+                }
+            }
             var kb=Keyboard.current;var pad=GameControls.ActivePad;
             if(IsOpen)
             {
@@ -163,6 +182,10 @@ namespace TheLightenRoad.Frontend
             for(int i=0;i<9;i++)Rule(leafHinge,"Faded manuscript line",new Vector2(370-(i%3)*30,1),new Vector2(0,175-i*32),new Color(.13f,.10f,.065f,.4f));
             coverGroup.gameObject.SetActive(false);leafGroup.gameObject.SetActive(false);
         }
+        private void QueueNarration(ArchiveLog log)
+        {
+            audioSource.Stop();narrationLog=log;narrationRequested=log!=null;narration.Prepare(log);
+        }
         private int PageCount(string text)=>Mathf.Max(1,Mathf.CeilToInt((text??"").Length/(float)PageLength));
         private void Turn(int direction)
         {
@@ -171,7 +194,9 @@ namespace TheLightenRoad.Frontend
             page+=direction;
             if(page<0){selected=(selected-1+entries.Count)%entries.Count;page=PageCount(CodexSession.Catalog.Find(entries[selected]).Text)-1;}
             else if(page>=PageCount(log.Text)){selected=(selected+1)%entries.Count;page=0;}
-            audioSource.Stop();Redraw();turnTime=MenuPreferences.ReducedMotion?1:0;
+            var current=CodexSession.Catalog.Find(entries[selected]);
+            if(current!=log)QueueNarration(current);
+            Redraw();turnTime=MenuPreferences.ReducedMotion?1:0;
         }
         private void Redraw()
         {
@@ -228,6 +253,7 @@ namespace TheLightenRoad.Frontend
         private void Build()
         {
             if(EventSystem.current==null){var events=new GameObject("Codex EventSystem",typeof(EventSystem),typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));events.transform.SetParent(transform,false);}
+            narration=gameObject.AddComponent<ArchiveNarration>();
             audioSource=gameObject.AddComponent<AudioSource>();audioSource.ignoreListenerPause=true;audioSource.playOnAwake=false;
             var canvasGo=new GameObject("Codex Canvas",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));canvasGo.transform.SetParent(transform,false);
             var canvas=canvasGo.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=120;

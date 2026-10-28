@@ -45,3 +45,13 @@ graphify-out/
 .agents/
 skills-lock.json
 
+
+# Locally provisioned offline speech runtime (rebuild with scripts/narration/setup.py)
+Game/Assets/StreamingAssets/Kokoro/runtime-*/
+Game/Assets/StreamingAssets/Kokoro/runtime-*.meta
+Game/Assets/StreamingAssets/Kokoro/*.onnx
+Game/Assets/StreamingAssets/Kokoro/*.onnx.meta
+Game/Assets/StreamingAssets/Kokoro/*.bin
+Game/Assets/StreamingAssets/Kokoro/*.bin.meta
+
+scripts/narration/__pycache__/
