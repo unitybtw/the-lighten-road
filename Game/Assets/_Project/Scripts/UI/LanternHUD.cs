@@ -160,6 +160,19 @@ namespace TheLightenRoad.UI
 
         private void OnEnable()
         {
+            // Script recompilation during Play Mode loses the nonserialized slot references.
+            // Replace the generated canvas rather than ticking a stale hierarchy.
+            if (slots == null)
+            {
+                var oldCanvas = transform.Find("LanternHUD Canvas");
+                if (oldCanvas != null)
+                {
+                    oldCanvas.gameObject.SetActive(false);
+                    Destroy(oldCanvas.gameObject);
+                }
+                maxDisplaySlots = LanternFuel.MaxEmbers;
+                BuildHierarchy();
+            }
             entrance = 0f;
             lastCharges = -1;
             popupTimer = countReaction = 0f;

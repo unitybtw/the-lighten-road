@@ -100,7 +100,7 @@ namespace TheLightenRoad.Frontend
         {
             if(progress==null)return;
             progress.text=$"ARCHIVE DECRYPTION\n\n{CodexSession.Decryption:0}%\n{CodexSession.FoundCount} OF {CodexSession.Catalog?.Total??0} RECORDS";
-            decryptionFill.sizeDelta=new Vector2(230*CodexSession.Decryption/100f,2);
+            decryptionFill.sizeDelta=new Vector2(450*CodexSession.Decryption/100f,2);
             if(entries.Count==0){title.text="The archive is silent";body.text="Recover logs from Archive Terminals to reveal the Old World.";clue.text="";pages.text="";return;}
             selected=Mathf.Clamp(selected,0,entries.Count-1);var log=CodexSession.Catalog.Find(entries[selected]);
             location.text=string.IsNullOrWhiteSpace(log.Location)?"THE ARCHIVE":log.Location;
@@ -130,6 +130,32 @@ namespace TheLightenRoad.Frontend
         {
             var image=Rect(name,parent,size,pos).gameObject.AddComponent<Image>();image.color=color;image.raycastTarget=false;return image;
         }
+        private static Sprite coverSprite,pageSprite;
+        private void BookShape(Transform parent,string name,Vector2 size,Vector2 pos,Color color,bool page)
+        {
+            var image=Rect(name,parent,size,pos).gameObject.AddComponent<Image>();
+            image.sprite=BookSprite(page);image.color=color;image.raycastTarget=false;
+        }
+        private static Sprite BookSprite(bool page)
+        {
+            var cached=page?pageSprite:coverSprite;if(cached!=null)return cached;
+            const int width=256,height=160;
+            var texture=new Texture2D(width,height,TextureFormat.RGBA32,false);
+            texture.name=page?"Codex page shape":"Codex cover shape";texture.filterMode=FilterMode.Bilinear;
+            var pixels=new Color32[width*height];
+            for(int y=0;y<height;y++)for(int x=0;x<width;x++)
+            {
+                float nx=Mathf.Abs((x+.5f)/width*2-1), ny=Mathf.Abs((y+.5f)/height*2-1);
+                // Clipped outer corners and a shallow dip where the book is bound.
+                float edge=page?.95f:.94f;
+                bool inside=nx<.99f && ny<edge && nx+ny<1.84f;
+                if(!page && nx<.12f && ny>.89f)inside=false;
+                pixels[y*width+x]=new Color32(255,255,255,inside?(byte)255:(byte)0);
+            }
+            texture.SetPixels32(pixels);texture.Apply(false,true);
+            var sprite=Sprite.Create(texture,new Rect(0,0,width,height),new Vector2(.5f,.5f));
+            if(page)pageSprite=sprite;else coverSprite=sprite;return sprite;
+        }
         private Button Action(Transform parent,string text,float x,UnityEngine.Events.UnityAction callback)
         {
             var r=Rect(text,parent,new Vector2(220,60),new Vector2(x,-340));var bg=r.gameObject.AddComponent<Image>();bg.color=Color.clear;
@@ -150,27 +176,26 @@ namespace TheLightenRoad.Frontend
             var dim=overlay.gameObject.AddComponent<Image>();dim.color=new Color(.008f,.009f,.008f,.94f);
             var r=Rect("Codex reading surface",overlay,new Vector2(1260,820),Vector2.zero);r.gameObject.AddComponent<MenuReadability>();readingGroup=r.gameObject.AddComponent<CanvasGroup>();
             var gold=new Color(.8f,.65f,.4f);var ivory=new Color(.9f,.88f,.81f);
-            // Layered covers, pages and a shaded fold suggest an open, timeworn archive book.
-            Rule(r,"Book cover",new Vector2(1200,750),new Vector2(0,4),new Color(.11f,.075f,.045f,1));
-            Rule(r,"Page edges",new Vector2(1180,728),new Vector2(0,10),new Color(.34f,.27f,.17f,1));
-            Rule(r,"Left page",new Vector2(300,710),new Vector2(-415,18),new Color(.16f,.14f,.105f,1));
-            Rule(r,"Right page",new Vector2(860,710),new Vector2(165,18),new Color(.19f,.165f,.12f,1));
-            Rule(r,"Book fold shadow",new Vector2(20,710),new Vector2(-265,18),new Color(.035f,.027f,.02f,.65f));
-            Rule(r,"Book fold highlight",new Vector2(2,700),new Vector2(-254,18),new Color(.48f,.38f,.23f,.4f));
-            Rule(r,"Top brass rule",new Vector2(1100,2),new Vector2(0,368),gold*.65f);
-            Rule(r,"Footer brass rule",new Vector2(1100,1),new Vector2(0,-295),gold*.4f);
-            Rule(r,"Document spine",new Vector2(1,570),new Vector2(-265,26),gold*.3f);
-            var stamp=Label("Archive stamp",r,new Vector2(230,40),new Vector2(-415,310),22,gold);stamp.text="FIELD ARCHIVE";ArchiveMenuStyle.Apply(stamp,"Heading",22);
-            progress=Label("Decryption",r,new Vector2(230,160),new Vector2(-415,175),22,gold);
-            Rule(r,"Decryption track",new Vector2(230,2),new Vector2(-415,48),new Color(.25f,.23f,.18f));
+            // An illustrated spread is drawn as geometry, so no external texture is required.
+            BookShape(r, "Leather cover", new Vector2(1220,750), new Vector2(0,4), new Color(.075f,.045f,.025f), false);
+            BookShape(r, "Page block", new Vector2(1194,724), new Vector2(0,12), new Color(.36f,.28f,.18f), false);
+            BookShape(r, "Left parchment", new Vector2(580,696), new Vector2(-291,25), new Color(.22f,.185f,.135f), true);
+            BookShape(r, "Right parchment", new Vector2(580,696), new Vector2(291,25), new Color(.24f,.205f,.15f), true);
+            Rule(r,"Spine shadow",new Vector2(28,650),new Vector2(0,24),new Color(.035f,.025f,.016f,.7f));
+            Rule(r,"Spine glint",new Vector2(2,630),new Vector2(13,24),new Color(.65f,.5f,.3f,.35f));
+            Rule(r,"Left heading rule",new Vector2(450,1),new Vector2(-300,259),gold*.55f);
+            Rule(r,"Right heading rule",new Vector2(450,1),new Vector2(300,190),gold*.55f);
+            var stamp=Label("Archive stamp",r,new Vector2(450,40),new Vector2(-300,300),26,gold);stamp.text="THE FIELD ARCHIVE";ArchiveMenuStyle.Apply(stamp,"Heading",26);
+            progress=Label("Decryption",r,new Vector2(450,115),new Vector2(-300,175),23,gold);
+            Rule(r,"Decryption track",new Vector2(450,2),new Vector2(-300,91),new Color(.42f,.34f,.23f));
             var fill=Rule(r,"Decryption fill",new Vector2(0,2),Vector2.zero,gold);fill.rectTransform.SetParent(r.Find("Decryption track"),false);decryptionFill=fill.rectTransform;decryptionFill.anchorMin=decryptionFill.anchorMax=decryptionFill.pivot=new Vector2(0,.5f);
-            var note=Label("Archive note",r,new Vector2(230,160),new Vector2(-415,-115),20,new Color(.59f,.58f,.52f));note.text="Fragments of the Old World.\n\nRecovered records remain with you through this journey.";
-            location=Label("Record location",r,new Vector2(740,28),new Vector2(150,322),20,gold);
-            title=Label("Log title",r,new Vector2(740,70),new Vector2(150,250),32,ivory);ArchiveMenuStyle.Apply(title,"Heading",32);
-            body=Label("Log text",r,new Vector2(740,300),new Vector2(150,55),22,ivory);
-            Rule(r,"Clue rule",new Vector2(740,1),new Vector2(150,-119),gold*.35f);
-            clue=Label("Room clue",r,new Vector2(740,106),new Vector2(150,-186),20,gold);
-            pages=Label("Page counter",r,new Vector2(740,28),new Vector2(150,-267),20,new Color(.6f,.59f,.53f));
+            var note=Label("Archive note",r,new Vector2(450,95),new Vector2(-300,8),21,new Color(.76f,.72f,.63f));note.text="Fragments of the Old World.\nRecovered records remain with you through this journey.";
+            Rule(r,"Clue rule",new Vector2(450,1),new Vector2(-300,-75),gold*.45f);
+            clue=Label("Room clue",r,new Vector2(450,135),new Vector2(-300,-164),21,gold);
+            location=Label("Record location",r,new Vector2(450,32),new Vector2(300,315),20,gold);
+            title=Label("Log title",r,new Vector2(450,75),new Vector2(300,252),32,ivory);ArchiveMenuStyle.Apply(title,"Heading",32);
+            body=Label("Log text",r,new Vector2(450,395),new Vector2(300,-25),22,ivory);
+            pages=Label("Page counter",r,new Vector2(450,28),new Vector2(300,-267),20,new Color(.72f,.69f,.60f));
             previous=Action(r,"Previous",-310,()=>Turn(-1));close=Action(r,"Close",0,Close);next=Action(r,"Next",310,()=>Turn(1));
             var buttons=new[]{previous,close,next};for(int i=0;i<3;i++)buttons[i].navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=buttons[(i+2)%3],selectOnRight=buttons[(i+1)%3]};
             shortcuts=Label("Codex shortcuts",r,new Vector2(1100,30),new Vector2(0,-390),20,new Color(.62f,.61f,.55f));shortcuts.alignment=TextAlignmentOptions.Center;
@@ -181,4 +206,5 @@ namespace TheLightenRoad.Frontend
             panel.SetActive(false);
         }
     }
+
 }
