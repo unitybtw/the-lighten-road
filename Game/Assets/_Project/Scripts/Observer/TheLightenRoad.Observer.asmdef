@@ -1,0 +1,6 @@
+{
+  "name": "TheLightenRoad.Observer",
+  "references": [
+    "UnityEngine.UI"
+  ]
+}

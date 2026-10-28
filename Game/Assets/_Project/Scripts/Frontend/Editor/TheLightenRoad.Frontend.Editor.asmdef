@@ -3,7 +3,11 @@
   "references": [
     "TheLightenRoad.Frontend",
     "TheLightenRoad.Audio",
-    "Unity.TextMeshPro"
+    "Unity.TextMeshPro",
+    "TheLightenRoad.Codex",
+    "TheLightenRoad.Observer"
   ],
-  "includePlatforms": ["Editor"]
+  "includePlatforms": [
+    "Editor"
+  ]
 }

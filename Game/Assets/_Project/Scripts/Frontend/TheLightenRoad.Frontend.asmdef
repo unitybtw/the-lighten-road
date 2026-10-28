@@ -9,6 +9,8 @@
     "UnityEngine.UI",
     "Unity.TextMeshPro",
     "Unity.InputSystem",
-    "TheLightenRoad.Input"
+    "TheLightenRoad.Input",
+    "TheLightenRoad.Observer",
+    "TheLightenRoad.Codex"
   ]
 }

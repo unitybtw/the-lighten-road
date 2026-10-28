@@ -29,6 +29,15 @@ namespace TheLightenRoad.Frontend
     [SelectionBase]
     public sealed class DiegeticWhisper : MonoBehaviour
     {
+        [Header("Archive Terminal (optional)")]
+        public TheLightenRoad.Codex.ArchiveLog ArchiveLog;
+        public bool TryReadArchive()
+        {
+            if(ArchiveLog==null)return false;
+            TheLightenRoad.Codex.CodexSession.Discover(ArchiveLog.Id);
+            TheLightenRoad.Codex.CodexSession.RequestPage(ArchiveLog.Id);
+            return TheLightenRoad.Codex.CodexSession.Has(ArchiveLog.Id);
+        }
         [Header("Whisper Message")]
         [SerializeField] private string keyHint = "SPACE";
         [SerializeField] private string actionPrompt = "LEAP ACROSS THE ABYSS";
@@ -381,6 +390,16 @@ namespace TheLightenRoad.Frontend
 
         private void Update()
         {
+            if(ArchiveLog!=null)
+            {
+                FindPlayerReferences();
+                if(playerTransform!=null && TheLightenRoad.Input.GameControls.GameplayAllowed && Vector2.Distance(transform.position,playerTransform.position)<=triggerRadius)
+                {
+                    bool pressed=Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame;
+                    var pad=TheLightenRoad.Input.GameControls.ActivePad;
+                    if(pressed || (pad!=null && pad.buttonNorth.wasPressedThisFrame))TryReadArchive();
+                }
+            }
             TickWhisper(Time.deltaTime);
         }
 
@@ -533,7 +552,7 @@ namespace TheLightenRoad.Frontend
         {
             if (isCompleted || isDissolving) return;
 
-            if (autoDissipateOnAction)
+            if (autoDissipateOnAction && ArchiveLog==null)
             {
                 Dissipate();
             }

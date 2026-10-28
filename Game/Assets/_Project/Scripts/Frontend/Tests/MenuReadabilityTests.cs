@@ -210,7 +210,7 @@ namespace TheLightenRoad.Frontend.Tests
                 Assert.That(bounds.yMax,Is.LessThanOrEqualTo(rect.yMax-1),item.name);
             }
         }
-        private static void Capture(Canvas canvas,int width,int height,string name)
+        internal static void Capture(Canvas canvas,int width,int height,string name)
         {
             // Off-screen UI projection: match the shipped CanvasScaler's logarithmic width/height blend.
             // This checks layout and rendering, not physical-display or device-specific input behavior.

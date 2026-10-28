@@ -5,7 +5,9 @@
     "Unity.InputSystem",
     "Unity.RenderPipelines.Universal.Runtime",
     "Unity.RenderPipelines.Universal.2D.Runtime",
-    "TheLightenRoad.Input"
+    "TheLightenRoad.Input",
+    "TheLightenRoad.Observer",
+    "TheLightenRoad.Codex"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

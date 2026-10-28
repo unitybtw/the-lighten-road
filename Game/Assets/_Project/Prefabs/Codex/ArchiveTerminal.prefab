@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &9013520126683709992
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2252233256568344650}
+  - component: {fileID: 535204533971447607}
+  - component: {fileID: 3605343754259449473}
+  m_Layer: 0
+  m_Name: ArchiveTerminal
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2252233256568344650
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9013520126683709992}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &535204533971447607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9013520126683709992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 506973b17c8324c77b1149bfe5184f41, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.DiegeticWhisper
+  ArchiveLog: {fileID: 11400000, guid: b1c18db8a0e894f09b7267380e0a08c7, type: 2}
+  keyHint: E
+  actionPrompt: READ ARCHIVE LOG
+  requiredAction: 3
+  triggerRadius: 1.7
+  fadeSpeed: 3.8
+  autoDissipateOnAction: 1
+  proximityDurationRequired: 2.5
+  whisperId:
+  persistCompletion: 0
+  destroyOnDissolve: 0
+  radiantIvory: {r: 0.97, g: 0.95, b: 0.89, a: 1}
+  amberGold: {r: 1, g: 0.72, b: 0.28, a: 1}
+  glowColor: {r: 1, g: 0.65, b: 0.2, a: 0.4}
+--- !u!114 &3605343754259449473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9013520126683709992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9acf8258538f543f59ac8023b69fb557, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.ArchiveTerminalVisual

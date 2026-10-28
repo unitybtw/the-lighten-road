@@ -1,0 +1,6 @@
+{
+  "name": "TheLightenRoad.Codex",
+  "references": [
+    "TheLightenRoad.Observer"
+  ]
+}

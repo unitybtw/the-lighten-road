@@ -9,7 +9,7 @@ namespace TheLightenRoad.Lantern
     /// The inventory holds at most four embers. Legacy charge APIs remain available
     /// for mechanism compatibility: two charges always represent one whole ember.
     /// </summary>
-    public sealed class LanternFuel : MonoBehaviour
+    public sealed class LanternFuel : MonoBehaviour, ISocialListener
     {
         [Header("Ember & Fuel Tuning")]
         [SerializeField, Min(0.01f)] private float capacity = 8f; // Four embers, two legacy charges each
@@ -56,6 +56,22 @@ namespace TheLightenRoad.Lantern
             FuelChanged?.Invoke(CurrentFuel, capacity);
             if (CurrentFuel <= 0f)
                 FuelDepleted?.Invoke();
+        }
+
+        private SocialChannel loreChannel;
+        private readonly System.Collections.Generic.HashSet<string> rewardedLogs=new System.Collections.Generic.HashSet<string>();
+        private void OnEnable()
+        {
+            TheLightenRoad.Codex.CodexSession.Ensure();
+            loreChannel=TheLightenRoad.Codex.CodexSession.Channel;
+            if(loreChannel!=null)loreChannel.Subscribe(this);
+        }
+        private void OnDisable(){if(loreChannel!=null)loreChannel.Unsubscribe(this);loreChannel=null;}
+        public void OnSocialEvent(SocialEvent e)
+        {
+            if(e.isReplay || e.kind!=SocialEventKind.LogFound || string.IsNullOrEmpty(e.text))return;
+            if(TheLightenRoad.Codex.CodexSession.Catalog?.Find(e.text)==null || !rewardedLogs.Add(e.text))return;
+            AddEmbers(1);
         }
 
         public bool CanSpendFuel(float amount)

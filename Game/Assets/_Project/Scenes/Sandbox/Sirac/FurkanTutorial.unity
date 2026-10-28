@@ -1166,6 +1166,39 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &62571676
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 62571677}
+  m_Layer: 0
+  m_Name: Archive Terminals
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &62571677
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62571676}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1579286329}
+  - {fileID: 1446832423}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &71462506
 GameObject:
   m_ObjectHideFlags: 0
@@ -24742,6 +24775,77 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &1446832422
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1446832423}
+  - component: {fileID: 1446832425}
+  - component: {fileID: 1446832424}
+  m_Layer: 0
+  m_Name: Archive Terminal - A Margin in the Dark
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1446832423
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446832422}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 37.4, y: 7.25, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 62571677}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1446832424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446832422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9acf8258538f543f59ac8023b69fb557, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.ArchiveTerminalVisual
+--- !u!114 &1446832425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446832422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 506973b17c8324c77b1149bfe5184f41, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.DiegeticWhisper
+  ArchiveLog: {fileID: 11400000, guid: 7d0833544c06142a099197ba6c1f46f6, type: 2}
+  keyHint: E
+  actionPrompt: READ ARCHIVE LOG
+  requiredAction: 3
+  triggerRadius: 1.7
+  fadeSpeed: 3.8
+  autoDissipateOnAction: 1
+  proximityDurationRequired: 2.5
+  whisperId:
+  persistCompletion: 0
+  destroyOnDissolve: 0
+  radiantIvory: {r: 0.97, g: 0.95, b: 0.89, a: 1}
+  amberGold: {r: 1, g: 0.72, b: 0.28, a: 1}
+  glowColor: {r: 1, g: 0.65, b: 0.2, a: 0.4}
 --- !u!1 &1460266935
 GameObject:
   m_ObjectHideFlags: 0
@@ -26737,6 +26841,77 @@ MeshRenderer:
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &1579286328
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1579286329}
+  - component: {fileID: 1579286331}
+  - component: {fileID: 1579286330}
+  m_Layer: 0
+  m_Name: Archive Terminal - The Keeper's Last Shift
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1579286329
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579286328}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.2, y: 0.9, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 62571677}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1579286330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579286328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9acf8258538f543f59ac8023b69fb557, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.ArchiveTerminalVisual
+--- !u!114 &1579286331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579286328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 506973b17c8324c77b1149bfe5184f41, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.DiegeticWhisper
+  ArchiveLog: {fileID: 11400000, guid: b1c18db8a0e894f09b7267380e0a08c7, type: 2}
+  keyHint: E
+  actionPrompt: READ ARCHIVE LOG
+  requiredAction: 3
+  triggerRadius: 1.7
+  fadeSpeed: 3.8
+  autoDissipateOnAction: 1
+  proximityDurationRequired: 2.5
+  whisperId:
+  persistCompletion: 0
+  destroyOnDissolve: 0
+  radiantIvory: {r: 0.97, g: 0.95, b: 0.89, a: 1}
+  amberGold: {r: 1, g: 0.72, b: 0.28, a: 1}
+  glowColor: {r: 1, g: 0.65, b: 0.2, a: 0.4}
 --- !u!1 &1596499366
 GameObject:
   m_ObjectHideFlags: 0
@@ -35720,3 +35895,4 @@ SceneRoots:
   - {fileID: 985794371}
   - {fileID: 1609743620}
   - {fileID: 1866915982}
+  - {fileID: 62571677}

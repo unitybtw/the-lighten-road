@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be688690988ce4770881b6e2a108368a, type: 3}
+  m_Name: ArchiveCatalog
+  m_EditorClassIdentifier: TheLightenRoad.Codex::TheLightenRoad.Codex.ArchiveCatalog
+  Channel: {fileID: 11400000, guid: f7771b23715f0449f871928714906b94, type: 2}
+  Logs:
+  - {fileID: 11400000, guid: b1c18db8a0e894f09b7267380e0a08c7, type: 2}
+  - {fileID: 11400000, guid: 7d0833544c06142a099197ba6c1f46f6, type: 2}

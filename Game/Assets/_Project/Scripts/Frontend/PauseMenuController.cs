@@ -255,6 +255,7 @@ namespace TheLightenRoad.Frontend
 
         private void Update()
         {
+            if(ArchiveCodexMenu.IsOpen || ArchiveCodexMenu.ClosedThisFrame)return;
             var k = Keyboard.current;
             var g = ControllerGlyphService.GetActiveGamepad();
 
