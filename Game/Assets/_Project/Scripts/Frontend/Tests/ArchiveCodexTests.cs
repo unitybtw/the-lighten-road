@@ -53,6 +53,43 @@ namespace TheLightenRoad.Frontend.Tests
             var fuel=Go("Fuel").AddComponent<LanternFuel>();CodexSession.Discover("a");CodexSession.Discover("b");Assert.That(fuel.TotalEmbers,Is.EqualTo(4));
             Assert.That(CodexSession.Decryption,Is.EqualTo(100));var catalog=CodexSession.Catalog;CodexSession.Begin(catalog);Assert.That(CodexSession.FoundCount,Is.Zero);
         }
+        [Test] public void OpeningKeepsOneHingeAndRevealsInkAfterCoverLands()
+        {
+            bool reduced=MenuPreferences.ReducedMotion;MenuPreferences.SetReducedMotion(false);
+            try
+            {
+                CodexSession.Discover("a");var menu=Go("Book motion regression").AddComponent<ArchiveCodexMenu>();menu.Open("a");
+                var tick=typeof(ArchiveCodexMenu).GetMethod("AnimateBook",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+                var hinge=menu.GetComponentsInChildren<RectTransform>(true).Single(r=>r.name=="Opening leather binding");
+                var ink=menu.GetComponentsInChildren<CanvasGroup>(true).Single(g=>g.name=="Book ink and controls");
+                float previous=0;
+                foreach(float time in new[]{0f,.35f,.8f,1.05f,1.4f,1.6f,2.1f})
+                {
+                    tick.Invoke(menu,new object[]{time-previous});previous=time;
+                    Assert.That(hinge.anchoredPosition,Is.EqualTo(new Vector2(0,25)),"The hinge must stay attached to the book origin.");
+                    if(time<1.6f)Assert.That(ink.alpha,Is.Zero,"Ink must not bleed through a moving cover.");
+                    MenuReadabilityTests.Capture(menu.GetComponentInChildren<Canvas>(),1280,720,"book-motion-"+Mathf.RoundToInt(time*100));
+                }
+                Assert.That(menu.IsAnimating,Is.False);Assert.That(ink.alpha,Is.EqualTo(1));menu.Close();
+            }
+            finally{MenuPreferences.SetReducedMotion(reduced);}
+        }
+        [UnityTest] public IEnumerator BookCanCloseDuringOpeningWithoutLeavingGameplayBlocked()
+        {
+            CodexSession.Discover("a");var menu=Go("Cinematic book").AddComponent<ArchiveCodexMenu>();
+            menu.Open("a");yield return new WaitForSecondsRealtime(.45f);
+            MenuReadabilityTests.Capture(menu.GetComponentInChildren<Canvas>(),1280,720,"codex-closed-cover");
+            yield return new WaitForSecondsRealtime(.55f);
+            MenuReadabilityTests.Capture(menu.GetComponentInChildren<Canvas>(),1280,720,"codex-opening");
+            Assert.That(menu.transform.Find("Codex Canvas/Codex overlay/Book cinematic"),Is.Not.Null);
+            menu.Close();
+            Assert.That(menu.IsAnimating,Is.False);
+            Assert.That(Time.timeScale,Is.EqualTo(1));yield return null;yield return null;Assert.That(GameControls.GameplayAllowed,Is.True);
+            menu.Open("a");yield return new WaitForSecondsRealtime(2.2f);
+            Assert.That(menu.IsAnimating,Is.False);
+            Assert.That(menu.GetComponentsInChildren<CanvasGroup>().Any(g=>g.name=="Codex reading surface" && g.alpha==1 && g.interactable),Is.True);
+            menu.Close();
+        }
         [UnityTest] public IEnumerator TerminalDeskStaysAnchoredWhilePromptAnimates()
         {
             var go=Go("Office desk");go.transform.position=new Vector3(10,2,0);var terminal=go.AddComponent<DiegeticWhisper>();terminal.ArchiveLog=CodexSession.Catalog.Find("a");
@@ -64,7 +101,7 @@ namespace TheLightenRoad.Frontend.Tests
         [UnityTest] public IEnumerator DossierReadingFitsSupportedScreensAndKeepsActionsSeparated()
         {
             CodexSession.Catalog.Find("a").Text=string.Join(" ",Enumerable.Repeat("The office kept its records in silence.",15));
-            CodexSession.Discover("a");var menu=Go("Office reader").AddComponent<ArchiveCodexMenu>();menu.Open("a");yield return new WaitForSecondsRealtime(.22f);
+            CodexSession.Discover("a");var menu=Go("Office reader").AddComponent<ArchiveCodexMenu>();menu.Open("a");yield return new WaitForSecondsRealtime(2.2f);
             var canvas=menu.GetComponentInChildren<Canvas>();
             foreach(var size in new[]{new Vector2Int(1280,720),new Vector2Int(1024,768),new Vector2Int(2560,1080)})
             {
@@ -80,7 +117,7 @@ namespace TheLightenRoad.Frontend.Tests
         {
             CodexSession.Discover("a");var menu=Go("Reader").AddComponent<ArchiveCodexMenu>();yield return null;
             Assert.That(menu.EntryCount,Is.EqualTo(1));menu.Open("a");Assert.That(ArchiveCodexMenu.IsOpen,Is.True);Assert.That(Time.timeScale,Is.Zero);Assert.That(GameControls.GameplayAllowed,Is.False);
-            yield return new WaitForSecondsRealtime(.22f);
+            yield return new WaitForSecondsRealtime(2.2f);
             MenuReadabilityTests.Capture(menu.GetComponentInChildren<Canvas>(),1280,720,"codex-reading-720p");
             CodexSession.Discover("b");menu.Open("b");
             menu.GetComponentsInChildren<Button>().Single(b=>b.name=="Next").onClick.Invoke();
