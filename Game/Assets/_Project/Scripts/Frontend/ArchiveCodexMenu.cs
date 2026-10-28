@@ -383,7 +383,7 @@ namespace TheLightenRoad.Frontend
             var closeRect=(RectTransform)close.transform;closeRect.anchorMin=closeRect.anchorMax=new Vector2(.5f,0);closeRect.anchoredPosition=new Vector2(0,99);
             shortcuts.rectTransform.anchorMin=shortcuts.rectTransform.anchorMax=new Vector2(.5f,0);shortcuts.rectTransform.anchoredPosition=new Vector2(0,44);
             var hint=Label("Page drag hint",footer.transform,new Vector2(740,30),Vector2.zero,18,new Color(.7f,.63f,.50f));
-            hint.rectTransform.anchorMin=hint.rectTransform.anchorMax=new Vector2(.5f,1);hint.rectTransform.anchoredPosition=new Vector2(0,-30);hint.text="Drag either outer page edge to turn";hint.alignment=TextAlignmentOptions.Center;
+            hint.rectTransform.anchorMin=hint.rectTransform.anchorMax=new Vector2(.5f,1);hint.rectTransform.anchoredPosition=new Vector2(0,-30);hint.text="Hold any page edge and pull to turn";hint.alignment=TextAlignmentOptions.Center;
             presentation=gameObject.AddComponent<ArchiveBookPresentation>();presentation.Initialize(canvas,readingButtons,CanTurn,ApplyTurn,PreviewTurn);
             panel.SetActive(false);footerPanel.SetActive(false);builtLayoutVersion=ReaderLayoutVersion;
         }

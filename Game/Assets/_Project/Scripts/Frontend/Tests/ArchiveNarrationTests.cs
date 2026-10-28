@@ -59,7 +59,7 @@ namespace TheLightenRoad.Frontend.Tests
    var menu=Host().AddComponent<ArchiveCodexMenu>();menu.Open(a.Id);yield return new WaitForSecondsRealtime(2.3f);
    Assert.That(menu.GetComponent<AudioSource>().clip,Is.SameAs(a.Audio));
    typeof(ArchiveCodexMenu).GetMethod("Turn",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).Invoke(menu,new object[]{1});
-   Assert.That(menu.IsNarrationPlaying,Is.False);yield return new WaitForSecondsRealtime(.55f);
+   Assert.That(menu.IsNarrationPlaying,Is.False);yield return new WaitForSecondsRealtime(1.35f);
    Assert.That(menu.GetComponent<AudioSource>().clip,Is.SameAs(b.Audio));Assert.That(menu.IsNarrationPlaying,Is.True);menu.Close();
    var real=Resources.Load<ArchiveCatalog>("Codex/ArchiveCatalog");CodexSession.Begin(real);CodexSession.Discover("office-ledger");
    menu.gameObject.SetActive(false);menu.gameObject.SetActive(true);menu.Open("office-ledger");menu.Close();

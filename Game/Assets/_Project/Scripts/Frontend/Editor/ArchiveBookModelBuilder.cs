@@ -47,7 +47,7 @@ namespace TheLightenRoad.Frontend.Editor
                 if(side<0){model.LeftPaper=leaf.GetComponent<MeshRenderer>();model.LeftCollider=collider;}else{model.RightPaper=leaf.GetComponent<MeshRenderer>();model.RightCollider=collider;}
                 foreach(float y in new[]{-3.58f,3.58f})Box(label+" brass corner "+y,parent,new Vector3(.27f,.27f,.035f),new Vector3(side*5.96f,y,.08f),brass,.012f);
             }
-            Box("Spine gutter backing",root.transform,new Vector3(.38f,7.18f,.16f),new Vector3(0,0,-.045f),ink,.02f);
+            Box("Spine gutter backing",root.transform,new Vector3(.38f,7.18f,.16f),new Vector3(0,0,.09f),ink,.02f);
             Box("Rounded leather spine",root.transform,new Vector3(.28f,7.44f,.35f),new Vector3(0,0,.14f),leather,.045f);
             for(int i=0;i<5;i++)Box("Raised spine band "+i,root.transform,new Vector3(.33f,.085f,.12f),new Vector3(0,-2.8f+i*1.4f,.025f),brass,.02f);
             var hinge=new GameObject("Front cover hinge");hinge.layer=31;hinge.transform.SetParent(root.transform,false);model.CoverHinge=hinge.transform;
@@ -58,7 +58,7 @@ namespace TheLightenRoad.Frontend.Editor
             foreach(float x in new[]{2.70f,3.46f})Box("Lantern cage "+x,hinge.transform,new Vector3(.07f,1.18f,.065f),new Vector3(x,0,-.52f),brass,.015f);
             foreach(float y in new[]{-.55f,.55f})Box("Lantern crown "+y,hinge.transform,new Vector3(.90f,.075f,.065f),new Vector3(3.08f,y,-.52f),brass,.02f);
             Box("Lantern handle",hinge.transform,new Vector3(.46f,.26f,.065f),new Vector3(3.08f,.78f,-.50f),brass,.025f);
-            Part("Woven red bookmark",left.transform,ArchiveBookGeometry.Ribbon(),red,new Vector3(-1.2f,0,-.06f));
+            Part("Woven red bookmark",left.transform,ArchiveBookGeometry.Ribbon(),red,new Vector3(-.4f,0,0));
             var turning=Part("Flexible turning leaf",root.transform,ArchiveBookGeometry.Leaf(1),paper,new Vector3(-.017f,0,-.035f));
             model.TurningPaper=turning.GetComponent<MeshRenderer>();model.TurningFilter=turning.GetComponent<MeshFilter>();turning.SetActive(false);
             PrefabUtility.SaveAsPrefabAsset(root,Folder+"/ArchiveBook.prefab");Object.DestroyImmediate(root);AssetDatabase.SaveAssets();

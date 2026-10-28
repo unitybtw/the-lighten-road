@@ -3,6 +3,8 @@ Shader "TheLightenRoad/Archive Book Surface"
  Properties {
   _BaseColor("Surface",Color)=(0.8,0.7,0.5,1)
   _InkTex("Page ink",2D)="black"{}
+  _BackInkTex("Reverse page ink",2D)="black"{}
+  _HasBackInk("Use reverse page ink",Float)=0
   _HasInk("Use page ink",Float)=0
   _Paper("Paper",Float)=0
   _Metal("Metal",Float)=0
@@ -18,8 +20,9 @@ Shader "TheLightenRoad/Archive Book Surface"
   #pragma fragment Frag
   #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
   TEXTURE2D(_InkTex); SAMPLER(sampler_InkTex);
+  TEXTURE2D(_BackInkTex); SAMPLER(sampler_BackInkTex);
   CBUFFER_START(UnityPerMaterial)
-  float4 _BaseColor, _TurnShade;float _HasInk,_Paper,_Metal;
+  float4 _BaseColor, _TurnShade;float _HasInk,_HasBackInk,_Paper,_Metal;
   CBUFFER_END
   struct A {float4 positionOS:POSITION;float3 normalOS:NORMAL;float2 uv:TEXCOORD0;};
   struct V {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float3 positionWS:TEXCOORD1;float2 uv:TEXCOORD2;float3 local:TEXCOORD3;};
@@ -40,7 +43,14 @@ Shader "TheLightenRoad/Archive Book Surface"
     float gutterShadow=exp(-pow(gutterDist*32.0,2))*0.28;
     base*=(1.0-gutterShadow);
    }
-   if(_HasInk>.5){float2 uv=i.uv;if(!front)uv.x=1-uv.x;float4 ink=SAMPLE_TEXTURE2D(_InkTex,sampler_InkTex,uv);base=ink.rgb+base*(1-ink.a);}
+   if(_HasInk>.5 && (front || _HasBackInk>.5))
+   {
+    float2 uv=i.uv;
+    float4 ink;
+    if(front)ink=SAMPLE_TEXTURE2D(_InkTex,sampler_InkTex,uv);
+    else{uv.x=1-uv.x;ink=SAMPLE_TEXTURE2D(_BackInkTex,sampler_BackInkTex,uv);}
+    base=ink.rgb+base*(1-ink.a);
+   }
    float projected=.5+.24*cos(_TurnShade.x*PI)*_TurnShade.y;
    float shadow=sin(_TurnShade.x*PI)*exp(-pow((i.uv.x-projected)*9,2))*.20*_Paper;
    float3 view=GetWorldSpaceNormalizeViewDir(i.positionWS);

@@ -184,7 +184,7 @@ namespace TheLightenRoad.Frontend.Tests
             yield return new WaitForSecondsRealtime(2.2f);
             menu.GetComponent<ArchiveBookPresentation>().CapturePreview(1280,720,"Library/Readability/codex-reading-720p.png");
             CodexSession.Discover("b");menu.Open("b");
-            menu.GetComponentsInChildren<Button>().Single(b=>b.name=="Next").onClick.Invoke();yield return new WaitForSecondsRealtime(.55f);
+            menu.GetComponentsInChildren<Button>().Single(b=>b.name=="Next").onClick.Invoke();yield return new WaitForSecondsRealtime(1.35f);
             Assert.That(menu.GetComponentsInChildren<TMP_Text>().Single(t=>t.name=="Page counter").text,Does.Contain("PAGE 2 /"));
             menu.Close();Assert.That(Time.timeScale,Is.EqualTo(1));Assert.That(ArchiveCodexMenu.IsOpen,Is.False);
             menu.gameObject.SetActive(false);menu.gameObject.SetActive(true);Assert.That(menu.EntryCount,Is.EqualTo(2));

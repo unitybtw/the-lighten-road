@@ -27,27 +27,35 @@ namespace TheLightenRoad.Frontend
         public void SetOpening(float progress)
         {
             if(CoverHinge==null)return;
-            CoverHinge.gameObject.SetActive(progress<.999f);
+            // Keep the same physical front cover underneath the left folios after opening.
+            CoverHinge.gameObject.SetActive(true);
             CoverHinge.localRotation=Quaternion.Euler(0,180*progress,0);
             LeftAssembly.gameObject.SetActive(true);
             LeftAssembly.localRotation=Quaternion.Euler(0,-180*(1-progress),0);
             if(fixedLeftCover==null)fixedLeftCover=LeftAssembly.GetComponentsInChildren<MeshRenderer>(true)
                 .Where(r=>r.name.Contains("hardcover") || r.name.Contains("cover panel") || r.name.Contains("brass corner")).ToArray();
-            foreach(var renderer in fixedLeftCover)renderer.enabled=progress>=.999f;
+            foreach(var renderer in fixedLeftCover)renderer.enabled=false;
         }
         public void HoldSheet(RenderTexture ink,int side=1)
         {
             var previous=RenderTexture.active;try{Graphics.Blit(ink,frozenInk);}finally{RenderTexture.active=previous;}
-            turnMaterial.SetTexture("_InkTex",frozenInk);
+            turnMaterial.SetTexture("_InkTex",frozenInk);turnMaterial.SetFloat("_HasBackInk",1);
             if(TurningPaper!=null)TurningPaper.transform.localPosition=new Vector3(-side*.017f,0,-.035f);
             TurningPaper.gameObject.SetActive(true);
         }
-        public void Curl(int side,float amount,float grabY)
+        public void Curl(int side,float amount,float grabY,float pullY=0,float grabU=1)
         {
-            ArchiveBookGeometry.UpdateLeaf(dynamicLeaf,side,Mathf.Clamp01(amount),grabY);
+            ArchiveBookGeometry.UpdateLeaf(dynamicLeaf,side,Mathf.Clamp01(amount),grabY,pullY,grabU);
             var shade=new Vector4(amount,side,0,0);leftMaterial.SetVector("_TurnShade",shade);rightMaterial.SetVector("_TurnShade",shade);
         }
-        public void PreviewUnderlay(RenderTexture next){leftMaterial.SetTexture("_InkTex",next);rightMaterial.SetTexture("_InkTex",next);}
+        public void PreviewUnderlay(RenderTexture next,int side)
+        {
+            // Only the page being uncovered changes. The opposite page stays readable.
+            (side>0?rightMaterial:leftMaterial).SetTexture("_InkTex",next);
+            turnMaterial.SetTexture("_BackInkTex",next);
+        }
+        public Vector3 SheetPoint(int side,float amount,float grabY,float u,float v,float pullY=0)
+            =>TurningPaper.transform.localPosition+ArchiveBookGeometry.LeafPoint(side,amount,grabY,u,v,pullY,u);
         public void ReleaseSheet()
         {
             TurningPaper.gameObject.SetActive(false);

@@ -28,7 +28,7 @@ namespace TheLightenRoad.Frontend
         public bool IsInitialized=>Model!=null && Model.IsBound && Ink!=null && PreviewInk!=null && PixelTarget!=null && Turn!=null;
         public void Rebind(Func<bool> canTurn,Action<int> commit,Action<int> preview)
         {this.preview=preview;if(Turn!=null)Turn.Initialize(this,canTurn,commit);}
-        private Transform stage;private float lastAspect,baseDistance;private Renderer[] modelRenderers;
+        private Transform stage;private float lastAspect,baseDistance,openingProgress;private Renderer[] modelRenderers;
         private readonly List<Canvas> hiddenOverlays=new List<Canvas>();
         public void Initialize(Canvas canvas,Button[] controls,Func<bool> canTurn,Action<int> commit,Action<int> preview)
         {
@@ -67,7 +67,7 @@ namespace TheLightenRoad.Frontend
         private void LateUpdate()
         {
             if(BookCamera==null)return;EnsurePixelTarget();
-            float aspect=(float)Screen.width/Mathf.Max(1,Screen.height);if(!Mathf.Approximately(aspect,lastAspect))SetAspect(aspect);if(Visible)FitModel(false);
+            float aspect=(float)Screen.width/Mathf.Max(1,Screen.height);if(!Mathf.Approximately(aspect,lastAspect))SetAspect(aspect);if(Visible && (Turn==null || !Turn.IsBusy))FitModel(false);
         }
         private void EnsurePixelTarget()
         {
@@ -85,8 +85,9 @@ namespace TheLightenRoad.Frontend
             baseDistance=height/(2*Mathf.Tan(BookCamera.fieldOfView*.5f*Mathf.Deg2Rad));
             BookCamera.transform.localPosition=new Vector3(0,.35f,-baseDistance);
         }
-        public void FitModel(bool instant)
+        public void FitModel(bool instant,bool allowWhileHeld=false)
         {
+            if(Turn!=null && Turn.IsBusy && !allowWhileHeld)return;
             if(modelRenderers==null || Model==null)return;
             bool any=false;Bounds bounds=default;
             foreach(var renderer in modelRenderers)
@@ -95,6 +96,17 @@ namespace TheLightenRoad.Frontend
                 if(!any){bounds=renderer.bounds;any=true;}else bounds.Encapsulate(renderer.bounds);
             }
             if(!any)return;
+            if(openingProgress>=.999f)
+            {
+                // Reserve the entire paper sweep before a gesture; framing must not
+                // change underneath a held pointer or cause a zoom/drag feedback loop.
+                for(int side=-1;side<=1;side+=2)for(int step=0;step<=12;step++)
+                    for(int corner=0;corner<2;corner++)
+                    {
+                        var edge=ArchiveBookGeometry.LeafPoint(side,step/12f,corner==0?-1:1,1,corner);
+                        bounds.Encapsulate(Model.transform.TransformPoint(edge+new Vector3(-side*.017f,0,-.035f)));
+                    }
+            }
             Vector3 min=bounds.min-stage.position,max=bounds.max-stage.position;
             float desiredY=Mathf.Clamp((min.y+max.y)*.5f,.25f,1.15f);
             float blend=1-Mathf.Exp(-Time.unscaledDeltaTime*7);
@@ -109,7 +121,7 @@ namespace TheLightenRoad.Frontend
             float distance=instant?required:Mathf.Max(required,Mathf.Lerp(-BookCamera.transform.localPosition.z,required,blend));
             BookCamera.transform.localPosition=new Vector3(0,cameraY,-distance);
         }
-        public void PrepareSheet(int side){Model.HoldSheet(Ink,side);preview(side);Model.PreviewUnderlay(PreviewInk);}
+        public void PrepareSheet(int side){Model.HoldSheet(Ink,side);preview(side);Model.PreviewUnderlay(PreviewInk,side);}
         public void RenderNextSpread()
         {
             if(previewCanvas==null)
@@ -134,6 +146,7 @@ namespace TheLightenRoad.Frontend
         }
         public void SetOpening(float progress)
         {
+            openingProgress=progress;
             if(Model==null)return;Model.SetOpening(progress);Model.transform.localPosition=new Vector3(-3.05f*(1-progress),.25f,0);
         }
         public void Show(bool value)
@@ -163,7 +176,9 @@ namespace TheLightenRoad.Frontend
             var ray=BookCamera.ViewportPointToRay(new Vector3(screen.x/Mathf.Max(1,Screen.width),screen.y/Mathf.Max(1,Screen.height),0));var plane=new Plane(Model.transform.TransformDirection(Vector3.back),Model.transform.TransformPoint(new Vector3(0,0,-.15f)));
             if(!plane.Raycast(ray,out var distance))return false;point=Model.transform.InverseTransformPoint(ray.GetPoint(distance));return true;
         }
-        public bool IsPageEdge(Vector2 uv)=> (uv.x<.45f || uv.x>.55f) && uv.y>.06f && uv.y<.94f;
+        // The collider already bounds the paper: top, bottom, outer edge and blank
+        // paper are all grabbable, leaving only the narrow sewn binding pinned.
+        public bool IsPageEdge(Vector2 uv)=>Mathf.Abs(uv.x-.5f)>.008f;
         public Vector2 ScreenPoint(Vector3 modelPoint)
         {
             var viewport=BookCamera.WorldToViewportPoint(Model.transform.TransformPoint(modelPoint));return new Vector2(viewport.x*Screen.width,viewport.y*Screen.height);
@@ -175,7 +190,7 @@ namespace TheLightenRoad.Frontend
             try
             {
                 Canvas.ForceUpdateCanvases();RenderPipeline.SubmitRenderRequest(InkCamera,new UniversalRenderPipeline.SingleCameraRequest{destination=Ink});
-                SetAspect((float)width/height);FitModel(true);RenderPipeline.SubmitRenderRequest(BookCamera,new UniversalRenderPipeline.SingleCameraRequest{destination=pixels});
+                SetAspect((float)width/height);FitModel(true,true);RenderPipeline.SubmitRenderRequest(BookCamera,new UniversalRenderPipeline.SingleCameraRequest{destination=pixels});
                 Graphics.Blit(pixels,target);RenderTexture.active=target;image=new Texture2D(width,height,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,width,height),0,0);image.Apply();
                 Directory.CreateDirectory(Path.GetDirectoryName(path));File.WriteAllBytes(path,image.EncodeToPNG());
             }

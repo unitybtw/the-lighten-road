@@ -49,7 +49,7 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(view.Turn.IsDragging,Is.True,"A real UI pointer-down must capture the sheet.");
             InputSystem.QueueStateEvent(scriptedMouse,new MouseState{position=finish,buttons=1});yield return null;yield return null;
             Assert.That(view.Turn.Progress,Is.GreaterThan(.5f));
-            InputSystem.QueueStateEvent(scriptedMouse,new MouseState{position=finish});yield return new WaitForSecondsRealtime(.5f);
+            InputSystem.QueueStateEvent(scriptedMouse,new MouseState{position=finish});yield return new WaitForSecondsRealtime(1.2f);
             Assert.That(view.Turn.IsBusy,Is.False);Assert.That(Counter(),Does.Contain("PAGE 2 /"));
         }
         [Test] public void UninitializedPointerHandlersIgnoreInputSafely()
@@ -72,7 +72,7 @@ namespace TheLightenRoad.Frontend.Tests
         {
             string before=Counter();Assert.That(view.Turn.Begin(Point(5.4f)),Is.True);view.Turn.Drag(Point(3));
             Assert.That(view.Model.RightPaper.sharedMaterial.GetTexture("_InkTex"),Is.SameAs(view.PreviewInk));
-            Assert.That(view.Turn.Progress,Is.InRange(.1f,.35f));Assert.That(Counter(),Is.EqualTo(before));
+            Assert.That(view.Turn.Progress,Is.InRange(.05f,.49f));Assert.That(Counter(),Is.EqualTo(before));
             view.Turn.Release();view.Turn.Tick(1);Assert.That(view.Turn.IsBusy,Is.False);Assert.That(Counter(),Is.EqualTo(before));
             Assert.That(view.Model.TurningPaper.gameObject.activeSelf,Is.False);
             Assert.That(view.Model.RightPaper.sharedMaterial.GetTexture("_InkTex"),Is.SameAs(view.Ink));
@@ -152,8 +152,152 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(view.Turn.Begin(Point(5.4f)),Is.True);view.Turn.Drag(Point(0));
             var mesh=view.Model.TurningFilter.sharedMesh;Assert.That(mesh.vertexCount,Is.GreaterThan(1000));
             Assert.That(mesh.vertices.All(v=>!float.IsNaN(v.x)&&!float.IsNaN(v.y)&&!float.IsNaN(v.z)),Is.True);
-            Assert.That(mesh.bounds.size.z,Is.GreaterThan(2));
+            Assert.That(mesh.bounds.size.z,Is.InRange(.5f,2.5f));
             var first=mesh.vertices[0];Assert.That(first.x,Is.EqualTo(.015f).Within(.001));
+            view.Turn.Cancel();
+        }
+        [Test] public void HeldMaterialPointFollowsTheCursorWithoutRunningAhead()
+        {
+            var start=Point(5.4f);
+            Assert.That(view.TryPagePoint(start,out var hit,out var uv),Is.True);
+            float u=(Mathf.Abs(hit.x)+.002f)/ArchiveBookGeometry.PageWidth;
+            float v=hit.y/ArchiveBookGeometry.PageHeight+.5f;
+            float grab=Mathf.Clamp(v*2-1,-.95f,.95f);
+            Assert.That(view.Turn.Begin(start),Is.True);
+            Vector2 offset=start-view.ScreenPoint(view.Model.SheetPoint(1,0,grab,u,v));
+            foreach(float x in new[]{4.8f,3f,1f,-1f,-3f})
+            {
+                var pointer=Point(x);view.Turn.Drag(pointer);
+                float actual=view.ScreenPoint(view.Model.SheetPoint(1,view.Turn.Progress,grab,u,v,view.Turn.VerticalPull)).x+offset.x;
+                Assert.That(actual,Is.EqualTo(pointer.x).Within(1.5f),"The grabbed point must remain under the horizontal cursor position.");
+                float held=view.Turn.Progress;view.Turn.Tick(.25f);view.Turn.Tick(.25f);
+                Assert.That(view.Turn.Progress,Is.EqualTo(held).Within(.0001f),"Holding still must not advance a page.");
+            }
+            view.Turn.Cancel();
+        }
+        [Test] public void ReleaseSettlesGraduallyAndCommitsOnlyWhenPaperLands()
+        {
+            string before=Counter();Assert.That(view.Turn.Begin(Point(5.4f)),Is.True);view.Turn.Drag(Point(-1));
+            float held=view.Turn.Progress;Assert.That(held,Is.GreaterThan(.5f));view.Turn.Release();
+            view.Turn.Tick(.1f);Assert.That(view.Turn.IsBusy,Is.True);
+            Assert.That(view.Turn.Progress-held,Is.InRange(0,.06f));Assert.That(Counter(),Is.EqualTo(before));
+            view.Turn.Cancel();Assert.That(Counter(),Is.EqualTo(before),"Closing a settling turn must not silently advance the record.");
+            view.Turn.Automatic(1);view.Turn.Tick(.8f);Assert.That(view.Turn.IsBusy,Is.True);Assert.That(Counter(),Is.EqualTo(before));
+            view.Turn.Tick(.5f);Assert.That(view.Turn.IsBusy,Is.False);Assert.That(Counter(),Does.Contain("PAGE 2 /"));
+        }
+        [Test] public void PreviewLeavesTheOppositePageAloneAndPrintsTheReverseOfTheSheet()
+        {
+            Assert.That(view.Turn.Begin(Point(5.4f)),Is.True);
+            Assert.That(view.Model.LeftPaper.sharedMaterial.GetTexture("_InkTex"),Is.SameAs(view.Ink));
+            Assert.That(view.Model.TurningPaper.sharedMaterial.GetTexture("_BackInkTex"),Is.SameAs(view.PreviewInk));
+            view.Turn.Cancel();
+        }
+        [Test] public void PaperStripsKeepTheirLengthAndTheLandedSheetMatchesTheRestingLeaf()
+        {
+            for(int side=-1;side<=1;side+=2)foreach(float progress in new[]{0,.15f,.5f,.85f,1})
+            {
+                var mesh=ArchiveBookGeometry.Leaf(side,progress,.8f);owned.Add(mesh);var vertices=mesh.vertices;
+                for(int row=0;row<=ArchiveBookGeometry.LeafRows;row+=4)
+                {
+                    float length=0;int start=row*(ArchiveBookGeometry.LeafColumns+1);
+                    for(int column=0;column<ArchiveBookGeometry.LeafColumns;column++)length+=Vector3.Distance(vertices[start+column],vertices[start+column+1]);
+                    Assert.That(length,Is.EqualTo(ArchiveBookGeometry.PageWidth).Within(.025f));
+                }
+                if(progress==0 || progress==1)Assert.That(mesh.bounds.size.z,Is.LessThan(.07f));
+            }
+        }
+        [Test] public void NarrowBindingPartsHaveFiniteNonInvertedBevels()
+        {
+            foreach(var size in new[]{new Vector3(.085f,.33f,.12f),new Vector3(5.83f,6.98f,.008f),new Vector3(.19f,.26f,.025f)})
+            {
+                var mesh=ArchiveBookGeometry.Binding(size.x,size.y,size.z,.045f);owned.Add(mesh);
+                Assert.That(mesh.bounds.size.x,Is.EqualTo(size.x).Within(.001f));
+                Assert.That(mesh.bounds.size.y,Is.EqualTo(size.y).Within(.001f));
+                Assert.That(mesh.bounds.size.z,Is.EqualTo(size.z).Within(.001f));
+                var vertices=mesh.vertices;var triangles=mesh.triangles;
+                for(int i=0;i<triangles.Length;i+=3)
+                    Assert.That(Vector3.Cross(vertices[triangles[i+1]]-vertices[triangles[i]],vertices[triangles[i+2]]-vertices[triangles[i]]).sqrMagnitude,Is.GreaterThan(1e-15f));
+            }
+        }
+        [Test] public void TopBottomAndOuterEdgesFollowATwoDimensionalPull()
+        {
+            foreach(var start in new[]{new Vector2(2,3.4f),new Vector2(2,-3.4f),new Vector2(5.6f,0),new Vector2(-2,3.4f),new Vector2(-2,-3.4f),new Vector2(-5.6f,0)})
+            {
+                int side=start.x>0?1:-1;
+                var screen=Point(start.x,start.y);
+                Assert.That(view.TryPagePoint(screen,out var hit,out var uv),Is.True);
+                float u=(Mathf.Abs(hit.x)+.002f)/ArchiveBookGeometry.PageWidth,v=hit.y/ArchiveBookGeometry.PageHeight+.5f;
+                float grab=Mathf.Clamp(v*2-1,-.95f,.95f);
+                Assert.That(view.Turn.Begin(screen),Is.True,"Every free edge must be grabbable: "+start);
+                Vector2 offset=screen-view.ScreenPoint(view.Model.SheetPoint(side,0,grab,u,v));
+                Vector2 destination=Point(start.x-side*.9f,start.y+(start.y>0?-.55f:.55f));
+                view.Turn.Drag(destination);
+                Vector2 actual=view.ScreenPoint(view.Model.SheetPoint(side,view.Turn.Progress,grab,u,v,view.Turn.VerticalPull))+offset;
+                Assert.That(Vector2.Distance(actual,destination),Is.LessThan(3.5f),"The actual paper point must follow both screen axes: "+start);
+                Assert.That(Mathf.Abs(view.Turn.VerticalPull),Is.GreaterThan(.08f));
+                var vertices=view.Model.TurningFilter.sharedMesh.vertices;
+                Assert.That(vertices[0].x,Is.EqualTo(side*.015f).Within(.001f));
+                Assert.That(vertices[0].y,Is.EqualTo(-ArchiveBookGeometry.PageHeight*.5f).Within(.001f),"The spine must not stretch with a diagonal pull.");
+                view.Turn.Cancel();
+            }
+        }
+        [Test] public void VerticalOnlyPullBendsPaperWithoutAdvancingAndSettlesBack()
+        {
+            string before=Counter();Assert.That(view.Turn.Begin(Point(5.5f,3.3f)),Is.True);
+            view.Turn.Drag(Point(5.5f,2.5f));
+            Assert.That(Mathf.Abs(view.Turn.VerticalPull),Is.GreaterThan(.2f));
+            Assert.That(view.Model.TurningFilter.sharedMesh.bounds.size.z,Is.GreaterThan(.1f));
+            view.Turn.Release();view.Turn.Tick(2);
+            Assert.That(Counter(),Is.EqualTo(before));Assert.That(view.Turn.VerticalPull,Is.Zero);
+        }
+        [Test] public void PullingANearSpineTopEdgeDoesNotCommitUntilTheGripCrossesTheBinding()
+        {
+            string before=Counter();Assert.That(view.Turn.Begin(Point(2,3.4f)),Is.True);view.Turn.Drag(Point(1,2.9f));
+            view.Turn.Release();view.Turn.Tick(2);Assert.That(Counter(),Is.EqualTo(before));
+            Assert.That(view.Turn.Begin(Point(2,3.4f)),Is.True);view.Turn.Drag(Point(-2,2.9f));
+            view.Turn.Release();view.Turn.Tick(2);Assert.That(Counter(),Does.Contain("PAGE 2 /"));
+        }
+        [Test] public void DiagonalPaperNeverFoldsThroughTheUnderlyingStack()
+        {
+            var mesh=ArchiveBookGeometry.Leaf(1);owned.Add(mesh);
+            foreach(float progress in new[]{0,.25f,.5f,.75f,1})foreach(float pull in new[]{-.8f,.8f})
+            {
+                ArchiveBookGeometry.UpdateLeaf(mesh,1,progress,.9f,pull,.65f);
+                Assert.That(mesh.vertices.All(v=>v.z<=-.0849f),Is.True,"The moving paper must remain in front of its binding, including near the end of a diagonal turn.");
+            }
+        }
+        [Test] public void BookmarkIsTuckedBelowPrintedPaperAndOnlyAShortForkedTipLeavesTheCover()
+        {
+            var filter=view.Model.GetComponentsInChildren<MeshFilter>().Single(m=>m.name=="Woven red bookmark");
+            var vertices=filter.sharedMesh.vertices;
+            foreach(var vertex in vertices)
+            {
+                var local=filter.transform.localPosition+vertex;
+                if(local.y>-ArchiveBookGeometry.PageHeight*.5f)
+                    Assert.That(local.z,Is.GreaterThan(-.04f),"The head must never pierce through the voice controls.");
+                Assert.That(local.y,Is.GreaterThan(-4.05f),"The exposed tail should not hang far below the cover.");
+            }
+            Assert.That(vertices[vertices.Length-2].y,Is.GreaterThan(vertices[vertices.Length-1].y+.04f),"The tip has a small V cut instead of a squared strip.");
+        }
+        [Test] public void AClickWithoutPullingDoesNotLeaveTheReaderBusy()
+        {
+            Assert.That(view.Turn.Begin(Point(5.4f)),Is.True);view.Turn.Release();Assert.That(view.Turn.IsBusy,Is.False);
+        }
+        [Test] public void GutterBackingSitsBehindThePaperInsteadOfCoveringItWithABlackStrip()
+        {
+            var backing=view.Model.GetComponentsInChildren<MeshFilter>().Single(m=>m.name=="Spine gutter backing");
+            float front=backing.transform.localPosition.z+backing.sharedMesh.bounds.min.z;
+            float crease=view.Model.RightPaper.transform.localPosition.z+view.Model.RightCollider.sharedMesh.vertices[0].z;
+            Assert.That(front,Is.GreaterThan(crease+.02f),"The supporting binding must be behind the readable paper, along positive local Z.");
+        }
+        [Test] public void OpeningKeepsOnePhysicalCoverAndTheCameraDoesNotChaseAHeldPage()
+        {
+            view.Model.SetOpening(.999f);Assert.That(view.Model.CoverHinge.gameObject.activeSelf,Is.True);
+            view.Model.SetOpening(1);Assert.That(view.Model.CoverHinge.gameObject.activeSelf,Is.True);
+            view.FitModel(true);Vector3 camera=view.BookCamera.transform.localPosition;
+            Assert.That(view.Turn.Begin(Point(5.4f)),Is.True);view.Turn.Drag(Point(0));
+            // The pre-reserved sweep must fit without a camera jump, even at the high bend.
+            view.FitModel(true);Assert.That(Vector3.Distance(camera,view.BookCamera.transform.localPosition),Is.LessThan(.025f));
             view.Turn.Cancel();
         }
         [Test] public void ExistingOverlayIsRestoredButAlreadyDisabledOverlayRemainsDisabled()
