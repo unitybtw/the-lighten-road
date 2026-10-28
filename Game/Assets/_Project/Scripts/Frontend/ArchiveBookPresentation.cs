@@ -109,7 +109,7 @@ namespace TheLightenRoad.Frontend
             float distance=instant?required:Mathf.Max(required,Mathf.Lerp(-BookCamera.transform.localPosition.z,required,blend));
             BookCamera.transform.localPosition=new Vector3(0,cameraY,-distance);
         }
-        public void PrepareSheet(int side){Model.HoldSheet(Ink);preview(side);Model.PreviewUnderlay(PreviewInk);}
+        public void PrepareSheet(int side){Model.HoldSheet(Ink,side);preview(side);Model.PreviewUnderlay(PreviewInk);}
         public void RenderNextSpread()
         {
             if(previewCanvas==null)
@@ -163,7 +163,7 @@ namespace TheLightenRoad.Frontend
             var ray=BookCamera.ViewportPointToRay(new Vector3(screen.x/Mathf.Max(1,Screen.width),screen.y/Mathf.Max(1,Screen.height),0));var plane=new Plane(Model.transform.TransformDirection(Vector3.back),Model.transform.TransformPoint(new Vector3(0,0,-.15f)));
             if(!plane.Raycast(ray,out var distance))return false;point=Model.transform.InverseTransformPoint(ray.GetPoint(distance));return true;
         }
-        public bool IsPageEdge(Vector2 uv)=> (uv.x<.22f || uv.x>.78f) && uv.y>.14f && uv.y<.88f;
+        public bool IsPageEdge(Vector2 uv)=> (uv.x<.45f || uv.x>.55f) && uv.y>.06f && uv.y<.94f;
         public Vector2 ScreenPoint(Vector3 modelPoint)
         {
             var viewport=BookCamera.WorldToViewportPoint(Model.transform.TransformPoint(modelPoint));return new Vector2(viewport.x*Screen.width,viewport.y*Screen.height);

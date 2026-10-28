@@ -36,6 +36,9 @@ Shader "TheLightenRoad/Archive Book Surface"
     float margin=step(5.1,abs(i.local.x))+step(3.0,abs(i.local.y));
     base*=1-.045*step(.92,grain)*saturate(margin);
     base*=.99+.014*step(.5,frac(i.local.z*80));
+    float gutterDist=abs(i.uv.x-0.5);
+    float gutterShadow=exp(-pow(gutterDist*32.0,2))*0.28;
+    base*=(1.0-gutterShadow);
    }
    if(_HasInk>.5){float2 uv=i.uv;if(!front)uv.x=1-uv.x;float4 ink=SAMPLE_TEXTURE2D(_InkTex,sampler_InkTex,uv);base=ink.rgb+base*(1-ink.a);}
    float projected=.5+.24*cos(_TurnShade.x*PI)*_TurnShade.y;

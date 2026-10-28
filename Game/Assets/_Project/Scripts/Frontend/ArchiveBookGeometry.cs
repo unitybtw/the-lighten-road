@@ -42,13 +42,13 @@ namespace TheLightenRoad.Frontend
                     if(column>0)
                     {
                         float mid=(column-.5f)/columns;
-                        float twist=.85f*grabY*(v*2-1)*mid;
-                        float angle=progress*Mathf.PI+Mathf.Sin(progress*Mathf.PI)*(.64f*Mathf.Sin(mid*Mathf.PI)+twist);
+                        float twist=.40f*grabY*(v*2-1)*mid;
+                        float angle=progress*Mathf.PI+Mathf.Sin(progress*Mathf.PI)*(.55f*Mathf.Sin(mid*Mathf.PI)+twist);
                         rowX[row]+=Mathf.Cos(angle)*PageWidth/columns;rowZ[row]-=Mathf.Sin(angle)*PageWidth/columns;
                     }
                     float curl=Mathf.Sin(Mathf.PI*progress)*u*u;
                     float y=(v-.5f)*PageHeight+curl*.34f*(grabY-v*2+1);
-                    vertices[i]=new Vector3(side*(rowX[row]+.015f),y,rowZ[row]-.12f-.10f*Mathf.Exp(-u*25)-.025f*Mathf.Sin(v*Mathf.PI));
+                    vertices[i]=new Vector3(side*(rowX[row]+.015f),y,rowZ[row]-.12f+.035f*Mathf.Exp(-u*18)-.025f*Mathf.Sin(v*Mathf.PI));
                     uv[i]=new Vector2((side*(u*580+1)+630)/1260,(v*696-323+450)/900);
                 }
             }

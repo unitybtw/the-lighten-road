@@ -48,6 +48,9 @@ skills-lock.json
 
 # Locally provisioned offline speech runtime (rebuild with scripts/narration/setup.py)
 Game/Assets/StreamingAssets/Kokoro/runtime-*/
+
+# Unity CLI Pipeline local config
+Game/ProjectSettings/Packages/com.unity.pipeline/
 Game/Assets/StreamingAssets/Kokoro/runtime-*.meta
 Game/Assets/StreamingAssets/Kokoro/*.onnx
 Game/Assets/StreamingAssets/Kokoro/*.onnx.meta

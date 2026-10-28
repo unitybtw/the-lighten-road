@@ -35,7 +35,13 @@ namespace TheLightenRoad.Frontend
                 .Where(r=>r.name.Contains("hardcover") || r.name.Contains("cover panel") || r.name.Contains("brass corner")).ToArray();
             foreach(var renderer in fixedLeftCover)renderer.enabled=progress>=.999f;
         }
-        public void HoldSheet(RenderTexture ink){var previous=RenderTexture.active;try{Graphics.Blit(ink,frozenInk);}finally{RenderTexture.active=previous;}turnMaterial.SetTexture("_InkTex",frozenInk);TurningPaper.gameObject.SetActive(true);}
+        public void HoldSheet(RenderTexture ink,int side=1)
+        {
+            var previous=RenderTexture.active;try{Graphics.Blit(ink,frozenInk);}finally{RenderTexture.active=previous;}
+            turnMaterial.SetTexture("_InkTex",frozenInk);
+            if(TurningPaper!=null)TurningPaper.transform.localPosition=new Vector3(-side*.017f,0,-.035f);
+            TurningPaper.gameObject.SetActive(true);
+        }
         public void Curl(int side,float amount,float grabY)
         {
             ArchiveBookGeometry.UpdateLeaf(dynamicLeaf,side,Mathf.Clamp01(amount),grabY);

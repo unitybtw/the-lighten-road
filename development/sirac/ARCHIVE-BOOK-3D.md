@@ -1,19 +1,28 @@
 # Archive book: 3D model and direct page manipulation
 
-The reader now instantiates `Game/Assets/_Project/Resources/UI/ArchiveBook3D/ArchiveBook.prefab`. Its hardcover panels, bevelled spine, raised bands, brass fittings, cloth bookmark, folio blocks, and paper leaves are separate editable mesh objects. Meshes and materials are saved beside the prefab. `The Lighten Road > Archive > Rebuild 3D Book Model` regenerates these authored assets from `ArchiveBookModelBuilder`.
+The reader now instantiates `Game/Assets/_Project/Resources/UI/ArchiveBook3D/ArchiveBook.prefab`. Its hardcover panels, bevelled spine, raised bands, brass fittings, cloth bookmark, folio blocks, spine gutter backing, and paper leaves are separate editable mesh objects. Meshes and materials are saved beside the prefab. `The Lighten Road > Archive > Rebuild 3D Book Model` regenerates these authored assets from `ArchiveBookModelBuilder`.
 
-The source handwriting canvas renders to a private 2048 × 1464 texture. The texture is printed onto paper geometry rather than displayed over a picture of a book. A held sheet snapshots its front-side ink, deforms through a tessellated bend, and exposes the opposite side as it crosses the spine. The following spread is rendered into a separate preview texture underneath it. Previewing restores the logical record/page immediately and never publishes discovery events, awards fuel, or changes narration. Cancelling restores the original texture as well as the original selection. Geometry shading, leather grain, paper edges, and a moving gutter shadow come from the archive surface shader.
+The source handwriting canvas renders to a private 2048 × 1464 texture. The texture is printed onto paper geometry rather than displayed over a picture of a book. A held sheet snapshots its front-side ink, deforms through a tessellated bend, and exposes the opposite side as it crosses the spine. The following spread is rendered into a separate preview texture underneath it. Previewing restores the logical record/page immediately and never publishes discovery events, awards fuel, or changes narration. Cancelling restores the original texture as well as the original selection. Geometry shading, leather grain, paper edges, seamless spine crease overlap, an ambient gutter fold shadow, and a moving page shadow come from the archive surface shader.
 
 ## Controls
 
-- Hold the left mouse button on either outer page edge, then drag across the spine.
-- Releasing before the halfway point returns the sheet and leaves the selected page unchanged.
+- Hold the left mouse button across either page spread, then drag across the spine.
+- Dragging dynamically tracks the cursor's vertical position and flexes the page organically without abrupt twists or distortion.
+- Releasing before the halfway point smoothly returns the sheet and leaves the selected page unchanged with organic settling.
 - Releasing past halfway completes exactly one forward/backward page turn.
+- Next / Previous buttons trigger a fluid 0.72s quintic smootherstep flip animation that glides naturally across the spine.
 - Previous/Next, Left/Right, and the controller bumpers remain available.
 - Close or losing application focus cancels an unfinished gesture. The cover lifts towards the reader, and the left folios rotate continuously with it instead of appearing halfway through the opening. Reading continues to pause gameplay.
 - Reduced Motion keeps direct manipulation but snaps the release and button-driven transitions.
 
 Voice controls retain their own click targets. Button-origin drags never capture a sheet; the modal pixel display also blocks clicks into the world behind it. A mesh UV raycaster routes clicks to those controls before treating blank paper as a draggable edge. The original text, clues, discovery state, and narrator queue remain in the Codex menu. Within-record page turns keep narration continuous.
+
+## Spine binding and crease continuity
+
+- The left and right readable paper leaves meet at the spine centerline with a 4mm seamless tuck overlap, eliminating any vertical gap, seam, or background void between the pages.
+- A dedicated `Spine gutter backing` mesh bridges across both folio blocks directly beneath the valley.
+- The paper geometry curves naturally into the binding valley (+Z depth into the book) rather than bulging outwards toward the camera.
+- The archive surface shader calculates an ambient contact shadow along the gutter fold (`abs(uv.x - 0.5)`), creating a rich, physical spine valley.
 
 ## Rendering and lifecycle
 
