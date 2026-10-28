@@ -32,7 +32,7 @@ namespace TheLightenRoad.Frontend.Editor
                 "Scout the landing before jumping down. Recovered records remain available after a chamber reset.");
             catalog.Logs=catalog.Logs.Concat(new[]{a,b}).GroupBy(l=>l.Id).Select(g=>g.First()).ToArray();EditorUtility.SetDirty(catalog);
             var group=new GameObject("Office Archive Points");SceneManager.MoveGameObjectToScene(group,scene);
-            Point(group,a,new Vector3(-3.2f,-2.74f,0));Point(group,b,new Vector3(24.5f,-1.0314f,0));
+            Point(group,a,new Vector3(-1.7f,-2.74f,0));Point(group,b,new Vector3(26f,-2.74f,0));
             EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);AssetDatabase.SaveAssets();
             if(opened)EditorSceneManager.CloseScene(scene,true);
         }
