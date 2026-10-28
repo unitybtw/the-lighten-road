@@ -385,6 +385,7 @@ namespace TheLightenRoad.Frontend
             if (promptText != null)
             {
                 promptText.text = actionPrompt;
+                if(ArchiveLog!=null){promptText.characterSpacing=1.2f;promptText.fontSize=15f;}
             }
         }
 
@@ -417,7 +418,8 @@ namespace TheLightenRoad.Frontend
             FindPlayerReferences();
 
             // Sinuous organic floating bob
-            transform.localPosition = initialLocalPos + Vector3.up * (Mathf.Sin(Time.time * 2.2f) * 0.08f);
+            if(ArchiveLog==null)transform.localPosition=initialLocalPos+Vector3.up*(Mathf.Sin(Time.time*2.2f)*.08f);
+            else if(worldCanvas!=null)worldCanvas.transform.localPosition=Vector3.up*(1.45f+(MenuPreferences.ReducedMotion?0:.035f*Mathf.Sin(Time.time*2.2f)));
 
             // Shimmering dissolution sequence
             if (isDissolving)

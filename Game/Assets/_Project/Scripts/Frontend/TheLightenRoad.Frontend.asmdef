@@ -11,6 +11,8 @@
     "Unity.InputSystem",
     "TheLightenRoad.Input",
     "TheLightenRoad.Observer",
-    "TheLightenRoad.Codex"
+    "TheLightenRoad.Codex",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime"
   ]
 }

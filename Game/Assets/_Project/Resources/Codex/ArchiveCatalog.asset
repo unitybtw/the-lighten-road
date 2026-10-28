@@ -16,3 +16,5 @@ MonoBehaviour:
   Logs:
   - {fileID: 11400000, guid: b1c18db8a0e894f09b7267380e0a08c7, type: 2}
   - {fileID: 11400000, guid: 7d0833544c06142a099197ba6c1f46f6, type: 2}
+  - {fileID: 11400000, guid: e6fb3380f36a946bbb2e8b42331d11cb, type: 2}
+  - {fileID: 11400000, guid: 963ebf7bb038f4cb29272a0746d4813a, type: 2}

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using TheLightenRoad.Codex;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -34,7 +35,7 @@ namespace TheLightenRoad.Frontend.Editor
             var second=Asset<ArchiveLog>("02_UpperArchive");second.Id="upper-archive";second.Title="A Margin in the Dark";
             second.Text="They called the light an endless gift. We counted every ember.\n\nBehind the upper shelves I kept a record of the flooded rooms. A circuit that opens a passage can wake the current beneath your feet. Watch both consequences before committing your light.";
             second.RoomClue="Powered water is dangerous; drained water is safe. One circuit may control more than one mechanism.";
-            var catalog=Asset<ArchiveCatalog>("ArchiveCatalog");catalog.Channel=channel;catalog.Logs=new[]{first,second};
+            var catalog=Asset<ArchiveCatalog>("ArchiveCatalog");catalog.Channel=channel;catalog.Logs=catalog.Logs.Concat(new[]{first,second}).Where(l=>l!=null).GroupBy(l=>l.Id).Select(g=>g.First()).ToArray();
             foreach(var a in new Object[]{delivery,membership,channel,first,second,catalog})EditorUtility.SetDirty(a);
             var template=Terminal(first,Vector3.zero);
             PrefabUtility.SaveAsPrefabAsset(template,"Assets/_Project/Prefabs/Codex/ArchiveTerminal.prefab");Object.DestroyImmediate(template);

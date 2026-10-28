@@ -3,6 +3,7 @@ using System.Linq;
 using TheLightenRoad.Codex;
 using TheLightenRoad.Input;
 using TheLightenRoad.Player;
+using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -20,7 +21,10 @@ namespace TheLightenRoad.Frontend
         private readonly List<string> entries=new List<string>();
         private SocialChannel channel;
         private GameObject panel;
-        private TMP_Text progress,title,body,clue,pages;
+        private TMP_Text progress,title,body,clue,pages,location,shortcuts;
+        private CanvasGroup readingGroup;
+        private RectTransform decryptionFill;
+        private float revealTime;
         private Button previous,next,close;
         private AudioSource audioSource;
         private int selected,page;
@@ -40,9 +44,9 @@ namespace TheLightenRoad.Frontend
         {
             CodexSession.Ensure();channel=CodexSession.Channel;entries.Clear();
             if(channel!=null)channel.Subscribe(this);
-            CodexSession.PageRequested+=Open;Redraw();
+            CodexSession.PageRequested+=Open;ControllerGlyphService.OnPromptStyleChanged+=RefreshShortcuts;Redraw();RefreshShortcuts();
         }
-        void OnDisable(){Close();if(channel!=null)channel.Unsubscribe(this);CodexSession.PageRequested-=Open;}
+        void OnDisable(){Close();if(channel!=null)channel.Unsubscribe(this);CodexSession.PageRequested-=Open;ControllerGlyphService.OnPromptStyleChanged-=RefreshShortcuts;}
         public void OnSocialEvent(SocialEvent e)
         {
             if(e.kind!=SocialEventKind.LogFound || CodexSession.Catalog?.Find(e.text)==null)return;
@@ -58,7 +62,7 @@ namespace TheLightenRoad.Frontend
                 previousTime=Time.timeScale;previousSelection=EventSystem.current?.currentSelectedGameObject;
                 Time.timeScale=0;GameControls.BlockGameplay(this,true);IsOpen=true;
             }
-            panel.SetActive(true);Redraw();
+            panel.SetActive(true);revealTime=0;readingGroup.alpha=MenuPreferences.ReducedMotion?1:.15f;Redraw();RefreshShortcuts();
             var log=CodexSession.Catalog.Find(id);audioSource.Stop();
             if(log.Audio!=null){audioSource.volume=MenuPreferences.Master*MenuPreferences.Effects;audioSource.clip=log.Audio;audioSource.Play();}
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(close.gameObject);
@@ -72,6 +76,7 @@ namespace TheLightenRoad.Frontend
         }
         void Update()
         {
+            if(IsOpen){revealTime+=Time.unscaledDeltaTime;readingGroup.alpha=MenuPreferences.ReducedMotion?1:Mathf.SmoothStep(.15f,1,Mathf.Clamp01(revealTime/.18f));}
             var kb=Keyboard.current;var pad=GameControls.ActivePad;
             if(IsOpen)
             {
@@ -94,9 +99,12 @@ namespace TheLightenRoad.Frontend
         private void Redraw()
         {
             if(progress==null)return;
-            progress.text=$"ARCHIVE DECRYPTION   {CodexSession.Decryption:0}%   /   {CodexSession.FoundCount} OF {CodexSession.Catalog?.Total??0} LOGS";
+            progress.text=$"ARCHIVE DECRYPTION\n\n{CodexSession.Decryption:0}%\n{CodexSession.FoundCount} OF {CodexSession.Catalog?.Total??0} RECORDS";
+            decryptionFill.sizeDelta=new Vector2(230*CodexSession.Decryption/100f,2);
             if(entries.Count==0){title.text="The archive is silent";body.text="Recover logs from Archive Terminals to reveal the Old World.";clue.text="";pages.text="";return;}
             selected=Mathf.Clamp(selected,0,entries.Count-1);var log=CodexSession.Catalog.Find(entries[selected]);
+            location.text=string.IsNullOrWhiteSpace(log.Location)?"THE ARCHIVE":log.Location;
+            previous.interactable=next.interactable=entries.Count>1 || PageCount(log.Text)>1;
             title.text=log.Title;var text=log.Text??"";page=Mathf.Clamp(page,0,PageCount(text)-1);
             int start=page*PageLength;body.text=text.Substring(start,Mathf.Min(PageLength,text.Length-start));
             clue.text="ROOM CLUE\n"+log.RoomClue;pages.text=$"LOG {selected+1} / {entries.Count}    ·    PAGE {page+1} / {PageCount(text)}";
@@ -111,11 +119,25 @@ namespace TheLightenRoad.Frontend
             var t=Rect(name,parent,size,pos).gameObject.AddComponent<TextMeshProUGUI>();t.fontSize=font;t.color=color;t.raycastTarget=false;
             t.textWrappingMode=TextWrappingModes.Normal;t.richText=false;return t;
         }
+        private void RefreshShortcuts()
+        {
+            if(shortcuts==null)return;
+            var style=ControllerGlyphService.ActiveStyle;
+            shortcuts.text=style==ControllerPromptStyle.PlayStation?"L1 / R1  Browse     Circle  Close     Create  Reopen":
+                style==ControllerPromptStyle.Xbox?"LB / RB  Browse     B  Close     View  Reopen":"Left / Right  Browse     Esc  Close     Tab  Reopen";
+        }
+        private Image Rule(Transform parent,string name,Vector2 size,Vector2 pos,Color color)
+        {
+            var image=Rect(name,parent,size,pos).gameObject.AddComponent<Image>();image.color=color;image.raycastTarget=false;return image;
+        }
         private Button Action(Transform parent,string text,float x,UnityEngine.Events.UnityAction callback)
         {
-            var r=Rect(text,parent,new Vector2(260,60),new Vector2(x,-310));var bg=r.gameObject.AddComponent<Image>();bg.color=new Color(.16f,.12f,.07f,.95f);
-            var b=r.gameObject.AddComponent<Button>();b.targetGraphic=bg;b.onClick.AddListener(callback);
-            var t=Label(text+" caption",r,new Vector2(250,50),Vector2.zero,22,new Color(1,.82f,.5f));t.text=text;t.alignment=TextAlignmentOptions.Center;ArchiveMenuStyle.Apply(t,"Caption",22);return b;
+            var r=Rect(text,parent,new Vector2(220,60),new Vector2(x,-340));var bg=r.gameObject.AddComponent<Image>();bg.color=Color.clear;
+            var b=r.gameObject.AddComponent<Button>();b.targetGraphic=bg;b.transition=Selectable.Transition.None;b.onClick.AddListener(callback);
+            var t=Label(text+" caption",r,new Vector2(190,50),Vector2.zero,22,new Color(1,.82f,.5f));t.text=text;t.alignment=TextAlignmentOptions.Center;ArchiveMenuStyle.Apply(t,"Caption",22);
+            var focus=r.gameObject.AddComponent<SettingsLightFocus>();focus.Label=t;focus.CardPlate=bg;focus.PointerOffset=101;
+            var diamond=Rule(r,"Focus diamond",new Vector2(6,6),new Vector2(-101,0),Color.clear);diamond.rectTransform.localRotation=Quaternion.Euler(0,0,45);focus.LeftPointer=diamond.rectTransform;
+            return b;
         }
         private void Build()
         {
@@ -124,23 +146,32 @@ namespace TheLightenRoad.Frontend
             var canvasGo=new GameObject("Codex Canvas",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));canvasGo.transform.SetParent(transform,false);
             var canvas=canvasGo.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=120;
             var scaler=canvasGo.GetComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=.5f;
-            var r=Rect("Codex reading surface",canvasGo.transform,new Vector2(1180,820),Vector2.zero);panel=r.gameObject;
-            r.gameObject.AddComponent<MenuReadability>();var bg=r.gameObject.AddComponent<Image>();bg.color=new Color(.018f,.025f,.032f,.985f);
-            var gold=new Color(1,.78f,.4f);var ivory=new Color(.94f,.92f,.85f);
-            progress=Label("Decryption",r,new Vector2(1040,40),new Vector2(0,340),22,gold);
-            title=Label("Log title",r,new Vector2(1040,64),new Vector2(0,268),34,ivory);ArchiveMenuStyle.Apply(title,"Heading",34);
-            body=Label("Log text",r,new Vector2(1040,320),new Vector2(0,65),24,ivory);
-            clue=Label("Room clue",r,new Vector2(1040,110),new Vector2(0,-170),22,gold);
-            pages=Label("Page counter",r,new Vector2(1040,32),new Vector2(0,-248),20,ivory);
-            previous=Action(r,"Previous",-320,()=>Turn(-1));close=Action(r,"Close",0,Close);next=Action(r,"Next",320,()=>Turn(1));
+            var overlay=Rect("Codex overlay",canvasGo.transform,Vector2.zero,Vector2.zero);overlay.anchorMin=Vector2.zero;overlay.anchorMax=Vector2.one;overlay.sizeDelta=Vector2.zero;panel=overlay.gameObject;
+            var dim=overlay.gameObject.AddComponent<Image>();dim.color=new Color(.008f,.009f,.008f,.94f);
+            var r=Rect("Codex reading surface",overlay,new Vector2(1260,820),Vector2.zero);r.gameObject.AddComponent<MenuReadability>();readingGroup=r.gameObject.AddComponent<CanvasGroup>();
+            var gold=new Color(.8f,.65f,.4f);var ivory=new Color(.9f,.88f,.81f);
+            Rule(r,"Dossier backing",new Vector2(1180,720),new Vector2(0,10),new Color(.045f,.045f,.038f,.96f));
+            Rule(r,"Top brass rule",new Vector2(1100,2),new Vector2(0,368),gold*.65f);
+            Rule(r,"Footer brass rule",new Vector2(1100,1),new Vector2(0,-295),gold*.4f);
+            Rule(r,"Document spine",new Vector2(1,570),new Vector2(-265,26),gold*.3f);
+            var stamp=Label("Archive stamp",r,new Vector2(230,40),new Vector2(-415,310),22,gold);stamp.text="FIELD ARCHIVE";ArchiveMenuStyle.Apply(stamp,"Heading",22);
+            progress=Label("Decryption",r,new Vector2(230,160),new Vector2(-415,175),22,gold);
+            Rule(r,"Decryption track",new Vector2(230,2),new Vector2(-415,48),new Color(.25f,.23f,.18f));
+            var fill=Rule(r,"Decryption fill",new Vector2(0,2),Vector2.zero,gold);fill.rectTransform.SetParent(r.Find("Decryption track"),false);decryptionFill=fill.rectTransform;decryptionFill.anchorMin=decryptionFill.anchorMax=decryptionFill.pivot=new Vector2(0,.5f);
+            var note=Label("Archive note",r,new Vector2(230,160),new Vector2(-415,-115),20,new Color(.59f,.58f,.52f));note.text="Fragments of the Old World.\n\nRecovered records remain with you through this journey.";
+            location=Label("Record location",r,new Vector2(740,28),new Vector2(150,322),20,gold);
+            title=Label("Log title",r,new Vector2(740,70),new Vector2(150,250),32,ivory);ArchiveMenuStyle.Apply(title,"Heading",32);
+            body=Label("Log text",r,new Vector2(740,300),new Vector2(150,55),22,ivory);
+            Rule(r,"Clue rule",new Vector2(740,1),new Vector2(150,-119),gold*.35f);
+            clue=Label("Room clue",r,new Vector2(740,106),new Vector2(150,-186),20,gold);
+            pages=Label("Page counter",r,new Vector2(740,28),new Vector2(150,-267),20,new Color(.6f,.59f,.53f));
+            previous=Action(r,"Previous",-310,()=>Turn(-1));close=Action(r,"Close",0,Close);next=Action(r,"Next",310,()=>Turn(1));
             var buttons=new[]{previous,close,next};for(int i=0;i<3;i++)buttons[i].navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=buttons[(i+2)%3],selectOnRight=buttons[(i+1)%3]};
-            var hint=Label("Codex shortcuts",r,new Vector2(1040,32),new Vector2(0,-370),18,ivory);hint.text="Arrows / LB–RB: pages    ·    Esc / B / Circle: close    ·    Tab / View / Create: reopen";
-            // Reuse the lecture feed unchanged as a separate observer.
-            var feedRect=Rect("Archive recovery feed",canvasGo.transform,new Vector2(500,130),new Vector2(0,440));
+            shortcuts=Label("Codex shortcuts",r,new Vector2(1100,30),new Vector2(0,-390),20,new Color(.62f,.61f,.55f));shortcuts.alignment=TextAlignmentOptions.Center;
+            var feedRect=Rect("Archive recovery feed",canvasGo.transform,new Vector2(500,130),Vector2.zero);
             var feedText=feedRect.gameObject.AddComponent<Text>();feedText.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");feedText.fontSize=18;feedText.color=gold;feedText.raycastTarget=false;
             var feed=feedRect.gameObject.AddComponent<PartyFeedUI>();feed.enabled=false;CodexSession.Ensure();feed.channel=CodexSession.Channel;feed.text=feedText;feed.maxLines=2;feed.enabled=true;
-            feedRect.anchorMin=feedRect.anchorMax=new Vector2(.5f,0);feedRect.anchoredPosition=new Vector2(0,120);
-            feedRect.gameObject.AddComponent<ArchiveFeedVisibility>();
+            feedRect.anchorMin=feedRect.anchorMax=new Vector2(.5f,0);feedRect.anchoredPosition=new Vector2(0,120);feedRect.gameObject.AddComponent<ArchiveFeedVisibility>();
             panel.SetActive(false);
         }
     }

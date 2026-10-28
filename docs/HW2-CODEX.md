@@ -35,3 +35,13 @@ Kemal's Interaction, Mechanisms and sandbox files are outside this change. No co
 ## Part B submission document
 
 The revised two-page GDD section is `output/pdf/HW2_B_TheLightenRoad.pdf`; its editable source is `docs/HW2-PART-B.md`. It follows B.1/B.2/B.3, uses the exact spreadsheet cells, names ArchiveCodexMenu correctly and discloses the actual AI contribution. The user confirmed that the system choice and core mechanics were team decisions. The eight-line scenario is illustrative, not a claim of a recorded playtest. Rebuild on this macOS workspace with `python3 scripts/docs/build_hw2_part_b.py` (ReportLab and the system Arial fonts required). The original supplied PDF remains unchanged.
+
+## Office scene integration
+
+`Office.unity` now contains two additional records: **The Unfinished Ledger** near reception at (-3.2, -2.74), and **A Note Above the Dust** on the upper filing cabinet at (24.5, -1.0314). They use the same E / Triangle / Y interaction and one-time reward as the tutorial records. The shared catalog now contains four unique records across both scenes; an Office-only visit starts at 0/4, not 0/2. All four records remain session discoveries.
+
+Office record text, clue and location are editable in `03_OfficeLedger.asset` and `04_OfficeMargin.asset`. These remain prototype prose for designer review. The installation menu appends the records without removing tutorial entries or duplicating Office objects. Existing Office geometry, lights and props are preserved.
+
+The terminal is now a code-drawn point-filtered filing desk, open ledger and small reading lamp using an aged iron/brass palette. The desk remains anchored; only its prompt floats. Reduced Motion removes prompt bob and lamp shimmer. The Codex uses a dark dossier layout with a separate archive index, fine brass rules, location header and device-specific shortcuts. Navigation focus uses a diamond and text emphasis; opening fades in with unscaled time and respects Reduced Motion.
+
+Validation: **214/214 frontend and player Play Mode tests passed** after the final focus styling check. The reading layout was rendered at 1280×720, 1024×768 and 2560×1080 with text-fit assertions. Native Office review confirmed walking to reception, E opening the Office-specific log, and the one-ember discovery reward (3 to 4). The upper record was positioned against the existing cabinet collider; a full Office traversal and physical-controller playthrough were not performed. Source level geometry was not rebuilt.

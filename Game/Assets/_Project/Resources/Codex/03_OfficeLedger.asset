@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a014e981164b34ef4b183cb579b7e688, type: 3}
+  m_Name: 03_OfficeLedger
+  m_EditorClassIdentifier: TheLightenRoad.Codex::TheLightenRoad.Codex.ArchiveLog
+  Id: office-ledger
+  Title: The Unfinished Ledger
+  Location: CORPORATE OFFICE / RECEPTION
+  Text: 'The last entry is unfinished. A ring of soot marks the place where the clerk
+    kept a small lamp.
+
+
+    Names were entered, drawers were sealed, and the office
+    carried on as though the world outside had not already ended. Someone left a
+    final note between the pages: leave enough light for the return journey.'
+  RoomClue: A Flare spends one whole ember. Keep a reserve before exploring the darker
+    end of the office.
+  Audio: {fileID: 0}

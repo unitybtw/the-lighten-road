@@ -53,10 +53,34 @@ namespace TheLightenRoad.Frontend.Tests
             var fuel=Go("Fuel").AddComponent<LanternFuel>();CodexSession.Discover("a");CodexSession.Discover("b");Assert.That(fuel.TotalEmbers,Is.EqualTo(4));
             Assert.That(CodexSession.Decryption,Is.EqualTo(100));var catalog=CodexSession.Catalog;CodexSession.Begin(catalog);Assert.That(CodexSession.FoundCount,Is.Zero);
         }
+        [UnityTest] public IEnumerator TerminalDeskStaysAnchoredWhilePromptAnimates()
+        {
+            var go=Go("Office desk");go.transform.position=new Vector3(10,2,0);var terminal=go.AddComponent<DiegeticWhisper>();terminal.ArchiveLog=CodexSession.Catalog.Find("a");
+            go.AddComponent<ArchiveTerminalVisual>();var start=go.transform.position;
+            yield return null;terminal.TickWhisper(.2f);
+            Assert.That(go.transform.position,Is.EqualTo(start));
+            Assert.That(go.GetComponentInChildren<Canvas>().transform.localPosition.y,Is.GreaterThan(1));
+        }
+        [UnityTest] public IEnumerator DossierReadingFitsSupportedScreensAndKeepsActionsSeparated()
+        {
+            CodexSession.Catalog.Find("a").Text=string.Join(" ",Enumerable.Repeat("The office kept its records in silence.",15));
+            CodexSession.Discover("a");var menu=Go("Office reader").AddComponent<ArchiveCodexMenu>();menu.Open("a");yield return new WaitForSecondsRealtime(.22f);
+            var canvas=menu.GetComponentInChildren<Canvas>();
+            foreach(var size in new[]{new Vector2Int(1280,720),new Vector2Int(1024,768),new Vector2Int(2560,1080)})
+            {
+                MenuReadabilityTests.Capture(canvas,size.x,size.y,"office-codex-"+size.x);
+                foreach(var label in menu.GetComponentsInChildren<TMP_Text>().Where(t=>t.name=="Log text" || t.name=="Room clue" || t.name=="Log title"))
+                    Assert.That(label.GetPreferredValues(label.text,label.rectTransform.rect.width,0).y,Is.LessThanOrEqualTo(label.rectTransform.rect.height+2),label.name);
+            }
+            var buttons=menu.GetComponentsInChildren<Button>();Assert.That(buttons.Length,Is.EqualTo(3));
+            Assert.That(buttons.All(b=>b.GetComponent<SettingsLightFocus>()!=null),Is.True);
+            menu.Close();
+        }
         [UnityTest] public IEnumerator CodexRebuildsEntriesOnEnableAndRestoresTimeAndInputOnClose()
         {
             CodexSession.Discover("a");var menu=Go("Reader").AddComponent<ArchiveCodexMenu>();yield return null;
             Assert.That(menu.EntryCount,Is.EqualTo(1));menu.Open("a");Assert.That(ArchiveCodexMenu.IsOpen,Is.True);Assert.That(Time.timeScale,Is.Zero);Assert.That(GameControls.GameplayAllowed,Is.False);
+            yield return new WaitForSecondsRealtime(.22f);
             MenuReadabilityTests.Capture(menu.GetComponentInChildren<Canvas>(),1280,720,"codex-reading-720p");
             CodexSession.Discover("b");menu.Open("b");
             menu.GetComponentsInChildren<Button>().Single(b=>b.name=="Next").onClick.Invoke();

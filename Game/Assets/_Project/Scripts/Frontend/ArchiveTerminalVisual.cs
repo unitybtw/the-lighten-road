@@ -1,23 +1,36 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 namespace TheLightenRoad.Frontend
 {
-    /// <summary>Code-built terminal silhouette, independent of puzzle machinery.</summary>
+    /// <summary>A code-drawn, point-filtered filing desk and reading lamp for the ruined office.</summary>
     public sealed class ArchiveTerminalVisual : MonoBehaviour
     {
-        private SpriteRenderer ember;
-        static Sprite square;
+        private Light2D lamp;
+        private static Sprite desk;
+        private static Sprite BuildSprite()
+        {
+            var tex=new Texture2D(48,56,TextureFormat.RGBA32,false){filterMode=FilterMode.Point,wrapMode=TextureWrapMode.Clamp,name="Archive desk pixels"};
+            var pixels=new Color[48*56];tex.SetPixels(pixels);
+            Color iron=new Color32(49,51,48,255),edge=new Color32(94,90,72,255),dark=new Color32(23,26,25,255),paper=new Color32(177,164,123,255),brass=new Color32(140,102,48,255);
+            void Box(int x,int y,int w,int h,Color c){for(int j=y;j<y+h;j++)for(int i=x;i<x+w;i++)tex.SetPixel(i,j,c);}
+            Box(8,0,4,4,dark);Box(35,0,4,4,dark);Box(6,3,35,26,dark);Box(8,5,31,23,iron);
+            for(int y=7;y<26;y+=9){Box(10,y,27,7,edge);Box(11,y+1,25,5,iron);Box(21,y+3,7,1,brass);Box(10,y,27,1,dark);}
+            Box(3,28,42,3,brass);Box(4,31,40,2,edge);Box(7,32,26,1,dark);
+            Box(9,33,22,2,dark);Box(9,35,10,5,paper);Box(20,35,10,5,paper);Box(19,34,1,7,brass);
+            for(int y=36;y<40;y+=2){Box(11,y,6,1,edge);Box(22,y,6,1,edge);}
+            Box(35,33,5,2,brass);Box(37,35,1,13,edge);Box(29,47,9,1,brass);
+            Box(27,44,8,3,dark);Box(26,43,10,1,brass);Box(28,42,6,1,new Color32(246,188,83,255));
+            Box(7,22,2,3,brass);Box(37,9,1,4,brass);Box(13,5,3,1,dark);Box(33,29,2,1,paper);
+            tex.Apply();return Sprite.Create(tex,new Rect(0,0,48,56),new Vector2(.5f,.15f),32);
+        }
         void Awake()
         {
-            if(square==null)square=Sprite.Create(Texture2D.whiteTexture,new Rect(0,0,1,1),Vector2.one*.5f,1);
-            Piece("Archive plinth",new Vector2(0,-.35f),new Vector2(.65f,.95f),new Color(.12f,.14f,.14f));
-            Piece("Brass reading desk",new Vector2(0,.2f),new Vector2(.85f,.12f),new Color(.62f,.43f,.2f));
-            ember=Piece("Terminal ember",new Vector2(0,.4f),new Vector2(.18f,.24f),new Color(1,.72f,.25f));
+            if(desk==null)desk=BuildSprite();
+            var go=new GameObject("Filing desk and ledger",typeof(SpriteRenderer));go.transform.SetParent(transform,false);
+            var sr=go.GetComponent<SpriteRenderer>();sr.sprite=desk;sr.sortingOrder=12;
+            var light=new GameObject("Desk lamp pool",typeof(Light2D));light.transform.SetParent(transform,false);light.transform.localPosition=new Vector3(.2f,1.05f,0);
+            lamp=light.GetComponent<Light2D>();lamp.lightType=Light2D.LightType.Point;lamp.color=new Color(1,.71f,.34f);lamp.pointLightOuterRadius=1.65f;lamp.pointLightInnerRadius=.25f;lamp.intensity=.38f;
         }
-        SpriteRenderer Piece(string name,Vector2 pos,Vector2 size,Color color)
-        {
-            var go=new GameObject(name,typeof(SpriteRenderer));go.transform.SetParent(transform,false);go.transform.localPosition=pos;go.transform.localScale=size;
-            var sr=go.GetComponent<SpriteRenderer>();sr.sprite=square;sr.color=color;sr.sortingOrder=12;return sr;
-        }
-        void Update(){if(ember!=null)ember.color=new Color(1,.7f,.25f,.75f+.2f*Mathf.Sin(Time.unscaledTime*2));}
+        void Update(){if(lamp!=null)lamp.intensity=MenuPreferences.ReducedMotion ? .38f : .38f+.025f*Mathf.Sin(Time.unscaledTime*1.7f);}
     }
 }

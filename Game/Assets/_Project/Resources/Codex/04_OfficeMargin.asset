@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a014e981164b34ef4b183cb579b7e688, type: 3}
+  m_Name: 04_OfficeMargin
+  m_EditorClassIdentifier: TheLightenRoad.Codex::TheLightenRoad.Codex.ArchiveLog
+  Id: office-margin
+  Title: A Note Above the Dust
+  Location: CORPORATE OFFICE / UPPER FILES
+  Text: 'Most of the cabinets are empty. Above the dust line, one folder has survived.
+
+
+    Its
+    margins are filled with small observations: the sound of a door settling, the
+    shape of a gap, the route back to a familiar lamp. Whoever wrote this learned
+    the office by the pieces the darkness could not hide.'
+  RoomClue: Scout the landing before jumping down. Recovered records remain available
+    after a chamber reset.
+  Audio: {fileID: 0}
