@@ -31,3 +31,7 @@ Unity 6000.3.2f1: **212/212 frontend and player Play Mode tests passed**, zero f
 Automated checks cover live rescue from zero fuel, cancellation of the darkness timer, duplicate-terminal suppression, re-created/re-enabled listeners without duplicate fuel, stored replay, four-ember cap, session reset, catalog percentage, UI reconstruction, paginated reading and pause/input restoration. Test XML and render previews are generated under the ignored `Game/Library` directory. No physical controller or standalone build certification is implied by Editor tests.
 
 Kemal's Interaction, Mechanisms and sandbox files are outside this change. No course portal submission was performed.
+
+## Part B submission document
+
+The revised two-page GDD section is `output/pdf/HW2_B_TheLightenRoad.pdf`; its editable source is `docs/HW2-PART-B.md`. It follows B.1/B.2/B.3, uses the exact spreadsheet cells, names ArchiveCodexMenu correctly and discloses the actual AI contribution. The user confirmed that the system choice and core mechanics were team decisions. The eight-line scenario is illustrative, not a claim of a recorded playtest. Rebuild on this macOS workspace with `python3 scripts/docs/build_hw2_part_b.py` (ReportLab and the system Arial fonts required). The original supplied PDF remains unchanged.
