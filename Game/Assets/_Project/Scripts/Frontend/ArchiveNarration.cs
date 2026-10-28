@@ -97,9 +97,10 @@ namespace TheLightenRoad.Frontend
         private void CleanWorker()
         {
             if(worker!=null){try{if(!worker.HasExited)worker.Kill();}catch(InvalidOperationException){}worker.Dispose();worker=null;}
-            if(requestFile!=null){try{File.Delete(requestFile);}catch(IOException){}requestFile=null;}
+            string file=requestFile;requestFile=null;
+            if(!string.IsNullOrWhiteSpace(file)){try{File.Delete(file);}catch(IOException){}catch(UnauthorizedAccessException){}}
         }
-        private void OnDisable(){StopAllCoroutines();CleanWorker();pending.Clear();queue.Clear();textByKey.Clear();running=false;}
+        private void OnDisable(){StopAllCoroutines();CleanWorker();pending.Clear();queue.Clear();textByKey.Clear();running=false;foreach(var clip in ready.Values)if(clip!=null)Destroy(clip);ready.Clear();}
         private void OnDestroy(){StopAllCoroutines();CleanWorker();foreach(var clip in ready.Values)if(clip!=null)Destroy(clip);ready.Clear();}
     }
 }

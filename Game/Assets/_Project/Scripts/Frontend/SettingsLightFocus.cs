@@ -25,6 +25,7 @@ namespace TheLightenRoad.Frontend
         public RectTransform RightPointer;
         public float PointerOffset = 370f;
         public bool IsCurrent;
+        public bool UseInkPalette;
 
         private bool hovered;
         private bool isSelected;
@@ -110,6 +111,12 @@ namespace TheLightenRoad.Frontend
                 Color disabledCol = new Color(0.55f, 0.58f, 0.65f, 0.6f);
                 Color idleCol = IsCurrent ? new Color(1.0f, 0.78f, 0.32f, 0.95f) : new Color(0.85f, 0.90f, 0.98f, 0.85f);
                 Color focusCol = new Color(1.0f, 0.88f, 0.55f, 1f);
+                if (UseInkPalette)
+                {
+                    disabledCol = new Color(.35f, .29f, .22f, .65f);
+                    idleCol = new Color(.24f, .14f, .065f, 1f);
+                    focusCol = new Color(.43f, .17f, .04f, 1f);
+                }
                 Label.color = !enabledState ? disabledCol : Color.Lerp(idleCol, focusCol, blend);
             }
 
@@ -118,7 +125,7 @@ namespace TheLightenRoad.Frontend
                 float slide = Mathf.Lerp(PointerOffset + 18f, PointerOffset, blend);
                 LeftPointer.anchoredPosition = new Vector2(-slide, 0f);
                 var lImg = LeftPointer.GetComponent<Image>();
-                if (lImg != null) lImg.color = new Color(1.0f, 0.94f, 0.85f, blend);
+                if (lImg != null) lImg.color = UseInkPalette ? new Color(.43f, .17f, .04f, blend) : new Color(1.0f, 0.94f, 0.85f, blend);
             }
 
             if (RightPointer != null)

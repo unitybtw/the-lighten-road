@@ -14,6 +14,12 @@ namespace TheLightenRoad.Frontend.Tests
   T Asset<T>() where T:ScriptableObject{var a=ScriptableObject.CreateInstance<T>();owned.Add(a);return a;}
   GameObject Host(){var go=new GameObject("Narration regression");owned.Add(go);return go;}
   [TearDown] public void Cleanup(){foreach(var o in owned)if(o!=null)Object.DestroyImmediate(o);owned.Clear();CodexSession.End();Time.timeScale=1;}
+  [Test] public void DisablingNarrationAcceptsAnEmptyReloadedRequestPath()
+  {
+   var narration=Host().AddComponent<ArchiveNarration>();
+   typeof(ArchiveNarration).GetField("requestFile",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).SetValue(narration,"");
+   Assert.DoesNotThrow(()=>narration.enabled=false);
+  }
   [Test] public void CacheKeyMatchesOfflineWorkerAndInvalidatesEditedText()
   {
    var catalog=Resources.Load<ArchiveCatalog>("Codex/ArchiveCatalog");var log=catalog.Find("office-ledger");
@@ -58,6 +64,39 @@ namespace TheLightenRoad.Frontend.Tests
    var real=Resources.Load<ArchiveCatalog>("Codex/ArchiveCatalog");CodexSession.Begin(real);CodexSession.Discover("office-ledger");
    menu.gameObject.SetActive(false);menu.gameObject.SetActive(true);menu.Open("office-ledger");menu.Close();
    yield return new WaitForSecondsRealtime(2.5f);Assert.That(menu.IsNarrationPlaying,Is.False);
+  }
+  ArchiveCodexMenu ReaderWithVoice()
+  {
+   var log=Asset<ArchiveLog>();log.Id="voice-controls";log.Title="The quiet archive";log.Text="A record for the return journey.";
+   log.Audio=AudioClip.Create("Voice controls fixture",24000*8,1,24000,false);owned.Add(log.Audio);
+   var catalog=Asset<ArchiveCatalog>();catalog.Logs=new[]{log};catalog.Channel=Asset<SocialChannel>();
+   catalog.Channel.delivery=Asset<StoredDelivery>();catalog.Channel.membership=Asset<AmbientMembership>();
+   CodexSession.Begin(catalog);CodexSession.Discover(log.Id);
+   var menu=Host().AddComponent<ArchiveCodexMenu>();menu.Open(log.Id);return menu;
+  }
+  [UnityTest] public IEnumerator PauseBeforeOpeningCompletesPreventsLateAutoplayAndCloseClearsPause()
+  {
+   var menu=ReaderWithVoice();menu.ToggleNarration();Assert.That(menu.IsNarrationPaused,Is.True);
+   yield return new WaitForSecondsRealtime(2.35f);
+   Assert.That(menu.IsNarrationPlaying,Is.False,"A ready clip must respect a pending pause.");
+   menu.ToggleNarration();yield return null;
+   Assert.That(menu.IsNarrationPlaying,Is.True);Assert.That(menu.IsNarrationPaused,Is.False);
+   menu.ToggleNarration();menu.Close();Assert.That(menu.IsNarrationPaused,Is.False);
+   menu.ToggleNarration();menu.ReplayNarration();yield return null;
+   Assert.That(menu.IsNarrationPlaying,Is.False,"Closed readers must ignore voice controls.");
+  }
+  [UnityTest] public IEnumerator PausePreservesPlaybackPositionAndReplayStartsFromBeginning()
+  {
+   var menu=ReaderWithVoice();yield return new WaitForSecondsRealtime(2.8f);
+   var source=menu.GetComponent<AudioSource>();Assert.That(menu.IsNarrationPlaying,Is.True);
+   menu.ToggleNarration();int pausedAt=source.timeSamples;Assert.That(pausedAt,Is.GreaterThan(0));
+   yield return new WaitForSecondsRealtime(.25f);
+   Assert.That(source.timeSamples,Is.EqualTo(pausedAt));Assert.That(menu.IsNarrationPlaying,Is.False);
+   menu.ToggleNarration();yield return new WaitForSecondsRealtime(.2f);
+   Assert.That(source.timeSamples,Is.GreaterThan(pausedAt));
+   menu.ToggleNarration();menu.ReplayNarration();yield return null;
+   Assert.That(menu.IsNarrationPaused,Is.False);Assert.That(menu.IsNarrationPlaying,Is.True);
+   Assert.That(source.timeSamples,Is.LessThan(pausedAt));menu.Close();
   }
   [UnityTest] public IEnumerator NativeWorkerGeneratesWithoutBlockingFramesAndCachesResult()
   {

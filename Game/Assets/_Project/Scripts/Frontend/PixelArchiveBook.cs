@@ -11,7 +11,7 @@ namespace TheLightenRoad.Frontend
         public static Sprite Edges => edges != null ? edges : edges=Draw(3);
         private static Sprite Draw(int kind)
         {
-            const int w=96,h=112;
+            int w=96,h=kind==3?512:112;
             var t=new Texture2D(w,h,TextureFormat.RGBA32,false){name="Pixel archive book "+kind,filterMode=FilterMode.Point,wrapMode=TextureWrapMode.Clamp};
             var px=new Color32[w*h];
             Color32 ink=new Color32(28,23,23,255),leather=new Color32(61,42,34,255),lightLeather=new Color32(76,52,39,255),gold=new Color32(161,116,62,255),shine=new Color32(210,166,89,255);
@@ -26,7 +26,7 @@ namespace TheLightenRoad.Frontend
                 else
                 {
                     Color32 page=edge<3?new Color32(101,76,47,255):edge<5?new Color32(153,120,76,255):noise<2 && (x<15 || x>82 || y<12 || y>100)?new Color32(190,164,117,255):new Color32(209,184,139,255);
-                    if(kind==3 && y%3==0)page=new Color32(123,94,59,255);
+                    if(kind==3)page=y%3==0?new Color32(163,143,107,255):new Color32(207,187,148,255);
                     if(x<9 && kind==1)page=new Color32((byte)(100+x*11),(byte)(77+x*10),(byte)(49+x*8),255);
                     px[y*w+x]=page;
                 }

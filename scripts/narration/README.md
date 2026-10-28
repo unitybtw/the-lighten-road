@@ -16,6 +16,25 @@ The profile is `kokoro-fp16-george-v2`. Long entries are split into complete sen
 
 The SHA-256 key includes the profile and whitespace-normalized title/story. Editing text or changing the profile creates a new cache entry. Generated WAVs are written atomically into `Application.persistentDataPath/Narration`. Missing or failed synthesis does not block reading. Closing the book or changing entries stops playback and prevents a late result from starting; generation may finish in the background for reuse. Within-entry page turns keep the narration continuous. Master/effects settings apply live.
 
+## Archive reader presentation
+
+Caveat Regular provides local handwriting for headings, stories, and field observations; compact system labels retain their plain typeface. The static SDF font and its OFL license ship with the project. The reader now prints this ink onto the reusable mesh prefab described in [Archive book 3D](../../development/sirac/ARCHIVE-BOOK-3D.md). Mouse-held pages bend about the spine, return on an incomplete drag, and commit only after a completed turn. Both cameras disable when the reader closes.
+
+The 3D book separates the archive summary, field observation, and narrator on its left page from the recovered story on its right. Narration has a playback rail and elapsed/total time. Page navigation stays beside the page counter; closing and device-specific shortcuts live below the binding.
+
+Story pagination measures the actual font, width, and line spacing. Page boundaries preserve complete words and all source characters, including paragraph breaks. Controller navigation skips unavailable page or voice actions and returns focus to Close if the focused control becomes unavailable. Reduced-motion mode also applies to the reader's opening and page turns.
+
+## In-game reading controls
+
+The left book page shows whether narration is preparing, playing, paused, complete, or unavailable. Its voice buttons support mouse and explicit controller focus navigation. Controls use unscaled time because the book pauses gameplay.
+
+| Action | Keyboard | PlayStation | Xbox |
+| --- | --- | --- | --- |
+| Pause / resume voice | V | Triangle | Y |
+| Replay current entry | R | Square | X |
+
+Pausing while a clip is being prepared suppresses automatic playback until resumed. Resume preserves playback position; replay starts at the beginning. Moving to another record starts that record's narration after the page turn. Closing the book stops playback and clears the pause state. Controls are visually unavailable when a recording cannot be loaded; the text remains readable.
+
 ## Provenance and redistribution
 
 - Kokoro weights: https://huggingface.co/hexgrad/Kokoro-82M (Apache-2.0)
