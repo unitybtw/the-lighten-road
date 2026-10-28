@@ -27,7 +27,7 @@ namespace TheLightenRoad.Frontend
         {
             if(desk==null)desk=BuildSprite();
             var go=new GameObject("Filing desk and ledger",typeof(SpriteRenderer));go.transform.SetParent(transform,false);
-            var sr=go.GetComponent<SpriteRenderer>();sr.sprite=desk;sr.sortingOrder=12;
+            var sr=go.GetComponent<SpriteRenderer>();sr.sprite=desk;sr.sortingOrder=0;
             var light=new GameObject("Desk lamp pool",typeof(Light2D));light.transform.SetParent(transform,false);light.transform.localPosition=new Vector3(.2f,1.05f,0);
             lamp=light.GetComponent<Light2D>();lamp.lightType=Light2D.LightType.Point;lamp.color=new Color(1,.71f,.34f);lamp.pointLightOuterRadius=1.65f;lamp.pointLightInnerRadius=.25f;lamp.intensity=.38f;
         }

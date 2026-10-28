@@ -150,7 +150,13 @@ namespace TheLightenRoad.Frontend
             var dim=overlay.gameObject.AddComponent<Image>();dim.color=new Color(.008f,.009f,.008f,.94f);
             var r=Rect("Codex reading surface",overlay,new Vector2(1260,820),Vector2.zero);r.gameObject.AddComponent<MenuReadability>();readingGroup=r.gameObject.AddComponent<CanvasGroup>();
             var gold=new Color(.8f,.65f,.4f);var ivory=new Color(.9f,.88f,.81f);
-            Rule(r,"Dossier backing",new Vector2(1180,720),new Vector2(0,10),new Color(.045f,.045f,.038f,.96f));
+            // Layered covers, pages and a shaded fold suggest an open, timeworn archive book.
+            Rule(r,"Book cover",new Vector2(1200,750),new Vector2(0,4),new Color(.11f,.075f,.045f,1));
+            Rule(r,"Page edges",new Vector2(1180,728),new Vector2(0,10),new Color(.34f,.27f,.17f,1));
+            Rule(r,"Left page",new Vector2(300,710),new Vector2(-415,18),new Color(.16f,.14f,.105f,1));
+            Rule(r,"Right page",new Vector2(860,710),new Vector2(165,18),new Color(.19f,.165f,.12f,1));
+            Rule(r,"Book fold shadow",new Vector2(20,710),new Vector2(-265,18),new Color(.035f,.027f,.02f,.65f));
+            Rule(r,"Book fold highlight",new Vector2(2,700),new Vector2(-254,18),new Color(.48f,.38f,.23f,.4f));
             Rule(r,"Top brass rule",new Vector2(1100,2),new Vector2(0,368),gold*.65f);
             Rule(r,"Footer brass rule",new Vector2(1100,1),new Vector2(0,-295),gold*.4f);
             Rule(r,"Document spine",new Vector2(1,570),new Vector2(-265,26),gold*.3f);
