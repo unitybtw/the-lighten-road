@@ -2,6 +2,7 @@
   "name": "TheLightenRoad.Player.PlayModeTests",
   "references": [
     "TheLightenRoad.Player",
+    "TheLightenRoad.Input",
     "TheLightenRoad.Lantern",
     "TheLightenRoad.UI",
     "TheLightenRoad.Effects",

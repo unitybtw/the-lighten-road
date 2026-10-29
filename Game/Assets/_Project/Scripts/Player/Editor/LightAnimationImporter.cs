@@ -34,6 +34,7 @@ namespace TheLightenRoad.Player.Editor
             {
                 var animator = prefab.GetComponent<PlayerSpriteAnimator>();
                 if (animator == null) animator = prefab.AddComponent<PlayerSpriteAnimator>();
+                if (prefab.GetComponent<PlayerLedgeClimb>() == null) prefab.AddComponent<PlayerLedgeClimb>();
                 var renderer = prefab.GetComponentInChildren<SpriteRenderer>();
                 var serialized = new SerializedObject(animator);
                 serialized.FindProperty("catalog").objectReferenceValue = catalog;
@@ -75,6 +76,7 @@ namespace TheLightenRoad.Player.Editor
                 var previous = provider.GetSpriteRects().ToDictionary(r => r.name, r => r.spriteID);
                 var rects = new List<SpriteRect>(); var names = new List<SpriteNameFileIdPair>();
                 var offsets = new List<Vector2>();
+                var reaches = new List<float>();
                 Vector2 lastLight = new Vector2(13.5f / Ppu, 16.1f / Ppu);
                 for (int i = 0; i < frames.Count; i++)
                 {
@@ -89,13 +91,16 @@ namespace TheLightenRoad.Player.Editor
                     // Track the artist's small gold flame pixels; hold the previous position while
                     // the flame is occluded. This is a visual anchor only, never a fuel/light-mode change.
                     Vector2 sum = Vector2.zero; int count = 0;
+                    float reachX = -1;
                     for (int y = 0; y < (int)f.Rect.height; y++) for (int x = 0; x < (int)f.Rect.width; x++)
                     {
                         Color32 c = source.GetPixel((int)f.Rect.x + x, source.height - (int)f.Rect.y - y - 1);
+                        if (c.a > 100 && y < f.Rect.height * .65f) reachX = Mathf.Max(reachX, x + .5f);
                         if (c.a > 100 && c.r > 200 && c.g > 140 && c.b < 150 && c.r - c.b > 100) { sum += new Vector2(x + .5f, f.Rect.height - y - .5f); count++; }
                     }
                     if (count > 0) lastLight = (sum / count - Vector2.Scale(pivot, f.Rect.size)) / Ppu;
                     offsets.Add(lastLight);
+                    reaches.Add(reachX >= 0 ? (reachX - pivot.x * f.Rect.width) / Ppu : 0);
                 }
                 provider.SetSpriteRects(rects.ToArray());
                 provider.GetDataProvider<ISpriteNameFileIdDataProvider>().SetNameFileIdPairs(names);
@@ -114,7 +119,7 @@ namespace TheLightenRoad.Player.Editor
                 AnimationUtility.SetObjectReferenceCurve(clip, EditorCurveBinding.PPtrCurve("Placeholder Visual", typeof(SpriteRenderer), "m_Sprite"), keys);
                 var clipSettings = AnimationUtility.GetAnimationClipSettings(clip); clipSettings.loopTime = loop;
                 AnimationUtility.SetAnimationClipSettings(clip, clipSettings); EditorUtility.SetDirty(clip);
-                return new PlayerSpriteSequence { Kind = kind, Frames = sprites, Durations = frames.Select(f => f.Duration).ToArray(), LanternOffsets = offsets.ToArray(), PreviewClip = clip, Loop = loop };
+                return new PlayerSpriteSequence { Kind = kind, Frames = sprites, Durations = frames.Select(f => f.Duration).ToArray(), LanternOffsets = offsets.ToArray(), ReachOffsetsX = kind == LightAnimation.Climb ? reaches.ToArray() : Array.Empty<float>(), PreviewClip = clip, Loop = loop };
             }
             finally { UnityEngine.Object.DestroyImmediate(source); }
         }

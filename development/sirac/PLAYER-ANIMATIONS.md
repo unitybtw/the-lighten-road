@@ -2,11 +2,13 @@
 
 The shared PlayerPrototype now uses Maksim's eight Light sprite sheets. Its existing scene instances inherit the new visual component; the authored scene files and Kemal's Interaction, Mechanisms, Sandbox/Kemal and development folders were not edited. Artist credit and delivery details: [animation pack](../../Game/Assets/_Project/Art/Characters/LightAnimations/README.md).
 
-Standing, moving, jumping, landing, successful Flare and ember transfer use the supplied sprites. Sprint retimes the walk loop to movement speed. Transfer art is observed from fuel changes during interaction input and can be called explicitly; it does not alter circuits. Climb and Sheathing are included as ready contextual clips/API hooks, because the current motor has no climbing or stow mechanic. Idle's missing JSON timeline is provisionally 100 ms per frame.
+Standing, moving, jumping, landing, successful Flare and ember transfer use the supplied sprites. Sprint retimes the walk loop to movement speed. Transfer art is observed from fuel changes during interaction input and can be called explicitly; it does not alter circuits. Climb and the opening Sheathing frames are now connected to deliberate ledge traversal: face a reachable static ledge and press W / Up, D-pad Up or push the left stick upward. The lantern is stowed before climbing and redrawn by the end of the Climb art. See [traversal controls and safety](PLAYER-TRAVERSAL.md). Idle's missing JSON timeline is provisionally 100 ms per frame.
 
 The importer creates stable slices from the actual JSON rectangles (including 70×80 Climb cells), eight standard Unity animation clips and a catalog with the original timings. A repeated build changed no generated asset bytes/identities; all eight normalized case-sensitive paths and sprite references were checked. Source PNG/JSON bytes match the 15 delivered files.
 
-## Verification
+## Initial sprite-import verification (ea703ca)
+
+The later playable stow/climb integration and its final test results are documented in [PLAYER-TRAVERSAL.md](PLAYER-TRAVERSAL.md).
 
 - Player Play Mode assembly: **116 passed**, zero failures/skips, including six new animation cases. Movement, facing, jump/landing, successful and failed flare, fuel-transfer intent, death/respawn reset, pause, context hooks, collider/root preservation and all 121 frame records are covered. The legacy procedural squash test explicitly opts into that optional effect; the new art uses no procedural distortion by default.
 - First Light tutorial: **10 passed**, zero failures/skips.

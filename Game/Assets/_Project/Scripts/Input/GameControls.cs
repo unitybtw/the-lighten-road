@@ -14,7 +14,15 @@ namespace TheLightenRoad.Input
         public const string FlarePath = "<Gamepad>/rightTrigger";
         private static readonly HashSet<int> blockers = new HashSet<int>();
         private static int suppressedThroughFrame = -1;
-        public static bool GameplayAllowed => blockers.Count == 0 && Time.timeScale > 0f && Time.frameCount > suppressedThroughFrame;
+        public static bool GameplayAllowed => GameplayAllowedExcept(null);
+        /// <summary>A traversal can own an input block while still respecting pause and other owners.</summary>
+        public static bool GameplayAllowedExcept(Object owner)
+        {
+            if (Time.timeScale <= 0f || Time.frameCount <= suppressedThroughFrame) return false;
+            int excluded = owner != null ? owner.GetInstanceID() : 0;
+            foreach (int blocker in blockers) if (blocker != excluded) return false;
+            return true;
+        }
         public static void BlockGameplay(Object owner, bool blocked)
         {
             if(owner == null) return;

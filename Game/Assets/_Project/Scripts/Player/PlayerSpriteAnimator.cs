@@ -107,7 +107,7 @@ namespace TheLightenRoad.Player
             Select(kind, true, true); return true;
         }
         public void ClearContextAnimation()
-        { explicitContext = holdContext = false; oneShot = false; Select(LightAnimation.Idle, false, true); }
+        { explicitContext = holdContext = false; oneShot = false; Select(LightAnimation.Idle, false, true); RenderFrame(); }
 
         private void LateUpdate() { if (AutomaticTicks) Tick(Time.deltaTime); }
         public void Tick(float deltaTime)

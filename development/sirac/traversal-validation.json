@@ -1,0 +1,88 @@
+{
+  "unity": "6000.3.2f1",
+  "scope": "Player stow / ledge traversal and shared input ownership; no protected contributor files changed",
+  "test_rounds": {
+    "broad": {
+      "total": 337,
+      "passed": 335,
+      "failed": 2,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "frontend_before_final_fixes": {
+      "total": 160,
+      "passed": 158,
+      "failed": 2,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "pause_final": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "readability_final": {
+      "total": 11,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "player_final": {
+      "total": 129,
+      "passed": 129,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    }
+  },
+  "latest_distinct_outcomes": {
+    "total": 338,
+    "passed": 338,
+    "failed": 0,
+    "method": "Combined broad run with final affected-suite reruns. This is not a single clean 338-test full run."
+  },
+  "resolved_test_failures": [
+    "Readability test updated for MOVE / CLIMB; shortened controller callout to fit its existing bounds.",
+    "Paused-menu Escape routing uses InputState.Change to bypass native Editor event consumption while still exercising the real menu input handler."
+  ],
+  "import_repeat": {
+    "checked": 36,
+    "changed": []
+  },
+  "source_files_verified": 15,
+  "live_scene": {
+    "scene": "FurkanTutorial",
+    "ledge": "Far side and exit",
+    "inspection": "Player positioned beside the existing ledge and camera moved only in Play Mode; normal runtime traversal then advanced and paused for captures. No scene changes saved. Not a complete route or FPS benchmark.",
+    "stow": "{ scene = FurkanTutorial, climbing = True, progress = 0.1705882, animation = Sheathing, sprite = Sheathing_005, frame = 5, position = (34.70, 1.15), grounded = False, gravity = 0, colliderEnabled = True, charges = 6, controls = False }",
+    "climb": "{ scene = FurkanTutorial, climbing = True, progress = 0.4411762, animation = Climb, sprite = Climb_007, frame = 7, position = (34.70, 1.83), grounded = False, gravity = 0, colliderEnabled = True, charges = 6, controls = False }",
+    "after_normal_time_restored": "{ scene = FurkanTutorial, climbing = False, progress = 0, animation = Idle, sprite = Idle_000, frame = 0, position = (35.70, 3.20), grounded = True, gravity = 3, colliderEnabled = True, charges = 6, controls = True }"
+  },
+  "captures": [
+    {
+      "file": "development/sirac/previews/player-traversal/live-climb.png",
+      "width": 1600,
+      "height": 900,
+      "sha256": "0070cf4617024870467443784a0539155ce4fb7359901c51440c4dd4decefbd6"
+    },
+    {
+      "file": "development/sirac/previews/player-traversal/live-finished.png",
+      "width": 1600,
+      "height": 900,
+      "sha256": "4dff2cd7353a8f08a0a37c12e35f5dc33446982fbf641ca136f8c4efdc414c43"
+    },
+    {
+      "file": "development/sirac/previews/player-traversal/live-stow.png",
+      "width": 1600,
+      "height": 900,
+      "sha256": "69fef902077de21326dc409bed7951723ec8dece9a117a68571ba96ad813a720"
+    }
+  ],
+  "limitations": [
+    "No standalone build or physical-controller feel validation repeated.",
+    "Motion uses authored sprites and a collision-checked mantle trajectory; no skeletal hand IK."
+  ]
+}

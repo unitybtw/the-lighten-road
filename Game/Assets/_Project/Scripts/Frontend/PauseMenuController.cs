@@ -106,7 +106,6 @@ namespace TheLightenRoad.Frontend
 
         private string currentView = "none";
         private float previousTimeScale = 1f;
-        private readonly List<MonoBehaviour> suspendedInteractions = new List<MonoBehaviour>();
         private Coroutine restoreInteractions;
         private bool destroying;
 
@@ -589,14 +588,7 @@ namespace TheLightenRoad.Frontend
             }
             if (suspend)
             {
-                // Legacy vein scripts poll buttons directly. Suspend only their polling component;
-                // the shared circuit state and linked mechanisms remain untouched.
-                foreach (var actor in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
-                    if (actor.enabled && actor.GetType().FullName == "TheLightenRoad.Interaction.EmberVein")
-                    {
-                        suspendedInteractions.Add(actor);
-                        actor.enabled = false;
-                    }
+                LegacyInteractionPollingGate.Acquire(this);
             }
             else if (destroying || !isActiveAndEnabled) RestoreInteractions();
             else restoreInteractions = StartCoroutine(RestoreInteractionsAfterMenuInput());
@@ -613,9 +605,7 @@ namespace TheLightenRoad.Frontend
 
         private void RestoreInteractions()
         {
-            foreach (var actor in suspendedInteractions)
-                if (actor != null) actor.enabled = true;
-            suspendedInteractions.Clear();
+            LegacyInteractionPollingGate.Release(this);
         }
 
         private void UpdateChamberInfo()
@@ -1078,7 +1068,7 @@ namespace TheLightenRoad.Frontend
 
             float y = 120f;
             float step = 40f;
-            pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right", y, 0);
+            pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE / CLIMB", "Walk left / right; W or Up at a ledge climbs", y, 0);
             pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE ]", "JUMP", "Jump and variable jump height", y - step, 1);
             pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2, 2);
             pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", y - step * 3, 3);

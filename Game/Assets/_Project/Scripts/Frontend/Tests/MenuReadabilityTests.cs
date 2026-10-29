@@ -102,7 +102,8 @@ namespace TheLightenRoad.Frontend.Tests
                 Assert.That(buttons[i].transform.Find("Selection rule").gameObject.activeSelf,Is.EqualTo(i==0));
                 if(i>0)Assert.That(RectOf(labels[i-1].rectTransform,canvas.transform).Overlaps(RectOf(labels[i].rectTransform,canvas.transform)),Is.False);
             }
-            var firstRow=menu.GetComponentsInChildren<TMP_Text>().Single(t=>t.name=="Action" && t.text=="MOVE").transform.parent as RectTransform;
+            var firstRow=menu.GetComponentsInChildren<TMP_Text>().Single(t=>t.name=="Action" && t.text=="MOVE / CLIMB").transform.parent as RectTransform;
+            Assert.That(firstRow.Find("Description").GetComponent<TMP_Text>().text,Does.Contain("W or Up"));
             Assert.That(RectOf(tabs,canvas.transform).Overlaps(RectOf(firstRow,canvas.transform)),Is.False);
             Capture(canvas,1280,720,"keyboard-tabs-720p");
             for(int tab=1;tab<=2;tab++)

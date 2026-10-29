@@ -1593,7 +1593,7 @@ namespace TheLightenRoad.Frontend
                 controlsDeviceTabLabels[i].fontSize = 13.5f;
             }
 
-            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE", "Walk left and right across the archive", 135f, 0);
+            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE / CLIMB", "Walk left / right; W or Up at a ledge climbs", 135f, 0);
             controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Hold to jump higher; release for a short hop", 84f, 1);
             controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f, 2);
             controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", -18f, 3);

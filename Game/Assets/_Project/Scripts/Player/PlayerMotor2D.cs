@@ -126,6 +126,18 @@ namespace TheLightenRoad.Player
         public bool EnableSquashAndStretch { get => enableSquashAndStretch; set => enableSquashAndStretch = value; }
         public bool EnableKineticTilt { get => enableKineticTilt; set => enableKineticTilt = value; }
         public bool EnableCornerCorrection { get => enableCornerCorrection; set => enableCornerCorrection = value; }
+        public bool TraversalLocked { get; private set; }
+        public LayerMask GroundLayers => groundLayers;
+
+        public void SetTraversalLocked(bool locked)
+        {
+            TraversalLocked = locked;
+            horizontalInput = jumpBufferTimer = coyoteTimer = 0f;
+            sprintToggle = jumpReleased = IsRunning = false;
+            previousVerticalVelocity = 0f;
+            groundStateInitialized = false;
+            if (locked) { IsGrounded = false; GroundCollider = null; }
+        }
 
         private void Awake()
         {
@@ -191,7 +203,7 @@ namespace TheLightenRoad.Player
 
         private void Update()
         {
-            if(!GameControls.GameplayAllowed)
+            if(TraversalLocked || !GameControls.GameplayAllowed)
             {
                 horizontalInput=0; jumpBufferTimer=0; jumpReleased=false;
                 return;
@@ -240,7 +252,7 @@ namespace TheLightenRoad.Player
 
         private void FixedUpdate()
         {
-            if(!GameControls.GameplayAllowed)return;
+            if(TraversalLocked || !GameControls.GameplayAllowed)return;
             bool wasGrounded = IsGrounded;
             IsGrounded = CheckGrounded();
 

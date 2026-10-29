@@ -4932,6 +4932,7 @@ GameObject:
   - component: {fileID: 512839401726481023}
   - component: {fileID: 6332020728371791968}
   - component: {fileID: 6016417345635393423}
+  - component: {fileID: 1890038195983855163}
   m_Layer: 0
   m_Name: PlayerPrototype
   m_TagString: Untagged
@@ -5197,6 +5198,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerSpriteAnimator
   catalog: {fileID: 11400000, guid: 67e421e580b5f40d4843145ae2c0113e, type: 2}
   target: {fileID: 8652911498168288635}
+--- !u!114 &1890038195983855163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738987852800000031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41f0321183de6477c9229887f09e1ef0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerLedgeClimb
+  forwardReach: 0.32
+  minimumLipHeight: 0.25
+  maximumLipHeight: 1.35
+  landingInset: 0.12
+  stowDuration: 0.7
 --- !u!1 &6310001053283258633
 GameObject:
   m_ObjectHideFlags: 0

@@ -246,26 +246,29 @@ namespace TheLightenRoad.Frontend.Tests
                 InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
                 InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
                 keyboard.MakeCurrent();
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                // Input System 1.17 lazily enables press tracking on the first property read.
+                // Prime it before pumping the event so a newly added device is deterministic.
+                Assert.That(keyboard.escapeKey.wasPressedThisFrame, Is.False);
                 InputSystem.Update();
+                InputState.Change(keyboard, new KeyboardState());
                 pauseMenu.Pause();
                 pauseMenu.RequestRestartChamber();
-                // Pump one complete input frame. An Editor update can otherwise consume/reset a
-                // queued synthetic Escape before the paused runtime's Update gets its turn.
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
-                InputSystem.Update();
+                // Test UI routing against real device state. The native Editor can consume queued
+                // synthetic Escape events before they reach a paused Game view; this supported
+                // state API bypasses that transport without bypassing the menu's input handler.
+                InputState.Change(keyboard, new KeyboardState(Key.Escape));
                 Assert.That(keyboard.escapeKey.wasPressedThisFrame, Is.True);
                 pauseMenu.SendMessage("Update");
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputState.Change(keyboard, new KeyboardState());
                 InputSystem.Update();
                 Assert.That(pauseMenu.IsConfirmationOpen, Is.False);
                 Assert.That(pauseMenu.CurrentView, Is.EqualTo("main"));
                 Assert.That(Time.timeScale, Is.Zero);
                 yield return null;
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
                 InputSystem.Update();
+                InputState.Change(keyboard, new KeyboardState(Key.Escape));
                 pauseMenu.SendMessage("Update");
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputState.Change(keyboard, new KeyboardState());
                 InputSystem.Update();
                 Assert.That(PauseMenuController.IsPaused, Is.False);
             }

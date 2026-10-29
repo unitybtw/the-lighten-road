@@ -64,6 +64,8 @@ public sealed class PlayerSpriteAnimatorTests
             Assert.That(s.Frames.All(f => Mathf.Approximately(f.rect.height, s.Kind == LightAnimation.Climb ? 80 : 70)), Is.True);
         }
         Assert.That(data.Find(LightAnimation.Climb).Frames[0].pivot.y, Is.EqualTo(30));
+        Assert.That(data.Find(LightAnimation.Climb).ReachOffsetsX.Length, Is.EqualTo(27));
+        Assert.That(data.Find(LightAnimation.Climb).ReachOffsetsX.All(x => !float.IsNaN(x) && !float.IsInfinity(x)), Is.True);
         Assert.That(data.Find(LightAnimation.Idle).Frames[0].pivot.y, Is.EqualTo(35));
     }
     [UnityTest] public IEnumerator WalkingAndFacingUseTheDeliveredFramesWithoutChangingPhysics()

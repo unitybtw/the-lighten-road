@@ -12,6 +12,7 @@ namespace TheLightenRoad.Player
         public Sprite[] Frames;
         public float[] Durations;
         public Vector2[] LanternOffsets;
+        public float[] ReachOffsetsX;
         public AnimationClip PreviewClip;
         public bool Loop;
         public float Duration

@@ -32,7 +32,6 @@ namespace TheLightenRoad.UI
         private RectTransform glyphFooter;
         private CanvasGroup glyphGroup;
         private Image navigationGlyph, confirmGlyph, backGlyph;
-        private readonly System.Collections.Generic.List<MonoBehaviour> suspendedInteractions = new System.Collections.Generic.List<MonoBehaviour>();
         private readonly Image[] ashes = new Image[14];
         private readonly ActionItem[] buttons = new ActionItem[2];
         private sealed class ActionItem
@@ -119,15 +118,11 @@ namespace TheLightenRoad.UI
         }
         private void SuspendLegacyPolling()
         {
-            // Same UI boundary as pause: suspend raw input polling, preserving circuit/device state.
-            foreach (var actor in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
-                if (actor.enabled && actor.GetType().FullName == "TheLightenRoad.Interaction.EmberVein")
-                { suspendedInteractions.Add(actor); actor.enabled = false; }
+            LegacyInteractionPollingGate.Acquire(this);
         }
         private void RestoreLegacyPolling()
         {
-            foreach (var actor in suspendedInteractions) if (actor != null) actor.enabled = true;
-            suspendedInteractions.Clear();
+            LegacyInteractionPollingGate.Release(this);
         }
         private void OwnRecoveryDecision()
         {
