@@ -258,8 +258,8 @@ namespace TheLightenRoad.Frontend
         private void Update()
         {
             TickPauseSettingsSave();
-            if (returningToTitle) return;
-            if(ArchiveCodexMenu.IsOpen || ArchiveCodexMenu.ClosedThisFrame)return;
+            if (returningToTitle || DeathScreenOverlay.IsAnyVisible) return;
+            if(ArchiveCodexMenu.IsOpen || (!IsPaused && ArchiveCodexMenu.ClosedThisFrame))return;
             var k = Keyboard.current;
             var g = ControllerGlyphService.GetActiveGamepad();
 
@@ -368,7 +368,7 @@ namespace TheLightenRoad.Frontend
 
         public void Pause()
         {
-            if (IsPaused) return;
+            if (IsPaused || DeathScreenOverlay.IsAnyVisible) return;
             IsPaused = true;
 
             previousTimeScale = Time.timeScale <= 0f ? 1f : Time.timeScale;

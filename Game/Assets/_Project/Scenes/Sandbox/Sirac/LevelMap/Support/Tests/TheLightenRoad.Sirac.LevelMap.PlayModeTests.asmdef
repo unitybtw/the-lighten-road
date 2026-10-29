@@ -1,5 +1,5 @@
 {
   "name": "TheLightenRoad.Sirac.LevelMap.PlayModeTests",
-  "references": ["TheLightenRoad.Sirac.LevelMap", "TheLightenRoad.Player", "TheLightenRoad.Lantern", "Unity.InputSystem"],
+  "references": ["TheLightenRoad.Sirac.LevelMap", "TheLightenRoad.Player", "TheLightenRoad.Lantern", "TheLightenRoad.UI", "Unity.InputSystem"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

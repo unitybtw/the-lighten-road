@@ -62,7 +62,7 @@ namespace TheLightenRoad.FirstLight
         }
         private void LateUpdate()
         {
-            if(overlayVisibility!=null)overlayVisibility.alpha=PauseMenuController.IsPaused?0:1;
+            if(overlayVisibility!=null)overlayVisibility.alpha=(PauseMenuController.IsPaused || DeathScreenOverlay.IsAnyVisible)?0:1;
         }
         public void SetIgnition(float t)
         {

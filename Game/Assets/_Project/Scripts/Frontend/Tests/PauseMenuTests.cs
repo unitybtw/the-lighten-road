@@ -239,31 +239,41 @@ namespace TheLightenRoad.Frontend.Tests
             var keyboard = InputSystem.AddDevice<Keyboard>();
             var oldBackground = InputSystem.settings.backgroundBehavior;
             var oldEditorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            var oldUpdateMode = InputSystem.settings.updateMode;
             try
             {
                 InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
                 InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
                 keyboard.MakeCurrent();
-                // Let UI action setup and any previous overlay's input suppression finish.
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-                yield return null; yield return null;
+                InputSystem.Update();
                 pauseMenu.Pause();
                 pauseMenu.RequestRestartChamber();
+                // Pump one complete input frame. An Editor update can otherwise consume/reset a
+                // queued synthetic Escape before the paused runtime's Update gets its turn.
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
-                yield return null; yield return null;
+                InputSystem.Update();
+                Assert.That(keyboard.escapeKey.wasPressedThisFrame, Is.True);
+                pauseMenu.SendMessage("Update");
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputSystem.Update();
                 Assert.That(pauseMenu.IsConfirmationOpen, Is.False);
                 Assert.That(pauseMenu.CurrentView, Is.EqualTo("main"));
                 Assert.That(Time.timeScale, Is.Zero);
-                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-                yield return null; yield return null;
+                yield return null;
                 InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
-                yield return null; yield return null;
+                InputSystem.Update();
+                pauseMenu.SendMessage("Update");
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                InputSystem.Update();
                 Assert.That(PauseMenuController.IsPaused, Is.False);
             }
             finally
             {
                 InputSystem.RemoveDevice(keyboard);
                 if (previousKeyboard != null && previousKeyboard.added) previousKeyboard.MakeCurrent();
+                InputSystem.settings.updateMode = oldUpdateMode;
                 InputSystem.settings.backgroundBehavior = oldBackground;
                 InputSystem.settings.editorInputBehaviorInPlayMode = oldEditorInput;
             }

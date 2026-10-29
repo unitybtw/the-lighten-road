@@ -23,8 +23,7 @@ namespace TheLightenRoad.Frontend
         }
         public static float FitScale(Vector2 available, Vector2 content)
         {
-            if (available.x <= 0 || available.y <= 0 || content.x <= 0 || content.y <= 0) return 1f;
-            return Mathf.Min(1.2f, available.x * .9f / content.x, available.y * .9f / content.y);
+            return TheLightenRoad.UI.ArchiveInterfaceStyle.FitScale(available, content);
         }
         public static void EnlargeText(Transform root)
         {

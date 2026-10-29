@@ -4,6 +4,7 @@
     "TheLightenRoad.Sirac.TestChamber",
     "TheLightenRoad.Player",
     "TheLightenRoad.Lantern",
+    "TheLightenRoad.UI",
     "Unity.InputSystem"
   ],
   "optionalUnityReferences": ["TestAssemblies"]
