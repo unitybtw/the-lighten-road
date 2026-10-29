@@ -197,6 +197,7 @@ namespace TheLightenRoad.Frontend
         private void OnDisable()
         {
             if (Instance != this) return;
+            FlushPauseSettingsSave();
             if (IsPaused) Resume();
             if (restoreInteractions != null) StopCoroutine(restoreInteractions);
             restoreInteractions = null;
@@ -207,6 +208,7 @@ namespace TheLightenRoad.Frontend
         private void OnDestroy()
         {
             destroying = true;
+            FlushPauseSettingsSave();
             ControllerGlyphService.OnPromptStyleChanged -= RefreshPauseFooterPrompts;
             bool ownsPause = Instance == this;
             if (transitionRoutine != null)
@@ -255,6 +257,8 @@ namespace TheLightenRoad.Frontend
 
         private void Update()
         {
+            TickPauseSettingsSave();
+            if (returningToTitle) return;
             if(ArchiveCodexMenu.IsOpen || ArchiveCodexMenu.ClosedThisFrame)return;
             var k = Keyboard.current;
             var g = ControllerGlyphService.GetActiveGamepad();
@@ -262,6 +266,13 @@ namespace TheLightenRoad.Frontend
             bool escapePressed = k != null && (k.escapeKey.wasPressedThisFrame || k.pKey.wasPressedThisFrame);
             bool startPressed = g != null && g.startButton.wasPressedThisFrame;
             bool eastPressed = g != null && g.buttonEast.wasPressedThisFrame;
+
+            if (IsPaused && IsConfirmationOpen)
+            {
+                if (escapePressed || startPressed || eastPressed) CancelConfirmation();
+                else RestoreLostPauseSelection(k, g);
+                return;
+            }
 
             if (escapePressed || startPressed || (IsPaused && eastPressed))
             {
@@ -297,6 +308,7 @@ namespace TheLightenRoad.Frontend
 
             if (IsPaused)
             {
+                RestoreLostPauseSelection(k, g);
                 if (k != null)
                 {
                     if (currentView == "controls")
@@ -326,18 +338,6 @@ namespace TheLightenRoad.Frontend
                         if (currentView == "controls") TogglePauseVibration();
                     }
 
-                    if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
-                    {
-                        bool padNavIntent = g.dpad.up.wasPressedThisFrame || g.dpad.down.wasPressedThisFrame ||
-                                            g.dpad.left.wasPressedThisFrame || g.dpad.right.wasPressedThisFrame ||
-                                            g.buttonSouth.wasPressedThisFrame ||
-                                            (g.leftStick.ReadValue().sqrMagnitude > 0.15f);
-                        if (padNavIntent)
-                        {
-                            RestorePauseMenuSelection();
-                        }
-                    }
-
                     if (currentView == "controls")
                     {
                         if (g.leftShoulder.wasPressedThisFrame)
@@ -359,7 +359,8 @@ namespace TheLightenRoad.Frontend
         {
             if (EventSystem.current == null) return;
             GameObject target = null;
-            if (currentView == "main" && resumeButton != null) target = resumeButton.gameObject;
+            if (IsConfirmationOpen && confirmationCancelButton != null) target = confirmationCancelButton.gameObject;
+            else if (currentView == "main" && resumeButton != null) target = resumeButton.gameObject;
             else if (currentView == "controls" && controlsBackButton != null) target = controlsBackButton.gameObject;
             else if (currentView == "settings" && masterSlider != null) target = masterSlider.gameObject;
             if (target != null) EventSystem.current.SetSelectedGameObject(target);
@@ -413,6 +414,8 @@ namespace TheLightenRoad.Frontend
         public void Resume()
         {
             if (!IsPaused) return;
+            FlushPauseSettingsSave();
+            HideConfirmation();
             IsPaused = false;
 
             Time.timeScale = previousTimeScale <= 0f ? 1f : previousTimeScale;
@@ -447,6 +450,8 @@ namespace TheLightenRoad.Frontend
 
         public void ShowMainView()
         {
+            HideConfirmation();
+            FlushPauseSettingsSave();
             currentView = "main";
             if (mainHeader != null) mainHeader.SetActive(true);
             if (mainPanel != null) mainPanel.SetActive(true);
@@ -464,6 +469,8 @@ namespace TheLightenRoad.Frontend
 
         public void ShowSettingsView()
         {
+            HideConfirmation();
+            FlushPauseSettingsSave();
             currentView = "settings";
             if (mainHeader != null) mainHeader.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(false);
@@ -481,7 +488,10 @@ namespace TheLightenRoad.Frontend
 
         public void ShowControlsView()
         {
+            HideConfirmation();
+            FlushPauseSettingsSave();
             currentView = "controls";
+            RefreshPauseControlsQuickOptions();
             if (mainHeader != null) mainHeader.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(false);
@@ -537,21 +547,35 @@ namespace TheLightenRoad.Frontend
 
         public void QuitToMainMenu()
         {
+            if (returningToTitle) return;
+            if (!IsPaused) Pause();
+            returningToTitle = true;
+            if (transitionRoutine != null) { StopCoroutine(transitionRoutine); transitionRoutine = null; }
+            FlushPauseSettingsSave();
             StartCoroutine(QuitRoutine());
         }
 
         private IEnumerator QuitRoutine()
         {
-            Time.timeScale = 1f;
-            IsPaused = false;
+            // Keep the scene frozen and gameplay blocked until the destination takes over.
+            if (canvasGroup != null) canvasGroup.interactable = false;
+            float startAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
+            float elapsed = 0;
+            float duration = MenuPreferences.ReducedMotion ? 0 : .22f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                if (canvasGroup != null) canvasGroup.alpha = Mathf.Lerp(startAlpha, 0, elapsed / duration);
+                yield return null;
+            }
             yield return null;
             if (Application.CanStreamedLevelBeLoaded(MainMenuScenePath))
             {
-                SceneManager.LoadScene(MainMenuScenePath);
+                SceneManager.LoadSceneAsync(MainMenuScenePath);
             }
             else
             {
-                SceneManager.LoadScene("MainMenu");
+                SceneManager.LoadSceneAsync("MainMenu");
             }
         }
 
@@ -599,7 +623,11 @@ namespace TheLightenRoad.Frontend
             string sceneName = SceneManager.GetActiveScene().name;
             string chamberName = "RUINED ARCHIVE";
 
-            if (sceneName.Contains("Furkan"))
+            if (sceneName == "FirstLightTutorial")
+            {
+                chamberName = "PROLOGUE : FIRST LIGHT";
+            }
+            else if (sceneName.Contains("Furkan"))
             {
                 chamberName = "CHAMBER 01-02 : THE FIRST LIGHT";
             }
@@ -620,16 +648,19 @@ namespace TheLightenRoad.Frontend
             if (mementoBadgeLabel != null)
             {
                 bool hasMemento = false;
+                bool tracksMemento = false;
                 var directors = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
                 foreach (var d in directors)
                 {
                     if (d.GetType().Name == "FurkanLevelDirector")
                     {
                         var field = d.GetType().GetField("HasMemento");
-                        if (field != null) hasMemento = (bool)field.GetValue(d);
+                        if (field != null) { hasMemento = (bool)field.GetValue(d); tracksMemento = true; }
                     }
                 }
 
+                mementoBadgeLabel.gameObject.SetActive(tracksMemento);
+                if (!tracksMemento) return;
                 if (hasMemento)
                 {
                     mementoBadgeLabel.text = "ARCHIVE MEMENTO RECOVERED\n<size=13><color=#B0BED6>\"The deep stone whispers of paths that open only in high flame.\"</color></size>";
@@ -804,6 +835,7 @@ namespace TheLightenRoad.Frontend
             BuildSettingsPanel(modal.transform);
             BuildControlsPanel(modal.transform);
             BuildPauseFooter(modal.transform);
+            BuildPauseConfirmation(modal.transform);
             ApplyPauseReadability();
 
             ShowMainView();
@@ -835,8 +867,8 @@ namespace TheLightenRoad.Frontend
             resumeButton = CreateFramelessMenuButton("ResumeButton", r, "Resume", "Return to game", new Vector2(0f, startY), Resume, isPrimary: true);
             var controlsBtn = CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
             var settingsBtn = CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
-            var restartBtn = CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RestartChamber);
-            var quitBtn = CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), QuitToMainMenu);
+            var restartBtn = CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RequestRestartChamber);
+            var quitBtn = CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), RequestQuitToMainMenu);
 
             if (bottomCrestSprite != null)
             {
@@ -888,7 +920,7 @@ namespace TheLightenRoad.Frontend
             masterSlider = CreateSlider("MasterSlider", r, new Vector2(0f, y), "Master Volume", "Overall audio level", v =>
             {
                 MenuPreferences.SetAudio(v, MenuPreferences.Music, MenuPreferences.Effects);
-                MenuPreferences.Save();
+                MarkPauseSettingsChanged();
                 UpdateSliderPercentLabel(masterSlider);
             });
 
@@ -896,7 +928,7 @@ namespace TheLightenRoad.Frontend
             musicSlider = CreateSlider("MusicSlider", r, new Vector2(0f, y), "Ambient Music", "Music and atmospheric score", v =>
             {
                 MenuPreferences.SetAudio(MenuPreferences.Master, v, MenuPreferences.Effects);
-                MenuPreferences.Save();
+                MarkPauseSettingsChanged();
                 UpdateSliderPercentLabel(musicSlider);
             });
 
@@ -904,7 +936,7 @@ namespace TheLightenRoad.Frontend
             effectsSlider = CreateSlider("EffectsSlider", r, new Vector2(0f, y), "Sound Effects (SFX)", "Footsteps, lantern and interactions", v =>
             {
                 MenuPreferences.SetAudio(MenuPreferences.Master, MenuPreferences.Music, v);
-                MenuPreferences.Save();
+                MarkPauseSettingsChanged();
                 UpdateSliderPercentLabel(effectsSlider);
             });
 
@@ -941,7 +973,7 @@ namespace TheLightenRoad.Frontend
                 bImg.raycastTarget = false;
             }
 
-            var resetBtn = CreateEtherealActionButton("ResetDefaultsButton", r, "Reset Defaults", new Vector2(-160f, -205f), ResetDefaults, isPrimary: false, width: 230f);
+            var resetBtn = CreateEtherealActionButton("ResetDefaultsButton", r, "Reset Defaults", new Vector2(-160f, -205f), RequestResetDefaults, isPrimary: false, width: 230f);
             settingsBackButton = CreateEtherealActionButton("SettingsBackButton", r, "<  Return to Pause", new Vector2(160f, -205f), ShowMainView, isPrimary: true, width: 260f);
 
             var sNavButtons = new Selectable[] { masterSlider, musicSlider, effectsSlider, fullscreenToggle, vsyncToggle, reducedMotionToggle };
@@ -1245,7 +1277,8 @@ namespace TheLightenRoad.Frontend
             var bBtn = s1.gameObject.AddComponent<Button>();
             bBtn.onClick.AddListener(() =>
             {
-                if (currentView == "settings" || currentView == "controls") ShowMainView();
+                if (IsConfirmationOpen) CancelConfirmation();
+                else if (currentView == "settings" || currentView == "controls") ShowMainView();
                 else Resume();
             });
 
@@ -1261,8 +1294,8 @@ namespace TheLightenRoad.Frontend
             var rBtn = s2.gameObject.AddComponent<Button>();
             rBtn.onClick.AddListener(() =>
             {
-                if (currentView == "settings") ResetDefaults();
-                else if (currentView == "main") RestartChamber();
+                if (currentView == "settings") RequestResetDefaults();
+                else if (currentView == "main") RequestRestartChamber();
                 else if (currentView == "controls") TogglePauseVibration();
             });
 
@@ -1319,6 +1352,11 @@ namespace TheLightenRoad.Frontend
 
             // Footer bar slots
             if (pauseFooterBar == null) return;
+            bool compactFooter = currentView != "controls";
+            var selectSlot = (RectTransform)pauseFooterSelectIcon.transform.parent;
+            var backSlot = (RectTransform)pauseFooterBackIcon.transform.parent;
+            selectSlot.anchoredPosition = new Vector2(compactFooter ? -180 : -390, 0);
+            backSlot.anchoredPosition = new Vector2(compactFooter ? 180 : -130, 0);
 
             // Slot 0: Select
             if (pauseFooterSelectIcon != null)
@@ -1357,8 +1395,8 @@ namespace TheLightenRoad.Frontend
 
             // Destructive actions remain deliberate menu selections, never a spare face-button shortcut.
             if (pauseFooterResetIcon != null) pauseFooterResetIcon.transform.parent.gameObject.SetActive(currentView == "controls");
-            // Slot 2: Rumble preview
-            string resetLabel = currentView == "settings" ? "RESTORE DEFAULTS" : (currentView == "controls" ? "TEST RUMBLE" : "RESTART LEVEL");
+            // Slot 2: Rumble preference shortcut
+            string resetLabel = currentView == "settings" ? "RESTORE DEFAULTS" : (currentView == "controls" ? "TOGGLE RUMBLE" : "RESTART LEVEL");
             if (pauseFooterResetIcon != null)
             {
                 if (isPad)
@@ -1915,7 +1953,7 @@ namespace TheLightenRoad.Frontend
                     float t = Mathf.Clamp01(dist / 1.35f);
                     float smooth = t * t * (3f - 2f * t);
 
-                    Color center = new Color(0.015f, 0.024f, 0.045f, 0.72f);
+                    Color center = new Color(0.015f, 0.024f, 0.045f, 0.94f);
                     Color edge = new Color(0.006f, 0.009f, 0.018f, 0.98f);
                     Color c = Color.Lerp(center, edge, smooth);
                     tex.SetPixel(x, y, c);

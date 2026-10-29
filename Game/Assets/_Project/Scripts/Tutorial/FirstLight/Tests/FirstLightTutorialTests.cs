@@ -124,5 +124,25 @@ namespace TheLightenRoad.FirstLight.Tests
         }
         [UnityTest] public IEnumerator DisablingTheDirectorDuringTheIntroNeverLeavesGlobalInputLocked()
         {Assert.That(GameControls.GameplayAllowed,Is.False);tutorial.enabled=false;yield return null;yield return null;Assert.That(GameControls.GameplayAllowed,Is.True);}
+
+        [UnityTest] public IEnumerator PauseHidesCinematicCaptionsAndRestoresTheSameLessonOnResume()
+        {
+            tutorial.Tick(3);
+            var overlay=tutorial.Presentation.BlackVeil.canvas.rootCanvas.GetComponent<CanvasGroup>();
+            var stage=tutorial.Stage;
+            string hint=tutorial.Presentation.Hint.text;
+            var pause=PauseMenuController.Instance;
+            pause.Pause();
+            yield return null;yield return null;
+            Assert.That(overlay.alpha,Is.Zero,"Tutorial titles, hints and letterboxing must not draw above the pause menu.");
+            var labels=pause.GetComponentsInChildren<TMPro.TMP_Text>(true);
+            Assert.That(labels.Single(t=>t.name=="ChamberTitle").text,Is.EqualTo("PROLOGUE : FIRST LIGHT"));
+            Assert.That(labels.Single(t=>t.name=="MementoBadge").gameObject.activeSelf,Is.False,"The prologue has no memento objective.");
+            pause.RequestRestartChamber();pause.CancelConfirmation();pause.Resume();
+            yield return null;yield return null;
+            Assert.That(overlay.alpha,Is.EqualTo(1));
+            Assert.That(tutorial.Stage,Is.EqualTo(stage));
+            Assert.That(tutorial.Presentation.Hint.text,Is.EqualTo(hint));
+        }
     }
 }

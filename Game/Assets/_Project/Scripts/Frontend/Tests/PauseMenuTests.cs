@@ -4,6 +4,11 @@ using NUnit.Framework;
 using TheLightenRoad.Player;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.UI;
+using TMPro;
 
 namespace TheLightenRoad.Frontend.Tests
 {
@@ -140,6 +145,146 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(MenuPreferences.ReducedMotion, Is.True);
 
             pauseMenu.Resume();
+        }
+
+        [UnityTest]
+        public IEnumerator RestartRequiresConfirmationAndCannotRunTwice()
+        {
+            yield return null;
+            int restarts = 0;
+            var previous = PauseMenuController.OnRestartLevelRequested;
+            PauseMenuController.OnRestartLevelRequested = () => restarts++;
+            try
+            {
+                Time.timeScale = .5f;
+                pauseMenu.Pause();
+                var restart = pauseMenu.MainPanel.transform.Find("RestartButton").GetComponent<Button>();
+                EventSystem.current.SetSelectedGameObject(restart.gameObject);
+                restart.onClick.Invoke();
+                Assert.That(restarts, Is.Zero);
+                Assert.That(pauseMenu.IsConfirmationOpen, Is.True);
+                Assert.That(Time.timeScale, Is.Zero);
+                Assert.That(EventSystem.current.currentSelectedGameObject.name, Is.EqualTo("Cancel decision"));
+                pauseMenu.CancelConfirmation();
+                Assert.That(restarts, Is.Zero);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(restart.gameObject));
+                restart.onClick.Invoke();
+                pauseMenu.ConfirmPendingAction();
+                pauseMenu.ConfirmPendingAction();
+                Assert.That(restarts, Is.EqualTo(1));
+                Assert.That(Time.timeScale, Is.EqualTo(.5f));
+                Assert.That(PauseMenuController.IsPaused, Is.False);
+            }
+            finally { PauseMenuController.OnRestartLevelRequested = previous; }
+        }
+
+        [UnityTest]
+        public IEnumerator ReturningToTitleCanBeCancelledWithoutUnpausingOrLeavingTheScene()
+        {
+            yield return null;
+            var originalScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            pauseMenu.Pause();
+            var quit = pauseMenu.MainPanel.transform.Find("QuitButton").GetComponent<Button>();
+            EventSystem.current.SetSelectedGameObject(quit.gameObject);
+            quit.onClick.Invoke();
+            Assert.That(pauseMenu.MainPanel.activeSelf, Is.False);
+            var cancel = EventSystem.current.currentSelectedGameObject.GetComponent<Button>();
+            Assert.That(cancel.navigation.selectOnRight.name, Is.EqualTo("Confirm decision"));
+            Assert.That(cancel.navigation.selectOnRight.navigation.selectOnLeft, Is.SameAs(cancel));
+            cancel.onClick.Invoke();
+            yield return null;
+            Assert.That(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), Is.EqualTo(originalScene));
+            Assert.That(Time.timeScale, Is.Zero);
+            Assert.That(GameControls.GameplayAllowed, Is.False);
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(quit.gameObject));
+        }
+
+        [UnityTest]
+        public IEnumerator RestoreDefaultsCanBeCancelledAndPreservesChapterProgressWhenConfirmed()
+        {
+            const string progressKey = "TLR.Menu.RealmCompleted.999";
+            bool hadProgress = PlayerPrefs.HasKey(progressKey);
+            int progress = PlayerPrefs.GetInt(progressKey);
+            try
+            {
+                MenuPreferences.SetRealmCompleted(999);
+                MenuPreferences.SetAudio(.23f, .34f, .45f);
+                pauseMenu.Pause();
+                pauseMenu.ShowSettingsView();
+                var reset = pauseMenu.SettingsPanel.transform.Find("ResetDefaultsButton").GetComponent<Button>();
+                EventSystem.current.SetSelectedGameObject(reset.gameObject);
+                reset.onClick.Invoke();
+                pauseMenu.CancelConfirmation();
+                Assert.That(MenuPreferences.Master, Is.EqualTo(.23f).Within(.001f));
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(reset.gameObject));
+                reset.onClick.Invoke();
+                pauseMenu.ConfirmPendingAction();
+                Assert.That(MenuPreferences.Master, Is.EqualTo(.85f).Within(.001f));
+                Assert.That(MenuPreferences.IsRealmCompleted(999), Is.True);
+                Assert.That(pauseMenu.CurrentView, Is.EqualTo("settings"));
+                Assert.That(Time.timeScale, Is.Zero);
+                yield return null;
+            }
+            finally
+            {
+                if (hadProgress) PlayerPrefs.SetInt(progressKey, progress); else PlayerPrefs.DeleteKey(progressKey);
+                PlayerPrefs.Save();
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator EscapeCancelsTheDecisionBeforeResumingGameplay()
+        {
+            var previousKeyboard = Keyboard.current;
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            var oldBackground = InputSystem.settings.backgroundBehavior;
+            var oldEditorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+            try
+            {
+                InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+                InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+                keyboard.MakeCurrent();
+                // Let UI action setup and any previous overlay's input suppression finish.
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                yield return null; yield return null;
+                pauseMenu.Pause();
+                pauseMenu.RequestRestartChamber();
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
+                yield return null; yield return null;
+                Assert.That(pauseMenu.IsConfirmationOpen, Is.False);
+                Assert.That(pauseMenu.CurrentView, Is.EqualTo("main"));
+                Assert.That(Time.timeScale, Is.Zero);
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                yield return null; yield return null;
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
+                yield return null; yield return null;
+                Assert.That(PauseMenuController.IsPaused, Is.False);
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(keyboard);
+                if (previousKeyboard != null && previousKeyboard.added) previousKeyboard.MakeCurrent();
+                InputSystem.settings.backgroundBehavior = oldBackground;
+                InputSystem.settings.editorInputBehaviorInPlayMode = oldEditorInput;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PendingVolumeSaveFinishesWhilePausedAndFlushesWhenDisabled()
+        {
+            pauseMenu.Pause();
+            pauseMenu.ShowSettingsView();
+            var slider = pauseMenu.SettingsPanel.transform.Find("MasterSlider/Slider").GetComponent<Slider>();
+            var status = pauseMenu.SettingsPanel.transform.Find("Pause settings save status").GetComponent<TMP_Text>();
+            slider.value = .31f;
+            Assert.That(MenuPreferences.Master, Is.EqualTo(.31f).Within(.001f), "Audio changes immediately.");
+            Assert.That(status.text, Is.EqualTo("Saving preferences..."));
+            yield return new WaitForSecondsRealtime(.45f);
+            Assert.That(status.text, Is.EqualTo("Saved automatically on this device"));
+            slider.value = .42f;
+            pauseMenu.enabled = false;
+            Assert.That(status.text, Is.EqualTo("Saved automatically on this device"));
+            Assert.That(Time.timeScale, Is.EqualTo(1));
         }
     }
 }

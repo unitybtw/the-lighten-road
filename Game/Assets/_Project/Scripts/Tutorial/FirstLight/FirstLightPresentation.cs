@@ -25,6 +25,7 @@ namespace TheLightenRoad.FirstLight
         public CanvasGroup HintGroup,TitleGroup;
         public TMP_Text Hint,Heading,Chapter;
         private FirstLightTutorial tutorial;
+        private CanvasGroup overlayVisibility;
         private AudioSource sound;
         private ParticleSystem passageWisps;
         private readonly List<AudioClip> clips=new List<AudioClip>();
@@ -39,6 +40,10 @@ namespace TheLightenRoad.FirstLight
         private static readonly Color Ember=new Color(1,.62f,.25f),Ivory=new Color(.96f,.97f,1);
         public void Initialize(FirstLightTutorial value)
         {
+            // Keep tutorial captions and letterboxing below modal menus without losing their stage state.
+            var overlay=BlackVeil.canvas.rootCanvas;
+            overlayVisibility=overlay.GetComponent<CanvasGroup>();
+            if(overlayVisibility==null)overlayVisibility=overlay.gameObject.AddComponent<CanvasGroup>();
             tutorial=value;sound=gameObject.AddComponent<AudioSource>();sound.playOnAwake=false;sound.spatialBlend=0;
             // Rehydrate line paths from editable scene renderers, not a serialized jagged array.
             ConduitPoints=new Vector3[Conduits.Length][];
@@ -54,6 +59,10 @@ namespace TheLightenRoad.FirstLight
             var renderer=motes.GetComponent<ParticleSystemRenderer>();renderer.sharedMaterial=DoorCore.sharedMaterial;renderer.sortingOrder=7;
             if(OutlinePoints==null || OutlinePoints.Length==0){OutlinePoints=new Vector3[DoorOutline.positionCount];DoorOutline.GetPositions(OutlinePoints);}
             doorTrace=new LightTrace(DoorOutline,OutlinePoints);
+        }
+        private void LateUpdate()
+        {
+            if(overlayVisibility!=null)overlayVisibility.alpha=PauseMenuController.IsPaused?0:1;
         }
         public void SetIgnition(float t)
         {
