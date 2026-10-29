@@ -393,7 +393,8 @@ namespace TheLightenRoad.UI
             }
         }
 
-        private static readonly System.Collections.Generic.Dictionary<string, Sprite> spriteCache = new System.Collections.Generic.Dictionary<string, Sprite>();
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> playStationSprites = new System.Collections.Generic.Dictionary<string, Sprite>();
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> xboxSprites = new System.Collections.Generic.Dictionary<string, Sprite>();
 
         /// <summary>
         /// Retrieves the authentic high-resolution button glyph sprite (Zacksly pack) for the active or requested controller style.
@@ -403,14 +404,13 @@ namespace TheLightenRoad.UI
             var style = overrideStyle ?? ActiveStyle;
             if (style == ControllerPromptStyle.Keyboard) return null;
 
-            string folder = style == ControllerPromptStyle.PlayStation ? "PlayStation" : "Xbox";
-            string path = $"UI/ControllerGlyphs/{folder}/{glyphName}";
-
-            if (spriteCache.TryGetValue(path, out var cached))
+            var cache = style == ControllerPromptStyle.PlayStation ? playStationSprites : xboxSprites;
+            if (cache.TryGetValue(glyphName, out var cached))
                 return cached;
 
-            var loaded = Resources.Load<Sprite>(path);
-            spriteCache[path] = loaded;
+            string folder = style == ControllerPromptStyle.PlayStation ? "PlayStation" : "Xbox";
+            var loaded = Resources.Load<Sprite>($"UI/ControllerGlyphs/{folder}/{glyphName}");
+            cache[glyphName] = loaded;
             return loaded;
         }
 

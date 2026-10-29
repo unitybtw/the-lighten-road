@@ -20,7 +20,7 @@ namespace TheLightenRoad.Frontend
         public static bool ClosedThisFrame=>Time.frameCount<=closedFrame+1;
         private readonly List<string> entries=new List<string>();
         private SocialChannel channel;
-        private GameObject panel,footerPanel;
+        private GameObject panel,footerPanel,recoveryFeedCanvas;
         private TMP_Text progress,title,body,clue,pages,location,shortcuts;
         private CanvasGroup readingGroup;
         private RectTransform decryptionFill;
@@ -28,7 +28,7 @@ namespace TheLightenRoad.Frontend
         private CanvasGroup copyGroup;
         private ArchiveBookPresentation presentation;
         private TMP_FontAsset handwriting;
-        private bool opening;
+        private bool opening,ownsPause;
         public bool IsAnimating => opening || (presentation!=null && presentation.Turn!=null && presentation.Turn.IsBusy);
         private const float OpeningDuration = 2.1f;
         private const int ReaderLayoutVersion=2;
@@ -50,27 +50,41 @@ namespace TheLightenRoad.Frontend
         private float previousTime;
         private GameObject previousSelection;
         public int EntryCount=>entries.Count;
+        [SerializeField,HideInInspector] private bool deferPresentation;
+        public bool PresentationCreated=>panel!=null && presentation!=null;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics(){IsOpen=false;closedFrame=-10;SceneManager.sceneLoaded-=Install;SceneManager.sceneLoaded+=Install;}
         static void Install(Scene scene,LoadSceneMode mode)
         {
             if(Object.FindAnyObjectByType<PlayerMotor2D>()==null || Object.FindAnyObjectByType<ArchiveCodexMenu>()!=null)return;
-            new GameObject("Archive Codex").AddComponent<ArchiveCodexMenu>();
+            CreateStandby();
         }
-        void Awake(){Build();}
+        public static ArchiveCodexMenu CreateStandby()
+        {
+            var root=new GameObject("Archive Codex");root.SetActive(false);
+            var reader=root.AddComponent<ArchiveCodexMenu>();reader.deferPresentation=true;
+            root.SetActive(true);return reader;
+        }
+        void Awake(){if(!deferPresentation)Build();}
         void Start()
         {
+            if(!PresentationCreated)return;
             var catalog=CodexSession.Catalog;
             if(catalog!=null && catalog==Resources.Load<ArchiveCatalog>("Codex/ArchiveCatalog"))
                 foreach(var log in catalog.Logs)narration.Prepare(log);
         }
         void OnEnable()
         {
-            if(builtLayoutVersion!=ReaderLayoutVersion || panel==null || presentation==null || !presentation.IsInitialized)RebuildAfterReload();
-            presentation.Rebind(CanTurn,ApplyTurn,PreviewTurn);
-            CodexSession.Ensure();channel=CodexSession.Channel;entries.Clear();
+            if(!deferPresentation || PresentationCreated)EnsurePresentation();
+            CodexSession.Ensure();channel=CodexSession.Channel;entries.Clear();EnsureRecoveryFeed();
             if(channel!=null)channel.Subscribe(this);
             CodexSession.PageRequested+=Open;ControllerGlyphService.OnPromptStyleChanged+=RefreshShortcuts;Redraw();RefreshShortcuts();
+        }
+        private void EnsurePresentation()
+        {
+            if(panel==null && presentation==null && builtLayoutVersion==0)Build();
+            else if(builtLayoutVersion!=ReaderLayoutVersion || !PresentationCreated || !presentation.IsInitialized)RebuildAfterReload();
+            presentation.Rebind(CanTurn,ApplyTurn,PreviewTurn);
         }
         private void RebuildAfterReload()
         {
@@ -91,12 +105,13 @@ namespace TheLightenRoad.Frontend
         }
         public void Open(string id)
         {
-            int index=entries.IndexOf(id);if(index<0)return;
+            int index=entries.IndexOf(id);if(index<0 || (IsOpen && !ownsPause))return;
+            EnsurePresentation();
             bool wasOpen=IsOpen;selected=index;page=0;
             if(!IsOpen)
             {
                 previousTime=Time.timeScale;previousSelection=EventSystem.current?.currentSelectedGameObject;
-                Time.timeScale=0;GameControls.BlockGameplay(this,true);IsOpen=true;
+                Time.timeScale=0;GameControls.BlockGameplay(this,true);IsOpen=true;ownsPause=true;
             }
             presentation.Turn.Cancel();panel.SetActive(true);footerPanel.SetActive(true);presentation.Show(true);revealTime=0;opening=!wasOpen && !MenuPreferences.ReducedMotion;
             Redraw();RefreshShortcuts();AnimateBook(0);
@@ -105,14 +120,24 @@ namespace TheLightenRoad.Frontend
         }
         public void Close()
         {
+            if(!PresentationCreated && !ownsPause)return;
             if(panel!=null)panel.SetActive(false);if(footerPanel!=null)footerPanel.SetActive(false);if(presentation!=null)presentation.Show(false);
             opening=false;narrationRequested=false;narrationPaused=false; narrationLog=null;
-            if(!IsOpen)return;
-            audioSource.Stop();Time.timeScale=previousTime;GameControls.BlockGameplay(this,false);IsOpen=false;closedFrame=Time.frameCount;
+            if(!ownsPause)return;
+            if(audioSource!=null)audioSource.Stop();ownsPause=false;Time.timeScale=previousTime;GameControls.BlockGameplay(this,false);IsOpen=false;closedFrame=Time.frameCount;
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(previousSelection);
         }
         void Update()
         {
+            if(!PresentationCreated)
+            {
+                var keyboard=Keyboard.current;var gamepad=GameControls.ActivePad;
+                if(GameControls.GameplayAllowed && entries.Count>0 &&
+                   ((keyboard!=null && keyboard.tabKey.wasPressedThisFrame)||(gamepad!=null && gamepad.selectButton.wasPressedThisFrame)))
+                    Open(entries[Mathf.Clamp(selected,0,entries.Count-1)]);
+                return;
+            }
+            if(IsOpen && !ownsPause)return;
             if(IsOpen)
             {
                 AnimateBook(Time.unscaledDeltaTime);
@@ -180,6 +205,8 @@ namespace TheLightenRoad.Frontend
             if(!IsOpen || narrationLog==null)return;
             QueueNarration(narrationLog);
         }
+        private int displayedVoiceSecond=-1,displayedVoiceLength=-1;
+        private AudioClip displayedVoiceClip;
         private void RefreshNarrationControls()
         {
             if(voiceStatus==null)return;
@@ -192,7 +219,12 @@ namespace TheLightenRoad.Frontend
             float elapsed=clip==null?0:audioSource.time;
             if(clip!=null && !narrationRequested && !narrationPaused && !audioSource.isPlaying)elapsed=clip.length;
             voiceFill.sizeDelta=new Vector2(430*(clip==null?0:Mathf.Clamp01(elapsed/Mathf.Max(.01f,clip.length))),2);
-            voiceTime.text=clip==null?"TITLE & STORY":"TITLE & STORY     "+VoiceClock(elapsed)+" / "+VoiceClock(clip.length);
+            int second=clip==null?-1:Mathf.FloorToInt(elapsed),length=clip==null?-1:Mathf.FloorToInt(clip.length);
+            if(displayedVoiceClip!=clip || displayedVoiceSecond!=second || displayedVoiceLength!=length)
+            {
+                displayedVoiceClip=clip;displayedVoiceSecond=second;displayedVoiceLength=length;
+                voiceTime.text=clip==null?"TITLE & STORY":"TITLE & STORY     "+VoiceClock(elapsed)+" / "+VoiceClock(clip.length);
+            }
             voiceToggleCaption.text=narrationPaused?"Resume voice":narrationRequested || audioSource.isPlaying?"Pause voice":"Listen again";
         }
         private void ConfigureReadingNavigation()
@@ -312,6 +344,19 @@ namespace TheLightenRoad.Frontend
             var diamond=Rule(r,"Focus diamond",new Vector2(6,6),new Vector2(-focus.PointerOffset,0),Color.clear);diamond.rectTransform.localRotation=Quaternion.Euler(0,0,45);focus.LeftPointer=diamond.rectTransform;
             return b;
         }
+        private void EnsureRecoveryFeed()
+        {
+            if(recoveryFeedCanvas!=null)return;
+            CodexSession.Ensure();
+            recoveryFeedCanvas=new GameObject("Archive feed canvas",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler));recoveryFeedCanvas.transform.SetParent(transform,false);
+            var canvas=recoveryFeedCanvas.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=119;
+            var scaler=recoveryFeedCanvas.GetComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=.5f;
+            var rect=Rect("Archive recovery feed",recoveryFeedCanvas.transform,new Vector2(500,130),new Vector2(0,120));
+            rect.anchorMin=rect.anchorMax=new Vector2(.5f,0);
+            var text=rect.gameObject.AddComponent<Text>();text.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");text.fontSize=18;text.color=new Color(.29f,.18f,.095f);text.raycastTarget=false;
+            var feed=rect.gameObject.AddComponent<PartyFeedUI>();feed.enabled=false;feed.channel=CodexSession.Channel;feed.text=text;feed.maxLines=2;feed.enabled=true;
+            rect.gameObject.AddComponent<ArchiveFeedVisibility>();
+        }
         private void Build()
         {
             if(EventSystem.current==null){var events=new GameObject("Codex EventSystem",typeof(EventSystem),typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));events.transform.SetParent(transform,false);}
@@ -365,17 +410,10 @@ namespace TheLightenRoad.Frontend
             close=Action(r,"Close",0,Close,-385,180,52);
             readingButtons=new[]{voiceToggle,voiceReplay,previous,next};
             shortcuts=Label("Codex shortcuts",r,new Vector2(1100,48),new Vector2(0,-433),18,new Color(.72f,.69f,.59f));shortcuts.alignment=TextAlignmentOptions.Center;
-            var feedRect=Rect("Archive recovery feed",canvasGo.transform,new Vector2(500,130),Vector2.zero);
-            var feedText=feedRect.gameObject.AddComponent<Text>();feedText.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");feedText.fontSize=18;feedText.color=gold;feedText.raycastTarget=false;
-            var feed=feedRect.gameObject.AddComponent<PartyFeedUI>();feed.enabled=false;CodexSession.Ensure();feed.channel=CodexSession.Channel;feed.text=feedText;feed.maxLines=2;feed.enabled=true;
-            feedRect.anchorMin=feedRect.anchorMax=new Vector2(.5f,0);feedRect.anchoredPosition=new Vector2(0,120);feedRect.gameObject.AddComponent<ArchiveFeedVisibility>();
+            EnsureRecoveryFeed();
             Hand(heading,52);Hand(title,44);title.fontSizeMin=32;title.fontSizeMax=44;
             Hand(body,36);body.fontStyle=FontStyles.Bold;body.lineSpacing=3;body.paragraphSpacing=7;
             Hand(clue,28);clue.fontStyle=FontStyles.Bold;clue.enableAutoSizing=true;clue.fontSizeMin=24;clue.fontSizeMax=28;clue.lineSpacing=3;Hand(note,28);
-            var feedCanvas=new GameObject("Archive feed canvas",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler));feedCanvas.transform.SetParent(transform,false);
-            feedCanvas.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;feedCanvas.GetComponent<Canvas>().sortingOrder=119;
-            var feedScaler=feedCanvas.GetComponent<CanvasScaler>();feedScaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;feedScaler.referenceResolution=new Vector2(1920,1080);feedScaler.matchWidthOrHeight=.5f;
-            feedRect.SetParent(feedCanvas.transform,false);feedRect.anchoredPosition=new Vector2(0,120);
             var footer=new GameObject("Archive reading footer",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));footer.transform.SetParent(transform,false);footerPanel=footer;
             footer.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;footer.GetComponent<Canvas>().sortingOrder=121;
             var footerScaler=footer.GetComponent<CanvasScaler>();footerScaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;footerScaler.referenceResolution=new Vector2(1920,1080);footerScaler.matchWidthOrHeight=.5f;

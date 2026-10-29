@@ -29,6 +29,7 @@ namespace TheLightenRoad.Frontend
         public void Rebind(Func<bool> canTurn,Action<int> commit,Action<int> preview)
         {this.preview=preview;if(Turn!=null)Turn.Initialize(this,canTurn,commit);}
         private Transform stage;private float lastAspect,baseDistance,openingProgress;private Renderer[] modelRenderers;
+        private Vector3[] sweptPoints;
         private readonly List<Canvas> hiddenOverlays=new List<Canvas>();
         public void Initialize(Canvas canvas,Button[] controls,Func<bool> canTurn,Action<int> commit,Action<int> preview)
         {
@@ -100,12 +101,13 @@ namespace TheLightenRoad.Frontend
             {
                 // Reserve the entire paper sweep before a gesture; framing must not
                 // change underneath a held pointer or cause a zoom/drag feedback loop.
-                for(int side=-1;side<=1;side+=2)for(int step=0;step<=12;step++)
-                    for(int corner=0;corner<2;corner++)
-                    {
-                        var edge=ArchiveBookGeometry.LeafPoint(side,step/12f,corner==0?-1:1,1,corner);
-                        bounds.Encapsulate(Model.transform.TransformPoint(edge+new Vector3(-side*.017f,0,-.035f)));
-                    }
+                if(sweptPoints==null)
+                {
+                    sweptPoints=new Vector3[52];int index=0;
+                    for(int side=-1;side<=1;side+=2)for(int step=0;step<=12;step++)for(int corner=0;corner<2;corner++)
+                        sweptPoints[index++]=ArchiveBookGeometry.LeafPoint(side,step/12f,corner==0?-1:1,1,corner)+new Vector3(-side*.017f,0,-.035f);
+                }
+                foreach(var point in sweptPoints)bounds.Encapsulate(Model.transform.TransformPoint(point));
             }
             Vector3 min=bounds.min-stage.position,max=bounds.max-stage.position;
             float desiredY=Mathf.Clamp((min.y+max.y)*.5f,.25f,1.15f);
@@ -166,8 +168,11 @@ namespace TheLightenRoad.Frontend
             point=Vector3.zero;uv=Vector2.zero;if(!Visible || Model==null)return false;
             Physics.SyncTransforms();
             var ray=BookCamera.ViewportPointToRay(new Vector3(screen.x/Mathf.Max(1,Screen.width),screen.y/Mathf.Max(1,Screen.height),0));bool found=false;RaycastHit nearest=default;float distance=float.MaxValue;
-            foreach(var collider in new[]{Model.LeftCollider,Model.RightCollider})
+            for(int i=0;i<2;i++)
+            {
+                var collider=i==0?Model.LeftCollider:Model.RightCollider;
                 if(collider!=null && collider.gameObject.activeInHierarchy && collider.Raycast(ray,out var hit,1000) && hit.distance<distance){nearest=hit;distance=hit.distance;found=true;}
+            }
             if(!found)return false;point=Model.transform.InverseTransformPoint(nearest.point);uv=nearest.textureCoord;return true;
         }
         public bool TryDragPoint(Vector2 screen,out Vector3 point)

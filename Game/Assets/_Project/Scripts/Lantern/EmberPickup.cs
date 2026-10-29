@@ -469,8 +469,14 @@ namespace TheLightenRoad.Lantern
             var psr = burstGo.GetComponent<ParticleSystemRenderer>();
             if (psr != null)
             {
-                var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
-                if (shader != null) psr.material = new Material(shader);
+                // A destroyed ParticleSystem does not destroy an instantiated material.
+                // Reuse the same particle material as the reactive trail and sparks.
+                if (sharedParticleMaterial == null)
+                {
+                    var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit") ?? Shader.Find("Sprites/Default");
+                    if (shader != null) sharedParticleMaterial = new Material(shader);
+                }
+                psr.sharedMaterial = sharedParticleMaterial;
                 psr.sortingOrder = 5;
             }
 

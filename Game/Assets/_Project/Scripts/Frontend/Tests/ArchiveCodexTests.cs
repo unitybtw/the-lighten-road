@@ -24,6 +24,36 @@ namespace TheLightenRoad.Frontend.Tests
             var catalog=New<ArchiveCatalog>();catalog.Logs=new[]{a,b};catalog.Channel=New<SocialChannel>();catalog.Channel.delivery=New<StoredDelivery>();catalog.Channel.membership=New<AmbientMembership>();CodexSession.Begin(catalog);
         }
         [TearDown] public void Cleanup(){foreach(var o in created)if(o!=null)Object.DestroyImmediate(o);created.Clear();CodexSession.End();Time.timeScale=1;}
+        [Test] public void StandbyReaderKeepsDiscoveryButCreatesNoBookResourcesUntilAValidOpen()
+        {
+            var menu=ArchiveCodexMenu.CreateStandby();created.Add(menu.gameObject);
+            Assert.That(menu.PresentationCreated,Is.False);
+            Assert.That(menu.GetComponentsInChildren<Camera>(true),Is.Empty);
+            Assert.That(menu.GetComponent<ArchiveNarration>(),Is.Null);
+            menu.Open("missing");Assert.That(menu.PresentationCreated,Is.False);
+            CodexSession.Discover("a");Assert.That(menu.EntryCount,Is.EqualTo(1));
+            Assert.That(menu.PresentationCreated,Is.False,"Discovery must not allocate the 3D reader or start its narration worker.");
+            menu.enabled=false;menu.enabled=true;Assert.That(menu.EntryCount,Is.EqualTo(1));
+            menu.Open("a");Assert.That(menu.PresentationCreated,Is.True);Assert.That(ArchiveCodexMenu.IsOpen,Is.True);
+            var view=menu.GetComponent<ArchiveBookPresentation>();Assert.That(view.IsInitialized,Is.True);
+            menu.Close();menu.Open("a");Assert.That(menu.GetComponent<ArchiveBookPresentation>(),Is.SameAs(view));menu.Close();
+        }
+        [UnityTest] public IEnumerator StandbyStillShowsTheDiscoveryToastWithoutBuildingTheReader()
+        {
+            var menu=ArchiveCodexMenu.CreateStandby();created.Add(menu.gameObject);
+            CodexSession.Discover("a");yield return null;
+            var feed=menu.GetComponentInChildren<ArchiveFeedVisibility>(true);
+            Assert.That(feed,Is.Not.Null);Assert.That(feed.GetComponent<CanvasGroup>().alpha,Is.GreaterThan(0));
+            Assert.That(menu.PresentationCreated,Is.False);Assert.That(menu.GetComponentsInChildren<Camera>(true),Is.Empty);
+        }
+        [Test] public void UnopenedStandbyCannotUnpauseAnExistingReader()
+        {
+            CodexSession.Discover("a");var owner=Go("Reader owner").AddComponent<ArchiveCodexMenu>();owner.Open("a");
+            var standby=ArchiveCodexMenu.CreateStandby();created.Add(standby.gameObject);
+            standby.Close();standby.enabled=false;
+            Assert.That(ArchiveCodexMenu.IsOpen,Is.True);Assert.That(Time.timeScale,Is.Zero);owner.Close();
+            Assert.That(ArchiveCodexMenu.IsOpen,Is.False);Assert.That(Time.timeScale,Is.EqualTo(1));
+        }
         [Test] public void LiveDiscoveryRescuesEmptyLanternAndDuplicateTerminalNeverRepays()
         {
             var fuel=Go("Fuel").AddComponent<LanternFuel>();fuel.Initialize(0,8);

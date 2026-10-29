@@ -30,6 +30,12 @@ namespace TheLightenRoad.FirstLight
         private readonly List<AudioClip> clips=new List<AudioClip>();
         private string previousHint;
         private float hintTime;
+        private FirstLightStage hintStage=(FirstLightStage)(-1);
+        private ControllerPromptStyle hintStyle=(ControllerPromptStyle)(-1);
+        private bool hintAtSeal;
+        private string hintText;
+        private LightTrace[] conduitTraces;
+        private LightTrace doorTrace;
         private static readonly Color Ember=new Color(1,.62f,.25f),Ivory=new Color(.96f,.97f,1);
         public void Initialize(FirstLightTutorial value)
         {
@@ -37,6 +43,8 @@ namespace TheLightenRoad.FirstLight
             // Rehydrate line paths from editable scene renderers, not a serialized jagged array.
             ConduitPoints=new Vector3[Conduits.Length][];
             for(int i=0;i<Conduits.Length;i++){ConduitPoints[i]=new Vector3[Conduits[i].positionCount];Conduits[i].GetPositions(ConduitPoints[i]);}
+            conduitTraces=new LightTrace[Conduits.Length];
+            for(int i=0;i<Conduits.Length;i++)conduitTraces[i]=new LightTrace(Conduits[i],ConduitPoints[i]);
             var motes=new GameObject("White passage / slow light motes",typeof(ParticleSystem));motes.transform.SetParent(transform,false);motes.transform.position=new Vector3(30.2f,1.8f,-.1f);
             passageWisps=motes.GetComponent<ParticleSystem>();passageWisps.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
             var main=passageWisps.main;main.playOnAwake=false;main.loop=true;main.startLifetime=new ParticleSystem.MinMaxCurve(1.2f,2.4f);main.startSpeed=0;main.startSize=new ParticleSystem.MinMaxCurve(.025f,.05f);main.startColor=new Color(1,1,1,.32f);main.maxParticles=32;main.simulationSpace=ParticleSystemSimulationSpace.World;
@@ -45,6 +53,7 @@ namespace TheLightenRoad.FirstLight
             var drift=passageWisps.velocityOverLifetime;drift.enabled=true;drift.y=.18f;
             var renderer=motes.GetComponent<ParticleSystemRenderer>();renderer.sharedMaterial=DoorCore.sharedMaterial;renderer.sortingOrder=7;
             if(OutlinePoints==null || OutlinePoints.Length==0){OutlinePoints=new Vector3[DoorOutline.positionCount];DoorOutline.GetPositions(OutlinePoints);}
+            doorTrace=new LightTrace(DoorOutline,OutlinePoints);
         }
         public void SetIgnition(float t)
         {
@@ -98,10 +107,10 @@ namespace TheLightenRoad.FirstLight
             {
                 float charge=tutorial.Marks[i];MarkFaces[i].color=Color.Lerp(new Color(.065f,.075f,.08f),Ember,charge);
                 float trace=stage==FirstLightStage.DrawingDoor?Mathf.Clamp01(time/2.2f):stage>=FirstLightStage.DoorReady?1:0;
-                Trace(Conduits[i],ConduitPoints[i],trace);Conduits[i].startColor=Conduits[i].endColor=new Color(.95f,.81f,.5f,.75f);
+                conduitTraces[i].Apply(trace);Conduits[i].startColor=Conduits[i].endColor=new Color(.95f,.81f,.5f,.75f);
             }
             float reveal=stage==FirstLightStage.DrawingDoor?Mathf.Clamp01(time/2.8f):stage>=FirstLightStage.DoorReady?1:0;
-            Trace(DoorOutline,OutlinePoints,reduced && reveal>0?1:reveal);
+            doorTrace.Apply(reduced && reveal>0?1:reveal);
             DoorCore.color=new Color(1,1,1,Mathf.SmoothStep(0,.97f,Mathf.InverseLerp(.55f,1,reveal)));
             if(passageWisps!=null)
             {
@@ -110,7 +119,13 @@ namespace TheLightenRoad.FirstLight
                 else if(!emit && passageWisps.isPlaying)passageWisps.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
             }
             DoorLight.intensity=1.25f*Mathf.SmoothStep(0,1,reveal);DoorLight.pointLightOuterRadius=Mathf.Lerp(.05f,5,reveal);
-            SetHint(TextFor(stage),time,dt);
+            var style=ControllerGlyphService.ActiveStyle;
+            bool atSeal=tutorial.Player.transform.position.x>=18.5f;
+            if(hintStage!=stage || hintStyle!=style || hintAtSeal!=atSeal)
+            {
+                hintStage=stage;hintStyle=style;hintAtSeal=atSeal;hintText=TextFor(stage);
+            }
+            SetHint(hintText,time,dt);
         }
         private string TextFor(FirstLightStage stage)
         {
@@ -133,19 +148,30 @@ namespace TheLightenRoad.FirstLight
             hintTime+=dt;HintGroup.alpha=text.Length==0?0:Mathf.SmoothStep(0,1,hintTime/.5f);
             Chapter.text="PROLOGUE";
         }
-        private static void Trace(LineRenderer renderer,Vector3[] path,float amount)
+        private sealed class LightTrace
         {
-            renderer.enabled=amount>0;
-            if(amount<=0 || path==null || path.Length<2)return;
-            float length=0;for(int i=1;i<path.Length;i++)length+=Vector3.Distance(path[i-1],path[i]);
-            float remaining=length*Mathf.Clamp01(amount);var points=new List<Vector3>{path[0]};
-            for(int i=1;i<path.Length;i++)
+            private readonly LineRenderer renderer;
+            private readonly Vector3[] path;
+            private readonly float[] lengths;
+            private readonly float total;
+            private float previous=float.NaN;
+            public LightTrace(LineRenderer renderer,Vector3[] path)
             {
-                float segment=Vector3.Distance(path[i-1],path[i]);
-                if(remaining>=segment){points.Add(path[i]);remaining-=segment;}
-                else{points.Add(Vector3.Lerp(path[i-1],path[i],segment>0?remaining/segment:0));break;}
+                this.renderer=renderer;this.path=path;lengths=new float[path.Length];
+                for(int i=1;i<path.Length;i++){lengths[i]=Vector3.Distance(path[i-1],path[i]);total+=lengths[i];}
             }
-            renderer.positionCount=points.Count;renderer.SetPositions(points.ToArray());
+            public void Apply(float amount)
+            {
+                amount=Mathf.Clamp01(amount);
+                if(amount==previous)return;previous=amount;
+                renderer.enabled=amount>0;
+                if(amount<=0 || path.Length<2)return;
+                float remaining=total*amount;int last=1;
+                while(last<path.Length-1 && remaining>=lengths[last]){remaining-=lengths[last];last++;}
+                renderer.positionCount=last+1;
+                for(int i=0;i<last;i++)renderer.SetPosition(i,path[i]);
+                renderer.SetPosition(last,Vector3.Lerp(path[last-1],path[last],lengths[last]>0?remaining/lengths[last]:0));
+            }
         }
         public void Chime(float frequency,float length)
         {

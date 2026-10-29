@@ -412,11 +412,21 @@ namespace TheLightenRoad.UI
             active.Cracks.color = new Color(0.09f, 0.07f, 0.05f, Mathf.InverseLerp(0.4f, 1f, progress));
         }
 
+        private ControllerPromptStyle cachedPromptStyle=(ControllerPromptStyle)(-1);
+        private Key cachedFlareKey=(Key)(-1);
+        private Sprite cachedFlareSprite;
+        private string cachedFlareText;
         private void UpdateStatus(int charges)
         {
             bool active = target.HasActiveScout;
             var style = ControllerGlyphService.ActiveStyle;
-            var flareSprite = ControllerGlyphService.GetActionSprite(GlyphAction.Flare, style);
+            if(cachedPromptStyle!=style || cachedFlareKey!=target.ToggleFlareKey)
+            {
+                cachedPromptStyle=style;cachedFlareKey=target.ToggleFlareKey;
+                cachedFlareSprite=ControllerGlyphService.GetActionSprite(GlyphAction.Flare,style);
+                cachedFlareText=style==ControllerPromptStyle.PlayStation?"R2":style==ControllerPromptStyle.Xbox?"RT":cachedFlareKey.ToString().ToUpperInvariant();
+            }
+            var flareSprite = cachedFlareSprite;
 
             if (keyIcon != null)
             {
@@ -429,7 +439,7 @@ namespace TheLightenRoad.UI
                 else
                 {
                     keyIcon.color = Color.clear;
-                    string keyText = target.ToggleFlareKey.ToString().ToUpperInvariant();
+                    string keyText = cachedFlareText;
                     if (keyLabel != null && keyLabel.text != keyText)
                     {
                         keyLabel.text = keyText;
@@ -438,7 +448,7 @@ namespace TheLightenRoad.UI
             }
             else if (keyLabel != null)
             {
-                string keyText = style == ControllerPromptStyle.PlayStation ? "R2" : (style == ControllerPromptStyle.Xbox ? "RT" : target.ToggleFlareKey.ToString().ToUpperInvariant());
+                string keyText = cachedFlareText;
                 if (keyLabel.text != keyText) keyLabel.text = keyText;
             }
 

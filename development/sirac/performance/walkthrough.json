@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "scene": "FurkanTutorial",
+  "seconds": 19.23689179199937,
+  "stages": [
+    "Awakening",
+    "FindEmber",
+    "Ignition",
+    "Move",
+    "Jump",
+    "Gather",
+    "Scout",
+    "DrawingDoor",
+    "DoorReady",
+    "Departing"
+  ],
+  "position": "unloaded"
+}

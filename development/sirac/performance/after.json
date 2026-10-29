@@ -1,0 +1,38 @@
+[
+  {
+    "label": "tutorial_find_ember",
+    "iterations": 500,
+    "microsecondsPerCall": 2.6922,
+    "positiveHeapDeltaBytesPerCall": 0.0
+  },
+  {
+    "label": "tutorial_door_ready",
+    "iterations": 500,
+    "microsecondsPerCall": 6.676200000000001,
+    "positiveHeapDeltaBytesPerCall": 0.0
+  },
+  {
+    "label": "lantern_hud",
+    "iterations": 500,
+    "microsecondsPerCall": 3.4154,
+    "positiveHeapDeltaBytesPerCall": 0.0
+  },
+  {
+    "label": "book_mesh_curl",
+    "iterations": 300,
+    "microsecondsPerCall": 217.56300000000002,
+    "positiveHeapDeltaBytesPerCall": 0.0
+  },
+  {
+    "label": "book_idle_framing",
+    "iterations": 300,
+    "microsecondsPerCall": 18.752333333333333,
+    "positiveHeapDeltaBytesPerCall": 0.0
+  },
+  {
+    "label": "book_mouse_drag",
+    "iterations": 120,
+    "microsecondsPerCall": 1683.4658333333334,
+    "positiveHeapDeltaBytesPerCall": 0.0
+  }
+]

@@ -10,23 +10,27 @@ namespace TheLightenRoad.Frontend
         public MeshFilter TurningFilter;
         public MeshCollider LeftCollider,RightCollider;
         private Mesh dynamicLeaf;
+        private ArchiveBookGeometry.LeafBuffer leafBuffer;
+        private float lastOpening=float.NaN;
         private Material leftMaterial,rightMaterial,turnMaterial;
         private RenderTexture frozenInk;private RenderTexture liveInk;
         private MeshRenderer[] fixedLeftCover;
-        public bool IsBound=>dynamicLeaf!=null && leftMaterial!=null && rightMaterial!=null && turnMaterial!=null && frozenInk!=null && liveInk!=null;
+        public bool IsBound=>leafBuffer!=null && dynamicLeaf!=null && leftMaterial!=null && rightMaterial!=null && turnMaterial!=null && frozenInk!=null && liveInk!=null;
         public void Bind(RenderTexture ink)
         {
             liveInk=ink;
             leftMaterial=new Material(LeftPaper.sharedMaterial);rightMaterial=new Material(RightPaper.sharedMaterial);turnMaterial=new Material(TurningPaper.sharedMaterial);
             LeftPaper.sharedMaterial=leftMaterial;RightPaper.sharedMaterial=rightMaterial;TurningPaper.sharedMaterial=turnMaterial;
             foreach(var material in new[]{leftMaterial,rightMaterial,turnMaterial}){material.SetTexture("_InkTex",ink);material.SetFloat("_HasInk",1);}
+            leafBuffer=new ArchiveBookGeometry.LeafBuffer();
             dynamicLeaf=Instantiate(TurningFilter.sharedMesh);dynamicLeaf.MarkDynamic();TurningFilter.sharedMesh=dynamicLeaf;
             frozenInk=new RenderTexture(ink.descriptor){name="Held sheet ink snapshot",filterMode=FilterMode.Point};frozenInk.Create();
             TurningPaper.gameObject.SetActive(false);
         }
         public void SetOpening(float progress)
         {
-            if(CoverHinge==null)return;
+            if(CoverHinge==null || lastOpening==progress)return;
+            lastOpening=progress;
             // Keep the same physical front cover underneath the left folios after opening.
             CoverHinge.gameObject.SetActive(true);
             CoverHinge.localRotation=Quaternion.Euler(0,180*progress,0);
@@ -45,7 +49,7 @@ namespace TheLightenRoad.Frontend
         }
         public void Curl(int side,float amount,float grabY,float pullY=0,float grabU=1)
         {
-            ArchiveBookGeometry.UpdateLeaf(dynamicLeaf,side,Mathf.Clamp01(amount),grabY,pullY,grabU);
+            ArchiveBookGeometry.UpdateLeaf(dynamicLeaf,side,Mathf.Clamp01(amount),grabY,pullY,grabU,leafBuffer);
             var shade=new Vector4(amount,side,0,0);leftMaterial.SetVector("_TurnShade",shade);rightMaterial.SetVector("_TurnShade",shade);
         }
         public void PreviewUnderlay(RenderTexture next,int side)

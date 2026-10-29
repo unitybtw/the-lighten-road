@@ -32,88 +32,108 @@ namespace TheLightenRoad.Frontend
         }
         public static Mesh Leaf(int side,float progress=0,float grabY=0)
         {var m=new Mesh{name="Flexible double-sided archive leaf"};UpdateLeaf(m,side,progress,grabY);return m;}
-        // The bend travels from the free edge into the binding. Integrating its tangent
-        // preserves each horizontal paper strip's length instead of stretching a flat plate.
-        private static float LeafAngle(float u,float v,float progress,float grabY,float pullY=0)
+        // Midpoint samples are invariant. Cursor solving evaluates this curve thousands
+        // of times per gesture; no exponential or trigonometric rest-shape work belongs there.
+        private static readonly float[] MidU=new float[LeafColumns],RestAngle=new float[LeafColumns],BendSin=new float[LeafColumns];
+        static ArchiveBookGeometry()
         {
-            float wave=Mathf.Sin(progress*Mathf.PI);
-            float diagonal=.12f*(grabY-(v*2-1))*Mathf.Abs(grabY)*wave;
-            float centre=Mathf.Lerp(1.32f,-.32f,progress)+diagonal;
-            float t=Mathf.Clamp01((u-centre)/.56f+.5f);
-            float gutter=Mathf.Atan(.63f/PageWidth*Mathf.Exp(-u*18))*Mathf.Cos(progress*Mathf.PI);
-            float lift=Mathf.Abs(pullY)/PageWidth*1.5f*Mathf.Sin(u*Mathf.PI);
-            return Mathf.Clamp(Mathf.PI*(t*t*(3-2*t))+gutter+lift,0,Mathf.PI);
+            for(int i=0;i<LeafColumns;i++)
+            {
+                float u=(i+.5f)/LeafColumns;MidU[i]=u;
+                RestAngle[i]=Mathf.Atan(.63f/PageWidth*Mathf.Exp(-u*18));BendSin[i]=Mathf.Sin(u*Mathf.PI);
+            }
         }
-        private static Vector3 LeafPosition(int side,float u,float v,float progress,float grabY,float x,float z,float pullY=0,float grabU=1)
+        private readonly struct Curve
         {
-            float wave=Mathf.Sin(progress*Mathf.PI);
-            float y=(v-.5f)*PageHeight+.045f*wave*u*u*grabY;
-            y+=pullY*PullWeight(u,v,grabY,grabU);
-            float restingZ=-.085f-.025f*Mathf.Sin(v*Mathf.PI);
-            return new Vector3(side*(x+.015f),y,z+restingZ);
+            private readonly float centre,gutterSign,lift,corner,baseY,baseZ,pull,influence,radius;
+            public Curve(float v,float progress,float grabY,float pullY,float grabU)
+            {
+                float wave=Mathf.Sin(progress*Mathf.PI);
+                centre=Mathf.Lerp(1.32f,-.32f,progress)+.12f*(grabY-(v*2-1))*Mathf.Abs(grabY)*wave;
+                gutterSign=Mathf.Cos(progress*Mathf.PI);lift=Mathf.Abs(pullY)/PageWidth*1.5f;
+                corner=.045f*wave*grabY;baseY=(v-.5f)*PageHeight;baseZ=-.085f-.025f*Mathf.Sin(v*Mathf.PI);
+                pull=pullY;float distance=v-(grabY+1)*.5f;influence=Mathf.Exp(-2*distance*distance);radius=Mathf.Max(.08f,grabU);
+            }
+            private float Angle(float u,float rest,float bend)
+            {
+                float t=Mathf.Clamp01((u-centre)/.56f+.5f);
+                return Mathf.Clamp(Mathf.PI*(t*t*(3-2*t))+rest*gutterSign+lift*bend,0,Mathf.PI);
+            }
+            public float SampleAngle(int column)=>Angle(MidU[column],RestAngle[column],BendSin[column]);
+            public float PartialAngle(float u)=>Angle(u,Mathf.Atan(.63f/PageWidth*Mathf.Exp(-u*18)),Mathf.Sin(u*Mathf.PI));
+            public float Scale(float u)
+            {
+                if(pull==0)return 1;
+                float t=Mathf.Clamp01(u/radius),slope=pull*6*t*(1-t)/radius*influence/PageWidth;
+                return Mathf.Sqrt(Mathf.Max(.05f,1-slope*slope));
+            }
+            public Vector3 Position(int side,float u,float x,float z)
+            {
+                float t=Mathf.Clamp01(u/radius);
+                return new Vector3(side*(x+.015f),baseY+corner*u*u+pull*t*t*(3-2*t)*influence,z+baseZ);
+            }
         }
-        private static float PullWeight(float u,float v,float grabY,float grabU)
-        {
-            float t=Mathf.Clamp01(u/Mathf.Max(.08f,grabU));
-            float distance=v-(grabY+1)*.5f;
-            return t*t*(3-2*t)*Mathf.Exp(-2*distance*distance);
-        }
-        private static float StripScale(float u,float v,float grabY,float pullY,float grabU)
-        {
-            float radius=Mathf.Max(.08f,grabU),t=Mathf.Clamp01(u/radius);
-            float distance=v-(grabY+1)*.5f;
-            float slope=pullY*6*t*(1-t)/radius*Mathf.Exp(-2*distance*distance)/PageWidth;
-            // Vertical motion uses paper length instead of stretching its horizontal strips.
-            return Mathf.Sqrt(Mathf.Max(.05f,1-slope*slope));
-        }
-        /// <summary>Same material point used by both the mesh and the cursor constraint.</summary>
+        /// <summary>The same material point used by the mesh and cursor constraint.</summary>
         public static Vector3 LeafPoint(int side,float progress,float grabY,float u,float v,float pullY=0,float grabU=1)
         {
             progress=Mathf.Clamp01(progress);u=Mathf.Clamp01(u);v=Mathf.Clamp01(v);
-            float x=0,z=0;
+            var curve=new Curve(v,progress,grabY,pullY,grabU);float x=0,z=0;
             int full=Mathf.FloorToInt(u*LeafColumns);
             for(int column=0;column<full;column++)
             {
-                float angle=LeafAngle((column+.5f)/LeafColumns,v,progress,grabY,pullY);
-                float length=PageWidth/LeafColumns*StripScale((column+.5f)/LeafColumns,v,grabY,pullY,grabU);
+                float angle=curve.SampleAngle(column),length=PageWidth/LeafColumns*curve.Scale(MidU[column]);
                 x+=Mathf.Cos(angle)*length;z-=Mathf.Sin(angle)*length;
             }
             float remainder=u-full/(float)LeafColumns;
             if(remainder>0)
             {
-                float angle=LeafAngle(full/(float)LeafColumns+remainder*.5f,v,progress,grabY,pullY);
-                float length=PageWidth*remainder*StripScale(full/(float)LeafColumns+remainder*.5f,v,grabY,pullY,grabU);
+                float mid=full/(float)LeafColumns+remainder*.5f;
+                float angle=curve.PartialAngle(mid),length=PageWidth*remainder*curve.Scale(mid);
                 x+=Mathf.Cos(angle)*length;z-=Mathf.Sin(angle)*length;
             }
-            return LeafPosition(side,u,v,progress,grabY,x,z,pullY,grabU);
+            return curve.Position(side,u,x,z);
         }
-        public static void UpdateLeaf(Mesh mesh,int side,float progress,float grabY,float pullY=0,float grabU=1)
+        /// <summary>One owned workspace per animated leaf; topology changes only when its side changes.</summary>
+        public sealed class LeafBuffer
         {
-            progress=Mathf.Clamp01(progress);
-            const int columns=LeafColumns,rows=LeafRows;
-            var vertices=new Vector3[(columns+1)*(rows+1)];var uv=new Vector2[vertices.Length];
-            var indices=new int[columns*rows*6];
-            for(int row=0;row<=rows;row++)
+            private readonly Vector3[] vertices=new Vector3[(LeafColumns+1)*(LeafRows+1)];
+            private readonly Vector2[] uv=new Vector2[(LeafColumns+1)*(LeafRows+1)];
+            private readonly int[] indices=new int[LeafColumns*LeafRows*6];
+            private Mesh boundMesh;private int boundSide;
+            public void Update(Mesh mesh,int side,float progress,float grabY,float pullY,float grabU)
             {
-                float v=row/(float)rows,x=0,z=0;
-                for(int column=0;column<=columns;column++)
+                progress=Mathf.Clamp01(progress);
+                bool topology=boundMesh!=mesh || boundSide!=side || mesh.vertexCount!=vertices.Length;
+                for(int row=0;row<=LeafRows;row++)
                 {
-                    float u=column/(float)columns;int i=row*(columns+1)+column;
-                    if(column>0)
+                    float v=row/(float)LeafRows,x=0,z=0;var curve=new Curve(v,progress,grabY,pullY,grabU);
+                    for(int column=0;column<=LeafColumns;column++)
                     {
-                        float angle=LeafAngle((column-.5f)/columns,v,progress,grabY,pullY);
-                        float length=PageWidth/columns*StripScale((column-.5f)/columns,v,grabY,pullY,grabU);
-                        x+=Mathf.Cos(angle)*length;z-=Mathf.Sin(angle)*length;
+                        float u=column/(float)LeafColumns;int i=row*(LeafColumns+1)+column;
+                        if(column>0)
+                        {
+                            float angle=curve.SampleAngle(column-1),length=PageWidth/LeafColumns*curve.Scale(MidU[column-1]);
+                            x+=Mathf.Cos(angle)*length;z-=Mathf.Sin(angle)*length;
+                        }
+                        vertices[i]=curve.Position(side,u,x,z);
+                        if(topology)uv[i]=new Vector2((side*(u*580+1)+630)/1260,(v*696-323+450)/900);
                     }
-                    vertices[i]=LeafPosition(side,u,v,progress,grabY,x,z,pullY,grabU);
-                    uv[i]=new Vector2((side*(u*580+1)+630)/1260,(v*696-323+450)/900);
                 }
+                if(topology)
+                {
+                    int k=0;
+                    for(int row=0;row<LeafRows;row++)for(int col=0;col<LeafColumns;col++)
+                    {int a=row*(LeafColumns+1)+col,b=a+LeafColumns+1;if(side>0){indices[k++]=a;indices[k++]=b;indices[k++]=a+1;indices[k++]=a+1;indices[k++]=b;indices[k++]=b+1;}else{indices[k++]=a;indices[k++]=a+1;indices[k++]=b;indices[k++]=a+1;indices[k++]=b+1;indices[k++]=b;}}
+                    if(mesh.vertexCount!=vertices.Length)mesh.Clear();
+                    mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);
+                    boundMesh=mesh;boundSide=side;
+                }
+                else mesh.SetVertices(vertices);
+                mesh.RecalculateNormals();mesh.RecalculateBounds();
             }
-            int k=0;
-            for(int row=0;row<rows;row++)for(int col=0;col<columns;col++)
-            {int a=row*(columns+1)+col;int b=a+columns+1;if(side>0){indices[k++]=a;indices[k++]=b;indices[k++]=a+1;indices[k++]=a+1;indices[k++]=b;indices[k++]=b+1;}else{indices[k++]=a;indices[k++]=a+1;indices[k++]=b;indices[k++]=a+1;indices[k++]=b+1;indices[k++]=b;}}
-            mesh.Clear();mesh.vertices=vertices;mesh.uv=uv;mesh.triangles=indices;mesh.RecalculateNormals();mesh.RecalculateBounds();
         }
+        public static void UpdateLeaf(Mesh mesh,int side,float progress,float grabY,float pullY=0,float grabU=1,LeafBuffer buffer=null)
+            =>(buffer??new LeafBuffer()).Update(mesh,side,progress,grabY,pullY,grabU);
         public static Mesh Ribbon()
         {
             // The hidden head stays beneath the paper. Only a short, curved forked tip

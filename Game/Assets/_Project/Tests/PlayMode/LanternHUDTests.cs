@@ -44,6 +44,27 @@ public sealed class LanternHUDTests
     }
 
     [Test]
+    public void CachedPromptStillRespondsToBindingAndControllerStyleChanges()
+    {
+        var original=ControllerGlyphService.ConfiguredStyle;
+        var originalKey=controller.ToggleFlareKey;
+        try
+        {
+            ControllerGlyphService.ConfiguredStyle=ControllerPromptStyle.Keyboard;
+            controller.ToggleFlareKey=UnityEngine.InputSystem.Key.G;hud.Tick(0,0);
+            var labels=hud.GetComponentsInChildren<TMPro.TMP_Text>(true);
+            Assert.That(System.Array.Exists(labels,label=>label.text=="G"),Is.True);
+            controller.ToggleFlareKey=UnityEngine.InputSystem.Key.F;hud.Tick(0,0);
+            Assert.That(System.Array.Exists(labels,label=>label.text=="F"),Is.True);
+            ControllerGlyphService.ConfiguredStyle=ControllerPromptStyle.PlayStation;hud.Tick(0,0);
+            var expected=ControllerGlyphService.GetActionSprite(GlyphAction.Flare,ControllerPromptStyle.PlayStation);
+            Assert.That(expected,Is.Not.Null);
+            Assert.That(System.Array.Exists(hud.GetComponentsInChildren<UnityEngine.UI.Image>(true),image=>image.sprite==expected),Is.True);
+        }
+        finally{controller.ToggleFlareKey=originalKey;ControllerGlyphService.ConfiguredStyle=original;}
+    }
+
+    [Test]
     public void BuildsOverlayCanvasAndInitializesFourEmberSlots()
     {
         Step(0.1f);

@@ -229,6 +229,26 @@ public sealed class EmberPickupTests
 #endif
     }
 
+    [UnityTest]
+    public IEnumerator ConsecutiveAbsorptionBurstsShareTheirMaterial()
+    {
+#if UNITY_EDITOR
+        player=new GameObject("Burst material regression");var fuel=player.AddComponent<LanternFuel>();
+        fuel.Initialize(0,8);var prefab=UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/EmberPickup.prefab");
+        pickup=Object.Instantiate(prefab,new Vector3(100,0),Quaternion.identity);
+        Assert.That(pickup.GetComponent<EmberPickup>().CollectImmediate(fuel),Is.True);
+        var first=GameObject.Find("Ember_AbsorptionBurst").GetComponent<ParticleSystemRenderer>().sharedMaterial;
+        yield return null;
+        pickup=Object.Instantiate(prefab,new Vector3(110,0),Quaternion.identity);
+        Assert.That(pickup.GetComponent<EmberPickup>().CollectImmediate(fuel),Is.True);
+        foreach(var burst in Object.FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None))
+            if(burst.name=="Ember_AbsorptionBurst")Assert.That(burst.sharedMaterial,Is.SameAs(first),"A short-lived burst must not allocate an orphaned material.");
+        yield return new WaitForSeconds(.7f);
+#else
+        Assert.Ignore("This prefab integration test runs in Editor Play Mode.");yield break;
+#endif
+    }
+
     [UnityTearDown]
     public IEnumerator TearDown()
     {

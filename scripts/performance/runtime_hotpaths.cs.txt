@@ -1,0 +1,22 @@
+object Measure(string label,System.Action action,int count){for(int i=0;i<12;i++)action();var timer=new System.Diagnostics.Stopwatch();timer.Start();for(int i=0;i<count;i++)action();timer.Stop();System.GC.Collect();long bytes=0;for(int i=0;i<count;i++){long before=UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();action();bytes+=System.Math.Max(0,UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong()-before);}return new {label,iterations=count,microsecondsPerCall=timer.Elapsed.TotalMilliseconds*1000/count,positiveHeapDeltaBytesPerCall=(double)bytes/count};}
+var results=new System.Collections.Generic.List<object>();
+var tutorial=UnityEngine.Object.FindAnyObjectByType<TheLightenRoad.FirstLight.FirstLightTutorial>();
+tutorial.AutomaticTicks=false;
+results.Add(Measure("tutorial_find_ember",()=>tutorial.Presentation.Paint(TheLightenRoad.FirstLight.FirstLightStage.FindEmber,4,.016f),500));
+results.Add(Measure("tutorial_door_ready",()=>tutorial.Presentation.Paint(TheLightenRoad.FirstLight.FirstLightStage.DoorReady,4,.016f),500));
+var hud=tutorial.Hud;hud.gameObject.SetActive(true);
+results.Add(Measure("lantern_hud",()=>hud.Tick(.016f,5),500));
+TheLightenRoad.Codex.CodexSession.Discover("office-ledger");
+var menu=UnityEngine.Object.FindAnyObjectByType<TheLightenRoad.Frontend.ArchiveCodexMenu>();menu.Open("office-ledger");
+typeof(TheLightenRoad.Frontend.ArchiveCodexMenu).GetMethod("AnimateBook",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(menu,new object[]{2.2f});
+var view=menu.GetComponent<TheLightenRoad.Frontend.ArchiveBookPresentation>();
+int index=0;
+results.Add(Measure("book_mesh_curl",()=>view.Model.Curl(1,((index++)%100)/100f,.8f,.3f,.8f),300));
+view.Model.ReleaseSheet();
+results.Add(Measure("book_idle_framing",()=>view.FitModel(true),300));
+view.Turn.Begin(view.ScreenPoint(new UnityEngine.Vector3(5.4f,2.2f,-.14f)));
+results.Add(Measure("book_mouse_drag",()=>view.Turn.Drag(view.ScreenPoint(new UnityEngine.Vector3(4f-((index++)%80)*.08f,1.5f,-.14f))),120));
+view.Turn.Cancel();menu.Close();
+string json=Newtonsoft.Json.JsonConvert.SerializeObject(results,Newtonsoft.Json.Formatting.Indented);
+System.IO.File.WriteAllText("/Users/siracsimsek/Desktop/gamedevproject/Game/Library/Readability/runtime-performance-CAPTURE.json",json);
+return json;
