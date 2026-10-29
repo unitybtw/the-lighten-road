@@ -1,0 +1,67 @@
+{
+  "artist": "Maksim Martynenko (@Ichnolith)",
+  "files": [
+    {
+      "file": "Climb.json",
+      "sha256": "56f4377780ccd86ea36c901cb865aa2a20bc20c4ba61c6f2be19642d9a5e0cc4"
+    },
+    {
+      "file": "Climb.png",
+      "sha256": "f7b760facd0c05a46543062380722cbf7874c2dabd7693051676782f43581f20"
+    },
+    {
+      "file": "EmberSwap.json",
+      "sha256": "37c5630aa4b71247325ccef667f0f30b66bc049efe0be5bd09b8e5b16bc41393"
+    },
+    {
+      "file": "EmberSwap.png",
+      "sha256": "e0a656554ee3ea406889689f1f8313b7d35e956b0376312c9cf1029d2cfa35cd"
+    },
+    {
+      "file": "Flare.json",
+      "sha256": "e895dc6a8408cf973fe235338180edfe3f434c92fec42f8e181fcbd79fc237b9"
+    },
+    {
+      "file": "Flare.png",
+      "sha256": "fea10ebce5bc95885e5cb500b7a1ab75bfc24a01a178238e92d08f3848e8a028"
+    },
+    {
+      "file": "Idle.png",
+      "sha256": "3338d978fb02253b95f98e8ade2e7a2d7bca87f51c66f4e5a05b10695d905e8c"
+    },
+    {
+      "file": "Jump.json",
+      "sha256": "d72c905ab44868066127d9742d9e5d2e9b3bd300539503755415398bfeef5784"
+    },
+    {
+      "file": "Jump.png",
+      "sha256": "72b2d9132a28fb6e31ae2cb39a5093911758fa1f32c28916dd6818791411a204"
+    },
+    {
+      "file": "Landing.json",
+      "sha256": "9c9945ab656f4ecc82853ee89d1458490905655cf97d886fd0b8cb59bd433927"
+    },
+    {
+      "file": "Landing.png",
+      "sha256": "f2c48bbec431d3d681b56d6eaf186ffef0f5f6b69969173a039751440b93ac7c"
+    },
+    {
+      "file": "Sheathing.json",
+      "sha256": "16b519f0776b8f71297b8d238f96423d760d1cd5b5f497d67c15d28f11ca6beb"
+    },
+    {
+      "file": "Sheathing.png",
+      "sha256": "b658754ca00960978d57bc927abb6ec34c7a8aab1cbdc9d80e3d44a0f8547a3b"
+    },
+    {
+      "file": "Walk.json",
+      "sha256": "99b111a76abdacaea316ad855dcc13e2d2bd44cd4b6b8194f26a38303c03a570"
+    },
+    {
+      "file": "Walk.png",
+      "sha256": "6ed0dbc0824886e60e781d8dfcfeb905203c0b78d964e13f24ce5f55a2935415"
+    }
+  ],
+  "idle_frame_duration_ms": 100,
+  "idle_timing_note": "Idle.json was not supplied. 100 ms matches all seven delivered JSON timelines."
+}

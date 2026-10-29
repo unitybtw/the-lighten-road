@@ -1,0 +1,1 @@
+{"name":"TheLightenRoad.Player.Editor","references":["TheLightenRoad.Player","Unity.2D.Sprite.Editor","Unity.Newtonsoft.Json"],"includePlatforms":["Editor"]}

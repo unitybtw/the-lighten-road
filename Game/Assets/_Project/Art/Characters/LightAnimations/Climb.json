@@ -1,0 +1,232 @@
+{ "frames": {
+   "Climb 0.ase": {
+    "frame": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 1.ase": {
+    "frame": { "x": 70, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 2.ase": {
+    "frame": { "x": 140, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 3.ase": {
+    "frame": { "x": 210, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 4.ase": {
+    "frame": { "x": 280, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 5.ase": {
+    "frame": { "x": 350, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 6.ase": {
+    "frame": { "x": 420, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 7.ase": {
+    "frame": { "x": 490, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 8.ase": {
+    "frame": { "x": 560, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 9.ase": {
+    "frame": { "x": 630, "y": 0, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 10.ase": {
+    "frame": { "x": 0, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 11.ase": {
+    "frame": { "x": 70, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 12.ase": {
+    "frame": { "x": 140, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 13.ase": {
+    "frame": { "x": 210, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 14.ase": {
+    "frame": { "x": 280, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 15.ase": {
+    "frame": { "x": 350, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 16.ase": {
+    "frame": { "x": 420, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 17.ase": {
+    "frame": { "x": 490, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 18.ase": {
+    "frame": { "x": 560, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 19.ase": {
+    "frame": { "x": 630, "y": 80, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 20.ase": {
+    "frame": { "x": 0, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 21.ase": {
+    "frame": { "x": 70, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 22.ase": {
+    "frame": { "x": 140, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 23.ase": {
+    "frame": { "x": 210, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 24.ase": {
+    "frame": { "x": 280, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 25.ase": {
+    "frame": { "x": 350, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   },
+   "Climb 26.ase": {
+    "frame": { "x": 420, "y": 160, "w": 70, "h": 80 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 80 },
+    "sourceSize": { "w": 70, "h": 80 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "https://github.com/LibreSprite/LibreSprite/",
+  "version": "1.3",
+  "image": "C:\\Users\\zombo\\Desktop\\Climb.png",
+  "format": "RGBA8888",
+  "size": { "w": 700, "h": 240 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 3", "opacity": 255, "blendMode": "normal" }
+  ]
+ }
+}

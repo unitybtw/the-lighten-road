@@ -1,0 +1,289 @@
+{ "frames": {
+   "EmberSwap 0.ase": {
+    "frame": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 1.ase": {
+    "frame": { "x": 70, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 2.ase": {
+    "frame": { "x": 140, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 3.ase": {
+    "frame": { "x": 210, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 4.ase": {
+    "frame": { "x": 280, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 5.ase": {
+    "frame": { "x": 350, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 6.ase": {
+    "frame": { "x": 420, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 7.ase": {
+    "frame": { "x": 490, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 8.ase": {
+    "frame": { "x": 560, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 9.ase": {
+    "frame": { "x": 630, "y": 0, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 10.ase": {
+    "frame": { "x": 0, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 11.ase": {
+    "frame": { "x": 70, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 12.ase": {
+    "frame": { "x": 140, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 13.ase": {
+    "frame": { "x": 210, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 14.ase": {
+    "frame": { "x": 280, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 15.ase": {
+    "frame": { "x": 350, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 16.ase": {
+    "frame": { "x": 420, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 17.ase": {
+    "frame": { "x": 490, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 18.ase": {
+    "frame": { "x": 560, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 19.ase": {
+    "frame": { "x": 630, "y": 70, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 20.ase": {
+    "frame": { "x": 0, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 21.ase": {
+    "frame": { "x": 70, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 22.ase": {
+    "frame": { "x": 140, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 23.ase": {
+    "frame": { "x": 210, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 24.ase": {
+    "frame": { "x": 280, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 25.ase": {
+    "frame": { "x": 350, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 26.ase": {
+    "frame": { "x": 420, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 27.ase": {
+    "frame": { "x": 490, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 28.ase": {
+    "frame": { "x": 560, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 29.ase": {
+    "frame": { "x": 630, "y": 140, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 30.ase": {
+    "frame": { "x": 0, "y": 210, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 31.ase": {
+    "frame": { "x": 70, "y": 210, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 32.ase": {
+    "frame": { "x": 140, "y": 210, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   },
+   "EmberSwap 33.ase": {
+    "frame": { "x": 210, "y": 210, "w": 70, "h": 70 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 70, "h": 70 },
+    "sourceSize": { "w": 70, "h": 70 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "https://github.com/LibreSprite/LibreSprite/",
+  "version": "1.3",
+  "image": "C:\\Users\\zombo\\Desktop\\EmberSwap.png",
+  "format": "RGBA8888",
+  "size": { "w": 700, "h": 280 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" },
+   { "name": "Layer 4", "opacity": 255, "blendMode": "normal" }
+  ]
+ }
+}

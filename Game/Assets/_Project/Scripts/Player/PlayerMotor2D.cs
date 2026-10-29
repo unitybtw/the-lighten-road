@@ -123,6 +123,7 @@ namespace TheLightenRoad.Player
         public float GroundAcceleration { get => groundAcceleration; set => groundAcceleration = value; }
         public float GroundDeceleration { get => groundDeceleration; set => groundDeceleration = value; }
         public bool EnableApexHangTime { get => enableApexHangTime; set => enableApexHangTime = value; }
+        public bool EnableSquashAndStretch { get => enableSquashAndStretch; set => enableSquashAndStretch = value; }
         public bool EnableKineticTilt { get => enableKineticTilt; set => enableKineticTilt = value; }
         public bool EnableCornerCorrection { get => enableCornerCorrection; set => enableCornerCorrection = value; }
 

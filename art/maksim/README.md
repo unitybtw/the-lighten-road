@@ -27,3 +27,7 @@ These supplied concept images are preserved at their original resolution and byt
 ![Ember concept variants](concepts/embers-concept.jpg)
 
 6000 × 4000 JPEG. Crystal, veined stone, and patterned material alternatives, including environment and lantern reference forms. These alternatives do not establish new gameplay states or an approved final material.
+
+## Light animation delivery
+
+Maksim's eight sprite sheets and seven LibreSprite timelines are now integrated with PlayerPrototype. [Frames, import settings, runtime behavior and timing assumptions](../../Game/Assets/_Project/Art/Characters/LightAnimations/README.md). The animation art is credited to Maksim; the integration commit uses Siraç's normal Git identity.

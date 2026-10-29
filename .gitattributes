@@ -10,3 +10,15 @@
 *.jpg binary
 *.wav binary
 *.ogg binary
+
+# Preserve delivered LibreSprite metadata bytes, including its original CRLF endings.
+Game/Assets/_Project/Art/Characters/LightAnimations/*.json -text whitespace=cr-at-eol
+# Unity's native YAML emitter writes empty scalar fields with a trailing space.
+Game/Assets/_Project/Art/Characters/LightAnimations.meta whitespace=-blank-at-eol
+Game/Assets/_Project/Art/Characters/LightAnimations/**/*.meta whitespace=-blank-at-eol
+Game/Assets/_Project/Art/Characters/LightAnimations/**/*.anim whitespace=-blank-at-eol
+Game/Assets/_Project/Resources/Player.meta whitespace=-blank-at-eol
+Game/Assets/_Project/Resources/Player/*.meta whitespace=-blank-at-eol
+Game/Assets/_Project/Scripts/Player/Editor.meta whitespace=-blank-at-eol
+Game/Assets/_Project/Scripts/Player/Editor/*.meta whitespace=-blank-at-eol
+Game/Assets/_Project/Prefabs/PlayerPrototype.prefab whitespace=-blank-at-eol

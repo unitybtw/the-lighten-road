@@ -202,6 +202,8 @@ public sealed class PlayerMotor2DTests
     [UnityTest]
     public IEnumerator VisualSquashAndStretchReactsToJump()
     {
+        // Delivered frame animation opts out by default; retain this explicit procedural option.
+        motor.EnableSquashAndStretch = true;
         Vector3 initialScale = motor.CurrentVisualScale;
 
         // Trigger jump
