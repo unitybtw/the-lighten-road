@@ -85,6 +85,20 @@ namespace TheLightenRoad.Frontend.Tests
    menu.ToggleNarration();menu.ReplayNarration();yield return null;
    Assert.That(menu.IsNarrationPlaying,Is.False,"Closed readers must ignore voice controls.");
   }
+  [UnityTest] public IEnumerator NarrationUsesEffectsGainOnceWhileTheListenerOwnsMasterGain()
+  {
+   float master=MenuPreferences.Master,music=MenuPreferences.Music,effects=MenuPreferences.Effects;
+   var menu=ReaderWithVoice();
+   try
+   {
+    MenuPreferences.SetAudio(.4f,music,.6f);yield return null;yield return null;
+    Assert.That(AudioListener.volume,Is.EqualTo(.4f).Within(.001f));
+    Assert.That(menu.GetComponent<AudioSource>().volume,Is.EqualTo(.6f).Within(.001f),"The master setting must not attenuate narration twice.");
+    MenuPreferences.SetAudio(.7f,music,.25f);yield return null;yield return null;
+    Assert.That(menu.GetComponent<AudioSource>().volume,Is.EqualTo(.25f).Within(.001f));
+   }
+   finally {menu.Close();MenuPreferences.SetAudio(master,music,effects);}
+  }
   [UnityTest] public IEnumerator PausePreservesPlaybackPositionAndReplayStartsFromBeginning()
   {
    var menu=ReaderWithVoice();yield return new WaitForSecondsRealtime(2.8f);

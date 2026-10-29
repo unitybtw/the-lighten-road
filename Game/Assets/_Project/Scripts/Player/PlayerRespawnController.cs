@@ -147,14 +147,14 @@ namespace TheLightenRoad.Player
                 stateTimer += Time.deltaTime;
 
                 // Manual skip input
-                if (allowManualRespawnInput)
+                if (allowManualRespawnInput && GameControls.GameplayAllowedExcept(this))
                 {
                     bool skip = false;
                     var kb = Keyboard.current;
                     if (kb != null && (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.rKey.wasPressedThisFrame))
                         skip = true;
 
-                    var gp = Gamepad.current;
+                    var gp = GameControls.ActivePad;
                     if (gp != null && gp.buttonSouth.wasPressedThisFrame)
                         skip = true;
 
@@ -218,8 +218,10 @@ namespace TheLightenRoad.Player
             // Restore body simulation
             if (motor != null && motor.Body != null)
             {
+                motor.Body.position = spawnPosition;
                 motor.Body.simulated = true;
                 motor.Body.linearVelocity = Vector2.zero;
+                Physics2D.SyncTransforms();
             }
 
             // Restore lantern fuel
@@ -239,14 +241,16 @@ namespace TheLightenRoad.Player
             if (followCamera != null)
                 followCamera.SetTarget(transform, snap: true);
 
-            OnPlayerRespawned?.Invoke();
-
             // Re-enable player movement
             if (motor != null)
                 motor.enabled = true;
 
             state = RespawnState.Alive;
             GameControls.BlockGameplay(this, false);
+
+            // Observers see a completed recovery. A failed observer cannot strand the core state,
+            // and a new hazard reported by an observer must remain authoritative.
+            OnPlayerRespawned?.Invoke();
         }
 
         public void SetCheckpoint(Vector3 newSpawn)

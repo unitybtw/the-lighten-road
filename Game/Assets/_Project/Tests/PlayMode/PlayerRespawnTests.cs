@@ -3,6 +3,8 @@ using NUnit.Framework;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using TheLightenRoad.UI;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -15,10 +17,14 @@ public sealed class PlayerRespawnTests
     private PlayerRespawnController respawnController;
     private DeathScreenOverlay overlay;
     private GameObject overlayGo;
+    private bool hadDeathCount;
+    private int deathCount;
 
     [UnitySetUp]
     public IEnumerator SetUp()
     {
+        hadDeathCount = PlayerPrefs.HasKey("TheLightenRoad.TotalDeaths");
+        deathCount = PlayerPrefs.GetInt("TheLightenRoad.TotalDeaths");
         floor = new GameObject("Test Floor");
         floor.transform.position = new Vector3(0f, -0.5f, 0f);
         floor.AddComponent<BoxCollider2D>().size = new Vector2(30f, 1f);
@@ -60,6 +66,8 @@ public sealed class PlayerRespawnTests
         if (overlayGo != null)
             Object.Destroy(overlayGo);
         yield return null;
+        if (hadDeathCount) PlayerPrefs.SetInt("TheLightenRoad.TotalDeaths", deathCount);
+        else PlayerPrefs.DeleteKey("TheLightenRoad.TotalDeaths");
     }
 
     [UnityTest]
@@ -155,5 +163,63 @@ public sealed class PlayerRespawnTests
         Assert.That(player.transform.position, Is.EqualTo(chamberStart));
         Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
         yield return null;
+    }
+
+    [UnityTest] public IEnumerator RespawnRecoveryNotificationSeesAReadyPlayerAtTheCheckpoint()
+    {
+        RespawnState observed = RespawnState.Dead;bool motorReady = false, simulated = false;Vector2 position = default;
+        respawnController.SpawnPosition = new Vector3(5, 2, 0);
+        respawnController.OnPlayerRespawned += () => { observed=respawnController.State;motorReady=motor.enabled;simulated=motor.Body.simulated;position=motor.Body.position; };
+        respawnController.Kill(DeathReason.Hazard);respawnController.Respawn();
+        Assert.That(observed, Is.EqualTo(RespawnState.Alive));
+        Assert.That(motorReady && simulated, Is.True);
+        Assert.That(Vector2.Distance(position, respawnController.SpawnPosition), Is.LessThan(.001f));
+        yield return null;
+    }
+
+    [UnityTest] public IEnumerator RespawnRecoveryListenerFailureCannotStrandThePlayerInRespawning()
+    {
+        respawnController.OnPlayerRespawned += () => throw new System.InvalidOperationException("Recovery listener fixture");
+        respawnController.Kill(DeathReason.Hazard);
+        Assert.Throws<System.InvalidOperationException>(() => respawnController.Respawn());
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
+        Assert.That(motor.enabled && motor.Body.simulated, Is.True);
+        yield return null;
+    }
+
+    [UnityTest] public IEnumerator RespawnRecoveryListenerCanReportANewHazardWithoutItBeingOverwritten()
+    {
+        respawnController.OnPlayerRespawned += () => respawnController.Kill(DeathReason.Hazard);
+        respawnController.Kill(DeathReason.Darkness);respawnController.Respawn();
+        Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dying));
+        Assert.That(respawnController.LastDeathReason, Is.EqualTo(DeathReason.Hazard));
+        Assert.That(motor.enabled || motor.Body.simulated, Is.False);
+        yield return null;
+    }
+
+    [UnityTest] public IEnumerator RespawnRecoveryManualSkipWaitsUntilTheWorldIsUnpaused()
+    {
+        var previousKeyboard=Keyboard.current;var keyboard=InputSystem.AddDevice<Keyboard>();keyboard.MakeCurrent();
+        var background=InputSystem.settings.backgroundBehavior;var editor=InputSystem.settings.editorInputBehaviorInPlayMode;
+        InputSystem.settings.backgroundBehavior=InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode=InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+        try
+        {
+            overlay.enabled=false;respawnController.AutoRespawnEnabled=false;respawnController.AllowManualRespawnInput=true;
+            respawnController.Kill(DeathReason.Hazard);yield return new WaitForSeconds(.5f);
+            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead));
+            Time.timeScale=0;InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));yield return null;yield return null;
+            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead), "Pause-menu submit must not also respawn the player behind it.");
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState());yield return null;
+            Time.timeScale=1;yield return null;
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));yield return null;yield return null;
+            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
+        }
+        finally
+        {
+            Time.timeScale=1;InputSystem.RemoveDevice(keyboard);
+            if(previousKeyboard!=null && previousKeyboard.added)previousKeyboard.MakeCurrent();
+            InputSystem.settings.backgroundBehavior=background;InputSystem.settings.editorInputBehaviorInPlayMode=editor;
+        }
     }
 }

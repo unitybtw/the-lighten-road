@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-29",
+  "unity": "6000.3.2f1",
+  "base_commit": "ea18ac012bc738c286d519381855d41c5bdab3c2",
+  "compilation": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "before_scoped_runs": {
+    "respawn": {
+      "total": 4,
+      "passed": 0,
+      "failed": 4,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "reader": {
+      "total": 2,
+      "passed": 0,
+      "failed": 2,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "narration": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1,
+      "skipped": 0,
+      "inconclusive": 0
+    }
+  },
+  "reproduced_failures_fixed": [
+    {
+      "test": "PlayerRespawnTests.RespawnRecoveryListenerCanReportANewHazardWithoutItBeingOverwritten",
+      "before_message": "  Expected: Dying\n  But was:  Alive\n",
+      "after": "Passed"
+    },
+    {
+      "test": "PlayerRespawnTests.RespawnRecoveryListenerFailureCannotStrandThePlayerInRespawning",
+      "before_message": "  Expected: Alive\n  But was:  Respawning\n",
+      "after": "Passed"
+    },
+    {
+      "test": "PlayerRespawnTests.RespawnRecoveryManualSkipWaitsUntilTheWorldIsUnpaused",
+      "before_message": "  Pause-menu submit must not also respawn the player behind it.\n  Expected: Dead\n  But was:  Alive\n",
+      "after": "Passed"
+    },
+    {
+      "test": "PlayerRespawnTests.RespawnRecoveryNotificationSeesAReadyPlayerAtTheCheckpoint",
+      "before_message": "  Expected: Alive\n  But was:  Respawning\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Frontend.Tests.ArchiveCodexTests.ReaderOwnershipCannotOpenOverAnotherModalOrAllocateItsPresentation",
+      "before_message": "  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Frontend.Tests.ArchiveCodexTests.ReaderOwnershipSuspendsLegacyInteractionAndPreservesOtherLeases",
+      "before_message": "  The old raw E polling must stop while the book owns the screen.\n  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Frontend.Tests.ArchiveNarrationTests.NarrationUsesEffectsGainOnceWhileTheListenerOwnsMasterGain",
+      "before_message": "  The master setting must not attenuate narration twice.\n  Expected: 0.600000024f +/- 0.00100000005f\n  But was:  0.24000001f\n",
+      "after": "Passed"
+    }
+  ],
+  "full_project_playmode": {
+    "status": "completed",
+    "summary": {
+      "total": 373,
+      "passed": 373,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "duration_seconds": 309.32,
+    "suites": {
+      "0f,-1": 1,
+      "0f,1": 1,
+      "15f,0": 1,
+      "1f,0": 1,
+      "ArchiveBookInteractionTests": 25,
+      "ArchiveCodexTests": 17,
+      "ArchiveNarrationTests": 9,
+      "ArchiveStageAnimationTests": 2,
+      "ArchiveTestChamberTests": 3,
+      "BackgroundMusicManagerTests": 12,
+      "ChamberCompletionTests": 8,
+      "ControllerHapticsTests": 6,
+      "ControllerLightbarTests": 5,
+      "ControllerSupportTests": 10,
+      "DeathScreenTests": 8,
+      "DiegeticWhisperTests": 5,
+      "DualSenseBluetoothTests": 4,
+      "DualSensePatternTests": 8,
+      "DualSenseSpeakerTests": 13,
+      "EmberMagnetismTests": 4,
+      "EmberPickupTests": 7,
+      "EtherealPlatformTests": 5,
+      "FirstLightTutorialTests": 12,
+      "FlareGlyphTests": 7,
+      "FollowCamera2DTests": 4,
+      "FurkanTutorialTests": 8,
+      "GameControlsTests": 8,
+      "LanternControllerTests": 10,
+      "LanternFuelTests": 13,
+      "LanternHUDTests": 16,
+      "LifecycleRegressionTests": 8,
+      "MainMenuTests": 12,
+      "MenuReadabilityTests": 11,
+      "ParticleEffectsTests": 3,
+      "PauseMenuTests": 10,
+      "PhotosensitiveRelayTests": 8,
+      "PlayerLedgeClimbTests": 22,
+      "PlayerMotor2DTests": 11,
+      "PlayerRespawnTests": 9,
+      "PlayerSpriteAnimatorTests": 9,
+      "RuinedArchiveRouteTests": 3,
+      "SoundEffectManagerTests": 17,
+      "StaminaHUDTests": 7,
+      "SurfaceAudioTests": 4,
+      "SwayingPropTests": 6
+    }
+  },
+  "project_integrity": {
+    "checked_assets": 599,
+    "status": "passed",
+    "failures": []
+  },
+  "saved_preferences_restored": 27,
+  "total_deaths_preference_restored": true,
+  "editor_after": {
+    "scene": "FirstLightTutorial",
+    "playing": false,
+    "dirty": false
+  },
+  "protected_paths_unchanged": true,
+  "limitations": "Unity Editor Play Mode only. No standalone build, Edit Mode test suite, physical-controller or hardware audio matrix repeated."
+}

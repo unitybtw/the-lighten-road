@@ -54,6 +54,35 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(ArchiveCodexMenu.IsOpen,Is.True);Assert.That(Time.timeScale,Is.Zero);owner.Close();
             Assert.That(ArchiveCodexMenu.IsOpen,Is.False);Assert.That(Time.timeScale,Is.EqualTo(1));
         }
+        [UnityTest] public IEnumerator ReaderOwnershipSuspendsLegacyInteractionAndPreservesOtherLeases()
+        {
+            var type=System.AppDomain.CurrentDomain.GetAssemblies().Select(a=>a.GetType("TheLightenRoad.Interaction.EmberVein")).First(t=>t!=null);
+            var actor=(Behaviour)Go("Book legacy interaction").AddComponent(type);
+            CodexSession.Discover("a");var menu=Go("Book ownership regression").AddComponent<ArchiveCodexMenu>();menu.Open("a");
+            Assert.That(actor.enabled,Is.False,"The old raw E polling must stop while the book owns the screen.");
+            var other=Go("Other modal owner");LegacyInteractionPollingGate.Acquire(other);GameControls.BlockGameplay(other,true);
+            try
+            {
+                menu.Close();yield return null;yield return null;yield return null;
+                Assert.That(actor.enabled,Is.False);Assert.That(GameControls.GameplayAllowed,Is.False);
+            }
+            finally {LegacyInteractionPollingGate.Release(other);GameControls.BlockGameplay(other,false);}
+            yield return null;yield return null;yield return null;
+            Assert.That(actor.enabled,Is.True);Assert.That(GameControls.GameplayAllowed,Is.True);
+        }
+        [Test] public void ReaderOwnershipCannotOpenOverAnotherModalOrAllocateItsPresentation()
+        {
+            CodexSession.Discover("a");var menu=ArchiveCodexMenu.CreateStandby();created.Add(menu.gameObject);
+            var other=Go("Existing modal");GameControls.BlockGameplay(other,true);
+            try
+            {
+                menu.Open("a");
+                Assert.That(menu.PresentationCreated,Is.False);
+                Assert.That(ArchiveCodexMenu.IsOpen,Is.False);
+                Assert.That(Time.timeScale,Is.EqualTo(1));
+            }
+            finally {menu.Close();GameControls.BlockGameplay(other,false);}
+        }
         [Test] public void LiveDiscoveryRescuesEmptyLanternAndDuplicateTerminalNeverRepays()
         {
             var fuel=Go("Fuel").AddComponent<LanternFuel>();fuel.Initialize(0,8);

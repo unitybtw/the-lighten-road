@@ -106,12 +106,13 @@ namespace TheLightenRoad.Frontend
         public void Open(string id)
         {
             int index=entries.IndexOf(id);if(index<0 || (IsOpen && !ownsPause))return;
+            if(!ownsPause && GameControls.HasGameplayBlockers)return;
             EnsurePresentation();
             bool wasOpen=IsOpen;selected=index;page=0;
             if(!IsOpen)
             {
                 previousTime=Time.timeScale;previousSelection=EventSystem.current?.currentSelectedGameObject;
-                Time.timeScale=0;GameControls.BlockGameplay(this,true);IsOpen=true;ownsPause=true;
+                Time.timeScale=0;GameControls.BlockGameplay(this,true);LegacyInteractionPollingGate.Acquire(this);IsOpen=true;ownsPause=true;
             }
             presentation.Turn.Cancel();panel.SetActive(true);footerPanel.SetActive(true);presentation.Show(true);revealTime=0;opening=!wasOpen && !MenuPreferences.ReducedMotion;
             Redraw();RefreshShortcuts();AnimateBook(0);
@@ -124,7 +125,7 @@ namespace TheLightenRoad.Frontend
             if(panel!=null)panel.SetActive(false);if(footerPanel!=null)footerPanel.SetActive(false);if(presentation!=null)presentation.Show(false);
             opening=false;narrationRequested=false;narrationPaused=false; narrationLog=null;
             if(!ownsPause)return;
-            if(audioSource!=null)audioSource.Stop();ownsPause=false;Time.timeScale=previousTime;GameControls.BlockGameplay(this,false);IsOpen=false;closedFrame=Time.frameCount;
+            if(audioSource!=null)audioSource.Stop();ownsPause=false;Time.timeScale=previousTime;GameControls.BlockGameplay(this,false);LegacyInteractionPollingGate.Release(this);IsOpen=false;closedFrame=Time.frameCount;
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(previousSelection);
         }
         void Update()
@@ -141,7 +142,7 @@ namespace TheLightenRoad.Frontend
             if(IsOpen)
             {
                 AnimateBook(Time.unscaledDeltaTime);
-                audioSource.volume=MenuPreferences.Master*MenuPreferences.Effects;
+                audioSource.volume=MenuPreferences.Effects;
                 if(narrationRequested)
                 {
                     var clip=audioSource.clip!=null?audioSource.clip:narration.GetReadyClip(narrationLog);
