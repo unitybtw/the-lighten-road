@@ -46,8 +46,20 @@ namespace TheLightenRoad.Lantern.Relays
         private bool isOpen;
         private bool wasOpen;
         private bool isMoving;
+        private bool initialized;
+        private PhotosensitiveRelay2D boundRelay;
 
-        public PhotosensitiveRelay2D Relay { get => relay; set => relay = value; }
+        public PhotosensitiveRelay2D Relay
+        {
+            get => relay;
+            set
+            {
+                if (relay == value && boundRelay == value) return;
+                UnbindRelay();
+                relay = value;
+                if (initialized && isActiveAndEnabled) BindRelay();
+            }
+        }
         public bool IsOpen => isOpen;
         public bool IsMoving => isMoving;
         public float MotionProgress => motionProgress;
@@ -66,13 +78,23 @@ namespace TheLightenRoad.Lantern.Relays
             wasOpen = startOpen;
             motionProgress = startOpen ? 1f : 0f;
             transform.position = Vector3.Lerp(closedPosition, openPosition, motionProgress);
+            initialized = true;
         }
 
         private void OnEnable()
         {
+            if (relay == null) relay = GetComponentInParent<PhotosensitiveRelay2D>();
+            BindRelay();
+        }
+
+        private void BindRelay()
+        {
+            if (!initialized) return;
+            UnbindRelay();
             if (relay != null)
             {
-                relay.OnStateChanged.AddListener(HandleRelayStateChanged);
+                boundRelay = relay;
+                boundRelay.OnStateChanged.AddListener(HandleRelayStateChanged);
                 // Synchronize with initial relay state
                 if (relay.IsActivated != isOpen)
                 {
@@ -83,22 +105,27 @@ namespace TheLightenRoad.Lantern.Relays
 
         private void OnDisable()
         {
-            if (relay != null)
-            {
-                relay.OnStateChanged.RemoveListener(HandleRelayStateChanged);
-            }
+            UnbindRelay();
+        }
+
+        private void UnbindRelay()
+        {
+            if (boundRelay != null) boundRelay.OnStateChanged.RemoveListener(HandleRelayStateChanged);
+            boundRelay = null;
         }
 
         private void Start()
         {
             if (relay == null)
             {
-                relay = GetComponentInParent<PhotosensitiveRelay2D>();
+                Relay = GetComponentInParent<PhotosensitiveRelay2D>();
             }
         }
 
         private void Update()
         {
+            // The Inspector writes the serialized field directly, bypassing the public setter.
+            if (boundRelay != relay) BindRelay();
             Tick(Time.deltaTime);
         }
 

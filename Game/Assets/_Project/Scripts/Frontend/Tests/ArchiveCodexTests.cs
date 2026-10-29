@@ -112,6 +112,30 @@ namespace TheLightenRoad.Frontend.Tests
             var fuel=Go("Fuel").AddComponent<LanternFuel>();CodexSession.Discover("a");CodexSession.Discover("b");Assert.That(fuel.TotalEmbers,Is.EqualTo(4));
             Assert.That(CodexSession.Decryption,Is.EqualTo(100));var catalog=CodexSession.Catalog;CodexSession.Begin(catalog);Assert.That(CodexSession.FoundCount,Is.Zero);
         }
+        [Test] public void CatalogIdentityRejectsUnassignedOrWhitespaceRecordIds()
+        {
+            var valid=CodexSession.Catalog.Find("a");var unfinished=New<ArchiveLog>();
+            CodexSession.Catalog.Logs=new[]{valid,unfinished};
+            foreach(var id in new[]{null,"","   "})
+            {
+                unfinished.Id=id;
+                Assert.That(CodexSession.Discover(id),Is.False,"Unfinished records must not count as discoveries.");
+                Assert.That(CodexSession.FoundCount,Is.Zero);Assert.That(CodexSession.Decryption,Is.Zero);
+            }
+        }
+        [Test] public void CatalogIdentityHandlesAnUnassignedLogCollection()
+        {
+            var catalog=CodexSession.Catalog;catalog.Logs=null;
+            Assert.That(catalog.Total,Is.Zero);Assert.That(catalog.Find("a"),Is.Null);
+            Assert.That(CodexSession.Discover("a"),Is.False);
+        }
+        [Test] public void CatalogIdentityRejectsANullRestartBeforeClearingCurrentDiscoveries()
+        {
+            CodexSession.Discover("a");var catalog=CodexSession.Catalog;var channel=CodexSession.Channel;
+            Assert.Throws<System.ArgumentNullException>(()=>CodexSession.Begin(null));
+            Assert.That(CodexSession.Catalog,Is.SameAs(catalog));Assert.That(CodexSession.Channel,Is.SameAs(channel));
+            Assert.That(CodexSession.Has("a"),Is.True);
+        }
         [Test] public void OpeningKeepsOneHingeAndRevealsInkAfterCoverLands()
         {
             bool reduced=MenuPreferences.ReducedMotion;MenuPreferences.SetReducedMotion(false);

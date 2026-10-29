@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-29",
+  "unity": "6000.3.2f1",
+  "base_commit": "8ef11c4ac8fcab43b5a86ac9d49ba47e2c0f78ea",
+  "compilation": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "before_scoped_runs": {
+    "relay": {
+      "total": 16,
+      "passed": 7,
+      "failed": 9,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "catalog": {
+      "total": 3,
+      "passed": 0,
+      "failed": 3,
+      "skipped": 0,
+      "inconclusive": 0
+    }
+  },
+  "reproduced_failures_fixed": [
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.ArchiveGateOpensWhenRelayActivatesAndClosesWhenDeactivated",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.GateBindingAcceptsARelayAssignedAfterAwake",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.GateBindingDiscoversAndSubscribesToItsParent",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.GateBindingReassignmentReleasesTheOldRelayAndRespectsDisable",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.RelayLightOutputDoesNotChargeBeyondTheRisingLight",
+      "before_message": "  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.RelayLightOutputHonorsAScoutPaidForWithTheLastEmber",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.RelayLightOutputKeepsChargingDuringTheVisibleReleaseTail",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.RelayLightOutputRejectsADisabledRenderer",
+      "before_message": "  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Lantern.Relays.Tests.PhotosensitiveRelayTests.RelayLightOutputUsesTheLampPositionRatherThanThePlayerCentre",
+      "before_message": "  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Frontend.Tests.ArchiveCodexTests.CatalogIdentityHandlesAnUnassignedLogCollection",
+      "before_message": "System.ArgumentNullException : Value cannot be null.\nParameter name: source",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Frontend.Tests.ArchiveCodexTests.CatalogIdentityRejectsANullRestartBeforeClearingCurrentDiscoveries",
+      "before_message": "  Expected: <System.ArgumentNullException>\n  But was:  <System.NullReferenceException: Object reference not set to an instance of an object\n  at TheLightenRoad.Codex.CodexSession.Begin (TheLightenRoad.Codex.ArchiveCatalog catalog) [0x0000b] in Game/Assets/_Project/Scripts/Codex/CodexSession.cs:30 \n  at TheLightenRoad.Frontend.Tests.ArchiveCodexTests+<>c.<CatalogIdentityRejectsANullRestartBeforeClearingCurrentDiscoveries>b__16_0 () [0x00000] in Game/Assets/_Project/Scripts/Frontend/Tests/ArchiveCodexTests.cs:135 \n  at NUnit.Framework.Assert.Throws (NUnit.Framework.Constraints.IResolveConstraint expression, NUnit.Framework.TestDelegate code, System.String message, System.Object[] args) [0x0002f] in <f577cd9686154d6ab10efd7e65e64366>:0 >\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.Frontend.Tests.ArchiveCodexTests.CatalogIdentityRejectsUnassignedOrWhitespaceRecordIds",
+      "before_message": "  Unfinished records must not count as discoveries.\n  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    }
+  ],
+  "relay_focused_after": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "full_project_playmode": {
+    "status": "completed",
+    "summary": {
+      "total": 385,
+      "passed": 385,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "duration_seconds": 318.82
+  },
+  "project_integrity": {
+    "checked_assets": 599,
+    "status": "passed",
+    "failures": []
+  },
+  "saved_preferences_restored": 28,
+  "preferences_verified_mismatches": 0,
+  "total_deaths_preference_restored": true,
+  "adaptive_triggers_enabled_preference_restored": true,
+  "editor_after": {
+    "scene": "FirstLightTutorial",
+    "playing": false,
+    "dirty": false
+  },
+  "protected_paths_unchanged": true,
+  "limitations": "Unity Editor Play Mode only. No standalone build, Edit Mode test suite, physical-controller or hardware audio matrix repeated. Light sensing remains distance-based without wall occlusion."
+}

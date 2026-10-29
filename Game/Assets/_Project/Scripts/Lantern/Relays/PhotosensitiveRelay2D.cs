@@ -228,19 +228,38 @@ namespace TheLightenRoad.Lantern.Relays
                 if (targetLantern == null) return false;
             }
 
-            if (targetLantern.Fuel != null && targetLantern.Fuel.IsEmpty)
+            // The final spent ember still owns its full scout. Inventory and emitted light
+            // deliberately have different lifetimes during that reservation.
+            if (!targetLantern.gameObject.activeInHierarchy ||
+                (targetLantern.Fuel != null && targetLantern.Fuel.IsEmpty && !targetLantern.HasActiveScout))
             {
                 return false;
             }
 
-            distance = Vector2.Distance(transform.position, targetLantern.transform.position);
-            isFlare = targetLantern.IsFlared;
-
-            float allowedRelayRadius = isFlare ? flareActivationRadius : dimActivationRadius;
-            float lanternPhysicalRadius = isFlare ? targetLantern.FlareRadius : targetLantern.DimRadius;
+            float blend = Mathf.Clamp01(targetLantern.FlareBlend);
+            isFlare = blend >= .5f;
+            var light = targetLantern.LanternLight;
+            Vector3 origin;
+            float lanternPhysicalRadius;
+            if (light != null)
+            {
+                if (!light.isActiveAndEnabled || light.intensity <= 0) return false;
+                origin = light.transform.position;
+                lanternPhysicalRadius = light.pointLightOuterRadius;
+            }
+            else
+            {
+                // Non-rendering fixtures can still use the same gradual controller output.
+                if (!targetLantern.isActiveAndEnabled) return false;
+                origin = targetLantern.transform.position;
+                float passiveRadius = targetLantern.Fuel != null && !targetLantern.Fuel.IsEmpty ? targetLantern.DimRadius : .001f;
+                lanternPhysicalRadius = Mathf.Lerp(passiveRadius, targetLantern.FlareRadius, blend);
+            }
+            distance = Vector2.Distance(transform.position, origin);
+            float allowedRelayRadius = Mathf.Lerp(dimActivationRadius, flareActivationRadius, blend);
             maxReach = Mathf.Min(allowedRelayRadius, lanternPhysicalRadius);
 
-            return distance <= maxReach;
+            return maxReach > .001f && distance <= maxReach;
         }
 
         public void SetActivated(bool active)

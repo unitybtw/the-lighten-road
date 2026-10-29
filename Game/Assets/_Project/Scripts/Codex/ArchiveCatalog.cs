@@ -7,7 +7,7 @@ namespace TheLightenRoad.Codex
     {
         public SocialChannel Channel;
         public ArchiveLog[] Logs = new ArchiveLog[0];
-        public ArchiveLog Find(string id) => System.Array.Find(Logs,l=>l!=null && l.Id==id);
-        public int Total => Logs.Where(l=>l!=null && !string.IsNullOrWhiteSpace(l.Id)).Select(l=>l.Id).Distinct().Count();
+        public ArchiveLog Find(string id) => Logs==null || string.IsNullOrWhiteSpace(id)?null:System.Array.Find(Logs,l=>l!=null && l.Id==id);
+        public int Total => Logs?.Where(l=>l!=null && !string.IsNullOrWhiteSpace(l.Id)).Select(l=>l.Id).Distinct().Count()??0;
     }
 }

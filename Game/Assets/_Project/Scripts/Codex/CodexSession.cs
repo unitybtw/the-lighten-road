@@ -26,6 +26,7 @@ namespace TheLightenRoad.Codex
         }
         public static void Begin(ArchiveCatalog catalog)
         {
+            if(catalog==null)throw new ArgumentNullException(nameof(catalog));
             End();Catalog=catalog;
             Channel=catalog.Channel!=null?UnityEngine.Object.Instantiate(catalog.Channel):ScriptableObject.CreateInstance<SocialChannel>();
             var stored=catalog.Channel!=null?catalog.Channel.delivery as StoredDelivery:null;
