@@ -14,7 +14,7 @@ namespace TheLightenRoad.Frontend
 {
     /// <summary>
     /// Redesigned Full 2D Orthographic Parallax Main Menu for The Lighten Road.
-    /// Pairs a multi-layered 2D pixel-art archive stage featuring Character_Light_Stand.png
+    /// Pairs a multi-layered 2D pixel-art archive stage featuring Maksim's animated Light
     /// holding a glowing lantern on the right with a sleek left-aligned vertical menu list,
     /// animated pixel-art Flame Cursor, and a lantern-zoom radiant white-gold Play transition.
     /// </summary>

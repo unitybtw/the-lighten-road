@@ -1,0 +1,61 @@
+{
+  "unity": "6000.3.2f1",
+  "player_tests": {
+    "total": 132,
+    "passed": 132,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "frontend_tests": {
+    "total": 162,
+    "passed": 162,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "scoped_passed": 294,
+  "scope": "Player and frontend Play Mode assemblies; no complete-project run, standalone build or physical-controller validation repeated.",
+  "physics_unchanged": true,
+  "seam_regression": "Two real floor colliders separated by 0.55 units; test requires actual raw contact loss and no Jump/Landing pose while crossing. Genuine fall and deliberate jump are separately covered.",
+  "menu_before": {
+    "scene": "MainMenu",
+    "view": "home",
+    "sprite": "Idle_005",
+    "asset": "Assets/_Project/Art/Characters/LightAnimations/Idle.png",
+    "width": 420.0,
+    "height": 420.0,
+    "pivotY": 0.0928571448,
+    "scaleX": 1.0,
+    "scaleY": 1.0,
+    "anchorX": 0.70714283,
+    "anchorY": 0.7442857,
+    "raycast": false,
+    "reducedMotion": false
+  },
+  "menu_after": {
+    "scene": "MainMenu",
+    "view": "home",
+    "sprite": "Idle_002",
+    "asset": "Assets/_Project/Art/Characters/LightAnimations/Idle.png",
+    "width": 420.0,
+    "height": 420.0,
+    "pivotY": 0.0928571448,
+    "scaleX": 1.0,
+    "scaleY": 1.0,
+    "anchorX": 0.692857146,
+    "anchorY": 0.7585714,
+    "raycast": false,
+    "reducedMotion": false
+  },
+  "capture": {
+    "file": "development/sirac/previews/animation-consistency/main-menu-updated.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "bed5c57001931660cb8a1d70e839ea58ab79e51b8a698a5b6c404906a3b6dae5",
+    "kind": "Actual MainMenu Game view after SkipIntro; no scene camera or character repositioning."
+  },
+  "delivered_source_hashes_verified": 15,
+  "protected_paths_unchanged": true,
+  "menu_preference_keys_restored": 26
+}

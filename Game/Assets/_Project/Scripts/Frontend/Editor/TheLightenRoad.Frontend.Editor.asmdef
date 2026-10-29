@@ -2,6 +2,7 @@
   "name": "TheLightenRoad.Frontend.Editor",
   "references": [
     "TheLightenRoad.Frontend",
+    "TheLightenRoad.Player",
     "TheLightenRoad.Audio",
     "Unity.TextMeshPro",
     "TheLightenRoad.Codex",

@@ -17,3 +17,5 @@ The later playable stow/climb integration and its final test results are documen
 - Captures and [validation summary](player-animation-validation.json) are included. No standalone build or physical controller validation was repeated. Existing dirty dynamic font files and Python caches are outside this commit.
 
 [Idle close-up](previews/light-animations/live-idle.png) · [Flare close-up](previews/light-animations/live-flare.png)
+
+The menu now shares the authored Idle sequence, and visual seam handling distinguishes brief contact interruptions from genuine falls. See [menu and contact continuity](ANIMATION-CONSISTENCY.md).

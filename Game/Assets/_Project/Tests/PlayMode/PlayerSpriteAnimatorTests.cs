@@ -152,4 +152,51 @@ public sealed class PlayerSpriteAnimatorTests
         animation.ClearContextAnimation();
         Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Idle));
     }
+    [UnityTest] public IEnumerator ShortFloorGapDoesNotShowTakeoffOrLandingWhileCrossing()
+    {
+        // Two real colliders with a small seam; the motor must still report its raw contacts.
+        floor.GetComponent<BoxCollider2D>().size = new Vector2(4, 1);
+        floor.transform.position = new Vector2(-1, -.5f); // right edge = 1
+        var farFloor = new GameObject("Floor beyond narrow seam");
+        farFloor.transform.SetParent(floor.transform, false);
+        farFloor.transform.position = new Vector2(5.55f, -.5f);
+        farFloor.AddComponent<BoxCollider2D>().size = new Vector2(8, 1); // left edge = 1.55
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        bool rawContactLost = false;
+        string unexpectedPose = null;
+        float lowestY = motor.Body.position.y;
+        float deadline = Time.realtimeSinceStartup + 3;
+        while (motor.Body.position.x < 2.5f && Time.realtimeSinceStartup < deadline)
+        {
+            yield return null;
+            rawContactLost |= !motor.IsGrounded;
+            lowestY = Mathf.Min(lowestY, motor.Body.position.y);
+            if (unexpectedPose == null && (animation.CurrentAnimation == LightAnimation.Jump || animation.CurrentAnimation == LightAnimation.Landing))
+                unexpectedPose = $"{animation.CurrentAnimation} at {motor.Body.position}, velocity {motor.Body.linearVelocity}, grounded {motor.IsGrounded}";
+        }
+        Assert.That(motor.Body.position.x, Is.GreaterThan(2.4f));
+        Assert.That(rawContactLost, Is.True, "The test must exercise a real contact interruption.");
+        Assert.That(lowestY, Is.GreaterThan(.6f));
+        Assert.That(unexpectedPose, Is.Null, "No take-off or landing flinch at a short seam: " + unexpectedPose);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Walk));
+    }
+    [UnityTest] public IEnumerator GenuineWalkOffShowsAirborneHoldWithoutFakeJumpAnticipation()
+    {
+        int jumped = 0; motor.OnJumped += () => jumped++;
+        floor.SetActive(false);
+        yield return new WaitForSeconds(.22f);
+        Assert.That(motor.IsGrounded, Is.False);
+        Assert.That(motor.Body.linearVelocity.y, Is.LessThan(-1));
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
+        Assert.That(animation.CurrentFrame, Is.EqualTo(animation.Catalog.Find(LightAnimation.Jump).Frames.Length - 1));
+        Assert.That(jumped, Is.Zero, "A fall does not synthesize a physical jump.");
+    }
+    [UnityTest] public IEnumerator DeliberateJumpBypassesVisualGroundGrace()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+        yield return new WaitForSeconds(.06f);
+        Assert.That(motor.Body.linearVelocity.y, Is.GreaterThan(1));
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
+        Assert.That(animation.CurrentFrame, Is.LessThan(2));
+    }
 }

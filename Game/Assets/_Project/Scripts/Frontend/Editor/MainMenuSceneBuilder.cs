@@ -78,7 +78,9 @@ namespace TheLightenRoad.Frontend.Editor
                 serialized.FindProperty("font").objectReferenceValue = font;
             }
 
-            var charSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/_Project/Art/Characters/Character_Light_Stand.png");
+            var catalog = Resources.Load<TheLightenRoad.Player.PlayerAnimationCatalog>(TheLightenRoad.Player.PlayerAnimationCatalog.ResourcePath);
+            var idle = catalog != null ? catalog.Find(TheLightenRoad.Player.LightAnimation.Idle) : null;
+            var charSprite = idle != null && idle.Frames.Length > 0 ? idle.Frames[0] : null;
             if (charSprite != null)
             {
                 serialized.FindProperty("characterSprite").objectReferenceValue = charSprite;

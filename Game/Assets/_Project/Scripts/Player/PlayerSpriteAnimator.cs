@@ -11,6 +11,10 @@ namespace TheLightenRoad.Player
     {
         [SerializeField] private PlayerAnimationCatalog catalog;
         [SerializeField] private SpriteRenderer target;
+        [Tooltip("Visual-only grace for momentary ground-contact loss at seams; never grants physical support.")]
+        [SerializeField, Range(0f, .2f)] private float groundAnimationGrace = .12f;
+        [Tooltip("Minimum real drop from the last supported position before a walk-off shows an air pose.")]
+        [SerializeField, Range(.02f, .3f)] private float fallPoseDrop = .16f;
         private PlayerMotor2D motor;
         private PlayerRespawnController recovery;
         private LanternController lantern;
@@ -23,6 +27,9 @@ namespace TheLightenRoad.Player
         private Vector3 originalScale, originalLightPosition;
         private Quaternion originalRotation;
         private int transferFrame = -1;
+        private float unsupportedTime;
+        private float supportedHeight;
+        private bool hadSupport, jumpLaunched, airPoseShown;
         public bool AutomaticTicks { get; set; } = true;
         public PlayerAnimationCatalog Catalog => catalog;
         public LightAnimation CurrentAnimation => sequence != null ? sequence.Kind : LightAnimation.Idle;
@@ -53,6 +60,7 @@ namespace TheLightenRoad.Player
             if (lantern != null) lantern.FlareChanged += FlareChanged;
             if (fuel != null) fuel.FuelChanged += FuelChanged;
             if (recovery != null) recovery.OnPlayerRespawned += Respawned;
+            ResetAirState();
             Select(LightAnimation.Idle, false, true);
             RenderFrame();
         }
@@ -72,9 +80,17 @@ namespace TheLightenRoad.Player
             if (motor.LanternTransform != null) motor.LanternTransform.localPosition = originalLightPosition;
         }
         private void Jumped()
-        { explicitContext = holdContext = false; Select(LightAnimation.Jump, true, true); }
+        {
+            explicitContext = holdContext = false;
+            jumpLaunched = airPoseShown = true;
+            Select(LightAnimation.Jump, true, true);
+        }
         private void Landed(float impact)
-        { if (!explicitContext) Select(LightAnimation.Landing, true, true); }
+        {
+            // A small seam can produce a real contact event without ever showing an air pose.
+            if (!explicitContext && airPoseShown) Select(LightAnimation.Landing, true, true);
+            ResetAirState();
+        }
         private void FlareChanged(bool active)
         {
             if (active && IsAlive && !explicitContext) Select(LightAnimation.Flare, true, true);
@@ -97,6 +113,7 @@ namespace TheLightenRoad.Player
         private void Respawned()
         {
             explicitContext = holdContext = false; transferFrame = -1;
+            ResetAirState();
             Select(LightAnimation.Idle, false, true); RenderFrame();
         }
         /// <summary>Visual hook for future climbing/stowing owners. It does not move or lock the player.</summary>
@@ -104,17 +121,29 @@ namespace TheLightenRoad.Player
         {
             if (!IsAlive || catalog == null || catalog.Find(kind) == null) return false;
             explicitContext = true; holdContext = holdLastFrame;
+            ResetAirState();
             Select(kind, true, true); return true;
         }
         public void ClearContextAnimation()
-        { explicitContext = holdContext = false; oneShot = false; Select(LightAnimation.Idle, false, true); RenderFrame(); }
+        { explicitContext = holdContext = false; oneShot = false; ResetAirState(); Select(LightAnimation.Idle, false, true); RenderFrame(); }
+
+        private void ResetAirState()
+        {
+            unsupportedTime = 0; jumpLaunched = airPoseShown = false;
+            hadSupport = motor != null && motor.IsGrounded;
+            supportedHeight = motor != null && motor.Body != null ? motor.Body.position.y : transform.position.y;
+        }
+        private void StartFallPose()
+        {
+            Select(LightAnimation.Jump, true, true);
+            // A walk-off has no take-off anticipation. Hold the delivered airborne pose directly.
+            elapsed = sequence != null ? sequence.Duration : 0;
+        }
 
         private void LateUpdate() { if (AutomaticTicks) Tick(Time.deltaTime); }
         public void Tick(float deltaTime)
         {
             if (sequence == null || target == null || !IsAlive || deltaTime <= 0) return;
-            bool moving = motor.IsGrounded && Mathf.Abs(motor.HorizontalInput) > .05f && Mathf.Abs(motor.HorizontalSpeed) > .08f;
-            bool airborne = motor.enabled && !motor.IsGrounded;
             if (explicitContext)
             {
                 elapsed += deltaTime;
@@ -123,10 +152,22 @@ namespace TheLightenRoad.Player
             }
             else
             {
+                bool unsupported = motor.enabled && !motor.IsGrounded;
+                unsupportedTime = unsupported ? unsupportedTime + deltaTime : 0;
+                bool dropped = !hadSupport || (motor.Body.linearVelocity.y < -.5f && motor.Body.position.y < supportedHeight - fallPoseDrop);
+                bool airborne = unsupported && (jumpLaunched || airPoseShown || (unsupportedTime >= groundAnimationGrace && dropped));
+                bool visuallySupported = motor.IsGrounded || (unsupported && !airborne && hadSupport);
+                bool moving = visuallySupported && Mathf.Abs(motor.HorizontalInput) > .05f && Mathf.Abs(motor.HorizontalSpeed) > .08f;
+                if (airborne) { airPoseShown = true; hadSupport = false; }
+                else if (motor.IsGrounded) { hadSupport = true; supportedHeight = motor.Body.position.y; jumpLaunched = airPoseShown = false; }
                 if (airborne && CurrentAnimation != LightAnimation.Jump && CurrentAnimation != LightAnimation.Flare)
-                    Select(LightAnimation.Jump, true, true);
+                    StartFallPose();
                 if (moving && oneShot && (CurrentAnimation == LightAnimation.Landing || CurrentAnimation == LightAnimation.EmberSwap)) oneShot = false;
-                if (!oneShot) Select(airborne ? LightAnimation.Jump : moving ? LightAnimation.Walk : LightAnimation.Idle, airborne, false);
+                if (!oneShot)
+                {
+                    if (airborne) StartFallPose();
+                    else Select(moving ? LightAnimation.Walk : LightAnimation.Idle, false, false);
+                }
                 float speed = CurrentAnimation == LightAnimation.Walk ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f) : 1;
                 elapsed += deltaTime * speed;
                 if (oneShot && elapsed >= sequence.Duration && (!airborne || CurrentAnimation != LightAnimation.Jump)) oneShot = false;

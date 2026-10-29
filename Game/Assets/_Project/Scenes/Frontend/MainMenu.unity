@@ -150,7 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TheLightenRoad.Frontend::TheLightenRoad.Frontend.MainMenuController
   font: {fileID: 11400000, guid: 7b87f6e6ed69442aeba76a10029ba701, type: 2}
   gameplayScene: Assets/_Project/Scenes/Sandbox/Sirac/FurkanTutorial.unity
-  characterSprite: {fileID: 21300000, guid: 3474f9c09b01418dae9b8d461b87dae8, type: 3}
+  characterSprite: {fileID: -306433830, guid: edd1123a4157943898f88205c7e662f9, type: 3}
   hangingLampSprite: {fileID: -8916889095958819551, guid: 897fbfe401d57499f8bb03164dd32f8c, type: 3}
   chainLinkSprite: {fileID: 9111420734958200680, guid: 43eec2e5c9a144dd6b35668d5303d305, type: 3}
 --- !u!4 &656238500

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TheLightenRoad.Player;
 using TheLightenRoad.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +8,7 @@ namespace TheLightenRoad.Frontend
 {
     /// <summary>
     /// Full 2D Orthographic Pixel-Art Parallax Stage for The Lighten Road Main Menu.
-    /// Showcases Character_Light_Stand.png holding up a glowing lantern on the right side
+    /// Showcases Maksim's frame-timed Light idle animation holding a lantern on the right side
     /// of the screen, with opening flare ignition, volumetric god rays, smooth multi-layered
     /// amber atmospheric illumination, hanging ceiling lamps, glowing Ember Veins,
     /// and a dynamic Bezier energy tether flowing into the active menu item.
@@ -65,6 +66,10 @@ namespace TheLightenRoad.Frontend
         private Sprite chainLinkSprite;
         private Sprite diamondSparkSprite;
         private Sprite characterHeroSprite;
+        private PlayerSpriteSequence heroIdle;
+        private Image wandererImage;
+        private float heroElapsed;
+        private int heroFrame = -1;
 
         // Dynamic animation & Play-zoom state
         private float time;
@@ -194,12 +199,12 @@ namespace TheLightenRoad.Frontend
 
         private void LoadProjectArtAssetsIfNeeded()
         {
+            var catalog = Resources.Load<PlayerAnimationCatalog>(PlayerAnimationCatalog.ResourcePath);
+            heroIdle = catalog != null ? catalog.Find(LightAnimation.Idle) : null;
+            if (heroIdle != null && heroIdle.Frames != null && heroIdle.Frames.Length > 0)
+                characterHeroSprite = heroIdle.Frames[0];
+            else heroIdle = null;
 #if UNITY_EDITOR
-            if (characterHeroSprite == null)
-            {
-                characterHeroSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
-                    "Assets/_Project/Art/Characters/Character_Light_Stand.png");
-            }
             if (lanternCageSprite == null)
             {
                 lanternCageSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
@@ -280,19 +285,23 @@ namespace TheLightenRoad.Frontend
             ledgeImg.raycastTarget = false;
 
             // Hero Character Centerpiece on Right Overlook (0.78f) leaving the Center Menu Column (0.50f) completely clear
-            wandererBodyRect = CreateAnchoredRect("Cloaked Wanderer Silhouette", foregroundLedgeLayer, new Vector2(360f, 390f), new Vector2(0.78f, 0.155f), Vector2.zero);
-            wandererBodyRect.pivot = new Vector2(0.5f, 0.04f);
-            var wandererImg = wandererBodyRect.gameObject.AddComponent<Image>();
-            wandererImg.sprite = characterHeroSprite;
-            wandererImg.preserveAspect = true;
-            wandererImg.raycastTarget = false;
+            var heroSize = heroIdle != null ? new Vector2(420, 420) : new Vector2(360, 390);
+            wandererBodyRect = CreateAnchoredRect("Cloaked Wanderer Silhouette", foregroundLedgeLayer, heroSize, new Vector2(0.78f, 0.155f), Vector2.zero);
+            // Delivered cells have their shared foot baseline 6.5px above the bottom of 70px.
+            wandererBodyRect.pivot = new Vector2(0.5f, heroIdle != null ? 6.5f / 70 : .04f);
+            wandererImage = wandererBodyRect.gameObject.AddComponent<Image>();
+            wandererImage.sprite = characterHeroSprite;
+            wandererImage.preserveAspect = true;
+            wandererImage.raycastTarget = false;
 
             // =================================================================
             // PRIMARY HERO LIGHT: GREAT ARCHIVE LANTERN AT CHARACTER'S HAND
             // =================================================================
-            // Held lantern position in Character_Light_Stand.png: (0.81, 0.77)
+            // The fallback anchor is replaced by each delivered frame's flame registration below.
             wandererLanternRect = CreateAnchoredRect("Great Archive Lantern", wandererBodyRect, new Vector2(50f, 50f), new Vector2(0.81f, 0.77f), Vector2.zero);
             wandererLanternRect.pivot = new Vector2(0.5f, 0.5f);
+            heroElapsed = 0; heroFrame = -1;
+            TickHero(0, false);
 
             // 1. Soft Warm Golden Backlight behind character so silhouette is crisp
             var backlightRect = CreateAnchoredRect("Character Backlight Aura", wandererLanternRect, new Vector2(320f, 320f), new Vector2(0.5f, 0.5f), new Vector2(-35f, -20f));
@@ -348,7 +357,7 @@ namespace TheLightenRoad.Frontend
             wandererInnerFlare.raycastTarget = false;
 
             // 7. Crisp Pixel-Art Flame Core in Lantern Glass
-            var smallFlameRect = CreateAnchoredRect("Wanderer Lantern Core", wandererLanternRect, new Vector2(26f, 32f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            var smallFlameRect = CreateAnchoredRect("Wanderer Lantern Core", wandererLanternRect, heroIdle != null ? new Vector2(14, 18) : new Vector2(26, 32), new Vector2(0.5f, 0.5f), Vector2.zero);
             wandererFlame = smallFlameRect.gameObject.AddComponent<Image>();
             wandererFlame.sprite = PixelSprites.Flame != null ? PixelSprites.Flame : diamondSparkSprite;
             wandererFlame.color = new Color(1.0f, 0.95f, 0.76f, 0f);
@@ -406,6 +415,7 @@ namespace TheLightenRoad.Frontend
 
         public void TickStage(float dt, float introIgnition, Vector2 normalizedMouse, Vector2 mouseCanvasPosition, bool reducedMotion)
         {
+            TickHero(dt, reducedMotion);
             time += dt;
             surgeIntensity = Mathf.MoveTowards(surgeIntensity, 0f, dt * 1.35f);
             pendulumBoost = Mathf.MoveTowards(pendulumBoost, 0f, dt * 2.4f);
@@ -570,7 +580,7 @@ namespace TheLightenRoad.Frontend
             // 5. Hero Character Breathing Motion
             if (wandererBodyRect != null)
             {
-                float breathY = reducedMotion ? 1f : (1f + Mathf.Sin(time * 1.8f) * 0.010f);
+                float breathY = reducedMotion || heroIdle != null ? 1f : (1f + Mathf.Sin(time * 1.8f) * 0.010f);
                 wandererBodyRect.localScale = new Vector3(1f, breathY, 1f);
             }
 
@@ -604,6 +614,25 @@ namespace TheLightenRoad.Frontend
             }
 
             lastIntroIgnition = introIgnition;
+        }
+
+        private void TickHero(float dt, bool reducedMotion)
+        {
+            if (heroIdle == null || wandererImage == null) return;
+            if (!reducedMotion) heroElapsed += Mathf.Max(0, dt);
+            if (heroIdle.Duration > 0) heroElapsed %= heroIdle.Duration;
+            int frame = heroIdle.FrameAt(heroElapsed);
+            if (frame < 0 || frame == heroFrame) return;
+            heroFrame = frame;
+            var sprite = heroIdle.Frames[frame];
+            wandererImage.sprite = sprite;
+            if (wandererLanternRect != null && sprite != null && heroIdle.LanternOffsets != null && frame < heroIdle.LanternOffsets.Length)
+            {
+                var pixel = heroIdle.LanternOffsets[frame] * sprite.pixelsPerUnit + sprite.pivot;
+                var anchor = new Vector2(pixel.x / sprite.rect.width, pixel.y / sprite.rect.height);
+                wandererLanternRect.anchorMin = wandererLanternRect.anchorMax = anchor;
+                wandererLanternRect.anchoredPosition = Vector2.zero;
+            }
         }
 
         private Vector2 GetHeroLanternCanvasPosition()

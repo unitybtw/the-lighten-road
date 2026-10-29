@@ -4,9 +4,9 @@
 
 | Animation | Frames | Canvas per frame | Authored duration | Runtime use |
 | --- | ---: | --- | ---: | --- |
-| Idle | 10 | 70 × 70 | 1.0 s loop* | Standing |
+| Idle | 10 | 70 × 70 | 1.0 s loop* | Standing and the animated main-menu character |
 | Walk | 10 | 70 × 70 | 1.0 s loop | Movement; playback rate follows walking/sprinting speed |
-| Jump | 6 | 70 × 70 | 0.6 s | Real jump event / airborne pose; last frame holds in flight |
+| Jump | 6 | 70 × 70 | 0.6 s | Real jump event; confirmed walk-offs enter the airborne hold directly after visual contact grace |
 | Landing | 5 | 70 × 70 | 0.5 s | Real landing event; movement can interrupt |
 | Flare | 12 | 70 × 70 | 1.2 s | Successful flare ignition |
 | EmberSwap | 34 | 70 × 70 | 3.4 s | Fuel change during interaction input; failed requests/pickups/flare spending do not normally trigger it |
