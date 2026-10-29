@@ -101,8 +101,6 @@ namespace TheLightenRoad.Frontend
 
         private readonly List<Sprite> proceduralSprites = new List<Sprite>();
 
-        private AudioClip cachedOpenClip;
-        private AudioClip cachedCloseClip;
 
         private string currentView = "none";
         private float previousTimeScale = 1f;
@@ -239,17 +237,6 @@ namespace TheLightenRoad.Frontend
                 }
             }
             proceduralSprites.Clear();
-
-            if (cachedOpenClip != null)
-            {
-                Destroy(cachedOpenClip);
-                cachedOpenClip = null;
-            }
-            if (cachedCloseClip != null)
-            {
-                Destroy(cachedCloseClip);
-                cachedCloseClip = null;
-            }
 
             if (Instance == this) Instance = null;
         }
@@ -389,7 +376,7 @@ namespace TheLightenRoad.Frontend
                 canvasGroup.blocksRaycasts = true;
             }
 
-            PlaySound(pauseOpenSound, 520f, 392f, isOpen: true);
+            PlaySound(pauseOpenSound, isOpen: true);
             ControllerGlyphService.StopRumble();
             DualSenseSpeaker.Stop();
             TheLightenRoad.UI.ControllerLightbar.SetAmbientColor(TheLightenRoad.UI.ControllerLightbar.ArchiveBlue);
@@ -427,7 +414,7 @@ namespace TheLightenRoad.Frontend
                 canvasGroup.blocksRaycasts = false;
             }
 
-            PlaySound(pauseCloseSound, 392f, 520f, isOpen: false);
+            PlaySound(pauseCloseSound, isOpen: false);
             TheLightenRoad.UI.ControllerLightbar.SetAmbientColor(TheLightenRoad.UI.ControllerLightbar.AmberLantern);
             OnPauseToggled.Invoke(false);
 
@@ -2141,47 +2128,11 @@ namespace TheLightenRoad.Frontend
             return rect;
         }
 
-        private void PlaySound(AudioClip clip, float freq1, float freq2, bool isOpen)
+        private void PlaySound(AudioClip clip, bool isOpen)
         {
-            AudioClip sound = clip;
-            if (sound == null)
-            {
-                if (isOpen)
-                {
-                    if (cachedOpenClip == null) cachedOpenClip = GetProceduralPauseClip(freq1, freq2);
-                    sound = cachedOpenClip;
-                }
-                else
-                {
-                    if (cachedCloseClip == null) cachedCloseClip = GetProceduralPauseClip(freq1, freq2);
-                    sound = cachedCloseClip;
-                }
-            }
-
+            var sound = clip != null ? clip : Resources.Load<AudioClip>(isOpen ? "Audio/SFX/UI/pause_open" : "Audio/SFX/UI/pause_close");
             if (sound != null && SoundEffectManager.HasInstance)
-            {
-                SoundEffectManager.Instance.PlayOneShot(sound, soundVolume * SoundEffectManager.Instance.MasterSFXVolume);
-            }
-        }
-
-        private static AudioClip GetProceduralPauseClip(float freq1, float freq2)
-        {
-            const int sampleRate = 44100;
-            const float duration = 0.45f;
-            int samples = Mathf.RoundToInt(sampleRate * duration);
-            var data = new float[samples];
-
-            for (int i = 0; i < samples; i++)
-            {
-                float t = i / (float)sampleRate;
-                float env = Mathf.Exp(-t * 8.5f);
-                float f = Mathf.Lerp(freq1, freq2, t / duration);
-                data[i] = Mathf.Sin(2f * Mathf.PI * f * t) * env * 0.35f;
-            }
-
-            var clip = AudioClip.Create("PauseChime", samples, 1, sampleRate, false);
-            clip.SetData(data, 0);
-            return clip;
+                SoundEffectManager.Instance.PlayOneShot(sound, soundVolume, bypassGrace: true);
         }
 
         private void AnimateSubView(CanvasGroup targetGroup)

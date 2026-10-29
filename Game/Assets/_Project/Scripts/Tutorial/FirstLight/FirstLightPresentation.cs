@@ -28,7 +28,6 @@ namespace TheLightenRoad.FirstLight
         private CanvasGroup overlayVisibility;
         private AudioSource sound;
         private ParticleSystem passageWisps;
-        private readonly List<AudioClip> clips=new List<AudioClip>();
         private string previousHint;
         private float hintTime;
         private FirstLightStage hintStage=(FirstLightStage)(-1);
@@ -185,15 +184,9 @@ namespace TheLightenRoad.FirstLight
         public void Chime(float frequency,float length)
         {
             if(sound==null)return;
-            const int rate=24000;var samples=new float[Mathf.CeilToInt(rate*length)];
-            for(int i=0;i<samples.Length;i++)
-            {
-                float t=i/(float)rate;float envelope=Mathf.Min(1,t/.025f)*Mathf.Exp(-t*5/length)*(1-t/length);
-                samples[i]=envelope*(Mathf.Sin(2*Mathf.PI*frequency*t)+.24f*Mathf.Sin(2*Mathf.PI*frequency*2.003f*t))*.18f;
-            }
-            var clip=AudioClip.Create("First light / harmonic chime",samples.Length,1,rate,false);clip.SetData(samples,0);clips.Add(clip);
-            sound.PlayOneShot(clip,MenuPreferences.Master*MenuPreferences.Effects*.45f);
+            var clip=Resources.Load<AudioClip>(frequency >= 700 ? "Audio/SFX/Environment/crystal_activate" : "Audio/SFX/Environment/crystal_charge");
+            if(clip!=null)sound.PlayOneShot(clip,MenuPreferences.Effects*.30f);
         }
-        private void OnDestroy(){foreach(var clip in clips)if(clip!=null)Destroy(clip);}
+
     }
 }

@@ -36,7 +36,7 @@ namespace TheLightenRoad.Tests.PlayMode
         }
 
         [Test]
-        public void SoundEffectManager_LoadsOrSynthesizesAllSurfaceBanks()
+        public void SoundEffectManager_LoadsAllAuthoredSurfaceBanks()
         {
             Assert.That(sfxManager.WoodWalkClips, Is.Not.Null);
             Assert.That(sfxManager.WoodWalkClips.Length, Is.GreaterThan(0));

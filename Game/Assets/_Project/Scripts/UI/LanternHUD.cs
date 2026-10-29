@@ -287,19 +287,7 @@ namespace TheLightenRoad.UI
                     breakAudio.spatialBlend = 0f;
                 }
                 if (emberBreakClip == null && placeholderBreakClip == null)
-                {
-                    const int samples = 4410;
-                    float[] data = new float[samples];
-                    var noise = new System.Random(173);
-                    for (int i = 0; i < samples; i++)
-                    {
-                        float t = i / 22050f;
-                        float click = Mathf.Exp(-t * 85f) + 0.35f * Mathf.Exp(-Mathf.Abs(t - 0.035f) * 180f);
-                        data[i] = ((float)noise.NextDouble() * 2f - 1f) * click * 0.45f;
-                    }
-                    placeholderBreakClip = AudioClip.Create("Ember crack / prototype", samples, 1, 22050, false);
-                    placeholderBreakClip.SetData(data, 0);
-                }
+                    placeholderBreakClip = Resources.Load<AudioClip>("Audio/SFX/Lantern/ember_break");
                 breakAudio.PlayOneShot(emberBreakClip != null ? emberBreakClip : placeholderBreakClip, emberBreakVolume);
             }
         }
@@ -307,7 +295,6 @@ namespace TheLightenRoad.UI
         private void OnDestroy()
         {
             Unbind();
-            if (placeholderBreakClip != null) Destroy(placeholderBreakClip);
         }
 
         private void Update()

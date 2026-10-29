@@ -1,0 +1,743 @@
+{
+  "date": "2026-10-29",
+  "unity": "6000.3.2f1",
+  "base_commit": "dd41dfb067d95e1d498b9071a52b77d58416041a",
+  "tests": {
+    "player": {
+      "total": 145,
+      "passed": 145,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "frontend": {
+      "total": 162,
+      "passed": 162,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "glyph": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "tutorial": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "completion": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    }
+  },
+  "scoped_passed": 334,
+  "scope": "Five scoped Play Mode runs, not a complete-project run. No standalone build, hardware output-device listening check or physical DualSense verification repeated.",
+  "asset_audit": {
+    "cues": 67,
+    "total_bytes": 1819017,
+    "peak_max": 0.48999,
+    "all_non_silent": true,
+    "all_mono_44100": true,
+    "all_faded_boundaries": true
+  },
+  "unity_import_audit": {
+    "clips_verified": 67,
+    "max_decoded_peak": 0.484161377,
+    "all_readable_non_silent": true,
+    "clips": [
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_walk_01.wav",
+        "name": "footstep_walk_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.28,
+        "peak": 0.2934265,
+        "rms": 0.021828518398123598
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_sprint_01.wav",
+        "name": "footstep_sprint_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.23,
+        "peak": 0.397338867,
+        "rms": 0.031417691600602655
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_walk_01.ogg",
+        "name": "footstep_wood_walk_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.240204081,
+        "peak": 0.311706543,
+        "rms": 0.029928552532433723
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_sprint_01.ogg",
+        "name": "footstep_wood_sprint_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.27,
+        "peak": 0.3994751,
+        "rms": 0.043529754738183234
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_walk_01.wav",
+        "name": "footstep_metal_walk_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.32,
+        "peak": 0.2810974,
+        "rms": 0.025558984672373136
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_sprint_01.wav",
+        "name": "footstep_metal_sprint_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.27,
+        "peak": 0.339630127,
+        "rms": 0.03249794285143544
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_walk_01.ogg",
+        "name": "footstep_ethereal_walk_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.344421774,
+        "peak": 0.130340576,
+        "rms": 0.020476145007425676
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_sprint_01.ogg",
+        "name": "footstep_ethereal_sprint_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.299501121,
+        "peak": 0.1628418,
+        "rms": 0.02616369609391172
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_walk_01.wav",
+        "name": "footstep_water_walk_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.36,
+        "peak": 0.263458252,
+        "rms": 0.019606847871959085
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_sprint_01.wav",
+        "name": "footstep_water_sprint_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3,
+        "peak": 0.3340149,
+        "rms": 0.02681814752494377
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_walk_02.wav",
+        "name": "footstep_walk_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.28,
+        "peak": 0.2935791,
+        "rms": 0.017437402166125736
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_sprint_02.wav",
+        "name": "footstep_sprint_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.23,
+        "peak": 0.392242432,
+        "rms": 0.024610869638434885
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_walk_02.ogg",
+        "name": "footstep_wood_walk_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.267188221,
+        "peak": 0.321075439,
+        "rms": 0.031861931341026314
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_sprint_02.ogg",
+        "name": "footstep_wood_sprint_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.253242642,
+        "peak": 0.402374268,
+        "rms": 0.030899023483586842
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_walk_02.wav",
+        "name": "footstep_metal_walk_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.32,
+        "peak": 0.2919922,
+        "rms": 0.02854023933314479
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_sprint_02.wav",
+        "name": "footstep_metal_sprint_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.27,
+        "peak": 0.358734131,
+        "rms": 0.03560771077051813
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_walk_02.ogg",
+        "name": "footstep_ethereal_walk_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.153015867,
+        "peak": 0.120300293,
+        "rms": 0.02053040603152411
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_sprint_02.ogg",
+        "name": "footstep_ethereal_sprint_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.13306123,
+        "peak": 0.167663574,
+        "rms": 0.02622326277374415
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_walk_02.wav",
+        "name": "footstep_water_walk_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.36,
+        "peak": 0.260650635,
+        "rms": 0.012806484163006518
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_sprint_02.wav",
+        "name": "footstep_water_sprint_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3,
+        "peak": 0.350097656,
+        "rms": 0.01796195698480507
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_walk_03.wav",
+        "name": "footstep_walk_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.28,
+        "peak": 0.299377441,
+        "rms": 0.0162921800091124
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_sprint_03.wav",
+        "name": "footstep_sprint_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.23,
+        "peak": 0.3939209,
+        "rms": 0.023027551663119816
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_walk_03.ogg",
+        "name": "footstep_wood_walk_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.245306119,
+        "peak": 0.3012085,
+        "rms": 0.029520713603828453
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_sprint_03.ogg",
+        "name": "footstep_wood_sprint_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.231156468,
+        "peak": 0.404571533,
+        "rms": 0.03982846799168304
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_walk_03.wav",
+        "name": "footstep_metal_walk_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.32,
+        "peak": 0.283813477,
+        "rms": 0.027671734450282755
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_sprint_03.wav",
+        "name": "footstep_metal_sprint_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.27,
+        "peak": 0.358764648,
+        "rms": 0.03538077630736819
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_walk_03.ogg",
+        "name": "footstep_ethereal_walk_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.132721081,
+        "peak": 0.198303223,
+        "rms": 0.0377421587621893
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_sprint_03.ogg",
+        "name": "footstep_ethereal_sprint_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.115804985,
+        "peak": 0.2355957,
+        "rms": 0.04962509275916896
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_walk_03.wav",
+        "name": "footstep_water_walk_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.36,
+        "peak": 0.2566223,
+        "rms": 0.018946616655329044
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_sprint_03.wav",
+        "name": "footstep_water_sprint_03",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3,
+        "peak": 0.336181641,
+        "rms": 0.026609744618893986
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_walk_04.wav",
+        "name": "footstep_walk_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.28,
+        "peak": 0.288452148,
+        "rms": 0.011478794057666023
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/footstep_sprint_04.wav",
+        "name": "footstep_sprint_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.23,
+        "peak": 0.390411377,
+        "rms": 0.015971309680772757
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_walk_04.ogg",
+        "name": "footstep_wood_walk_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.270362824,
+        "peak": 0.29864502,
+        "rms": 0.0318696742062618
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Wood/footstep_wood_sprint_04.ogg",
+        "name": "footstep_wood_sprint_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.225124717,
+        "peak": 0.396087646,
+        "rms": 0.03182010978989939
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_walk_04.wav",
+        "name": "footstep_metal_walk_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.2919728,
+        "peak": 0.2824402,
+        "rms": 0.03172687499713681
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Metal/footstep_metal_sprint_04.wav",
+        "name": "footstep_metal_sprint_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.2592517,
+        "peak": 0.345977783,
+        "rms": 0.039250438452860484
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_walk_04.ogg",
+        "name": "footstep_ethereal_walk_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.38,
+        "peak": 0.13458252,
+        "rms": 0.02526275021568696
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Ethereal/footstep_ethereal_sprint_04.ogg",
+        "name": "footstep_ethereal_sprint_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.32,
+        "peak": 0.160980225,
+        "rms": 0.03397808535611241
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_walk_04.wav",
+        "name": "footstep_water_walk_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.36,
+        "peak": 0.255279541,
+        "rms": 0.012431207339224355
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Surfaces/Water/footstep_water_sprint_04.wav",
+        "name": "footstep_water_sprint_04",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3,
+        "peak": 0.333068848,
+        "rms": 0.017011780809506397
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/jump_takeoff.wav",
+        "name": "jump_takeoff",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.25,
+        "peak": 0.227294922,
+        "rms": 0.02947064815860771
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/landing_soft.wav",
+        "name": "landing_soft",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3,
+        "peak": 0.3587036,
+        "rms": 0.020553251774391556
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/landing_hard.wav",
+        "name": "landing_hard",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.48,
+        "peak": 0.4024048,
+        "rms": 0.046158688987030974
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/exhaustion_breath.wav",
+        "name": "exhaustion_breath",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 3.0,
+        "peak": 0.191925049,
+        "rms": 0.02361788632621101
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/skid_scuff.wav",
+        "name": "skid_scuff",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.22,
+        "peak": 0.220275879,
+        "rms": 0.04301873696432125
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Player/air_draft.wav",
+        "name": "air_draft",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3004762,
+        "peak": 0.149230957,
+        "rms": 0.027799329211111303
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Lantern/flare_ignite.wav",
+        "name": "flare_ignite",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.85,
+        "peak": 0.484161377,
+        "rms": 0.05009657203258416
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Lantern/flare_extinguish.wav",
+        "name": "flare_extinguish",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.4,
+        "peak": 0.201660156,
+        "rms": 0.027425271151136278
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Lantern/ember_break.wav",
+        "name": "ember_break",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.26,
+        "peak": 0.3734131,
+        "rms": 0.030713285595853648
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/ember_pickup.wav",
+        "name": "ember_pickup",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.305805,
+        "peak": 0.266357422,
+        "rms": 0.02178673892387586
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/chain_clink_01.wav",
+        "name": "chain_clink_01",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.250861675,
+        "peak": 0.2715149,
+        "rms": 0.01885965410522506
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/chain_clink_02.wav",
+        "name": "chain_clink_02",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.26,
+        "peak": 0.238037109,
+        "rms": 0.011540160826783781
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/crystal_charge.wav",
+        "name": "crystal_charge",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.65,
+        "peak": 0.232330322,
+        "rms": 0.04843044024963151
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/crystal_activate.wav",
+        "name": "crystal_activate",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.85,
+        "peak": 0.308898926,
+        "rms": 0.0595704650738901
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/gate_open.wav",
+        "name": "gate_open",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.85,
+        "peak": 0.3829651,
+        "rms": 0.031526077127660854
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Environment/gate_close.wav",
+        "name": "gate_close",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.6988662,
+        "peak": 0.411743164,
+        "rms": 0.05058794063057834
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/UI/hover.wav",
+        "name": "hover",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.12,
+        "peak": 0.154571533,
+        "rms": 0.018606333163619152
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/UI/confirm.wav",
+        "name": "confirm",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.18,
+        "peak": 0.21762085,
+        "rms": 0.012681204602945665
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/UI/back.wav",
+        "name": "back",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.22,
+        "peak": 0.188690186,
+        "rms": 0.012804623665068257
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/UI/pause_open.wav",
+        "name": "pause_open",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.151065767,
+        "peak": 0.232513428,
+        "rms": 0.032206287356583436
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/UI/pause_close.wav",
+        "name": "pause_close",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.1849433,
+        "peak": 0.206329346,
+        "rms": 0.021398769364693416
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Controller/ignite_whoosh.mp3",
+        "name": "ignite_whoosh",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.7053061,
+        "peak": 0.385864258,
+        "rms": 0.04069436922686769
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Controller/extinguish_whoosh.mp3",
+        "name": "extinguish_whoosh",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.4702041,
+        "peak": 0.195159912,
+        "rms": 0.024524041335912027
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Controller/pickup_crystal.mp3",
+        "name": "pickup_crystal",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.391836733,
+        "peak": 0.269012451,
+        "rms": 0.019132704870805154
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Controller/break_glass.ogg",
+        "name": "break_glass",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.3,
+        "peak": 0.31036377,
+        "rms": 0.027028600503149567
+      },
+      {
+        "path": "Assets/_Project/Resources/Audio/SFX/Controller/preview_chime.ogg",
+        "name": "preview_chime",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 0.45,
+        "peak": 0.3343506,
+        "rms": 0.07576806561978286
+      },
+      {
+        "path": "Assets/_Project/Resources/Completion/ArchiveArrival.wav",
+        "name": "ArchiveArrival",
+        "channels": 1,
+        "frequency": 44100,
+        "seconds": 1.24231291,
+        "peak": 0.287536621,
+        "rms": 0.0473287015239665
+      }
+    ]
+  },
+  "controller_payloads": [
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Break.bytes",
+      "packets": 40,
+      "bytes": 8000,
+      "sha256": "ee292528e5901c036e92cd7ece4ba72ee7e6fca7afc2078bcaf2660ae231985b"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Extinguish.bytes",
+      "packets": 48,
+      "bytes": 9600,
+      "sha256": "11454c297cdaece45bbffe647f51c60a0e8e44218fef375a67249483f60dbe01"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Ignite.bytes",
+      "packets": 72,
+      "bytes": 14400,
+      "sha256": "38d696cdd8b7153fe5f7cb15b2aca015f419a68e797cc79b9b2a1eff43cad9dd"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Mac/Break.bytes",
+      "packets": 34,
+      "bytes": 6800,
+      "sha256": "b1525f249eaa0b14ecf7e4d3b4bf80ad8e90e81b734556e63e476f176c0be410"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Mac/Extinguish.bytes",
+      "packets": 34,
+      "bytes": 6800,
+      "sha256": "c34776c148e77bcdfcba4f69f3267d83388ab03eeef1024ffde93b10baa773c7"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Mac/Ignite.bytes",
+      "packets": 38,
+      "bytes": 7600,
+      "sha256": "8a99ed09a8c302da9e7933ad8701416e194ae541c8b541b2455ba9db834c961b"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Mac/Pickup.bytes",
+      "packets": 30,
+      "bytes": 6000,
+      "sha256": "1b6fcde7d502faabe863d9ff17677e6f579e3706050dc5f94370ed4e5668ff04"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Mac/Preview.bytes",
+      "packets": 48,
+      "bytes": 9600,
+      "sha256": "3898ce84cb2ce8d8adacf80e44acf7bef20abae7687279f9a9054ff312eba4c5"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Pickup.bytes",
+      "packets": 42,
+      "bytes": 8400,
+      "sha256": "7fd8bc2ef32f794aabb4714a868878a23eb93458ae21f14758f1adc9ef77a02d"
+    },
+    {
+      "path": "Game/Assets/_Project/Resources/Audio/ControllerSpeaker/Preview.bytes",
+      "packets": 52,
+      "bytes": 10400,
+      "sha256": "e4e36e31119cf6783b163f8c106b47b45736c9c64294bb18de26e10bb5f40cd7"
+    }
+  ],
+  "menu_preference_keys_restored": 26,
+  "editor_after": {
+    "scene": "FirstLightTutorial",
+    "playing": false,
+    "dirty": false
+  },
+  "protected_paths_unchanged": true,
+  "source_credits": "../../Game/Assets/_Project/Resources/Audio/SFX/archive-sfx-manifest.json",
+  "cue_reel": "previews/audio-polish/archive-sfx-preview.wav",
+  "cue_reel_is_runtime_recording": false,
+  "project_integrity": {
+    "checked_assets": 599,
+    "status": "passed",
+    "failures": []
+  },
+  "compilation": {
+    "errors": 0,
+    "warnings": 0
+  }
+}

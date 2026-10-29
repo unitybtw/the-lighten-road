@@ -67,6 +67,67 @@ public sealed class SoundEffectManagerTests
     }
 
     [Test]
+    public void EffectsVolumeChangesAlreadyPlayingVoicesWithoutApplyingGainTwice()
+    {
+        sfxManager.ResetSceneGraceForTesting();
+        sfxManager.MasterSFXVolume = .8f;
+        sfxManager.PlayOneShot(testClip, .5f);
+        var voices = sfxObject.GetComponents<AudioSource>();
+        var voice = System.Array.Find(voices, v => v.clip == testClip && !v.loop);
+        Assert.That(voice, Is.Not.Null);
+        Assert.That(voice.volume, Is.EqualTo(.4f).Within(.001f));
+        sfxManager.MasterSFXVolume = 0;
+        Assert.That(voice.volume, Is.Zero);
+        sfxManager.MasterSFXVolume = .5f;
+        Assert.That(voice.volume, Is.EqualTo(.25f).Within(.001f));
+    }
+
+    [UnityTest]
+    public IEnumerator RepeatedAttachmentChecksDoNotRestartPlayerAudioGrace()
+    {
+        var go = new GameObject("Audio grace regression");
+        go.AddComponent<PlayerMotor2D>();
+        var controller = go.AddComponent<PlayerAudioController>();
+        yield return new WaitForSeconds(.75f);
+        PlayerAudioController.AttachToAllMotors();
+        var field = typeof(PlayerAudioController).GetField("spawnGraceTimer", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.That((float)field.GetValue(controller), Is.LessThanOrEqualTo(0));
+        Object.Destroy(go);
+    }
+
+    [UnityTest]
+    public IEnumerator RepeatedStepsDoNotImmediatelyReuseTheSameRecording()
+    {
+        var bank = new[] { testClip, sfxManager.WoodWalkClips[0], sfxManager.WoodWalkClips[1] };
+        sfxManager.ConfigureSurfaceClips(SurfaceType.Wood, bank, bank);
+        sfxManager.ResetSceneGraceForTesting();
+        AudioClip previous = null;
+        for (int i = 0; i < 8; i++)
+        {
+            sfxManager.StopTransientSounds();
+            sfxManager.PlayWalkFootstep(SurfaceType.Wood);
+            var active = System.Array.Find(sfxObject.GetComponents<AudioSource>(), v => v.isPlaying && !v.loop);
+            Assert.That(active, Is.Not.Null);
+            Assert.That(active.clip, Is.Not.EqualTo(previous));
+            previous = active.clip;
+            yield return new WaitForSeconds(.06f);
+        }
+    }
+
+    [Test]
+    public void FallbackEffectsUseImportedAssetsInsteadOfRuntimeTones()
+    {
+#if UNITY_EDITOR
+        foreach (var clip in new[] { sfxManager.UIHoverClip, sfxManager.UIClickClip, sfxManager.UIBackClip,
+            sfxManager.FlareExtinguishClip, sfxManager.SkidScuffClip, sfxManager.AirDraftClip })
+        {
+            Assert.That(clip, Is.Not.Null);
+            Assert.That(UnityEditor.AssetDatabase.GetAssetPath(clip), Does.StartWith("Assets/_Project/Resources/Audio/SFX/"));
+        }
+#endif
+    }
+
+    [Test]
     public void PlaysFootstepsJumpsAndLandingsWithoutErrors()
     {
         Assert.DoesNotThrow(() => sfxManager.PlayWalkFootstep());

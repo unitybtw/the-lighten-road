@@ -70,7 +70,6 @@ namespace TheLightenRoad.Lantern.Glyphs
         private float forceSolidTimer;
 
         private static Sprite cachedDefaultPlatformSprite;
-        private static AudioClip proceduralChimeClip;
 
         public bool IsSolid => isSolid;
         public bool IsDecaying => isDecaying;
@@ -390,35 +389,13 @@ namespace TheLightenRoad.Lantern.Glyphs
 
         private void PlaySound(AudioClip clip, float freq1, float freq2)
         {
-            AudioClip sound = clip != null ? clip : GetProceduralCrystalClip(freq1, freq2);
+            AudioClip sound = clip != null ? clip : Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_charge");
             if (sound != null && SoundEffectManager.HasInstance)
             {
-                SoundEffectManager.Instance.PlayOneShot(sound, soundVolume * SoundEffectManager.Instance.MasterSFXVolume);
+                SoundEffectManager.Instance.PlayOneShot(sound, soundVolume);
             }
         }
 
-        private static AudioClip GetProceduralCrystalClip(float freq1, float freq2)
-        {
-            if (proceduralChimeClip != null) return proceduralChimeClip;
 
-            const int sampleRate = 44100;
-            const float duration = 0.35f;
-            int samples = Mathf.RoundToInt(sampleRate * duration);
-            var data = new float[samples];
-
-            for (int i = 0; i < samples; i++)
-            {
-                float t = i / (float)sampleRate;
-                float env = Mathf.Exp(-t * 11f);
-                float f = Mathf.Lerp(freq1, freq2, t / duration);
-                // Dual harmonic chime
-                float wave = Mathf.Sin(2f * Mathf.PI * f * t) * 0.7f + Mathf.Sin(4f * Mathf.PI * f * t) * 0.3f;
-                data[i] = wave * env * 0.3f;
-            }
-
-            proceduralChimeClip = AudioClip.Create("EtherealChime", samples, 1, sampleRate, false);
-            proceduralChimeClip.SetData(data, 0);
-            return proceduralChimeClip;
-        }
     }
 }

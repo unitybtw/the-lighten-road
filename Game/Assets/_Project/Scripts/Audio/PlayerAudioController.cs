@@ -1,5 +1,6 @@
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
+using TheLightenRoad.Input;
 using UnityEngine;
 
 namespace TheLightenRoad.Audio
@@ -116,7 +117,6 @@ namespace TheLightenRoad.Audio
                     {
                         ctrl = m.gameObject.AddComponent<PlayerAudioController>();
                     }
-                    ctrl.ResetSpawnGrace(0.65f);
                 }
             }
         }
@@ -217,11 +217,14 @@ namespace TheLightenRoad.Audio
 
             TickFootsteps(Time.deltaTime);
             TickFoley(Time.deltaTime);
+            if (SoundEffectManager.HasInstance && stamina != null)
+                SoundEffectManager.Instance.SetExhaustionActive(spawnGraceTimer <= 0 && stamina.IsExhausted &&
+                    GameControls.GameplayAllowed && !motor.TraversalLocked && (respawnController == null || respawnController.State == RespawnState.Alive));
         }
 
         public void TickFoley(float dt)
         {
-            if (motor == null || spawnGraceTimer > 0f) return;
+            if (motor == null || spawnGraceTimer > 0f || dt <= 0 || !GameControls.GameplayAllowed || motor.TraversalLocked) return;
 
             // Skid scuff on rapid directional turn
             if (motor.IsGrounded && Mathf.Abs(motor.HorizontalSpeed) > 1.8f)
@@ -257,9 +260,9 @@ namespace TheLightenRoad.Audio
                 if (motor == null) return;
             }
 
-            if (spawnGraceTimer > 0f) return;
+            if (spawnGraceTimer > 0f || dt <= 0 || !GameControls.GameplayAllowed || motor.TraversalLocked) return;
 
-            bool isMovingOnGround = motor.IsGrounded && (Mathf.Abs(motor.HorizontalSpeed) > 0.35f || Mathf.Abs(motor.HorizontalInput) > 0.2f);
+            bool isMovingOnGround = motor.IsGrounded && Mathf.Abs(motor.HorizontalSpeed) > 0.35f;
 
             if (isMovingOnGround)
             {

@@ -6,7 +6,7 @@ namespace TheLightenRoad.Audio
 {
     /// <summary>
     /// Central sound effect manager handling audio source pooling, organic pitch variation,
-    /// seamless multi-channel playback, and exhaustion breath looping.
+    /// bounded voice playback, and exhaustion breath looping.
     /// Auto-instantiates with full CC0 SFX library if missing from any scene.
     /// </summary>
     [DisallowMultipleComponent]
@@ -141,6 +141,8 @@ namespace TheLightenRoad.Audio
 
         private const int PoolSize = 8;
         private AudioSource[] sourcePool;
+        private readonly float[] voiceLevels = new float[PoolSize];
+        private bool exhaustionRequested;
         private int poolIndex;
         private AudioSource exhaustionSource;
         private float targetExhaustionVol;
@@ -155,7 +157,18 @@ namespace TheLightenRoad.Audio
         public float SceneGraceTimer { get => sceneGraceTimer; set => sceneGraceTimer = Mathf.Max(0f, value); }
         public void ResetSceneGraceForTesting() => sceneGraceTimer = 0f;
 
-        public float MasterSFXVolume { get => masterSFXVolume; set => masterSFXVolume = Mathf.Clamp01(value); }
+        public float MasterSFXVolume
+        {
+            get => masterSFXVolume;
+            set
+            {
+                masterSFXVolume = Mathf.Clamp01(value);
+                if (sourcePool != null)
+                    for (int i = 0; i < sourcePool.Length; i++)
+                        if (sourcePool[i] != null) sourcePool[i].volume = voiceLevels[i] * masterSFXVolume;
+                targetExhaustionVol = exhaustionRequested ? exhaustionVolume * masterSFXVolume : 0;
+            }
+        }
         public float FootstepsVolume { get => footstepsVolume; set => footstepsVolume = Mathf.Clamp01(value); }
         public float ExhaustionVolume => exhaustionSource != null ? exhaustionSource.volume : 0f;
         public bool IsExhaustionPlaying => exhaustionSource != null && exhaustionSource.isPlaying;
@@ -265,6 +278,8 @@ namespace TheLightenRoad.Audio
 
         public void StopTransientSounds()
         {
+            exhaustionRequested = false;
+            targetExhaustionVol = 0;
             if (sourcePool != null)
             {
                 for (int i = 0; i < sourcePool.Length; i++)
@@ -329,115 +344,48 @@ namespace TheLightenRoad.Audio
 
             if (woodWalkClips == null || woodWalkClips.Length == 0 || woodWalkClips[0] == null)
             {
-                woodWalkClips = LoadSurfaceBank("Wood", "footstep_wood_walk", SurfaceType.Wood, false);
+                woodWalkClips = LoadSurfaceBank("Wood", "footstep_wood_walk");
             }
             if (woodSprintClips == null || woodSprintClips.Length == 0 || woodSprintClips[0] == null)
             {
-                woodSprintClips = LoadSurfaceBank("Wood", "footstep_wood_sprint", SurfaceType.Wood, true);
+                woodSprintClips = LoadSurfaceBank("Wood", "footstep_wood_sprint");
             }
             if (metalWalkClips == null || metalWalkClips.Length == 0 || metalWalkClips[0] == null)
             {
-                metalWalkClips = LoadSurfaceBank("Metal", "footstep_metal_walk", SurfaceType.Metal, false);
+                metalWalkClips = LoadSurfaceBank("Metal", "footstep_metal_walk");
             }
             if (metalSprintClips == null || metalSprintClips.Length == 0 || metalSprintClips[0] == null)
             {
-                metalSprintClips = LoadSurfaceBank("Metal", "footstep_metal_sprint", SurfaceType.Metal, true);
+                metalSprintClips = LoadSurfaceBank("Metal", "footstep_metal_sprint");
             }
             if (etherealWalkClips == null || etherealWalkClips.Length == 0 || etherealWalkClips[0] == null)
             {
-                etherealWalkClips = LoadSurfaceBank("Ethereal", "footstep_ethereal_walk", SurfaceType.Ethereal, false);
+                etherealWalkClips = LoadSurfaceBank("Ethereal", "footstep_ethereal_walk");
             }
             if (etherealSprintClips == null || etherealSprintClips.Length == 0 || etherealSprintClips[0] == null)
             {
-                etherealSprintClips = LoadSurfaceBank("Ethereal", "footstep_ethereal_sprint", SurfaceType.Ethereal, true);
+                etherealSprintClips = LoadSurfaceBank("Ethereal", "footstep_ethereal_sprint");
             }
             if (waterWalkClips == null || waterWalkClips.Length == 0 || waterWalkClips[0] == null)
             {
-                waterWalkClips = LoadSurfaceBank("Water", "footstep_water_walk", SurfaceType.Water, false);
+                waterWalkClips = LoadSurfaceBank("Water", "footstep_water_walk");
             }
             if (waterSprintClips == null || waterSprintClips.Length == 0 || waterSprintClips[0] == null)
             {
-                waterSprintClips = LoadSurfaceBank("Water", "footstep_water_sprint", SurfaceType.Water, true);
+                waterSprintClips = LoadSurfaceBank("Water", "footstep_water_sprint");
             }
-            if (flareExtinguishClip == null)
-            {
-                flareExtinguishClip = CreateProceduralClip("Flare_Extinguish", 0.32f, t =>
-                {
-                    float decay = Mathf.Exp(-10f * t);
-                    float whoosh = Mathf.Sin(2f * Mathf.PI * (180f - t * 240f) * t) * 0.6f 
-                                 + Mathf.Sin(2f * Mathf.PI * 90f * t) * 0.4f;
-                    return whoosh * decay;
-                });
-            }
-            if (skidScuffClip == null)
-            {
-                skidScuffClip = CreateProceduralClip("Skid_Scuff", 0.09f, t =>
-                {
-                    float decay = Mathf.Exp(-42f * t);
-                    float rasp = Mathf.Sin(2f * Mathf.PI * 320f * t) * 0.6f 
-                               + Mathf.Sin(2f * Mathf.PI * 740f * t) * 0.4f;
-                    return rasp * decay;
-                });
-            }
-            if (airDraftClip == null)
-            {
-                airDraftClip = CreateProceduralClip("Air_Draft", 0.42f, t =>
-                {
-                    float env = Mathf.Sin(Mathf.PI * (t / 0.42f));
-                    float breeze = Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.4f 
-                                 + Mathf.Sin(2f * Mathf.PI * 65f * t) * 0.6f;
-                    return breeze * env;
-                });
-            }
+            if (flareExtinguishClip == null) flareExtinguishClip = Resources.Load<AudioClip>("Audio/SFX/Lantern/flare_extinguish");
+            if (skidScuffClip == null) skidScuffClip = Resources.Load<AudioClip>("Audio/SFX/Player/skid_scuff");
+            if (airDraftClip == null) airDraftClip = Resources.Load<AudioClip>("Audio/SFX/Player/air_draft");
             if (chainClinkClips == null || chainClinkClips.Length == 0 || chainClinkClips[0] == null)
-            {
-                var c1 = Resources.Load<AudioClip>("Audio/SFX/Environment/chain_clink_01");
-                var c2 = Resources.Load<AudioClip>("Audio/SFX/Environment/chain_clink_02");
-                if (c1 != null && c2 != null)
-                {
-                    chainClinkClips = new[] { c1, c2 };
-                }
-                else
-                {
-                    chainClinkClips = new[]
-                    {
-                        CreateProceduralClip("Chain_Clink_1", 0.15f, t => Mathf.Sin(2f * Mathf.PI * 1800f * t) * Mathf.Exp(-35f * t) * 0.4f),
-                        CreateProceduralClip("Chain_Clink_2", 0.18f, t => Mathf.Sin(2f * Mathf.PI * 2200f * t) * Mathf.Exp(-40f * t) * 0.4f)
-                    };
-                }
-            }
+                chainClinkClips = new[] { Resources.Load<AudioClip>("Audio/SFX/Environment/chain_clink_01"), Resources.Load<AudioClip>("Audio/SFX/Environment/chain_clink_02") };
             if (crystalChargeClip == null) crystalChargeClip = Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_charge");
             if (crystalActivateClip == null) crystalActivateClip = Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_activate");
             if (gateOpenClip == null) gateOpenClip = Resources.Load<AudioClip>("Audio/SFX/Environment/gate_open");
             if (gateCloseClip == null) gateCloseClip = Resources.Load<AudioClip>("Audio/SFX/Environment/gate_close");
-
-            if (uiHoverClip == null)
-            {
-                uiHoverClip = CreateProceduralClip("UI_Hover", 0.05f, t =>
-                {
-                    float env = Mathf.Exp(-70f * t);
-                    return Mathf.Sin(2f * Mathf.PI * 1450f * t) * 0.25f * env;
-                });
-            }
-            if (uiClickClip == null)
-            {
-                uiClickClip = CreateProceduralClip("UI_Click", 0.07f, t =>
-                {
-                    float env = Mathf.Exp(-48f * t);
-                    float click = Mathf.Sin(2f * Mathf.PI * 560f * t) * 0.5f 
-                                + Mathf.Sin(2f * Mathf.PI * 1120f * t) * 0.3f;
-                    return click * env;
-                });
-            }
-            if (uiBackClip == null)
-            {
-                uiBackClip = CreateProceduralClip("UI_Back", 0.11f, t =>
-                {
-                    float env = Mathf.Exp(-32f * t);
-                    float freq = Mathf.Lerp(420f, 260f, t / 0.11f);
-                    return Mathf.Sin(2f * Mathf.PI * freq * t) * 0.45f * env;
-                });
-            }
+            if (uiHoverClip == null) uiHoverClip = Resources.Load<AudioClip>("Audio/SFX/UI/hover");
+            if (uiClickClip == null) uiClickClip = Resources.Load<AudioClip>("Audio/SFX/UI/confirm");
+            if (uiBackClip == null) uiBackClip = Resources.Load<AudioClip>("Audio/SFX/UI/back");
         }
 
         private float playerCheckTimer;
@@ -485,19 +433,19 @@ namespace TheLightenRoad.Audio
             if (masterSFXVolume > 0.001f)
             {
                 savedPreMuteVolume = masterSFXVolume;
-                masterSFXVolume = 0f;
+                MasterSFXVolume = 0f;
                 Debug.Log("[SoundEffectManager] SFX Muted.");
             }
             else
             {
-                masterSFXVolume = savedPreMuteVolume > 0.001f ? savedPreMuteVolume : 1.0f;
+                MasterSFXVolume = savedPreMuteVolume > 0.001f ? savedPreMuteVolume : 1.0f;
                 Debug.Log($"[SoundEffectManager] SFX Unmuted ({masterSFXVolume * 100:F0}%).");
             }
         }
 
         public void AdjustVolume(float delta)
         {
-            masterSFXVolume = Mathf.Clamp01(masterSFXVolume + delta);
+            MasterSFXVolume = Mathf.Clamp01(masterSFXVolume + delta);
             Debug.Log($"[SoundEffectManager] SFX Volume: {masterSFXVolume * 100:F0}%");
         }
 
@@ -632,105 +580,38 @@ namespace TheLightenRoad.Audio
             if (src == null) return;
 
             src.pitch = pitch;
-            src.volume = Mathf.Clamp01(volume * masterSFXVolume);
-            src.PlayOneShot(clip);
+            int slot = System.Array.IndexOf(sourcePool, src);
+            voiceLevels[slot] = Mathf.Clamp01(volume);
+            src.volume = voiceLevels[slot] * masterSFXVolume;
+            // Reusing a busy voice replaces it; PlayOneShot would keep accumulating old voices.
+            src.Stop();
+            src.clip = clip;
+            src.Play();
         }
 
-        private static AudioClip CreateProceduralClip(string name, float duration, System.Func<float, float> waveFunc)
+        private static AudioClip[] LoadSurfaceBank(string folder, string filePrefix)
         {
-            int sampleRate = 44100;
-            int totalSamples = Mathf.Max(1, (int)(duration * sampleRate));
-            var clip = AudioClip.Create(name, totalSamples, 1, sampleRate, false);
-            float[] data = new float[totalSamples];
-            for (int i = 0; i < totalSamples; i++)
-            {
-                float t = (float)i / sampleRate;
-                data[i] = Mathf.Clamp(waveFunc(t), -1f, 1f);
-            }
-            clip.SetData(data, 0);
-            return clip;
-        }
-
-        private static AudioClip[] LoadSurfaceBank(string folder, string filePrefix, SurfaceType surface, bool isSprint)
-        {
+            // A missing optional bank falls back to the recorded stone bank, never a synthesized beep.
             var loaded = new AudioClip[4];
-            bool anyMissing = false;
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < loaded.Length; i++)
             {
-                string path = $"Audio/SFX/Surfaces/{folder}/{filePrefix}_{i + 1:D2}";
-                loaded[i] = Resources.Load<AudioClip>(path);
-                if (loaded[i] == null)
-                {
-                    anyMissing = true;
-                }
+                loaded[i] = Resources.Load<AudioClip>($"Audio/SFX/Surfaces/{folder}/{filePrefix}_{i + 1:D2}");
+                if (loaded[i] == null) return null;
             }
-
-            if (anyMissing)
-            {
-                // Fallback to procedural generation if resources not loaded (e.g. headless unit tests without asset database)
-                return GenerateStepBank(folder, surface, isSprint);
-            }
-
             return loaded;
         }
 
-        private static AudioClip[] GenerateStepBank(string prefix, SurfaceType surface, bool isSprint)
+        private AudioClip lastFootstep;
+        private AudioClip SelectFootstep(AudioClip[] bank)
         {
-            var bank = new AudioClip[4];
-            float dur = isSprint ? 0.12f : 0.15f;
-            for (int i = 0; i < 4; i++)
+            if (bank == null || bank.Length == 0) return null;
+            int first = Random.Range(0, bank.Length);
+            for (int i = 0; i < bank.Length; i++)
             {
-                float pitchMod = 1f + (i - 1.5f) * 0.08f;
-                string clipName = $"{prefix}_{surface}_{(isSprint ? "Sprint" : "Walk")}_{i + 1}";
-                bank[i] = CreateProceduralClip(clipName, dur, t =>
-                {
-                    switch (surface)
-                    {
-                        case SurfaceType.Wood:
-                        {
-                            float decay = Mathf.Exp(-24f * t);
-                            float freq = (210f + i * 15f) * pitchMod;
-                            float tone = Mathf.Sin(2f * Mathf.PI * freq * t) * 0.8f + Mathf.Sin(2f * Mathf.PI * freq * 2f * t) * 0.35f;
-                            float knock = Mathf.Sin(2f * Mathf.PI * 110f * t) * 0.4f;
-                            return (tone + knock) * decay;
-                        }
-                        case SurfaceType.Metal:
-                        {
-                            float decay = Mathf.Exp(-28f * t);
-                            float freq = (1200f + i * 60f) * pitchMod;
-                            float ring = Mathf.Sin(2f * Mathf.PI * freq * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * freq * 2.1f * t) * 0.4f;
-                            float click = Mathf.Sin(2f * Mathf.PI * 3400f * t) * 0.2f * Mathf.Exp(-90f * t);
-                            return (ring + click) * decay;
-                        }
-                        case SurfaceType.Ethereal:
-                        {
-                            float decay = Mathf.Exp(-14f * t);
-                            float f1 = (880f + i * 40f) * pitchMod;
-                            float f2 = f1 * 1.5f;
-                            float f3 = f1 * 2f;
-                            float tone = Mathf.Sin(2f * Mathf.PI * f1 * t) * 0.5f 
-                                       + Mathf.Sin(2f * Mathf.PI * f2 * t) * 0.35f 
-                                       + Mathf.Sin(2f * Mathf.PI * f3 * t) * 0.2f;
-                            return tone * decay;
-                        }
-                        case SurfaceType.Water:
-                        {
-                            float decay = Mathf.Exp(-20f * t);
-                            float splash = Mathf.Sin(2f * Mathf.PI * (500f + i * 50f) * t) * 0.4f + Mathf.Sin(2f * Mathf.PI * 1800f * t) * 0.3f;
-                            float plop = Mathf.Sin(2f * Mathf.PI * (280f - t * 500f) * t) * 0.5f;
-                            return (splash + plop) * decay;
-                        }
-                        default:
-                        {
-                            float decay = Mathf.Exp(-36f * t);
-                            float freq = (520f + i * 30f) * pitchMod;
-                            float tone = Mathf.Sin(2f * Mathf.PI * freq * t) * 0.7f + Mathf.Sin(2f * Mathf.PI * freq * 1.9f * t) * 0.3f;
-                            return tone * decay;
-                        }
-                    }
-                });
+                var clip = bank[(first + i) % bank.Length];
+                if (clip != null && clip != lastFootstep) return lastFootstep = clip;
             }
-            return bank;
+            return lastFootstep = bank[first];
         }
 
         private AudioClip[] GetWalkClipsForSurface(SurfaceType surface)
@@ -765,7 +646,7 @@ namespace TheLightenRoad.Audio
             if (bank == null || bank.Length == 0 || bank[0] == null) bank = walkClips;
             if (bank == null || bank.Length == 0) return;
 
-            AudioClip clip = bank[Random.Range(0, bank.Length)];
+            AudioClip clip = SelectFootstep(bank);
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(clip, footstepsVolume, pitch);
         }
@@ -778,7 +659,7 @@ namespace TheLightenRoad.Audio
             if (bank == null || bank.Length == 0 || bank[0] == null) bank = sprintClips;
             if (bank == null || bank.Length == 0) return;
 
-            AudioClip clip = bank[Random.Range(0, bank.Length)];
+            AudioClip clip = SelectFootstep(bank);
             float pitch = 1f + Random.Range(-pitchRandomRange, pitchRandomRange);
             PlayOneShot(clip, footstepsVolume * 1.25f, pitch);
         }
@@ -923,8 +804,11 @@ namespace TheLightenRoad.Audio
             }
         }
 
+        private float nextHoverTime;
         public void PlayUIHover(float volumeScale = 1.0f)
         {
+            if (Time.unscaledTime < nextHoverTime) return;
+            nextHoverTime = Time.unscaledTime + .085f;
             if (uiHoverClip == null) EnsureClipsLoaded();
             if (uiHoverClip != null)
             {
@@ -957,6 +841,7 @@ namespace TheLightenRoad.Audio
 
         public void SetExhaustionActive(bool active)
         {
+            exhaustionRequested = active;
             targetExhaustionVol = active ? (exhaustionVolume * masterSFXVolume) : 0f;
 
             var src = EnsureExhaustionSource();

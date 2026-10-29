@@ -4,6 +4,7 @@
   "references": [
     "TheLightenRoad.Player",
     "TheLightenRoad.Lantern",
+    "TheLightenRoad.Input",
     "Unity.InputSystem"
   ]
 }

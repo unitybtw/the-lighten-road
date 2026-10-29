@@ -1,0 +1,17 @@
+[
+  "UI/hover.wav",
+  "UI/confirm.wav",
+  "UI/back.wav",
+  "UI/pause_open.wav",
+  "UI/pause_close.wav",
+  "Player/footstep_walk_01.wav",
+  "Player/footstep_walk_02.wav",
+  "Surfaces/Wood/footstep_wood_walk_01.ogg",
+  "Surfaces/Metal/footstep_metal_walk_01.wav",
+  "Surfaces/Water/footstep_water_walk_01.wav",
+  "Lantern/flare_ignite.wav",
+  "Lantern/flare_extinguish.wav",
+  "Environment/ember_pickup.wav",
+  "Lantern/ember_break.wav",
+  "Environment/crystal_activate.wav"
+]

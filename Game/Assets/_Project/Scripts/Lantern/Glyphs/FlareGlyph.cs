@@ -67,7 +67,6 @@ namespace TheLightenRoad.Lantern.Glyphs
         private float lingerTimer;
         private bool isFullyCharged;
         private bool isReceivingFlareLight;
-        private static AudioClip proceduralResonanceClip;
 
         public GlyphType Type { get => glyphType; set { glyphType = value; ApplySprite(); } }
         public float ChargeLevel => chargeLevel;
@@ -296,10 +295,10 @@ namespace TheLightenRoad.Lantern.Glyphs
 
         private void PlayActivationFeedback()
         {
-            AudioClip clipToPlay = activationSound != null ? activationSound : GetProceduralResonanceClip();
+            AudioClip clipToPlay = activationSound != null ? activationSound : Resources.Load<AudioClip>("Audio/SFX/Environment/crystal_activate");
             if (clipToPlay != null && SoundEffectManager.HasInstance)
             {
-                SoundEffectManager.Instance.PlayOneShot(clipToPlay, soundVolume * SoundEffectManager.Instance.MasterSFXVolume);
+                SoundEffectManager.Instance.PlayOneShot(clipToPlay, soundVolume);
             }
         }
 
@@ -327,34 +326,7 @@ namespace TheLightenRoad.Lantern.Glyphs
             ApplyVisuals();
         }
 
-        private static AudioClip GetProceduralResonanceClip()
-        {
-            if (proceduralResonanceClip != null) return proceduralResonanceClip;
 
-            const int sampleRate = 44100;
-            const float duration = 1.2f;
-            int samples = Mathf.RoundToInt(sampleRate * duration);
-            var data = new float[samples];
-
-            // 3 soft harmonic sinusoidal notes: 523.25Hz (C5), 659.25Hz (E5), 783.99Hz (G5)
-            float f1 = 523.25f;
-            float f2 = 659.25f;
-            float f3 = 783.99f;
-
-            for (int i = 0; i < samples; i++)
-            {
-                float t = i / (float)sampleRate;
-                float envelope = Mathf.Exp(-t * 3.8f) * Mathf.Min(1f, t * 40f);
-                float wave = (Mathf.Sin(2f * Mathf.PI * f1 * t) * 0.5f +
-                              Mathf.Sin(2f * Mathf.PI * f2 * t) * 0.3f +
-                              Mathf.Sin(2f * Mathf.PI * f3 * t) * 0.2f) * envelope;
-                data[i] = wave * 0.45f;
-            }
-
-            proceduralResonanceClip = AudioClip.Create("RuneResonanceChime", samples, 1, sampleRate, false);
-            proceduralResonanceClip.SetData(data, 0);
-            return proceduralResonanceClip;
-        }
 
         private void OnDrawGizmosSelected()
         {

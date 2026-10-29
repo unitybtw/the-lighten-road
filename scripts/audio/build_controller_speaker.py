@@ -96,7 +96,7 @@ def build():
             # 1. Full cue for standard playback
             full_opus = temp / f'{name}_full.opus'
             full_filters = (
-                f'atrim=duration={full_dur},asetpts=PTS-STARTPTS,'
+                f'apad=whole_dur={full_dur},atrim=duration={full_dur},asetpts=PTS-STARTPTS,'
                 'highpass=f=380:poles=2,lowpass=f=5600:poles=2,'
                 f'volume={vol:.2f},alimiter=limit=0.68:attack=8:release=45:asc=true,'
                 f'afade=t=in:d=0.010,afade=t=out:st={max(0, full_dur - 0.05)}:d=0.05,'
@@ -119,7 +119,8 @@ def build():
             # 2. Tailored Mac cue (must strictly have between 20 and 52 packets, i.e., 4000 to 10400 bytes)
             mac_opus = temp / f'{name}_mac.opus'
             mac_filters = (
-                f'atrim=duration={mac_dur},asetpts=PTS-STARTPTS,'
+                # Short recorded transients still need a complete bounded transport window.
+                f'apad=whole_dur={mac_dur},atrim=duration={mac_dur},asetpts=PTS-STARTPTS,'
                 'highpass=f=400:poles=2,lowpass=f=5600:poles=2,'
                 f'volume={vol * 1.1:.2f},alimiter=limit=0.68:attack=8:release=45:asc=true,'
                 f'afade=t=in:d=0.012,afade=t=out:st={max(0, mac_dur - 0.04)}:d=0.04,'
