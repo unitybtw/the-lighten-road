@@ -1,5 +1,6 @@
 using System.Collections;
 using TheLightenRoad.Audio;
+using TheLightenRoad.Input;
 using TheLightenRoad.Frontend;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.UI;
@@ -65,7 +66,9 @@ namespace TheLightenRoad.Player.Completion
 
         public bool TryBegin(PlayerRespawnController player)
         {
+            var motor = player != null ? player.GetComponent<PlayerMotor2D>() : null;
             if (!isActiveAndEnabled || Profile == null || player == null || player.State != RespawnState.Alive ||
+                motor == null || motor.TraversalLocked || GameControls.HasGameplayBlockers ||
                 IsRunning || HasCompleted || (active != null && active != this)) return false;
             // Validate before locking or showing a curtain: a mistyped scene must never strand the player.
             if (!string.IsNullOrWhiteSpace(DestinationScene) && !Application.CanStreamedLevelBeLoaded(DestinationScene))
@@ -126,6 +129,7 @@ namespace TheLightenRoad.Player.Completion
             Phase = "FadeIn";
             yield return Animate(Profile.FadeInSeconds, t => SetCurtain(1f - t));
             Unlock();
+            ReleaseOwnership();
             IsRunning = false;
             HasCompleted = true;
             Phase = "Complete";
@@ -163,6 +167,7 @@ namespace TheLightenRoad.Player.Completion
             if (routine != null) StopCoroutine(routine);
             routine = null;
             Unlock();
+            ReleaseOwnership();
             Cleanup();
             IsRunning = false;
             Phase = "Idle";
@@ -180,6 +185,8 @@ namespace TheLightenRoad.Player.Completion
 
         private void Lock(PlayerRespawnController player)
         {
+            GameControls.BlockGameplay(this, true);
+            LegacyInteractionPollingGate.Acquire(this);
             lockedPlayer = player;
             var motor = player.GetComponent<PlayerMotor2D>();
             gated = new Behaviour[] { motor, player.GetComponentInChildren<LanternController>(), player };
@@ -205,6 +212,11 @@ namespace TheLightenRoad.Player.Completion
             if (gated != null) for (int i = 0; i < gated.Length; i++)
                 if (gated[i] != null) gated[i].enabled = previousEnabled[i];
             gated = null; body = null; lockedPlayer = null;
+        }
+        private void ReleaseOwnership()
+        {
+            GameControls.BlockGameplay(this, false);
+            LegacyInteractionPollingGate.Release(this);
         }
 
         private void BuildPresentation()
@@ -367,7 +379,7 @@ namespace TheLightenRoad.Player.Completion
             // Disable/destroy is also a safe interruption (e.g. leaving Play Mode or unloading a local scene).
             if (routine != null) StopCoroutine(routine);
             routine = null;
-            Unlock(); Cleanup();
+            Unlock(); ReleaseOwnership(); Cleanup();
             IsRunning = false;
             if (active == this) active = null;
         }

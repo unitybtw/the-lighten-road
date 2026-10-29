@@ -58,6 +58,8 @@ namespace TheLightenRoad.Audio
         private bool isFading;
         private float savedPreMuteVolume = 0.25f;
         private bool isPlayRequested;
+        private bool stopRequested = true;
+        private bool isMuted;
 
         public AudioSource Source => audioSource != null ? audioSource : audioSource = GetComponent<AudioSource>();
         public AudioClip CurrentClip => musicClip;
@@ -67,6 +69,8 @@ namespace TheLightenRoad.Audio
             set
             {
                 targetVolume = Mathf.Clamp01(value);
+                if (isMuted) savedPreMuteVolume = targetVolume;
+                if (stopRequested || isMuted) return;
                 desiredVolume = targetVolume;
                 if (!isFading && audioSource != null)
                 {
@@ -135,9 +139,8 @@ namespace TheLightenRoad.Audio
 
         private void Update()
         {
-            // Resilient retry: if playOnStart was requested but playback hasn't started yet,
-            // start it as soon as the clip is loaded or streaming.
-            if ((playOnStart || isPlayRequested) && musicClip != null && audioSource != null && !audioSource.isPlaying)
+            // Only retry a pending Play, rather than treating the startup preference as a permanent request.
+            if (isPlayRequested && !stopRequested && !isMuted && musicClip != null && audioSource != null && !audioSource.isPlaying)
             {
                 if (musicClip.loadState == AudioDataLoadState.Loaded || musicClip.loadType == AudioClipLoadType.Streaming)
                 {
@@ -191,6 +194,9 @@ namespace TheLightenRoad.Audio
 
         public void Play(AudioClip clip = null, float customFadeDuration = -1f)
         {
+            stopRequested = false;
+            isMuted = false;
+            isPlayRequested = true;
             EnsureAudioSource();
 
             if (clip != null && clip != musicClip)
@@ -198,6 +204,11 @@ namespace TheLightenRoad.Audio
                 musicClip = clip;
                 audioSource.clip = musicClip;
             }
+
+            float duration = customFadeDuration >= 0f ? customFadeDuration : fadeInDuration;
+            desiredVolume = targetVolume;
+            fadeRate = duration > 0.01f ? (targetVolume / duration) : 100f;
+            isFading = true;
 
             if (audioSource.clip == null)
             {
@@ -212,18 +223,9 @@ namespace TheLightenRoad.Audio
                 }
             }
 
-            float duration = customFadeDuration >= 0f ? customFadeDuration : fadeInDuration;
-
-            if (!audioSource.isPlaying)
-            {
-                audioSource.volume = 0f;
-                currentFadeVolume = 0f;
-                audioSource.Play();
-            }
-
-            desiredVolume = targetVolume;
-            fadeRate = duration > 0.01f ? (targetVolume / duration) : 100f;
-            isFading = true;
+            if (musicClip.loadState == AudioDataLoadState.Unloaded) musicClip.LoadAudioData();
+            if (musicClip.loadState == AudioDataLoadState.Loaded || musicClip.loadType == AudioClipLoadType.Streaming)
+                StartPlayback();
         }
 
         private void StartPlayback()
@@ -234,13 +236,26 @@ namespace TheLightenRoad.Audio
 
             if (!audioSource.isPlaying)
             {
+                audioSource.volume = 0f;
+                currentFadeVolume = 0f;
                 audioSource.Play();
             }
+            isPlayRequested = false;
         }
 
         public void Stop(float customFadeDuration = -1f)
         {
-            if (audioSource == null || !audioSource.isPlaying) return;
+            isPlayRequested = false;
+            stopRequested = true;
+            isMuted = false;
+            if (audioSource == null) return;
+            if (!audioSource.isPlaying)
+            {
+                desiredVolume = 0;
+                audioSource.volume = 0;
+                isFading = false;
+                return;
+            }
 
             float duration = customFadeDuration >= 0f ? customFadeDuration : fadeOutDuration;
             desiredVolume = 0f;
@@ -252,6 +267,7 @@ namespace TheLightenRoad.Audio
         {
             EnsureAudioSource();
             desiredVolume = Mathf.Clamp01(target);
+            if (desiredVolume <= .0001f) isPlayRequested = false;
             float diff = Mathf.Abs(desiredVolume - audioSource.volume);
             fadeRate = duration > 0.01f ? (diff / duration) : 100f;
             isFading = true;
@@ -259,7 +275,7 @@ namespace TheLightenRoad.Audio
 
         public void TickFade(float dt)
         {
-            if (audioSource == null) return;
+            if (audioSource == null || isPlayRequested) return;
 
             if (isFading)
             {
@@ -291,13 +307,15 @@ namespace TheLightenRoad.Audio
         public void ToggleMute()
         {
             if (audioSource == null) return;
-            if (desiredVolume > 0.001f)
+            if (!isMuted && !stopRequested && desiredVolume > 0.001f)
             {
+                isMuted = true;
                 savedPreMuteVolume = desiredVolume;
                 FadeTo(0f, 0.4f);
             }
             else
             {
+                isMuted = false;
                 float restoreVol = savedPreMuteVolume > 0.01f ? savedPreMuteVolume : targetVolume;
                 if (!audioSource.isPlaying) Play();
                 FadeTo(restoreVol, 0.4f);

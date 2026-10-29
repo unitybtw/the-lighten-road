@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-29",
+  "unity": "6000.3.2f1",
+  "base_commit": "6b1a1ea11a3e2f83d6312054c2ff0d163dbc8755",
+  "compilation": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "before_scoped_runs": {
+    "music": {
+      "total": 9,
+      "passed": 7,
+      "failed": 2,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "tutorial": {
+      "total": 12,
+      "passed": 10,
+      "failed": 2,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "completion": {
+      "total": 7,
+      "passed": 5,
+      "failed": 2,
+      "skipped": 0,
+      "inconclusive": 0
+    }
+  },
+  "reproduced_failures_fixed": [
+    {
+      "test": "BackgroundMusicManagerTests.ExplicitStopSurvivesSubsequentUpdatesAndVolumeChanges",
+      "before_message": "  Update must not revive an explicitly stopped track.\n  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "BackgroundMusicManagerTests.MutedTrackStaysStoppedUntilUnmuted",
+      "before_message": "  Mute must not repeatedly restart a silent track.\n  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.FirstLight.Tests.FirstLightTutorialTests.ReenablingAfterIgnitionRestoresJumpAndRespawnObservers",
+      "before_message": "  The resumed director must still receive real motor jump events.\n  Expected: True\n  But was:  False\n",
+      "after": "Passed"
+    },
+    {
+      "test": "TheLightenRoad.FirstLight.Tests.FirstLightTutorialTests.ReenablingTheIntroRestoresItsGateAndDarknessExemption",
+      "before_message": "  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "ChamberCompletionTests.ClimbingPlayerCannotBeTakenOverByAnExitPresentation",
+      "before_message": "  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    },
+    {
+      "test": "ChamberCompletionTests.CompletionOwnsInputAndLegacyPollingWithoutReleasingAnotherOwner",
+      "before_message": "  Expected: False\n  But was:  True\n",
+      "after": "Passed"
+    }
+  ],
+  "full_project_playmode": {
+    "status": "completed",
+    "summary": {
+      "total": 366,
+      "passed": 366,
+      "failed": 0,
+      "skipped": 0,
+      "inconclusive": 0
+    },
+    "duration_seconds": 288.64,
+    "suites": {
+      "0f,-1": 1,
+      "0f,1": 1,
+      "15f,0": 1,
+      "1f,0": 1,
+      "ArchiveBookInteractionTests": 25,
+      "ArchiveCodexTests": 15,
+      "ArchiveNarrationTests": 8,
+      "ArchiveStageAnimationTests": 2,
+      "ArchiveTestChamberTests": 3,
+      "BackgroundMusicManagerTests": 12,
+      "ChamberCompletionTests": 8,
+      "ControllerHapticsTests": 6,
+      "ControllerLightbarTests": 5,
+      "ControllerSupportTests": 10,
+      "DeathScreenTests": 8,
+      "DiegeticWhisperTests": 5,
+      "DualSenseBluetoothTests": 4,
+      "DualSensePatternTests": 8,
+      "DualSenseSpeakerTests": 13,
+      "EmberMagnetismTests": 4,
+      "EmberPickupTests": 7,
+      "EtherealPlatformTests": 5,
+      "FirstLightTutorialTests": 12,
+      "FlareGlyphTests": 7,
+      "FollowCamera2DTests": 4,
+      "FurkanTutorialTests": 8,
+      "GameControlsTests": 8,
+      "LanternControllerTests": 10,
+      "LanternFuelTests": 13,
+      "LanternHUDTests": 16,
+      "LifecycleRegressionTests": 8,
+      "MainMenuTests": 12,
+      "MenuReadabilityTests": 11,
+      "ParticleEffectsTests": 3,
+      "PauseMenuTests": 10,
+      "PhotosensitiveRelayTests": 8,
+      "PlayerLedgeClimbTests": 22,
+      "PlayerMotor2DTests": 11,
+      "PlayerRespawnTests": 5,
+      "PlayerSpriteAnimatorTests": 9,
+      "RuinedArchiveRouteTests": 3,
+      "SoundEffectManagerTests": 17,
+      "StaminaHUDTests": 7,
+      "SurfaceAudioTests": 4,
+      "SwayingPropTests": 6
+    }
+  },
+  "project_integrity": {
+    "checked_assets": 599,
+    "status": "passed",
+    "failures": []
+  },
+  "menu_preference_keys_restored": 26,
+  "editor_after": {
+    "scene": "FirstLightTutorial",
+    "playing": false,
+    "dirty": false
+  },
+  "protected_paths_unchanged": true,
+  "limitations": "Editor Play Mode suite only. No standalone build, Edit Mode suite or physical-controller matrix repeated."
+}

@@ -14,6 +14,8 @@ namespace TheLightenRoad.Input
         public const string FlarePath = "<Gamepad>/rightTrigger";
         private static readonly HashSet<int> blockers = new HashSet<int>();
         private static int suppressedThroughFrame = -1;
+        /// <summary>Owned modal/traversal locks, independent of the simulation clock.</summary>
+        public static bool HasGameplayBlockers => blockers.Count > 0;
         public static bool GameplayAllowed => GameplayAllowedExcept(null);
         /// <summary>A traversal can own an input block while still respecting pause and other owners.</summary>
         public static bool GameplayAllowedExcept(Object owner)

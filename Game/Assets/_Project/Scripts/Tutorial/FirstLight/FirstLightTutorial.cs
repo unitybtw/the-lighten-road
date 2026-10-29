@@ -39,13 +39,28 @@ namespace TheLightenRoad.FirstLight
         public LanternController Lantern=>lantern;
 
         private void Start()=>Initialize();
+        private void OnEnable()
+        {
+            if(!initialized || Player==null)return;
+            Subscribe();
+            bool lit=HasIgnited && Stage>=FirstLightStage.Move;
+            Player.KillOnFuelDepleted=lit;
+            if(lantern!=null)lantern.enabled=lit;
+            Gate(Stage==FirstLightStage.Awakening || Stage==FirstLightStage.Ignition ||
+                 Stage==FirstLightStage.DrawingDoor || Stage==FirstLightStage.Departing);
+        }
+        private void Subscribe()
+        {
+            motor.OnJumped-=OnJump;motor.OnJumped+=OnJump;
+            Player.OnPlayerRespawned-=OnRespawn;Player.OnPlayerRespawned+=OnRespawn;
+        }
         public void Initialize()
         {
             if(initialized || Player==null || Presentation==null)return;
             initialized=true;motor=Player.GetComponent<PlayerMotor2D>();lantern=Player.GetComponent<LanternController>();fuel=lantern.Fuel;
             previousSurvival=Player.KillOnFuelDepleted;Player.KillOnFuelDepleted=false;
             fuel.Initialize(0,LanternFuel.MaximumFuel);lantern.ResetToDim();lantern.enabled=false;
-            motor.OnJumped+=OnJump;Player.OnPlayerRespawned+=OnRespawn;
+            Subscribe();
             if(Hud!=null)Hud.gameObject.SetActive(false);
             FirstEmber.gameObject.SetActive(false);ReserveA.gameObject.SetActive(false);ReserveB.gameObject.SetActive(false);
             Stage=FirstLightStage.Awakening;StageTime=0;Gate(true);
@@ -135,6 +150,7 @@ namespace TheLightenRoad.FirstLight
         }
         private void OnDisable()
         {
+            if(!initialized)return;
             if(motor!=null)motor.OnJumped-=OnJump;
             if(Player!=null){Player.OnPlayerRespawned-=OnRespawn;Player.KillOnFuelDepleted=previousSurvival;}
             if(initialized && lantern!=null)lantern.enabled=true;

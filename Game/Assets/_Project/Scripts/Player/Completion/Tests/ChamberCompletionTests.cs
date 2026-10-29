@@ -5,6 +5,7 @@ using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using TheLightenRoad.Player.Completion;
 using TheLightenRoad.Sirac.FurkanPrototype;
+using TheLightenRoad.Input;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -150,5 +151,51 @@ public sealed class ChamberCompletionTests
         Assert.That(player.GetComponent<Rigidbody2D>().simulated,Is.True);
         Assert.That(player.GetComponent<LanternFuel>().TotalEmbers,Is.EqualTo(3));
         Assert.That(GameObject.Find("Completion / presentation"),Is.Null);
+    }
+
+    [UnityTest] public IEnumerator CompletionOwnsInputAndLegacyPollingWithoutReleasingAnotherOwner()
+    {
+        var type=System.AppDomain.CurrentDomain.GetAssemblies().Select(a=>a.GetType("TheLightenRoad.Interaction.EmberVein")).First(t=>t!=null);
+        var node=new GameObject("Completion legacy input regression");SceneManager.MoveGameObjectToScene(node,scene);
+        var circuit=(Behaviour)node.AddComponent(type);
+        profile.HoldSeconds=3;
+        Assert.That(sequence.TryBegin(level.Player),Is.True);
+        Assert.That(GameControls.GameplayAllowed,Is.False);
+        Assert.That(circuit.enabled,Is.False,"Raw E polling must not transfer embers behind the exit presentation.");
+        GameControls.BlockGameplay(profile,true);LegacyInteractionPollingGate.Acquire(profile);
+        try
+        {
+            sequence.Cancel();yield return null;yield return null;yield return null;
+            Assert.That(GameControls.GameplayAllowed,Is.False);
+            Assert.That(circuit.enabled,Is.False);
+        }
+        finally {GameControls.BlockGameplay(profile,false);LegacyInteractionPollingGate.Release(profile);}
+        yield return null;yield return null;yield return null;
+        Assert.That(GameControls.GameplayAllowed,Is.True);Assert.That(circuit.enabled,Is.True);
+    }
+
+    [UnityTest] public IEnumerator ClimbingPlayerCannotBeTakenOverByAnExitPresentation()
+    {
+        var motor=level.Player.GetComponent<PlayerMotor2D>();motor.SetTraversalLocked(true);
+        try
+        {
+            Assert.That(sequence.TryBegin(level.Player),Is.False);
+            Assert.That(motor.enabled,Is.True);Assert.That(motor.Body.simulated,Is.True);
+        }
+        finally {motor.SetTraversalLocked(false);}
+        yield return null;
+    }
+
+    [UnityTest] public IEnumerator AnotherInputOwnerPreventsStartingAnExitBehindAModal()
+    {
+        GameControls.BlockGameplay(profile,true);
+        try
+        {
+            Assert.That(sequence.TryBegin(level.Player),Is.False);
+            Assert.That(level.Player.enabled,Is.True);
+            Assert.That(sequence.IsRunning,Is.False);
+        }
+        finally {GameControls.BlockGameplay(profile,false);}
+        yield return null;yield return null;
     }
 }

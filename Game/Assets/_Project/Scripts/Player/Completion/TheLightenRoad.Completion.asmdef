@@ -4,6 +4,7 @@
     "TheLightenRoad.Player",
     "TheLightenRoad.Lantern",
     "TheLightenRoad.Audio",
+    "TheLightenRoad.Input",
     "TheLightenRoad.Frontend",
     "Unity.TextMeshPro",
     "UnityEngine.UI",

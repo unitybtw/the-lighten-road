@@ -142,6 +142,36 @@ public sealed class BackgroundMusicManagerTests
         Assert.That(musicManager.CurrentVolume, Is.GreaterThan(0.1f));
     }
 
+    [UnityTest]
+    public IEnumerator ExplicitStopSurvivesSubsequentUpdatesAndVolumeChanges()
+    {
+        musicManager.Play(testClip, 0);
+        musicManager.TickFade(.1f);
+        musicManager.Stop(0);
+        musicManager.TickFade(.1f);
+        musicManager.TargetVolume = .18f;
+        yield return null; yield return null; yield return null;
+        Assert.That(musicManager.IsPlaying, Is.False, "Update must not revive an explicitly stopped track.");
+        musicManager.Play();
+        yield return null;
+        Assert.That(musicManager.IsPlaying, Is.True);
+    }
+
+    [UnityTest]
+    public IEnumerator MutedTrackStaysStoppedUntilUnmuted()
+    {
+        musicManager.Play(testClip, 0);
+        musicManager.TickFade(.1f);
+        musicManager.ToggleMute();
+        musicManager.TickFade(.6f);
+        yield return null; yield return null; yield return null;
+        Assert.That(musicManager.IsPlaying, Is.False, "Mute must not repeatedly restart a silent track.");
+        musicManager.ToggleMute();
+        musicManager.TickFade(.6f);
+        Assert.That(musicManager.IsPlaying, Is.True);
+        Assert.That(musicManager.CurrentVolume, Is.GreaterThan(.1f));
+    }
+
     [Test]
     public void AdjustsVolumeWithinValidBounds()
     {
@@ -151,5 +181,38 @@ public sealed class BackgroundMusicManagerTests
 
         musicManager.AdjustVolume(-0.5f);
         Assert.That(musicManager.TargetVolume, Is.GreaterThanOrEqualTo(0.05f));
+    }
+
+    [UnityTest]
+    public IEnumerator SettingsChangesDoNotUnmuteButUpdateTheRestoreLevel()
+    {
+        musicManager.Play(testClip,0);musicManager.TickFade(.1f);
+        musicManager.ToggleMute();musicManager.TickFade(.6f);
+        musicManager.TargetVolume=.08f;
+        yield return null;yield return null;yield return null;
+        Assert.That(musicManager.CurrentVolume,Is.Zero);
+        Assert.That(musicManager.IsPlaying,Is.False);
+        musicManager.ToggleMute();musicManager.TickFade(.6f);
+        Assert.That(musicManager.CurrentVolume,Is.EqualTo(.08f).Within(.001f));
+    }
+
+    [Test]
+    public void VolumeChangesDoNotCancelAnExplicitFadeOut()
+    {
+        musicManager.Play(testClip,0);musicManager.TickFade(.1f);
+        musicManager.Stop(.2f);musicManager.TargetVolume=.4f;musicManager.TickFade(.3f);
+        Assert.That(musicManager.IsPlaying,Is.False);
+        Assert.That(musicManager.CurrentVolume,Is.Zero);
+    }
+
+    [UnityTest]
+    public IEnumerator NonLoopingTrackDoesNotRestartAtItsNaturalEnd()
+    {
+        var loop=typeof(BackgroundMusicManager).GetField("loop",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+        loop.SetValue(musicManager,false);
+        musicManager.Play(testClip,0);
+        yield return new WaitForSecondsRealtime(1.3f);
+        Assert.That(musicManager.Source.loop,Is.False);
+        Assert.That(musicManager.IsPlaying,Is.False);
     }
 }

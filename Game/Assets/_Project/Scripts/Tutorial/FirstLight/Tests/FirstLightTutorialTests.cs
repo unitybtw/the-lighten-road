@@ -125,6 +125,35 @@ namespace TheLightenRoad.FirstLight.Tests
         [UnityTest] public IEnumerator DisablingTheDirectorDuringTheIntroNeverLeavesGlobalInputLocked()
         {Assert.That(GameControls.GameplayAllowed,Is.False);tutorial.enabled=false;yield return null;yield return null;Assert.That(GameControls.GameplayAllowed,Is.True);}
 
+        [UnityTest] public IEnumerator ReenablingTheIntroRestoresItsGateAndDarknessExemption()
+        {
+            tutorial.Tick(.4f);
+            tutorial.enabled=false;yield return null;yield return null;
+            tutorial.enabled=true;yield return null;yield return null;yield return null;
+            Assert.That(tutorial.Stage,Is.EqualTo(FirstLightStage.Awakening));
+            Assert.That(tutorial.StageTime,Is.EqualTo(.4f).Within(.01f));
+            Assert.That(GameControls.GameplayAllowed,Is.False);
+            Assert.That(tutorial.Lantern.enabled,Is.False);
+            tutorial.Player.TickSurvival(4);
+            Assert.That(tutorial.Player.State,Is.EqualTo(RespawnState.Alive));
+            tutorial.Tick(3);yield return null;yield return null;
+            Assert.That(GameControls.GameplayAllowed,Is.True);
+        }
+
+        [UnityTest] public IEnumerator ReenablingAfterIgnitionRestoresJumpAndRespawnObservers()
+        {
+            Ignite();tutorial.enabled=false;yield return null;yield return null;
+            tutorial.enabled=true;yield return null;yield return null;
+            Place(4.9f,.95f);tutorial.Tick(.01f);
+            for(int i=0;i<6;i++)yield return new WaitForFixedUpdate();
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));yield return null;yield return new WaitForFixedUpdate();
+            Assert.That(tutorial.HasJumped,Is.True,"The resumed director must still receive real motor jump events.");
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState());yield return null;
+            tutorial.Player.Kill(DeathReason.Hazard);tutorial.Player.Respawn();
+            Assert.That(tutorial.Lantern.Fuel.TotalEmbers,Is.EqualTo(1),"The pre-reserve lesson must restore one ember, rather than the generic chamber inventory.");
+            Assert.That(tutorial.Stage,Is.EqualTo(FirstLightStage.Jump));
+        }
+
         [UnityTest] public IEnumerator PauseHidesCinematicCaptionsAndRestoresTheSameLessonOnResume()
         {
             tutorial.Tick(3);
