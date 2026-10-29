@@ -60,11 +60,14 @@ public sealed class PlayerSpriteAnimatorTests
             Assert.That(s.Frames.All(f => f != null && Mathf.Abs(f.pixelsPerUnit - 36) < .001f), Is.True);
             Assert.That(s.PreviewClip.length, Is.EqualTo(s.Duration).Within(.001f));
             Assert.That(s.LanternOffsets.Length, Is.EqualTo(s.Frames.Length));
+            Assert.That(s.SoleOffsets.Length, Is.EqualTo(s.Frames.Length));
             Assert.That(s.Frames.All(f => Mathf.Approximately(f.rect.width, 70)), Is.True);
             Assert.That(s.Frames.All(f => Mathf.Approximately(f.rect.height, s.Kind == LightAnimation.Climb ? 80 : 70)), Is.True);
         }
         Assert.That(data.Find(LightAnimation.Climb).Frames[0].pivot.y, Is.EqualTo(30));
         Assert.That(data.Find(LightAnimation.Climb).ReachOffsetsX.Length, Is.EqualTo(27));
+        Assert.That(data.Find(LightAnimation.Climb).GripOffsets.Length, Is.EqualTo(27));
+        Assert.That(data.Find(LightAnimation.Climb).PlantOffsets.Length, Is.EqualTo(27));
         Assert.That(data.Find(LightAnimation.Climb).ReachOffsetsX.All(x => !float.IsNaN(x) && !float.IsInfinity(x)), Is.True);
         Assert.That(data.Find(LightAnimation.Idle).Frames[0].pivot.y, Is.EqualTo(35));
     }

@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-29",
+  "unity": "6000.3.2f1",
+  "base_commit": "cd82a09c1dc0bf23f6145ec7483ffcb7518e5908",
+  "compilation": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "player_tests": {
+    "total": 141,
+    "passed": 141,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "first_light_tutorial_tests": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "inconclusive": 0
+  },
+  "scoped_passed": 151,
+  "climb_tests": [
+    "PlayerLedgeClimbTests.AirborneGrabStartsWithClimbInsteadOfHangingThroughTheStowClip",
+    "PlayerLedgeClimbTests.CancellationPreservesTheVisibleSoleAndRestoresOffsets",
+    "PlayerLedgeClimbTests.DeathAndRespawnDoNotLeaveTraversalOrInputLocked",
+    "PlayerLedgeClimbTests.DeathFreezesTheActualClimbPoseUntilRespawn",
+    "PlayerLedgeClimbTests.DisablingTraversalRestoresPlayerAndAllowsAnotherAttempt",
+    "PlayerLedgeClimbTests.FlareRemainsAnExplicitSpendAndPreventsStowingAnActiveScout",
+    "PlayerLedgeClimbTests.GamepadDpadStartsClimbAndJumpCancelsRestoringGravity",
+    "PlayerLedgeClimbTests.HandStaysOnTheActualLipAndStandingFeetDoNotFloat",
+    "PlayerLedgeClimbTests.HorizontalMovementDoesNotStartAnUnrequestedClimb",
+    "PlayerLedgeClimbTests.HotplugWithHeldStickRequiresReleaseBeforeClimbing",
+    "PlayerLedgeClimbTests.JumpAndUpLaunchBeforeTheAirborneGrabInsteadOfStowingOnTheFloor",
+    "PlayerLedgeClimbTests.LeftFacingAirborneGrabUsesTheSameSafeTraversal",
+    "PlayerLedgeClimbTests.PauseAndOtherInputOwnersFreezeBothMotionAndPose",
+    "PlayerLedgeClimbTests.RemovedPlatformAndNewObstacleAbortSafely",
+    "PlayerLedgeClimbTests.RotatingSupportAbortsAndReleasesTheOwnedInputLock",
+    "PlayerLedgeClimbTests.SimultaneousLeftAndUpDoNotGrabTheLedgeBehindThePlayer",
+    "PlayerLedgeClimbTests.StartingInsideGeometryIsRejectedBeforeOwningControls",
+    "PlayerLedgeClimbTests.TallLedgeKeepsTheFullHangingStartAndPinsBothAxes",
+    "PlayerLedgeClimbTests.TallNarrowMovingAndObstructedLedgesAreRejected",
+    "PlayerLedgeClimbTests.TraversalAndModalLeasesRestoreOnlyAfterBothOwnersRelease",
+    "PlayerLedgeClimbTests.UpInputStowsLanternThenClimbsOntoSolidLedgeWithoutSpendingFuel",
+    "PlayerLedgeClimbTests.UpPressIsBufferedBrieflyBeforeTheLedgeBecomesReachable"
+  ],
+  "scope": "Two scoped Editor Play Mode runs. No complete-project suite, standalone build or physical-controller check repeated.",
+  "contact_assertions_world_units": {
+    "grip_error_below": 0.045,
+    "standing_sole_gap_below": 0.065,
+    "trailing_foot_penetration_below": 0.015,
+    "completion_sole_jump_below": 0.06
+  },
+  "recordings": [
+    {
+      "path": "development/sirac/previews/climb-polish/ground-climb.mp4",
+      "sha256": "f0cf090cd2c2ae6706802b7f2f2c12034920fcdbac034ec40b2ad34589911f5b",
+      "scene": "FurkanTutorial",
+      "ledge": "Second jump / 1.8m",
+      "entry_frame": 3,
+      "first_pose": "Sheathing",
+      "last_pose": "Idle",
+      "landing_body": [
+        8.295,
+        2.604914
+      ],
+      "final_controls_available": true,
+      "initial_charges": 6,
+      "final_charges": 6,
+      "capture_error": null,
+      "captured_frames": 70,
+      "excluded_staging_frames": 1,
+      "video": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1280,
+            "height": 720
+          }
+        ],
+        "format": {
+          "duration": "3.560000"
+        }
+      },
+      "setup": "Player/camera positioned for Play Mode inspection only. Runtime traversal clock, captured time spacing, no audio. No scene edits saved.",
+      "pickup_note": null
+    },
+    {
+      "path": "development/sirac/previews/climb-polish/air-climb.mp4",
+      "sha256": "4a92b372bd341559bf4c73bc636ec5113447fffc05e78f5b59c8db38581312bc",
+      "scene": "FurkanTutorial",
+      "ledge": "Circuit approach",
+      "entry_frame": 0,
+      "first_pose": "Climb",
+      "last_pose": "Idle",
+      "landing_body": [
+        24.995,
+        3.20489264
+      ],
+      "final_controls_available": true,
+      "initial_charges": 6,
+      "final_charges": 8,
+      "capture_error": null,
+      "captured_frames": 63,
+      "excluded_staging_frames": 1,
+      "video": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "width": 1280,
+            "height": 720
+          }
+        ],
+        "format": {
+          "duration": "3.200000"
+        }
+      },
+      "setup": "Player/camera positioned for Play Mode inspection only. Runtime traversal clock, captured time spacing, no audio. No scene edits saved.",
+      "pickup_note": "Existing pickup adds two charges while climbing."
+    }
+  ],
+  "delivered_source_hashes_verified": 15,
+  "repeat_import": {
+    "files_compared": 52,
+    "changed": 0,
+    "scope": "Source assets, metadata, preview clips, manifest, catalog and shared player prefab; documentation excluded."
+  },
+  "project_integrity": {
+    "checked_assets": 590,
+    "status": "passed",
+    "failures": []
+  },
+  "menu_preference_keys_restored": 26,
+  "editor_scene_after_review": "MainMenu",
+  "editor_playing_after_review": false,
+  "protected_paths_unchanged": true
+}

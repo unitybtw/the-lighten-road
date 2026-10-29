@@ -71,7 +71,7 @@ public sealed class PlayerLedgeClimbTests
     {
         float deadline = Time.realtimeSinceStartup + 5;
         while (climb.IsClimbing && Time.realtimeSinceStartup < deadline) yield return null;
-        Assert.That(climb.IsClimbing, Is.False);
+        Assert.That(climb.IsClimbing, Is.False, $"Progress {climb.Progress}; pose {poses.CurrentAnimation}/{poses.CurrentFrame}; controls {GameControls.GameplayAllowedExcept(climb)}; position {motor.Body.position}");
         yield return new WaitForSeconds(.15f);
     }
 
@@ -244,5 +244,155 @@ public sealed class PlayerLedgeClimbTests
         Assert.That(climb.TryBeginClimb(), Is.False);
         Assert.That(motor.TraversalLocked, Is.False); Assert.That(poses.AutomaticTicks, Is.True);
         yield return null;
+    }
+    [UnityTest] public IEnumerator HandStaysOnTheActualLipAndStandingFeetDoNotFloat()
+    {
+        var probe = player.AddComponent<ClimbPoseProbe>();
+        probe.Climb = climb; probe.Poses = poses; probe.Top = ledge.GetComponent<BoxCollider2D>().bounds.max.y;
+        Assert.That(climb.TryBeginClimb(), Is.True);
+        Assert.That(climb.EntryFrame, Is.GreaterThan(0), "Low ledges must skip the overhead hanging pose.");
+        yield return Finish();
+        Assert.That(probe.GripFrames.Count, Is.GreaterThanOrEqualTo(7));
+        Assert.That(probe.MaxGripError, Is.LessThan(.045f), "Hand must remain on the corner in both axes.");
+        Assert.That(probe.StandingSamples, Is.GreaterThan(5));
+        Assert.That(probe.MaxSoleGap, Is.LessThan(.065f), "Standing frames must stay on the top surface.");
+        Assert.That(probe.TrailingFootPenetration, Is.LessThan(.015f), "The hanging foot must stay outside the wall before it clears the lip.");
+        Assert.That(probe.CompletionSoleJump, Is.LessThan(.06f), "Returning to Idle must not pop the feet.");
+    }
+    [UnityTest] public IEnumerator AirborneGrabStartsWithClimbInsteadOfHangingThroughTheStowClip()
+    {
+        motor.Body.position = new Vector2(0, 1.12f); motor.Body.linearVelocity = Vector2.down;
+        yield return new WaitForFixedUpdate(); yield return null;
+        Assert.That(motor.IsGrounded, Is.False);
+        Assert.That(climb.TryBeginClimb(), Is.True);
+        Assert.That(poses.CurrentAnimation, Is.EqualTo(LightAnimation.Climb));
+        Assert.That(climb.EntryFrame, Is.GreaterThan(0));
+        yield return Finish();
+        Assert.That(motor.IsGrounded, Is.True);
+    }
+    [UnityTest] public IEnumerator TallLedgeKeepsTheFullHangingStartAndPinsBothAxes()
+    {
+        ledge.transform.position = new Vector2(1.65f, 1.05f);
+        ledge.GetComponent<BoxCollider2D>().size = new Vector2(2, 2.1f);
+        var probe = player.AddComponent<ClimbPoseProbe>();
+        probe.Climb = climb; probe.Poses = poses; probe.Top = 2.1f;
+        Assert.That(climb.TryBeginClimb(), Is.True);
+        Assert.That(climb.EntryFrame, Is.Zero);
+        yield return Finish();
+        Assert.That(probe.GripFrames.Contains(0), Is.True);
+        Assert.That(probe.GripFrames.Count, Is.GreaterThanOrEqualTo(12));
+        Assert.That(probe.MaxGripError, Is.LessThan(.045f));
+        Assert.That(probe.MaxSoleGap, Is.LessThan(.065f));
+        Assert.That(probe.CompletionSoleJump, Is.LessThan(.06f));
+    }
+    [UnityTest] public IEnumerator CancellationPreservesTheVisibleSoleAndRestoresOffsets()
+    {
+        Assert.That(climb.TryBeginClimb(), Is.True); yield return new WaitForSeconds(1.35f);
+        var before = ClimbPoseProbe.Sole(poses);
+        climb.CancelClimb();
+        var after = ClimbPoseProbe.Sole(poses);
+        Assert.That(Vector3.Distance(before, after), Is.LessThan(.045f));
+        Assert.That(motor.TraversalLocked, Is.False);
+        yield return new WaitForSeconds(.35f);
+        Assert.That(poses.Renderer.transform.localPosition, Is.EqualTo(Vector3.zero));
+        Assert.That(GameControls.GameplayAllowed, Is.True);
+        Assert.That(motor.Body.gravityScale, Is.GreaterThan(0));
+    }
+    [UnityTest] public IEnumerator DeathFreezesTheActualClimbPoseUntilRespawn()
+    {
+        Assert.That(climb.TryBeginClimb(), Is.True); yield return new WaitForSeconds(1.3f);
+        var position = poses.Renderer.transform.position; var sprite = poses.Renderer.sprite;
+        var recovery = player.GetComponent<PlayerRespawnController>(); recovery.AutoRespawnEnabled = false;
+        recovery.Kill(DeathReason.Hazard);
+        Assert.That(Vector3.Distance(poses.Renderer.transform.position, position), Is.LessThan(.12f));
+        Assert.That(poses.Renderer.sprite, Is.EqualTo(sprite));
+        yield return new WaitForSeconds(.2f);
+        Assert.That(poses.Renderer.sprite, Is.EqualTo(sprite));
+        recovery.Respawn(); yield return new WaitForSeconds(.2f);
+        Assert.That(poses.Renderer.transform.localPosition, Is.EqualTo(Vector3.zero));
+        Assert.That(poses.CurrentAnimation, Is.EqualTo(LightAnimation.Idle));
+    }
+    [UnityTest] public IEnumerator UpPressIsBufferedBrieflyBeforeTheLedgeBecomesReachable()
+    {
+        motor.Body.position = new Vector2(-.4f, .81f);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.D));
+        yield return new WaitForSeconds(.16f);
+        Assert.That(climb.IsClimbing, Is.True);
+    }
+    [UnityTest] public IEnumerator RotatingSupportAbortsAndReleasesTheOwnedInputLock()
+    {
+        Assert.That(climb.TryBeginClimb(), Is.True); yield return new WaitForSeconds(1);
+        ledge.transform.rotation = Quaternion.Euler(0, 0, 90);
+        yield return new WaitForSeconds(.2f);
+        Assert.That(climb.IsClimbing, Is.False);
+        Assert.That(motor.TraversalLocked, Is.False);
+        yield return new WaitForSeconds(.2f);
+        Assert.That(GameControls.GameplayAllowed, Is.True);
+    }
+    [UnityTest] public IEnumerator SimultaneousLeftAndUpDoNotGrabTheLedgeBehindThePlayer()
+    {
+        Box("Left archive ledge", new Vector2(-1.65f, .75f), new Vector2(2, 1.5f));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        yield return new WaitForSeconds(.18f);
+        Assert.That(climb.IsClimbing, Is.True);
+        Assert.That(climb.LandingPosition.x, Is.LessThan(0));
+        Assert.That(motor.FacingDirection, Is.EqualTo(-1));
+    }
+    [UnityTest] public IEnumerator JumpAndUpLaunchBeforeTheAirborneGrabInsteadOfStowingOnTheFloor()
+    {
+        int jumps = 0; motor.OnJumped += () => jumps++;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space, Key.W));
+        yield return new WaitForSeconds(.14f);
+        Assert.That(jumps, Is.EqualTo(1));
+        Assert.That(climb.IsClimbing, Is.True);
+        Assert.That(poses.CurrentAnimation, Is.EqualTo(LightAnimation.Climb));
+    }
+}
+
+// Observe after traversal's LateUpdate and the sprite animator, as the rendered frame sees it.
+[DefaultExecutionOrder(200)]
+public sealed class ClimbPoseProbe : MonoBehaviour
+{
+    public PlayerLedgeClimb Climb;
+    public PlayerSpriteAnimator Poses;
+    public float Top, MaxGripError, MaxSoleGap, CompletionSoleJump, TrailingFootPenetration;
+    public int StandingSamples;
+    public readonly HashSet<int> GripFrames = new HashSet<int>();
+    private bool previousClimb;
+    private int previousFrame;
+    private Vector3 previousSole;
+    public static Vector3 Sole(PlayerSpriteAnimator poses)
+    {
+        var data = poses.Catalog.Find(poses.CurrentAnimation);
+        var p = data.SoleOffsets[poses.CurrentFrame];
+        if (poses.Renderer.flipX) p.x = -p.x;
+        return poses.Renderer.transform.TransformPoint(p);
+    }
+    private void LateUpdate()
+    {
+        if (Climb == null || Poses == null) return;
+        bool active = Climb.IsClimbing && Poses.CurrentAnimation == LightAnimation.Climb;
+        int frame = Poses.CurrentFrame;
+        var sole = Sole(Poses);
+        if (active)
+        {
+            var data = Poses.Catalog.Find(LightAnimation.Climb);
+            if (!Climb.IsReaching && frame < 15)
+            {
+                var p = data.GripOffsets[frame]; if (Poses.Renderer.flipX) p.x = -p.x;
+                MaxGripError = Mathf.Max(MaxGripError, Vector2.Distance(Poses.Renderer.transform.TransformPoint(p), Climb.GripPoint));
+                GripFrames.Add(frame);
+            }
+            if (frame >= 20) { StandingSamples++; MaxSoleGap = Mathf.Max(MaxSoleGap, Mathf.Abs(sole.y - Top)); }
+            else if (frame >= 15 && sole.y < Top - .015f)
+            {
+                int direction = Poses.Renderer.flipX ? -1 : 1;
+                float edge = Climb.GripPoint.x - direction * .02f;
+                TrailingFootPenetration = Mathf.Max(TrailingFootPenetration, (sole.x - edge) * direction);
+            }
+        }
+        else if (previousClimb && previousFrame >= 25 && Poses.CurrentAnimation == LightAnimation.Idle)
+            CompletionSoleJump = Mathf.Max(CompletionSoleJump, Vector3.Distance(previousSole, sole));
+        previousClimb = active; previousFrame = frame; previousSole = sole;
     }
 }

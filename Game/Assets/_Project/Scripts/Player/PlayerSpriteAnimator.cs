@@ -127,6 +127,15 @@ namespace TheLightenRoad.Player
         public void ClearContextAnimation()
         { explicitContext = holdContext = false; oneShot = false; ResetAirState(); Select(LightAnimation.Idle, false, true); RenderFrame(); }
 
+        /// <summary>Sample an owned context at an exact source time without advancing a second clock.</summary>
+        public bool SampleContextPose(float sourceTime)
+        {
+            if (!explicitContext || sequence == null || float.IsNaN(sourceTime) || float.IsInfinity(sourceTime)) return false;
+            elapsed = Mathf.Clamp(sourceTime, 0, sequence.Duration);
+            RenderFrame();
+            return true;
+        }
+
         private void ResetAirState()
         {
             unsupportedTime = 0; jumpLaunched = airPoseShown = false;
