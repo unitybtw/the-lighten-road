@@ -115,11 +115,11 @@ Each teammate has a dedicated workspace for prototypes, art sources, or puzzle d
 
 | Team member | Role | Authored commits |
 | --- | --- | ---: |
-| [Siraç](https://github.com/unitybtw) | Game Developer | 29 |
-| [Kemal](https://github.com/kemal-berke) | Game Developer | 1 |
+| [Siraç](https://github.com/unitybtw) | Game Developer | 155 |
+| [Kemal](https://github.com/kemal-berke) | Game Developer | 9 |
 | [Maksim](https://github.com/Ichnolith) | Artist | 1 |
+| [Furkan](https://github.com/aeshmacodex) | Game Designer | 1 |
 | [Can](https://github.com/benesas) | Artist | 0 |
-| [Furkan](https://github.com/aeshmacodex) | Game Designer | 0 |
 
 Counts cover GitHub-linked commit authors on `main`, excluding merge commits and bots. Co-author trailers, issues, reviews, uncommitted assets and work outside Git are not counted. Commit volume is an activity signal, not a measure of effort or work quality.
 

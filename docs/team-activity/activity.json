@@ -8,7 +8,7 @@
       "role": "Game Developer",
       "profile_url": "https://github.com/unitybtw",
       "avatar_sha256": "9469817448132c76770ddfe2bbcf6da560ce4d3ce451f14373ee8a1e26c70efb",
-      "commits": 29
+      "commits": 155
     },
     {
       "login": "kemal-berke",
@@ -16,7 +16,7 @@
       "role": "Game Developer",
       "profile_url": "https://github.com/kemal-berke",
       "avatar_sha256": "5b55eff0be7016598b25c5dd516dc1ac83566f2104c746e8835d57478efd5c6b",
-      "commits": 1
+      "commits": 9
     },
     {
       "login": "benesas",
@@ -40,13 +40,13 @@
       "role": "Game Designer",
       "profile_url": "https://github.com/aeshmacodex",
       "avatar_sha256": "a0d437d93b3ca2440bc8374395185b0f2e35a545f782309fe87c44aa7b5d9a6f",
-      "commits": 0
+      "commits": 1
     }
   ],
-  "team_commits": 31,
+  "team_commits": 166,
   "other_linked_author_commits": 0,
   "unlinked_author_commits": 0,
   "method": "Non-merge commits authored by GitHub-linked accounts on the default branch; bots excluded. Co-author trailers and work outside Git are not counted.",
-  "source_revision": "ff362999fd8e9662d7c4542d3e93815a915606c4",
-  "updated_at": "2026-10-16 12:34 UTC"
+  "source_revision": "cd82a09c1dc0bf23f6145ec7483ffcb7518e5908",
+  "updated_at": "2026-10-29 16:31 UTC"
 }
