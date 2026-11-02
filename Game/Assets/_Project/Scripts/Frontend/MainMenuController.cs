@@ -38,16 +38,16 @@ namespace TheLightenRoad.Frontend
             {
                 Number = "REALM I",
                 Title = "THE FIRST LIGHT",
-                Tag = "TUTORIAL & BEGINNINGS",
-                Description = "Learn basic movement mechanics, explore the ruined archive, and power the conduit to advance.",
+                Tag = "THE FIRST STEPS",
+                Description = "Explore the archive, collect embers, and open the way forward.",
                 ScenePath = DefaultGameplayScene
             },
             new RealmOption
             {
                 Number = "REALM II",
                 Title = "THE FLOODED MECHANISMS",
-                Tag = "PUZZLES & MECHANICS",
-                Description = "Channel lantern energy into ancient Ember Veins and navigate past electrified waters and lifts.",
+                Tag = "VEINS & MACHINERY",
+                Description = "Use the ember veins to move lifts and cross dangerous water.",
                 ScenePath = "Assets/_Project/Scenes/Sandbox/Kemal/SceneKemal.unity"
             },
             new RealmOption
@@ -55,7 +55,7 @@ namespace TheLightenRoad.Frontend
                 Number = "REALM III",
                 Title = "ARCHIVE TEST CHAMBER",
                 Tag = "CALIBRATION ROOM",
-                Description = "Testing ground for lantern light radius, movement physics, coyote time, and environmental hazards.",
+                Description = "A place to test the lantern, movement, and hazards.",
                 ScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity"
             }
         };
@@ -589,7 +589,7 @@ namespace TheLightenRoad.Frontend
                 var r = AvailableRealms[selectedRealmIndex];
                 bool activeDone = MenuPreferences.IsRealmCompleted(selectedRealmIndex);
                 activeRealmBadgeText.text = activeDone
-                    ? $"--   {r.Number}  :  {r.Title}  [* CONQUERED]   --"
+                    ? $"--   {r.Number}  :  {r.Title}  COMPLETE   --"
                     : $"--   {r.Number}  :  {r.Title}   --";
             }
 
@@ -599,10 +599,10 @@ namespace TheLightenRoad.Frontend
                 bool curDone = MenuPreferences.IsRealmCompleted(selectedRealmIndex);
 
                 if (activeRealmShowcaseTag != null) activeRealmShowcaseTag.text = $"-   {cur.Tag}   -";
-                if (activeRealmShowcaseDesc != null) activeRealmShowcaseDesc.text = $"\"{cur.Description}\"";
+                if (activeRealmShowcaseDesc != null) activeRealmShowcaseDesc.text = cur.Description;
                 if (activeRealmShowcaseStatus != null)
                 {
-                    activeRealmShowcaseStatus.text = curDone ? "[ ACTIVE REALM  -  CONQUERED * ]" : "[ ACTIVE REALM ]";
+                    activeRealmShowcaseStatus.text = curDone ? "SELECTED · COMPLETE" : "SELECTED";
                     activeRealmShowcaseStatus.color = curDone ? amberGold : radiantIvory;
                 }
             }
@@ -631,8 +631,8 @@ namespace TheLightenRoad.Frontend
                 if (i < realmStatusLabels.Count && realmStatusLabels[i] != null)
                 {
                     realmStatusLabels[i].text = isSelected
-                        ? (isCompleted ? "[ ACTIVE REALM - CONQUERED * ]" : "[ ACTIVE REALM ]")
-                        : (isCompleted ? "[ CONQUERED * ]" : "SELECT REALM");
+                        ? (isCompleted ? "SELECTED · COMPLETE" : "SELECTED")
+                        : (isCompleted ? "COMPLETE" : "SELECT REALM");
                     realmStatusLabels[i].color = isSelected ? amberGold : (isCompleted ? radiantIvory : moonlightSilver);
                 }
             }
@@ -1391,7 +1391,7 @@ namespace TheLightenRoad.Frontend
                 realmTitles.Add(titleTxt);
 
                 // Centered Status & Tag Whisper (Preserves exact test contracts)
-                var statusTxt = CreateLabel("Status", row, (i == selectedRealmIndex) ? "[ ACTIVE REALM ]" : "SELECT REALM", 11.5f, amberGold, new Vector2(520f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, -16f));
+                var statusTxt = CreateLabel("Status", row, (i == selectedRealmIndex) ? "SELECTED" : "SELECT REALM", 11.5f, amberGold, new Vector2(520f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, -16f));
                 statusTxt.rectTransform.pivot = Vector2.one * 0.5f;
                 statusTxt.alignment = TextAlignmentOptions.Center;
                 statusTxt.fontStyle = FontStyles.Bold;
@@ -1408,16 +1408,16 @@ namespace TheLightenRoad.Frontend
             // Centered Selected Realm Lore Whisper (Frameless between two delicate filigree lines)
             var showcaseBox = CreateAnchoredRect("Showcase Container", surface, new Vector2(780f, 86f), new Vector2(0.5f, 0.5f), new Vector2(0f, -168f));
 
-            activeRealmShowcaseTag = CreateLabel("Showcase Tag", showcaseBox, "- TUTORIAL & BEGINNINGS -", 11f, amberGold, new Vector2(740f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, 24f));
+            activeRealmShowcaseTag = CreateLabel("Showcase Tag", showcaseBox, "- THE FIRST STEPS -", 11f, amberGold, new Vector2(740f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, 24f));
             activeRealmShowcaseTag.rectTransform.pivot = Vector2.one * 0.5f;
             activeRealmShowcaseTag.alignment = TextAlignmentOptions.Center;
             activeRealmShowcaseTag.characterSpacing = 4.5f;
 
-            activeRealmShowcaseDesc = CreateLabel("Showcase Desc", showcaseBox, "\"Learn basic movement mechanics, explore the ruined archive, and power the conduit to advance.\"", 13f, radiantIvory, new Vector2(760f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
+            activeRealmShowcaseDesc = CreateLabel("Showcase Desc", showcaseBox, "Explore the archive, collect embers, and open the way forward.", 13f, radiantIvory, new Vector2(760f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0f));
             activeRealmShowcaseDesc.rectTransform.pivot = Vector2.one * 0.5f;
             activeRealmShowcaseDesc.alignment = TextAlignmentOptions.Center;
 
-            activeRealmShowcaseStatus = CreateLabel("Showcase Status", showcaseBox, "[ ACTIVE REALM ]", 11f, moonlightSilver, new Vector2(500f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f));
+            activeRealmShowcaseStatus = CreateLabel("Showcase Status", showcaseBox, "SELECTED", 11f, moonlightSilver, new Vector2(500f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, -24f));
             activeRealmShowcaseStatus.rectTransform.pivot = Vector2.one * 0.5f;
             activeRealmShowcaseStatus.alignment = TextAlignmentOptions.Center;
             activeRealmShowcaseStatus.characterSpacing = 3.0f;

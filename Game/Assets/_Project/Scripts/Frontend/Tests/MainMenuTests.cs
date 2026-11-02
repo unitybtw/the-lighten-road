@@ -138,7 +138,7 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
-        public IEnumerator ConqueredRealms_DisplayBadgesAndRetainStatus()
+        public IEnumerator CompletedRealms_DisplayBadgesAndRetainStatus()
         {
             yield return null;
             _menu.SkipIntro();
@@ -151,18 +151,18 @@ namespace TheLightenRoad.Frontend.Tests
 
             var activeBadge = _menu.ActiveRealmBadgeText;
             Assert.That(activeBadge, Is.Not.Null);
-            Assert.That(activeBadge.text, Does.Contain("[* CONQUERED]"));
+            Assert.That(activeBadge.text, Does.Contain("COMPLETE"));
 
             var statusLabels = _menu.GetComponentsInChildren<TMPro.TMP_Text>();
-            bool foundConqueredActive = false;
-            bool foundConqueredInactive = false;
+            bool foundCompletedActive = false;
+            bool foundCompletedInactive = false;
             foreach (var label in statusLabels)
             {
-                if (label.text.Contains("[ ACTIVE REALM - CONQUERED * ]")) foundConqueredActive = true;
-                if (label.text.Contains("[ CONQUERED * ]")) foundConqueredInactive = true;
+                if (label.text == "SELECTED · COMPLETE") foundCompletedActive = true;
+                if (label.text == "COMPLETE") foundCompletedInactive = true;
             }
-            Assert.That(foundConqueredActive, Is.True, "Active conquered realm must have active conquered label.");
-            Assert.That(foundConqueredInactive, Is.True, "Other conquered realm must show conquered label.");
+            Assert.That(foundCompletedActive, Is.True, "Selected completed realm must show both states.");
+            Assert.That(foundCompletedInactive, Is.True, "Other completed realm must show its completion state.");
 
             MenuPreferences.ResetToDefaults();
             Assert.That(MenuPreferences.IsRealmCompleted(0), Is.True,"Resetting settings must preserve progress.");
