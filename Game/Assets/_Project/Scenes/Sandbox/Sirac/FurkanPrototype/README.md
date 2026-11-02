@@ -47,4 +47,4 @@ Unity MCP / Unity 6000.3.2f1: **76/76 Play Mode tests passed** in the completed 
 
 ## Exit presentation
 
-The exit at x=40.5 uses `ChamberExit.prefab` with the `FirstLightCompletion` profile. It marks this tutorial complete, reveals a warm light wave/title, plays the arrival chime and fades into the existing `ArchiveTestChamber` prototype. Edit the instance's Destination Scene for another chapter. See [reusable completion setup](../../../../Scripts/Player/Completion/README.md).
+The exit at x=40.5 uses `ChamberExit.prefab` with the `FirstLightCompletion` profile. It marks this tutorial complete, extinguishes the player’s lantern, shows the title in darkness, and loads the existing `ArchiveTestChamber` prototype under cover. The destination appears as its lantern relights. Edit the instance's Destination Scene for another chapter. See [reusable completion setup](../../../../Scripts/Player/Completion/README.md).

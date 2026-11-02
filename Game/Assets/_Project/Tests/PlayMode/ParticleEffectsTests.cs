@@ -74,6 +74,16 @@ public sealed class ParticleEffectsTests
         Assert.That(sparks.CurrentEmissionRate, Is.EqualTo(initialRate).Within(0.1f),
             "Returning to Dim mode should restore normal spark emission rate.");
 
+        lantern.SetPresentationVisibility(.5f);
+        yield return null;
+        Assert.That(sparks.CurrentEmissionRate,Is.EqualTo(initialRate*.5f).Within(.01f));
+        lantern.SetPresentationVisibility(0f);
+        yield return null;
+        Assert.That(sparks.IsEmitting,Is.False,"An extinguished transition lantern must not keep emitting sparks.");
+        lantern.SetPresentationVisibility(1f);
+        yield return null;
+        Assert.That(sparks.IsEmitting,Is.True);
+
         // Drain fuel to 0
         fuel.TrySpendFuel(fuel.CurrentFuel);
         yield return null;

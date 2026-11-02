@@ -12,13 +12,14 @@ namespace TheLightenRoad.Player.Completion
         public string Subtitle = "";
         public TMP_FontAsset Font;
         public Color LightColor = new Color(1f, .70f, .34f);
-        [Min(1f)] public float LightRadius = 7.5f;
-        [Range(0f, 3f)] public float LightIntensity = .7f;
         [Header("Timing / real seconds")]
-        [Min(.05f)] public float RevealSeconds = .9f;
+        [Min(.05f)] public float ExtinguishSeconds = .85f;
+        [Min(.05f)] public float RevealSeconds = .75f;
         [Min(0f)] public float HoldSeconds = .85f;
-        [Min(.05f)] public float FadeOutSeconds = .7f;
-        [Min(.05f)] public float FadeInSeconds = .75f;
+        [Tooltip("Title fades away while the scene remains fully covered.")]
+        [Min(.05f)] public float FadeOutSeconds = .4f;
+        [Tooltip("The destination lantern ignites as the new chamber becomes visible.")]
+        [Min(.05f)] public float FadeInSeconds = 1.25f;
         [Header("Sound / optional")]
         public AudioClip CompletionSound;
         [Range(0f, 1f)] public float SoundVolume = .65f;

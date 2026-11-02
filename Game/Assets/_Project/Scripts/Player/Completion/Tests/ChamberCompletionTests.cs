@@ -31,7 +31,7 @@ public sealed class ChamberCompletionTests
         sequence=level.Completion;
         Assert.That(sequence,Is.Not.Null,"Tutorial must have a wired reusable exit.");
         profile=Object.Instantiate(sequence.Profile);sequence.Profile=profile;
-        profile.RevealSeconds=.12f;profile.HoldSeconds=.1f;profile.FadeOutSeconds=.12f;profile.FadeInSeconds=.12f;
+        profile.ExtinguishSeconds=.12f;profile.RevealSeconds=.12f;profile.HoldSeconds=.1f;profile.FadeOutSeconds=.12f;profile.FadeInSeconds=.12f;
         sequence.DestinationScene="";
     }
     [UnityTearDown] public IEnumerator Teardown()
@@ -96,9 +96,11 @@ public sealed class ChamberCompletionTests
         profile.HoldSeconds=3;
         Assert.That(sequence.TryBegin(level.Player),Is.True);
         yield return new WaitForSecondsRealtime(.2f);
-        Assert.That(sequence.LightRadius,Is.GreaterThan(1f));
+        Assert.That(lantern.PresentationVisibility,Is.Zero);
+        Assert.That(lantern.LanternLight.intensity,Is.Zero);
         Assert.That(sequence.Cancel(),Is.True);
         Assert.That(lantern.enabled,Is.False);
+        Assert.That(lantern.PresentationVisibility,Is.EqualTo(1f));
         Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled,Is.True);
         Assert.That(level.Player.GetComponent<Rigidbody2D>().simulated,Is.True);
         Assert.That(sequence.CurtainAlpha,Is.Zero);
@@ -231,5 +233,61 @@ public sealed class ChamberCompletionTests
         sequence.Started.RemoveListener(cancel);
         yield return null; yield return null;
         Assert.That(sequence.TryBegin(level.Player), Is.True);
+    }
+
+    [UnityTest] public IEnumerator LanternGoesDarkBeforeTheTitleAndRelightsBeforeControlReturns()
+    {
+        var lantern=level.Player.GetComponent<LanternController>();
+        lantern.EnableFlicker=false;
+        int embers=lantern.Fuel.TotalEmbers;
+        profile.ExtinguishSeconds=.35f;profile.RevealSeconds=.2f;
+        profile.HoldSeconds=.2f;profile.FadeOutSeconds=.15f;profile.FadeInSeconds=.5f;
+        Assert.That(sequence.TryBegin(level.Player),Is.True);
+        Assert.That(sequence.TitleAlpha,Is.Zero);
+        yield return new WaitForSecondsRealtime(.12f);
+        Assert.That(lantern.PresentationVisibility,Is.InRange(.01f,.99f));
+        Assert.That(lantern.LanternLight.intensity,Is.InRange(.001f,lantern.DimIntensity-.001f));
+        Assert.That(sequence.TitleAlpha,Is.Zero,"Text must wait for the lantern to go out.");
+        yield return WaitForPhase("Hold");
+        Assert.That(lantern.LanternLight.intensity,Is.Zero);
+        Assert.That(sequence.CurtainAlpha,Is.EqualTo(1f));
+        Assert.That(sequence.TitleAlpha,Is.EqualTo(1f));
+        Assert.That(GameObject.Find("Warm light / arrival"),Is.Null,"The player's lantern owns the light; no extra exit light.");
+        yield return WaitForPhase("FadeIn");
+        yield return new WaitForSecondsRealtime(.15f);
+        Assert.That(sequence.TitleAlpha,Is.Zero);
+        Assert.That(lantern.PresentationVisibility,Is.InRange(.01f,.99f));
+        Assert.That(sequence.CurtainAlpha,Is.LessThan(1f));
+        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled,Is.False);
+        yield return WaitForPhase("Complete");
+        Assert.That(lantern.PresentationVisibility,Is.EqualTo(1f));
+        Assert.That(lantern.LanternLight.intensity,Is.EqualTo(lantern.DimIntensity).Within(.001f));
+        Assert.That(lantern.Fuel.TotalEmbers,Is.EqualTo(embers));
+    }
+
+    [UnityTest] public IEnumerator CancellingAnExtinguishRestoresAnActiveScoutWithoutAdvancingItsTimer()
+    {
+        var lantern=level.Player.GetComponent<LanternController>();
+        lantern.SetFlared(true);lantern.TickScout(lantern.TransitionDuration);
+        lantern.SetPresentationVisibility(.7f);
+        float timer=lantern.FlareTimer;
+        int embers=lantern.Fuel.TotalEmbers;
+        profile.ExtinguishSeconds=1f;
+        Assert.That(sequence.TryBegin(level.Player),Is.True);
+        Assert.That(lantern.PresentationVisibility,Is.EqualTo(.7f),"The initiating frame is not elapsed transition time.");
+        yield return new WaitForSecondsRealtime(.2f);
+        Assert.That(lantern.PresentationVisibility,Is.LessThan(.7f));
+        Assert.That(sequence.Cancel(),Is.True);
+        Assert.That(lantern.PresentationVisibility,Is.EqualTo(.7f));
+        Assert.That(lantern.FlareTimer,Is.EqualTo(timer));
+        Assert.That(lantern.HasActiveScout,Is.True);
+        Assert.That(lantern.Fuel.TotalEmbers,Is.EqualTo(embers));
+    }
+
+    private IEnumerator WaitForPhase(string phase)
+    {
+        float deadline=Time.realtimeSinceStartup+4f;
+        while(sequence.Phase!=phase && Time.realtimeSinceStartup<deadline)yield return null;
+        Assert.That(sequence.Phase,Is.EqualTo(phase));
     }
 }

@@ -1,19 +1,57 @@
-# Chamber completion and transition
+# Lantern-led chamber transition
 
-The existing exit now reveals a restrained warm light, briefly identifies the completed chamber, and fades to darkness over the scene change before returning control. The central title uses the archive display font, with a soft local shadow so the level remains visible. The full-width notification strip, decorative expanding ring, and unsupported flavor line have been removed. The existing memento state is retained in a short, readable status when the chamber tracks it. The profile retains optional subtitle and sound fields for deliberate, authored uses.
+The player leaves the chamber through their own lantern. It loses intensity and
+radius over 0.85 s, with spark emission falling with it; the scene fades to black.
+Only then does the completed chapter title appear: a 0.75 s fade with a small rise
+and tightening letter spacing, followed by a 0.85 s hold and 0.4 s fade out. Memento
+status is retained when the chamber tracks it. There is no separate exit light wave.
 
-The First Light profile uses a 0.9 s reveal, 0.85 s hold, 0.7 s cover and 0.75 s uncover. Reduced Motion suppresses title movement; the light and cover still communicate the transition. Existing input ownership, cancellation, destination validation and scene transfer logic remain in the reusable `ChamberCompletionSequence`.
+Scene loading stays behind the opaque black curtain. After the destination's
+Awake/Start, its actual lantern starts dark and relights over 1.25 s as the new room
+is revealed. Control stays gated until the reveal finishes. The visual transition
+does not spend an ember, reset an active scout or advance its timer. The normal
+chamber-entry budget still belongs to the destination/local checkpoint setup.
 
-## Reusing it
+Reduced Motion disables the title movement and tracking animation. Quiet, existing
+licensed lantern extinguish/ignite clips follow the two light actions and respect
+Master/Effects volume. The default profile no longer plays the synthetic arrival
+chime; an authored completion clip remains optional.
 
-Assign a `ChamberCompletionProfile` and an enabled Build Settings scene path to `ChamberCompletionSequence` on a trigger with `ChamberExitTrigger`. The trigger accepts the entering player or an explicitly assigned player. For a transition within one scene, leave the destination path empty and assign `DestinationSpawn`. Empty path and spawn show the completion locally without moving the player. The existing First Light exit in `FurkanTutorial` leads to `ArchiveTestChamber`, which is currently a test room.
+## Reuse and recovery
+
+Assign a profile and enabled destination to `ChamberCompletionSequence` on a
+`ChamberExitTrigger`. The same profile controls all five timing stages. Leave the
+scene path empty for a local completion and optionally set a checkpoint. The First
+Light exit in FurkanTutorial still routes to ArchiveTestChamber, a development room.
+Its fallback exit to the menu now uses the same profile defaults.
+
+Cancellation restores component states, body simulation, velocity and the prior
+lantern presentation gain. Input ownership remains held through cross-scene loading.
+The persistent root cleans up after arrival. Listener failures are logged and do
+not prevent completion/cleanup; synchronous cancellation from Started remains safe.
+No Kemal-owned scripts or scenes are changed.
 
 ## Verification
 
-Unity 6000.3.2f1 compiled without errors or warnings. All eight completion Play Mode tests passed, including actual scene transfer, cover ordering, input release, local destination and cancellation. Project integrity passed for 599 tracked assets. The [Game view preview](previews/completion-refined.png) shows the current level exit; its hold was temporarily extended in Play Mode to allow capture and was not saved. Saved preferences and the original FirstLightTutorial editor scene were restored. No standalone build, physical controller, or audio listening pass was performed.
+Unity 6000.3.2f1 / Unity CLI: final compilation reported **0 errors, 0 warnings**.
+The final focused run passed **12/12 completion tests**, including the real scene
+swap, zero-timescale operation, interrupted light recovery and unchanged scout/fuel
+state. The real-time clock starts with the animation rather than consuming the
+triggering frame's previous delta, preventing an initial jump after a long frame.
 
-## Event safety — 2 November 2026
+The earlier broad run passed **400/401 Play Mode tests**. Its one failure was
+`PlayerRespawnTests.RespawnRecoveryManualSkipWaitsUntilTheWorldIsUnpaused`; an isolated
+rerun passed without changes to respawn production/test code. A clean full-suite run
+is therefore not claimed. Lantern and spark tests passed in that broad run.
 
-If a completion event listener throws, its exception is logged and the transition continues to release control and clean up its presentation. UnityEvent does not guarantee later listeners in that same event will run after one throws, so listeners should still handle their own errors. Cancelling synchronously from the Started event leaves the player unlocked and permits a later retry.
+Actual 1920×1080 Game captures show [extinguishing](previews/lantern-transition/01-extinguishing.png),
+[the title in darkness](previews/lantern-transition/02-title.png),
+[the destination relighting](previews/lantern-transition/03-relighting.png) and
+[arrival](previews/lantern-transition/04-arrived.png). These use the authored timing
+and real FurkanTutorial → ArchiveTestChamber load; the source player was placed at
+the exit for capture. Capture metadata records the scene, title/curtain opacity and
+lantern visibility. No timing extension or fake world light was used.
 
-Two regression cases reproduced listener and synchronous-cancel failures before this fix. The final CLI Play Mode run passed all 10 completion tests, including a throwing Finished listener during a real scene swap.
+Project integrity passed (599 tracked assets). Personal preferences and the original
+FurkanTutorial editor scene were restored after verification. No standalone build,
+physical-controller test or audio listening pass is claimed.

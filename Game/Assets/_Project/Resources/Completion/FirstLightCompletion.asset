@@ -17,11 +17,10 @@ MonoBehaviour:
   Subtitle: ''
   Font: {fileID: 11400000, guid: 7b856a2514d1e46928d9fff9afaeab0c, type: 2}
   LightColor: {r: 1, g: 0.7, b: 0.34, a: 1}
-  LightRadius: 7.5
-  LightIntensity: 0.7
-  RevealSeconds: 0.9
+  ExtinguishSeconds: 0.85
+  RevealSeconds: 0.75
   HoldSeconds: 0.85
-  FadeOutSeconds: 0.7
-  FadeInSeconds: 0.75
-  CompletionSound: {fileID: 8300000, guid: bdd57f209e81b4ac0adbda86af576f33, type: 3}
+  FadeOutSeconds: 0.4
+  FadeInSeconds: 1.25
+  CompletionSound: {fileID: 0}
   SoundVolume: 0.65

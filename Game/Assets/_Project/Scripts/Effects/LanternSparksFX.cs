@@ -121,7 +121,7 @@ namespace TheLightenRoad.Effects
                 return;
             }
 
-            emission.rateOverTime = Mathf.Lerp(dimEmissionRate, flareEmissionRate, blend);
+            emission.rateOverTime = Mathf.Lerp(dimEmissionRate, flareEmissionRate, blend) * (lantern != null ? lantern.PresentationVisibility : 1f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(
                 Mathf.Lerp(dimSpeedRange.x, flareSpeedRange.x, blend),
                 Mathf.Lerp(dimSpeedRange.y, flareSpeedRange.y, blend));

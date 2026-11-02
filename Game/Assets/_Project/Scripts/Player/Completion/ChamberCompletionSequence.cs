@@ -7,7 +7,6 @@ using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -30,7 +29,7 @@ namespace TheLightenRoad.Player.Completion
         public bool HasCompleted { get; private set; }
         public string Phase { get; private set; } = "Idle";
         public float CurtainAlpha => curtain != null ? curtain.color.a : 0f;
-        public float LightRadius => glow != null ? glow.pointLightOuterRadius : 0f;
+        public float TitleAlpha => caption != null ? caption.alpha : 0f;
         public bool CanCancel => IsRunning && !loading;
         private static ChamberCompletionSequence active;
         private Coroutine routine;
@@ -38,8 +37,11 @@ namespace TheLightenRoad.Player.Completion
         private Image curtain;
         private CanvasGroup caption;
         private RectTransform captionRect;
-        private Light2D glow;
+        private TMP_Text title;
         private AudioSource sound;
+        private float soundGain = 1f;
+        private LanternController animatedLantern;
+        private float previousLanternVisibility;
         private PlayerRespawnController lockedPlayer;
         private Behaviour[] gated;
         private bool[] previousEnabled;
@@ -86,16 +88,24 @@ namespace TheLightenRoad.Player.Completion
         private IEnumerator Play(int run)
         {
             string completedScene = SceneManager.GetActiveScene().name;
-            Phase = "Reveal";
+            Phase = "Extinguish";
             ControllerGlyphService.PlayHaptic(HapticCue.ChamberComplete);
             Notify(Started);
             if (!IsRunning || generation != run || !isActiveAndEnabled) yield break;
-            if (sound.clip != null) sound.Play();
+            PlaySound(SoundEffectManager.Instance.FlareExtinguishClip, .45f);
+            yield return Animate(Profile.ExtinguishSeconds, t =>
+            {
+                if (animatedLantern != null) animatedLantern.SetPresentationVisibility(previousLanternVisibility * (1f - t));
+                SetCurtain(Mathf.InverseLerp(.18f, 1f, t));
+            });
+            // Typography is above the opaque curtain: the scene never competes with the title.
+            Phase = "Reveal";
+            PlaySound(Profile.CompletionSound);
             yield return Animate(Profile.RevealSeconds, t => ApplyReveal(t));
             Phase = "Hold";
             yield return Animate(Profile.HoldSeconds, t => { });
             Phase = "FadeOut";
-            yield return Animate(Profile.FadeOutSeconds, t => SetCurtain(t));
+            yield return Animate(Profile.FadeOutSeconds, t => caption.alpha = 1f - t);
             Notify(ScreenCovered);
             if (!IsRunning || generation != run || !isActiveAndEnabled) yield break;
             bool changesScene = !string.IsNullOrWhiteSpace(DestinationScene);
@@ -112,9 +122,15 @@ namespace TheLightenRoad.Player.Completion
                 if (operation != null) while (!operation.isDone) yield return null;
                 // Allow the destination's Awake/Start to establish its own chamber state first.
                 yield return null;
+                if (!IsRunning || generation != run || !isActiveAndEnabled) yield break;
                 var players = FindObjectsByType<PlayerRespawnController>(FindObjectsSortMode.None);
                 foreach (var player in players)
-                    if (player.gameObject.scene == SceneManager.GetActiveScene()) { Lock(player); break; }
+                    if (player.gameObject.scene == SceneManager.GetActiveScene())
+                    {
+                        Lock(player);
+                        if (animatedLantern != null) animatedLantern.SetPresentationVisibility(0f);
+                        break;
+                    }
             }
             else if (DestinationSpawn != null && lockedPlayer != null)
             {
@@ -125,9 +141,14 @@ namespace TheLightenRoad.Player.Completion
                 if (follow != null) follow.SetTarget(lockedPlayer.transform, true);
             }
             if (caption != null) caption.alpha = 0f;
-            if (glow != null) glow.intensity = 0f;
             Phase = "FadeIn";
-            yield return Animate(Profile.FadeInSeconds, t => SetCurtain(1f - t));
+            PlaySound(SoundEffectManager.Instance.FlareIgniteClip, .45f);
+            yield return Animate(Profile.FadeInSeconds, t =>
+            {
+                if (animatedLantern != null) animatedLantern.SetPresentationVisibility(previousLanternVisibility * t);
+                // Establish a little light before uncovering the destination.
+                SetCurtain(1f - Mathf.InverseLerp(.12f, 1f, t));
+            });
             Unlock();
             ReleaseOwnership();
             IsRunning = false;
@@ -155,14 +176,17 @@ namespace TheLightenRoad.Player.Completion
         private IEnumerator Animate(float seconds, System.Action<float> apply)
         {
             float elapsed = 0f;
+            double startedAt = Time.realtimeSinceStartupAsDouble;
             apply(0f);
             while (elapsed < Mathf.Max(.001f, seconds))
             {
-                elapsed += Time.unscaledDeltaTime;
+                // The triggering frame happened before this animation began. Start timing
+                // on the next frame, rather than consuming a long loading/editor frame at once.
+                yield return null;
+                elapsed = (float)(Time.realtimeSinceStartupAsDouble - startedAt);
                 float t = Mathf.Clamp01(elapsed / Mathf.Max(.001f, seconds));
                 apply(t * t * (3f - 2f * t));
-                if (sound != null) sound.volume = Profile.SoundVolume * SoundEffectManager.Instance.MasterSFXVolume;
-                yield return null;
+                if (sound != null) sound.volume = Profile.SoundVolume * soundGain * SoundEffectManager.Instance.MasterSFXVolume;
             }
             apply(1f);
         }
@@ -195,7 +219,9 @@ namespace TheLightenRoad.Player.Completion
             LegacyInteractionPollingGate.Acquire(this);
             lockedPlayer = player;
             var motor = player.GetComponent<PlayerMotor2D>();
-            gated = new Behaviour[] { motor, player.GetComponentInChildren<LanternController>(), player };
+            animatedLantern = player.GetComponentInChildren<LanternController>(true);
+            previousLanternVisibility = animatedLantern != null ? animatedLantern.PresentationVisibility : 1f;
+            gated = new Behaviour[] { motor, animatedLantern, player };
             body = motor != null ? motor.Body : player.GetComponent<Rigidbody2D>();
             if (body != null)
             {
@@ -214,10 +240,11 @@ namespace TheLightenRoad.Player.Completion
 
         private void Unlock()
         {
+            if (animatedLantern != null) animatedLantern.SetPresentationVisibility(previousLanternVisibility);
             if (body != null) { body.simulated = previousSimulation; body.linearVelocity = previousVelocity; }
             if (gated != null) for (int i = 0; i < gated.Length; i++)
                 if (gated[i] != null) gated[i].enabled = previousEnabled[i];
-            gated = null; body = null; lockedPlayer = null;
+            gated = null; body = null; lockedPlayer = null; animatedLantern = null;
         }
         private void ReleaseOwnership()
         {
@@ -229,16 +256,6 @@ namespace TheLightenRoad.Player.Completion
         {
             presentation = new GameObject("Completion / presentation");
             presentation.transform.SetParent(transform, false);
-            var lightObject = new GameObject("Warm light / arrival");
-            lightObject.transform.SetParent(presentation.transform, false);
-            lightObject.transform.position = transform.position;
-            glow = lightObject.AddComponent<Light2D>();
-            glow.lightType = Light2D.LightType.Point;
-            glow.color = Profile.LightColor;
-            glow.pointLightOuterRadius = .2f;
-            glow.pointLightInnerRadius = 0f;
-            glow.intensity = 0f;
-
             var canvasObject = new GameObject("Completion / overlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
             canvasObject.transform.SetParent(presentation.transform, false);
             var canvas = canvasObject.GetComponent<Canvas>();
@@ -256,13 +273,8 @@ namespace TheLightenRoad.Player.Completion
             caption.blocksRaycasts = false; caption.interactable = false; caption.alpha = 0f;
             captionRect = card.GetComponent<RectTransform>();
             Stretch(captionRect);
-            // A local dark glow preserves the surrounding scene instead of covering it
-            // with an opaque, full-width notification strip.
-            var backdrop = Image("Title shadow", card.transform, new Color(.008f, .008f, .006f, .94f));
-            backdrop.sprite = ArchiveInterfaceStyle.SoftGlow;
-            backdrop.rectTransform.sizeDelta = new Vector2(1280, 480);
             Text(Profile.Eyebrow, card.transform, 48f, 24f, new Color(.75f, .66f, .51f), 2f);
-            Text(Profile.Title, card.transform, -3f, 48f, new Color(.94f, .90f, .81f), 2f);
+            title = Text(Profile.Title, card.transform, -3f, 48f, new Color(.94f, .90f, .81f), 2f);
             if (!string.IsNullOrWhiteSpace(Profile.Subtitle))
                 Text(Profile.Subtitle, card.transform, -61f, 20f, new Color(.73f, .71f, .64f), .5f);
             var seal = Image("Ember mark", card.transform, Profile.LightColor);
@@ -275,12 +287,18 @@ namespace TheLightenRoad.Player.Completion
                 Text(memento.Value ? "MEMENTO RECOVERED" : "MEMENTO NOT FOUND", card.transform, -82f, 20f,
                     memento.Value ? new Color(.92f, .78f, .53f) : new Color(.67f, .65f, .58f), 1f);
 
-            // The curtain must draw above the caption to conceal the scene swap completely.
-            curtain.transform.SetAsLastSibling();
             sound = presentation.AddComponent<AudioSource>();
             sound.playOnAwake = false; sound.spatialBlend = 0f;
-            sound.clip = Profile.CompletionSound;
             sound.volume = Profile.SoundVolume * SoundEffectManager.Instance.MasterSFXVolume;
+        }
+
+        private void PlaySound(AudioClip clip, float gain = 1f)
+        {
+            if (clip == null || sound == null) return;
+            soundGain = gain;
+            sound.clip = clip;
+            sound.volume = Profile.SoundVolume * soundGain * SoundEffectManager.Instance.MasterSFXVolume;
+            sound.Play();
         }
 
         private static bool? CheckSceneMemento()
@@ -314,11 +332,9 @@ namespace TheLightenRoad.Player.Completion
         private void ApplyReveal(float t)
         {
             bool reduced = MenuPreferences.ReducedMotion;
-            glow.pointLightOuterRadius = Mathf.Lerp(.3f, Profile.LightRadius, reduced ? 1f : t);
-            glow.pointLightInnerRadius = glow.pointLightOuterRadius * .18f;
-            glow.intensity = Profile.LightIntensity * t;
-            caption.alpha = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.2f, 1f, t));
-            captionRect.anchoredPosition = new Vector2(0, 90f + (reduced ? 0 : Mathf.Lerp(-5, 0, t)));
+            caption.alpha = t;
+            captionRect.anchoredPosition = new Vector2(0, reduced ? 0 : Mathf.Lerp(-6, 0, t));
+            title.characterSpacing = reduced ? 2f : Mathf.Lerp(7f, 2f, t);
         }
 
         private static Image Image(string name, Transform parent, Color color)
@@ -327,7 +343,7 @@ namespace TheLightenRoad.Player.Completion
             go.transform.SetParent(parent, false);
             var image = go.GetComponent<Image>(); image.color = color; image.raycastTarget = false; return image;
         }
-        private void Text(string words, Transform parent, float y, float size, Color color, float spacing)
+        private TMP_Text Text(string words, Transform parent, float y, float size, Color color, float spacing)
         {
             var go = new GameObject(words, typeof(RectTransform), typeof(TextMeshProUGUI)); go.transform.SetParent(parent, false);
             var label = go.GetComponent<TextMeshProUGUI>();
@@ -337,18 +353,19 @@ namespace TheLightenRoad.Player.Completion
             label.raycastTarget = false;
             label.rectTransform.sizeDelta = new Vector2(1000, 64);
             label.rectTransform.anchoredPosition = new Vector2(0, y);
+            return label;
         }
         private static void Stretch(RectTransform rect)
         {
             rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
         }
-        private void SetCurtain(float alpha) => curtain.color = new Color(.012f, .019f, .017f, Mathf.Clamp01(alpha));
+        private void SetCurtain(float alpha) => curtain.color = new Color(0f, 0f, 0f, Mathf.Clamp01(alpha));
         private void Cleanup()
         {
             if (sound != null) sound.Stop();
             if (presentation != null) { presentation.SetActive(false); Destroy(presentation); }
-            curtain = null; caption = null; glow = null;
+            curtain = null; caption = null; title = null;
         }
         private void OnDisable()
         {

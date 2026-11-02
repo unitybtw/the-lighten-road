@@ -115,17 +115,8 @@ namespace TheLightenRoad.Sirac.TestChamber
                 {
                     completionSequence = gameObject.AddComponent<ChamberCompletionSequence>();
                     var profile = ScriptableObject.CreateInstance<ChamberCompletionProfile>();
-                    profile.Eyebrow = "CHAMBER CONQUERED";
                     profile.Title = "ARCHIVE TEST CHAMBER";
-                    profile.Subtitle = "ALL PROTOCOL TESTS EXECUTED AND MASTERED";
                     profile.Font = fontAsset;
-                    profile.LightColor = new Color(1f, 0.74f, 0.35f);
-                    profile.LightRadius = 12f;
-                    profile.LightIntensity = 1.4f;
-                    profile.RevealSeconds = 1.1f;
-                    profile.HoldSeconds = 1.3f;
-                    profile.FadeOutSeconds = 0.8f;
-                    profile.FadeInSeconds = 0.8f;
                     completionSequence.Profile = profile;
                     completionSequence.DestinationScene = "Assets/_Project/Scenes/Frontend/MainMenu.unity";
                 }

@@ -45,6 +45,27 @@ public sealed class LanternControllerTests
     }
 
     [Test]
+    public void PresentationVisibilityChangesRealLightWithoutChangingScoutOrFuel()
+    {
+        controller.EnableFlicker=false;
+        controller.SetFlared(true);controller.TickScout(controller.TransitionDuration);
+        int charges=fuel.TotalCharges;float timer=controller.FlareTimer;
+        controller.enabled=false;
+        controller.SetPresentationVisibility(.5f);
+        Assert.That(controller.LanternLight.intensity,Is.EqualTo(controller.FlareIntensity*.5f).Within(.001f));
+        Assert.That(controller.LanternLight.pointLightOuterRadius,Is.LessThan(controller.FlareRadius));
+        controller.SetPresentationVisibility(0f);
+        Assert.That(controller.LanternLight.intensity,Is.Zero);
+        Assert.That(controller.LanternLight.pointLightOuterRadius,Is.EqualTo(.001f).Within(.0001f));
+        controller.LanternLight.enabled=false;
+        controller.SetPresentationVisibility(1f);
+        Assert.That(controller.LanternLight.enabled,Is.False,"Presentation must preserve authored light enable state.");
+        Assert.That(controller.FlareTimer,Is.EqualTo(timer));
+        Assert.That(fuel.TotalCharges,Is.EqualTo(charges));
+        Assert.That(controller.HasActiveScout,Is.True);
+    }
+
+    [Test]
     public void ToggleFlareModeConsumesOneWholeEmberAndSetsScoutTimer()
     {
         fuel.Initialize(6f, 10f);

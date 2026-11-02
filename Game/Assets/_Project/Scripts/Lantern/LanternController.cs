@@ -69,6 +69,7 @@ namespace TheLightenRoad.Lantern
         private bool activeScout;
         private bool releasing;
         private bool reservingCharge;
+        private float presentationVisibility = 1f;
 
         /// <summary>Global active instance reference for fast zero-allocation access.</summary>
         public static LanternController ActiveInstance { get; private set; }
@@ -81,6 +82,13 @@ namespace TheLightenRoad.Lantern
         public event System.Action EmberBroken;
 
         public bool IsFlared { get; private set; }
+        /// <summary>Visual gain for scene transitions; does not spend fuel or advance the scout timeline.</summary>
+        public float PresentationVisibility => presentationVisibility;
+        public void SetPresentationVisibility(float visibility)
+        {
+            presentationVisibility = float.IsNaN(visibility) ? 1f : Mathf.Clamp01(visibility);
+            ApplyLight();
+        }
         public bool ShowDebugOverlay { get => showDebugOverlay; set => showDebugOverlay = value; }
         public LanternFuel Fuel => fuel != null ? fuel : (fuel = GetComponent<LanternFuel>());
         public bool IsLowFuel => fuel != null && fuel.NormalizedFuel <= lowFuelThreshold;
@@ -293,8 +301,9 @@ namespace TheLightenRoad.Lantern
 
             float passiveIntensity = fuel != null && !fuel.IsEmpty ? dimIntensity : 0f;
             float passiveRadius = passiveIntensity > 0f ? dimRadius : 0.001f;
-            lanternLight.intensity = Mathf.Lerp(passiveIntensity, flareIntensity, flareBlend) * pulse * flicker;
-            lanternLight.pointLightOuterRadius = Mathf.Lerp(passiveRadius, flareRadius, flareBlend) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
+            lanternLight.intensity = Mathf.Lerp(passiveIntensity, flareIntensity, flareBlend) * pulse * flicker * presentationVisibility;
+            float radius = Mathf.Lerp(passiveRadius, flareRadius, flareBlend) * pulse * (1f + (flicker - 1f) * (flickerRadius / Mathf.Max(0.001f, flickerIntensity)));
+            lanternLight.pointLightOuterRadius = Mathf.Lerp(.001f, radius, presentationVisibility);
         }
 
         private void OnGUI()

@@ -1,0 +1,38 @@
+[
+  {
+    "shot": "01-extinguishing",
+    "seconds": 0.408662915,
+    "phase": "Extinguish",
+    "visibility": 0.6402355,
+    "curtain": 0.219225019,
+    "title": 0.0,
+    "scene": "FurkanTutorial"
+  },
+  {
+    "shot": "02-title",
+    "seconds": 1.67572272,
+    "phase": "Hold",
+    "visibility": 0.0,
+    "curtain": 1.0,
+    "title": 1.0,
+    "scene": "FurkanTutorial"
+  },
+  {
+    "shot": "03-relighting",
+    "seconds": 3.83606434,
+    "phase": "FadeIn",
+    "visibility": 0.360529035,
+    "curtain": 0.7266716,
+    "title": 0.0,
+    "scene": "ArchiveTestChamber"
+  },
+  {
+    "shot": "04-arrived",
+    "seconds": 4.45399427,
+    "phase": "FadeIn",
+    "visibility": 0.971243,
+    "curtain": 0.0326783657,
+    "title": 0.0,
+    "scene": "ArchiveTestChamber"
+  }
+]
