@@ -10,6 +10,52 @@ public sealed class EmberMagnetismTests
     private GameObject player;
     private GameObject pickup;
 
+    [Test]
+    public void MagnetismStopsIfTheLanternFillsDuringFlight()
+    {
+        player = new GameObject("Lantern");
+        var fuel = player.AddComponent<LanternFuel>();
+        var lantern = player.AddComponent<LanternController>();
+        fuel.Initialize(4f, 8f);
+        pickup = new GameObject("Ember");
+        pickup.AddComponent<CircleCollider2D>();
+        var ember = pickup.AddComponent<EmberPickup>();
+        ember.SetTargetLantern(lantern);
+        ember.StartMagnetism(fuel);
+        Assert.That(ember.SparkTrail.emitting, Is.True);
+        fuel.Initialize(8f, 8f);
+        ember.Tick(.02f);
+        Assert.That(ember.IsMagnetizing, Is.False);
+        Assert.That(ember.SparkTrail.emitting, Is.False);
+        Assert.That(ember.IsCollected, Is.False);
+        fuel.Initialize(4f, 8f);
+        Assert.That(ember.TryCollect(fuel), Is.True);
+    }
+
+    [Test]
+    public void DisabledLanternLightDoesNotIlluminateAnEmber()
+    {
+        player = new GameObject("Lantern");
+        player.AddComponent<LanternFuel>();
+        var lightObject = new GameObject("Light");
+        lightObject.transform.SetParent(player.transform);
+        var light = lightObject.AddComponent<UnityEngine.Rendering.Universal.Light2D>();
+        light.lightType = UnityEngine.Rendering.Universal.Light2D.LightType.Point;
+        var lantern = player.AddComponent<LanternController>();
+        light.enabled = false;
+        pickup = new GameObject("Ember");
+        pickup.AddComponent<CircleCollider2D>();
+        var ember = pickup.AddComponent<EmberPickup>();
+        ember.EnableMagnetism = false;
+        ember.SetTargetLantern(lantern);
+        ember.Tick(.5f);
+        Assert.That(ember.IsIlluminated, Is.False);
+        Assert.That(ember.ReactionProgress, Is.Zero);
+        light.enabled = true;
+        ember.Tick(.5f);
+        Assert.That(ember.IsIlluminated, Is.True);
+    }
+
     [UnityTearDown]
     public IEnumerator TearDown()
     {

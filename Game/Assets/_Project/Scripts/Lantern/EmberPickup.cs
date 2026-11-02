@@ -57,6 +57,7 @@ namespace TheLightenRoad.Lantern
         private TrailRenderer sparkTrail;
         private Transform visualTransform;
         private Vector3 initialVisualLocalPosition;
+        private Quaternion initialVisualLocalRotation;
         private Color baseVisualColor = new Color(1f, 0.48f, 0.12f, 1f);
         private float reactionProgress;
         private bool isIlluminated;
@@ -88,6 +89,11 @@ namespace TheLightenRoad.Lantern
 
         public void SetTargetLantern(LanternController lantern)
         {
+            if (cachedLantern != lantern)
+            {
+                CancelMagnetism();
+                targetFuel = null;
+            }
             cachedLantern = lantern;
         }
 
@@ -111,6 +117,7 @@ namespace TheLightenRoad.Lantern
             {
                 visualTransform = visualRenderer.transform;
                 initialVisualLocalPosition = visualTransform.localPosition;
+                initialVisualLocalRotation = visualTransform.localRotation;
                 baseVisualColor = visualRenderer.color;
                 if (baseVisualColor.a <= 0.01f)
                 {
@@ -262,6 +269,9 @@ namespace TheLightenRoad.Lantern
                 CheckMagnetismTrigger();
             }
 
+            // A fully dormant crystal has no visual state to update each frame.
+            if (!isIlluminated && reactionProgress <= 0f) return;
+
             float targetReaction = isIlluminated ? 1f : 0f;
             float speed = isIlluminated ? (1f / Mathf.Max(0.01f, flareUpDuration)) : (1f / Mathf.Max(0.01f, coolDownDuration));
             reactionProgress = Mathf.MoveTowards(reactionProgress, targetReaction, speed * dt);
@@ -311,17 +321,15 @@ namespace TheLightenRoad.Lantern
 
         private void TickMagnetism(float dt)
         {
+            // Another pickup or a state change can fill the lantern during flight.
+            if (cachedLantern == null || !cachedLantern.gameObject.activeInHierarchy ||
+                targetFuel == null || fuelAmount <= 0f || targetFuel.Capacity - targetFuel.CurrentFuel < fuelAmount)
+            {
+                CancelMagnetism();
+                return;
+            }
             isIlluminated = true;
             reactionProgress = 1f;
-            if (cachedLantern == null || targetFuel == null)
-            {
-                cachedLantern = FindAnyObjectByType<LanternController>();
-                if (cachedLantern != null && targetFuel == null)
-                {
-                    targetFuel = cachedLantern.GetComponentInParent<LanternFuel>();
-                }
-                if (cachedLantern == null || targetFuel == null) return;
-            }
 
             Vector3 targetPos = cachedLantern.LanternLight != null ? cachedLantern.LanternLight.transform.position : cachedLantern.transform.position;
             Vector3 diff = targetPos - transform.position;
@@ -346,14 +354,24 @@ namespace TheLightenRoad.Lantern
             ApplyReaction(1f);
         }
 
+        private void CancelMagnetism()
+        {
+            if (isMagnetizing && visualTransform != null)
+                visualTransform.localRotation = initialVisualLocalRotation;
+            isMagnetizing = false;
+            magnetVelocity = Vector3.zero;
+            if (sparkTrail != null) sparkTrail.emitting = false;
+        }
+
         private void CheckLightStatus()
         {
             if (cachedLantern == null || !cachedLantern.gameObject.activeInHierarchy)
             {
-                cachedLantern = LanternController.ActiveInstance ?? FindAnyObjectByType<LanternController>();
+                SetTargetLantern(LanternController.ActiveInstance ?? FindAnyObjectByType<LanternController>());
             }
 
-            if (cachedLantern == null || cachedLantern.LanternLight == null || cachedLantern.LanternLight.intensity <= 0f)
+            if (cachedLantern == null || cachedLantern.LanternLight == null ||
+                !cachedLantern.LanternLight.isActiveAndEnabled || cachedLantern.LanternLight.intensity <= 0f)
             {
                 isIlluminated = false;
                 return;
