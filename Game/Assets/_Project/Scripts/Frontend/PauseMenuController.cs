@@ -18,12 +18,8 @@ using UnityEngine.UI;
 namespace TheLightenRoad.Frontend
 {
     /// <summary>
-    /// In-game pause menu and loop controller.
-    /// Redesigned to match the Main Menu's frameless, ornate Hollow-Knight / Ori ethereal
-    /// midnight-archive aesthetic: custom typography, authentic Hollow-Knight crests,
-    /// soft radial lantern glow auras, frameless action buttons with MenuButtonMotion wings,
-    /// rounded capsule sliders with circular anti-aliased glowing handles,
-    /// dynamic chamber title and memento recovery badges, and audio/display/motion settings.
+    /// In-game pause menu with a clear action list, current chamber and lantern status,
+    /// readable settings and controls, and confirmation before restarting or leaving.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed partial class PauseMenuController : MonoBehaviour
@@ -47,8 +43,8 @@ namespace TheLightenRoad.Frontend
         [SerializeField] private TMP_FontAsset font;
 
         // Moonlight & Silver Mist + Warm Ember Palette matching MainMenuController
-        private readonly Color radiantIvory = new Color32(236, 242, 252, 255);
-        private readonly Color moonlightSilver = new Color32(180, 198, 224, 240);
+        private readonly Color radiantIvory = new Color32(235, 228, 212, 255);
+        private readonly Color moonlightSilver = new Color32(179, 174, 163, 255);
         private readonly Color mutedIndigo = new Color32(118, 136, 166, 210);
         private readonly Color silverBorder = new Color32(150, 174, 210, 115);
         private readonly Color amberGold = new Color32(255, 174, 66, 255);
@@ -62,6 +58,8 @@ namespace TheLightenRoad.Frontend
         private GameObject controlsPanel;
         private TMP_Text chamberTitleLabel;
         private TMP_Text mementoBadgeLabel;
+        private TMP_Text currentFuelLabel, pauseActionHint;
+        private Image pauseLanternFlame;
 
         private Slider masterSlider;
         private Slider musicSlider;
@@ -82,7 +80,6 @@ namespace TheLightenRoad.Frontend
         private TMP_Text pauseLeftBumperText, pauseRightBumperText;
 
         private RectTransform modalRect;
-        private RectTransform titleGlowRect;
         private CanvasGroup mainPanelGroup;
         private CanvasGroup settingsPanelGroup;
         private CanvasGroup controlsPanelGroup;
@@ -94,7 +91,6 @@ namespace TheLightenRoad.Frontend
         private Sprite topFiligreeSprite;
         private Sprite bottomCrestSprite;
         private Sprite buttonPointerSprite;
-        private Sprite vignetteBlurSprite;
         private Sprite roundTrackSprite;
         private Sprite roundFillSprite;
         private Sprite thinBorderSprite;
@@ -181,7 +177,6 @@ namespace TheLightenRoad.Frontend
 
             filigreeSprite = CreateOrnateFiligreeSprite(512, 64);
             softRadialSprite = CreateSoftRadialSprite(128);
-            vignetteBlurSprite = CreateVignetteBlurSprite(256);
             roundTrackSprite = CreateRoundedCapsuleSprite(24, 8, new Color(0.55f, 0.68f, 0.86f, 0.35f), 4);
             roundFillSprite = CreateRoundedCapsuleSprite(24, 8, amberGold, 4);
             thinBorderSprite = CreateThinBorderBoxSprite(36, 36, 4, 2f);
@@ -598,28 +593,36 @@ namespace TheLightenRoad.Frontend
         private void UpdateChamberInfo()
         {
             string sceneName = SceneManager.GetActiveScene().name;
-            string chamberName = "RUINED ARCHIVE";
+            string chamberName = "Ruined Archive";
 
             if (sceneName == "FirstLightTutorial")
             {
-                chamberName = "PROLOGUE : FIRST LIGHT";
+                chamberName = "First Light";
             }
             else if (sceneName.Contains("Furkan"))
             {
-                chamberName = "CHAMBER 01-02 : THE FIRST LIGHT";
+                chamberName = "The First Light";
             }
             else if (sceneName.Contains("Kemal"))
             {
-                chamberName = "CHAMBER 02 : THE FLOODED MECHANISMS";
+                chamberName = "The Flooded Mechanisms";
             }
             else if (sceneName.Contains("ArchiveTest"))
             {
-                chamberName = "CHAMBER 03 : CALIBRATION SANCTUARY";
+                chamberName = "Archive Test Chamber";
             }
 
             if (chamberTitleLabel != null)
             {
                 chamberTitleLabel.text = chamberName;
+            }
+
+            if (currentFuelLabel != null)
+            {
+                var fuel = LanternController.ActiveInstance != null ? LanternController.ActiveInstance.Fuel : null;
+                currentFuelLabel.gameObject.SetActive(fuel != null);
+                if (fuel != null) currentFuelLabel.text = $"{fuel.TotalEmbers} / {Mathf.FloorToInt(fuel.Capacity / 2f)} embers";
+                if (pauseLanternFlame != null) pauseLanternFlame.enabled = fuel != null && !fuel.IsEmpty;
             }
 
             if (mementoBadgeLabel != null)
@@ -640,12 +643,12 @@ namespace TheLightenRoad.Frontend
                 if (!tracksMemento) return;
                 if (hasMemento)
                 {
-                    mementoBadgeLabel.text = "ARCHIVE MEMENTO RECOVERED\n<size=13><color=#B0BED6>\"The deep stone whispers of paths that open only in high flame.\"</color></size>";
+                    mementoBadgeLabel.text = "Archive memento\nRecovered";
                     mementoBadgeLabel.color = amberGold;
                 }
                 else
                 {
-                    mementoBadgeLabel.text = "ARCHIVE MEMENTO UNFOUND\n<size=13><color=#76849E>Scout forgotten ledges with radiant flare to reveal the ancient seal.</color></size>";
+                    mementoBadgeLabel.text = "Archive memento\nNot recovered";
                     mementoBadgeLabel.color = moonlightSilver;
                 }
             }
@@ -756,8 +759,7 @@ namespace TheLightenRoad.Frontend
             bRect.anchorMax = Vector2.one;
             bRect.sizeDelta = Vector2.zero;
             var bImg = backdrop.GetComponent<Image>();
-            bImg.sprite = vignetteBlurSprite;
-            bImg.color = Color.white;
+            bImg.color = new Color(0.025f, 0.028f, 0.027f, 0.94f);
             bImg.raycastTarget = true;
 
             // Central Frameless Modal Container
@@ -779,33 +781,7 @@ namespace TheLightenRoad.Frontend
             headerRect.sizeDelta = new Vector2(920f, 400f);
             headerRect.anchoredPosition = Vector2.zero;
 
-            // Soft Radial Moonlight Glow behind Title
-            var titleGlow = CreateAnchoredRect("Title Soft Lantern Glow", mainHeader.transform, new Vector2(760f, 240f), new Vector2(0.5f, 0.5f), new Vector2(0f, 300f));
-            var glowImg = titleGlow.gameObject.AddComponent<Image>();
-            glowImg.sprite = softRadialSprite;
-            glowImg.color = new Color(0.65f, 0.78f, 0.96f, 0.16f);
-            glowImg.raycastTarget = false;
-            titleGlowRect = titleGlow;
-
-            // Whispered Eyebrow
-            var eyebrow = CreateLabel("Eyebrow", mainHeader.transform, new Vector2(0f, 335f), new Vector2(620f, 24f),
-                "GAME PAUSED", 12f, TextAlignmentOptions.Center, moonlightSilver);
-            eyebrow.characterSpacing = 6.5f;
-
-            // Monumental Center Title: PAUSED
-            var title = CreateLabel("Title", mainHeader.transform, new Vector2(0f, 290f), new Vector2(640f, 60f),
-                "PAUSED", 52f, TextAlignmentOptions.Center, radiantIvory);
-            title.fontStyle = FontStyles.Bold;
-            title.characterSpacing = 10f;
-
-            // Chamber Title Whisper
-            chamberTitleLabel = CreateLabel("ChamberTitle", mainHeader.transform, new Vector2(0f, 240f), new Vector2(640f, 26f),
-                "CHAMBER 01-02 : THE FIRST LIGHT", 13.5f, TextAlignmentOptions.Center, amberGold);
-            chamberTitleLabel.characterSpacing = 4f;
-
-            // Memento Recovery Badge
-            mementoBadgeLabel = CreateLabel("MementoBadge", mainHeader.transform, new Vector2(0f, 195f), new Vector2(680f, 40f),
-                "", 14f, TextAlignmentOptions.Center, radiantIvory);
+            BuildPauseHeader(mainHeader.transform);
 
             // Sub-panels (Frameless Center Stage)
             BuildMainPanel(modal.transform);
@@ -829,34 +805,19 @@ namespace TheLightenRoad.Frontend
             r.sizeDelta = new Vector2(680f, 440f);
             r.anchoredPosition = new Vector2(0f, 0f);
 
-            if (topFiligreeSprite != null)
-            {
-                var topFiligree = CreateAnchoredRect("Pause Top Filigree", r, new Vector2(440f, 44f), new Vector2(0.5f, 0.5f), new Vector2(0f, 156f));
-                var tImg = topFiligree.gameObject.AddComponent<Image>();
-                tImg.sprite = topFiligreeSprite;
-                tImg.color = new Color(0.86f, 0.92f, 1.0f, 0.85f);
-                tImg.raycastTarget = false;
-            }
+            r.sizeDelta = new Vector2(540f, 420f);
+            r.anchoredPosition = new Vector2(-280f, -10f);
 
-            float startY = 100f;
-            float stepY = 66f;
+            resumeButton = CreatePauseAction("ResumeButton", r, "Continue", "Return to your current attempt.", 140f, Resume);
+            var settingsBtn = CreatePauseAction("SettingsButton", r, "Settings", "Adjust audio, display and motion.", 62f, ShowSettingsView);
+            var controlsBtn = CreatePauseAction("ControlsButton", r, "Controls", "View keyboard and controller bindings.", -16f, ShowControlsView);
+            var restartBtn = CreatePauseAction("RestartButton", r, "Restart chamber", "Start again from the last checkpoint.", -114f, RequestRestartChamber);
+            var quitBtn = CreatePauseAction("QuitButton", r, "Return to title", "Leave this attempt and return to the title screen.", -192f, RequestQuitToMainMenu);
 
-            resumeButton = CreateFramelessMenuButton("ResumeButton", r, "Resume", "Return to game", new Vector2(0f, startY), Resume, isPrimary: true);
-            var controlsBtn = CreateFramelessMenuButton("ControlsButton", r, "Controls", "Keybindings & movement mechanics", new Vector2(0f, startY - stepY), ShowControlsView);
-            var settingsBtn = CreateFramelessMenuButton("SettingsButton", r, "Settings", "Audio, display & motion preferences", new Vector2(0f, startY - stepY * 2), ShowSettingsView);
-            var restartBtn = CreateFramelessMenuButton("RestartButton", r, "Restart Level", "Restart from the last checkpoint", new Vector2(0f, startY - stepY * 3), RequestRestartChamber);
-            var quitBtn = CreateFramelessMenuButton("QuitButton", r, "Quit to Title", "Save preferences and return to title screen", new Vector2(0f, startY - stepY * 4), RequestQuitToMainMenu);
-
-            if (bottomCrestSprite != null)
-            {
-                var botCrest = CreateAnchoredRect("Pause Bottom Filigree", r, new Vector2(460f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, -220f));
-                var bImg = botCrest.gameObject.AddComponent<Image>();
-                bImg.sprite = bottomCrestSprite;
-                bImg.color = new Color(0.86f, 0.92f, 1.0f, 0.80f);
-                bImg.raycastTarget = false;
-            }
-
-            var navButtons = new[] { resumeButton, controlsBtn, settingsBtn, restartBtn, quitBtn };
+            var rule = CreateAnchoredRect("Recovery actions separator", r, new Vector2(480, 1), Vector2.one * .5f, new Vector2(0, -64)).gameObject.AddComponent<Image>();
+            rule.color = new Color(0.7f, 0.62f, 0.44f, .22f);
+            rule.raycastTarget = false;
+            var navButtons = new[] { resumeButton, settingsBtn, controlsBtn, restartBtn, quitBtn };
             for (int i = 0; i < navButtons.Length; i++)
             {
                 var nav = new Navigation
@@ -1332,8 +1293,8 @@ namespace TheLightenRoad.Frontend
             bool compactFooter = currentView != "controls";
             var selectSlot = (RectTransform)pauseFooterSelectIcon.transform.parent;
             var backSlot = (RectTransform)pauseFooterBackIcon.transform.parent;
-            selectSlot.anchoredPosition = new Vector2(compactFooter ? -180 : -390, 0);
-            backSlot.anchoredPosition = new Vector2(compactFooter ? 180 : -130, 0);
+            selectSlot.anchoredPosition = new Vector2(compactFooter ? -180 : -450, 0);
+            backSlot.anchoredPosition = new Vector2(compactFooter ? 180 : -150, 0);
 
             // Slot 0: Select
             if (pauseFooterSelectIcon != null)
@@ -1413,141 +1374,84 @@ namespace TheLightenRoad.Frontend
             }
         }
 
-        private Button CreateFramelessMenuButton(
-            string name,
-            RectTransform parent,
-            string title,
-            string subtitle,
-            Vector2 pos,
-            UnityAction onClick,
-            bool isPrimary = false)
+        private void BuildPauseHeader(Transform parent)
         {
-            var cardSize = new Vector2(isPrimary ? 540f : 500f, isPrimary ? 62f : 54f);
-            var itemRect = CreateAnchoredRect(name, parent, cardSize, new Vector2(0.5f, 0.5f), pos);
+            var caption = CreateLabel("Eyebrow", parent, new Vector2(-530, 300), new Vector2(500, 28),
+                "THE LIGHTEN ROAD", 18, TextAlignmentOptions.Left, moonlightSilver);
+            caption.rectTransform.pivot = new Vector2(0, .5f);
+            var title = CreateLabel("Title", parent, new Vector2(-530, 244), new Vector2(500, 68),
+                "Paused", 54, TextAlignmentOptions.Left, radiantIvory);
+            title.rectTransform.pivot = new Vector2(0, .5f);
+            title.characterSpacing = 1;
 
-            var glowRect = CreateAnchoredRect("Soft Lantern Aura", itemRect, new Vector2(cardSize.x + 80f, cardSize.y + 36f), new Vector2(0.5f, 0.5f), Vector2.zero);
-            var glowImg = glowRect.gameObject.AddComponent<Image>();
-            glowImg.sprite = softRadialSprite;
-            glowImg.color = Color.clear;
-            glowImg.raycastTarget = false;
+            var divider = CreateAnchoredRect("Pause column divider", parent, new Vector2(1, 428), Vector2.one * .5f, new Vector2(55, 15)).gameObject.AddComponent<Image>();
+            divider.color = new Color(.7f, .62f, .44f, .22f);
+            divider.raycastTarget = false;
+            var location = CreateLabel("Location caption", parent, new Vector2(140, 184), new Vector2(420, 30),
+                "CURRENT CHAMBER", 18, TextAlignmentOptions.Left, moonlightSilver);
+            location.rectTransform.pivot = new Vector2(0, .5f);
+            chamberTitleLabel = CreateLabel("ChamberTitle", parent, new Vector2(140, 118), new Vector2(420, 82),
+                "Ruined Archive", 30, TextAlignmentOptions.TopLeft, radiantIvory);
+            chamberTitleLabel.rectTransform.pivot = new Vector2(0, .5f);
+            chamberTitleLabel.textWrappingMode = TextWrappingModes.Normal;
 
-            var plateRect = CreateStretchRect("Card Plate", itemRect);
-            var plateImg = plateRect.gameObject.AddComponent<Image>();
-            plateImg.sprite = thinBorderSprite;
-            plateImg.type = Image.Type.Sliced;
-            plateImg.color = Color.clear;
-            plateImg.raycastTarget = true;
-
-            var borderRect = CreateStretchRect("Card Border", itemRect);
-            var borderImg = borderRect.gameObject.AddComponent<Image>();
-            borderImg.sprite = thinBorderSprite;
-            borderImg.type = Image.Type.Sliced;
-            borderImg.color = Color.clear;
-            borderImg.raycastTarget = false;
-
-            var wingContainer = CreateStretchRect("Ornate Wings", itemRect);
-            var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
-            wingGroup.alpha = 0f;
-            wingGroup.blocksRaycasts = false;
-
-            float wingOffset = isPrimary ? 295f : 275f;
-            RectTransform leftWing = null;
-            RectTransform rightWing = null;
-
-            if (buttonPointerSprite != null)
-            {
-                leftWing = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(44f, 22f), new Vector2(0.5f, 0.5f), new Vector2(-wingOffset, 0f));
-                var leftImg = leftWing.gameObject.AddComponent<Image>();
-                leftImg.sprite = buttonPointerSprite;
-                leftImg.color = radiantIvory;
-                leftImg.raycastTarget = false;
-
-                rightWing = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(44f, 22f), new Vector2(0.5f, 0.5f), new Vector2(wingOffset, 0f));
-                rightWing.localScale = new Vector3(-1f, 1f, 1f);
-                var rightImg = rightWing.gameObject.AddComponent<Image>();
-                rightImg.sprite = buttonPointerSprite;
-                rightImg.color = radiantIvory;
-                rightImg.raycastTarget = false;
-
-                var lSpark = CreateAnchoredRect("Left Ember Spark", leftWing, new Vector2(6f, 6f), new Vector2(0.5f, 0.5f), new Vector2(21f, 0f));
-                lSpark.localEulerAngles = new Vector3(0f, 0f, 45f);
-                var lSparkImg = lSpark.gameObject.AddComponent<Image>();
-                lSparkImg.color = amberGold;
-                lSparkImg.raycastTarget = false;
-
-                var rSpark = CreateAnchoredRect("Right Ember Spark", rightWing, new Vector2(6f, 6f), new Vector2(0.5f, 0.5f), new Vector2(21f, 0f));
-                rSpark.localEulerAngles = new Vector3(0f, 0f, 45f);
-                var rSparkImg = rSpark.gameObject.AddComponent<Image>();
-                rSparkImg.color = amberGold;
-                rSparkImg.raycastTarget = false;
-            }
-            else
-            {
-                leftWing = CreateOrnateWingGraphic("Left Wing", wingContainer, new Vector2(-wingOffset, 0f), isLeft: true);
-                rightWing = CreateOrnateWingGraphic("Right Wing", wingContainer, new Vector2(wingOffset, 0f), isLeft: false);
-            }
-
-            var titleTxt = CreateLabel("Title", itemRect, new Vector2(0f, 8f), new Vector2(cardSize.x - 40f, 28f),
-                title.ToUpperInvariant(), isPrimary ? 28f : 25f, TextAlignmentOptions.Center, isPrimary ? amberGold : radiantIvory);
-            titleTxt.fontStyle = FontStyles.Normal;
-            titleTxt.characterSpacing = 1.4f;
-            wingOffset=Mathf.Clamp(titleTxt.preferredWidth*.5f+30f,90f,220f);
-
-            var subTxt = CreateLabel("Subtitle", itemRect, new Vector2(0f, -12f), new Vector2(cardSize.x - 40f, 18f),
-                subtitle, 11f, TextAlignmentOptions.Center, moonlightSilver);
-            subTxt.characterSpacing = 1.5f;
-
-            var lineRect = CreateAnchoredRect("Underline Filigree", itemRect, new Vector2(0f, 2.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, isPrimary ? -23f : -20f));
-            var lineImg = lineRect.gameObject.AddComponent<Image>();
-            lineImg.sprite = filigreeSprite;
-            lineImg.color = Color.clear;
-            lineImg.raycastTarget = false;
-
-            var btn = itemRect.gameObject.AddComponent<Button>();
-            btn.targetGraphic = plateImg;
-            btn.transition = Selectable.Transition.None;
-            if (onClick != null)
-            {
-                btn.onClick.AddListener(() =>
-                {
-                    if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
-                    onClick.Invoke();
-                });
-            }
-
-            var motion = itemRect.gameObject.AddComponent<MenuButtonMotion>();
-            motion.CardPlate = plateImg;
-            motion.BorderFrame = borderImg;
-            motion.Text = titleTxt;
-            motion.SubtitleText = subTxt;
-            motion.SoftGlow = glowImg;
-            motion.LeftWing = leftWing;
-            motion.RightWing = rightWing;
-            motion.WingGroup = wingGroup;
-            motion.UnderlineFiligree = lineImg;
-            motion.IsPrimaryAction = isPrimary;
-            motion.BaseWingOffset = wingOffset;
-
-            return btn;
+            var lantern = CreateAnchoredRect("Pause lantern", parent, new Vector2(54, 76), Vector2.one * .5f, new Vector2(168, -12));
+            var frame = lantern.gameObject.AddComponent<Image>();
+            frame.sprite = PixelSprites.LanternFrame;
+            frame.color = new Color(0.78f, .68f, .46f);
+            frame.preserveAspect = true;
+            frame.raycastTarget = false;
+            pauseLanternFlame = CreateAnchoredRect("Pause lantern flame", lantern, new Vector2(16, 24), Vector2.one * .5f, new Vector2(0, -3)).gameObject.AddComponent<Image>();
+            pauseLanternFlame.sprite = PixelSprites.Flame;
+            pauseLanternFlame.color = new Color(1f, .72f, .32f);
+            pauseLanternFlame.preserveAspect = true;
+            pauseLanternFlame.raycastTarget = false;
+            currentFuelLabel = CreateLabel("Current embers", parent, new Vector2(224, -12), new Vector2(340, 50),
+                "", 26, TextAlignmentOptions.Left, radiantIvory);
+            currentFuelLabel.rectTransform.pivot = new Vector2(0, .5f);
+            mementoBadgeLabel = CreateLabel("MementoBadge", parent, new Vector2(140, -106), new Vector2(420, 70),
+                "", 22, TextAlignmentOptions.TopLeft, moonlightSilver);
+            mementoBadgeLabel.rectTransform.pivot = new Vector2(0, .5f);
+            mementoBadgeLabel.textWrappingMode = TextWrappingModes.Normal;
+            pauseActionHint = CreateLabel("Pause action hint", parent, new Vector2(-530, -294), new Vector2(520, 62),
+                "Return to your current attempt.", 20, TextAlignmentOptions.TopLeft, moonlightSilver);
+            pauseActionHint.rectTransform.pivot = new Vector2(0, .5f);
+            pauseActionHint.textWrappingMode = TextWrappingModes.Normal;
+            foreach (var text in new[] { caption, location, currentFuelLabel, mementoBadgeLabel, pauseActionHint })
+                UsePauseBodyFont(text);
         }
 
-        private RectTransform CreateOrnateWingGraphic(string name, RectTransform parent, Vector2 pos, bool isLeft)
+        private static void UsePauseBodyFont(TMP_Text text)
         {
-            var wing = CreateAnchoredRect(name, parent, new Vector2(88f, 20f), new Vector2(0.5f, 0.5f), pos);
+            if (TMP_Settings.defaultFontAsset != null) text.font = TMP_Settings.defaultFontAsset;
+            text.characterSpacing = 0;
+        }
 
-            var stem = CreateAnchoredRect("Filigree Stem", wing, new Vector2(68f, 10f), new Vector2(0.5f, 0.5f), new Vector2(isLeft ? -6f : 6f, 0f));
-            var stemImg = stem.gameObject.AddComponent<Image>();
-            stemImg.sprite = filigreeSprite;
-            stemImg.color = amberGold;
-            stemImg.raycastTarget = false;
+        private Button CreatePauseAction(string name, RectTransform parent, string title, string hint, float y, UnityAction onClick)
+        {
+            var rect = CreateAnchoredRect(name, parent, new Vector2(540, 68), Vector2.one * .5f, new Vector2(0, y));
+            var hit = rect.gameObject.AddComponent<Image>();
+            hit.color = Color.clear;
+            var button = rect.gameObject.AddComponent<Button>();
+            button.targetGraphic = hit;
+            button.transition = Selectable.Transition.None;
+            button.onClick.AddListener(onClick);
 
-            var diamond = CreateAnchoredRect("Diamond Tip", wing, new Vector2(7f, 7f), new Vector2(0.5f, 0.5f), new Vector2(isLeft ? 30f : -30f, 0f));
-            diamond.localEulerAngles = new Vector3(0f, 0f, 45f);
-            var diamondImg = diamond.gameObject.AddComponent<Image>();
-            diamondImg.color = radiantIvory;
-            diamondImg.raycastTarget = false;
-
-            return wing;
+            var label = CreateLabel("Title", rect, new Vector2(-250, 0), new Vector2(480, 48), title, 30, TextAlignmentOptions.Left, radiantIvory);
+            label.rectTransform.pivot = new Vector2(0, .5f);
+            var marker = CreateAnchoredRect("Selection marker", rect, new Vector2(3, 26), Vector2.one * .5f, new Vector2(-270, 0));
+            var markerImage = marker.gameObject.AddComponent<Image>();
+            markerImage.color = amberGold;
+            markerImage.raycastTarget = false;
+            var group = marker.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0;
+            var motion = rect.gameObject.AddComponent<MenuButtonMotion>();
+            motion.Text = label;
+            motion.WingGroup = group;
+            motion.LeftAlignedItem = true;
+            motion.InitializeBasePositions(label.rectTransform.anchoredPosition, Vector2.zero, Vector2.zero);
+            motion.OnFocusedCallback = _ => { if (pauseActionHint != null) pauseActionHint.text = hint; };
+            return button;
         }
 
         private Button CreateEtherealActionButton(
@@ -2229,11 +2133,7 @@ namespace TheLightenRoad.Frontend
                 modalRect.localScale = new Vector3(scale, scale, 1f);
                 modalRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-24f, 0f, smooth));
             }
-            if (titleGlowRect != null)
-            {
-                float glowScale = Mathf.Lerp(0.70f, 1.0f, smooth);
-                titleGlowRect.localScale = new Vector3(glowScale, glowScale, 1f);
-            }
+
         }
 
         private void SetClosedVisualState()
@@ -2244,10 +2144,7 @@ namespace TheLightenRoad.Frontend
                 modalRect.localScale = Vector3.one;
                 modalRect.anchoredPosition = Vector2.zero;
             }
-            if (titleGlowRect != null)
-            {
-                titleGlowRect.localScale = Vector3.one;
-            }
+
         }
 
         private static float EaseOutCubic(float t)

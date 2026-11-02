@@ -45,11 +45,13 @@ namespace TheLightenRoad.Frontend
             lantern.color = new Color(1f, .85f, .59f);
             lantern.raycastTarget = false;
 
-            var eyebrow = CreateLabel("Decision caption", confirmationContent, new Vector2(0, 122), new Vector2(800, 32), "A MOMENT BEFORE YOU GO", 20, TextAlignmentOptions.Center, amberGold);
+            var eyebrow = CreateLabel("Decision caption", confirmationContent, new Vector2(0, 122), new Vector2(800, 32), "CONFIRM ACTION", 20, TextAlignmentOptions.Center, amberGold);
             eyebrow.characterSpacing = 3;
             confirmationTitle = CreateLabel("Decision title", confirmationContent, new Vector2(0, 64), new Vector2(900, 60), "", 38, TextAlignmentOptions.Center, radiantIvory);
             confirmationBody = CreateLabel("Decision explanation", confirmationContent, new Vector2(0, -22), new Vector2(800, 100), "", 24, TextAlignmentOptions.Center, moonlightSilver);
             confirmationBody.characterSpacing = 0;
+            UsePauseBodyFont(confirmationBody);
+            UsePauseBodyFont(eyebrow);
 
             confirmationCancelButton = CreateEtherealActionButton("Cancel decision", confirmationContent, "Keep exploring", new Vector2(-210, -142), CancelConfirmation, true, 360);
             confirmationAcceptButton = CreateEtherealActionButton("Confirm decision", confirmationContent, "Confirm", new Vector2(210, -142), ConfirmPendingAction, false, 360);

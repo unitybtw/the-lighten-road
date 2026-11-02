@@ -165,7 +165,7 @@ namespace TheLightenRoad.FirstLight.Tests
             yield return null;yield return null;
             Assert.That(overlay.alpha,Is.Zero,"Tutorial titles, hints and letterboxing must not draw above the pause menu.");
             var labels=pause.GetComponentsInChildren<TMPro.TMP_Text>(true);
-            Assert.That(labels.Single(t=>t.name=="ChamberTitle").text,Is.EqualTo("PROLOGUE : FIRST LIGHT"));
+            Assert.That(labels.Single(t=>t.name=="ChamberTitle").text,Is.EqualTo("First Light"));
             Assert.That(labels.Single(t=>t.name=="MementoBadge").gameObject.activeSelf,Is.False,"The prologue has no memento objective.");
             pause.RequestRestartChamber();pause.CancelConfirmation();pause.Resume();
             yield return null;yield return null;

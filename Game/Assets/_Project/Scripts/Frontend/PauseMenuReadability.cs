@@ -9,12 +9,14 @@ namespace TheLightenRoad.Frontend
         private void ApplyPauseReadability()
         {
             MenuReadability.EnlargeText(modalRect);
+            foreach(var text in modalRect.GetComponentsInChildren<TMP_Text>(true))
+                if(text.name=="Subtitle" || text.name=="Description") UsePauseBodyFont(text);
             var settingsRoot=(RectTransform)settingsPanel.transform;
             settingsRoot.sizeDelta=new Vector2(1040,720);
             var settingsTitle=settingsRoot.Find("SettingsTitle")?.GetComponent<TMP_Text>();
             if(settingsTitle!=null){settingsTitle.fontSize=32;settingsTitle.rectTransform.anchoredPosition=new Vector2(0,305);settingsTitle.rectTransform.sizeDelta=new Vector2(800,48);}
             var crown=settingsRoot.Find("Settings Top Filigree") as RectTransform;
-            if(crown!=null)crown.anchoredPosition=new Vector2(0,355);
+            if(crown!=null)crown.gameObject.SetActive(false);
             Transform[] rows={masterSlider.transform.parent,musicSlider.transform.parent,effectsSlider.transform.parent,fullscreenToggle.transform,vsyncToggle.transform,reducedMotionToggle.transform};
             for(int i=0;i<rows.Length;i++)
             { var r=(RectTransform)rows[i];MenuReadability.Row(r);r.anchoredPosition=new Vector2(0,220-i*78); }
@@ -25,7 +27,7 @@ namespace TheLightenRoad.Frontend
             var controlsRoot=(RectTransform)controlsPanel.transform;controlsRoot.sizeDelta=new Vector2(1040,760);
             var title=controlsRoot.Find("ControlsTitle")?.GetComponent<TMP_Text>();
             if(title!=null){title.fontSize=32;MenuReadability.Place(title.rectTransform,new Vector2(0,305),new Vector2(800,48));}
-            var ornament=controlsRoot.Find("Controls Top Filigree") as RectTransform;if(ornament!=null)ornament.anchoredPosition=new Vector2(0,355);
+            var ornament=controlsRoot.Find("Controls Top Filigree") as RectTransform;if(ornament!=null)ornament.gameObject.SetActive(false);
             var tabs=(RectTransform)controlsRoot.Find("Pause Controls Tabs");tabs.anchoredPosition=new Vector2(0,232);tabs.sizeDelta=new Vector2(1040,56);
             for(int i=0;i<3;i++)
             {
@@ -61,6 +63,14 @@ namespace TheLightenRoad.Frontend
             MenuReadability.Place((RectTransform)pauseVibrationButton.transform,new Vector2(196,-232),new Vector2(360,56));
             MenuReadability.Place((RectTransform)controlsBackButton.transform,new Vector2(0,-300),new Vector2(360,56));
             MenuReadability.Footer(pauseFooterBar);pauseFooterBar.anchoredPosition=new Vector2(0,-378);
+            pauseFooterBar.sizeDelta=new Vector2(1180,44);
+            foreach(var label in new[]{pauseFooterSelectText,pauseFooterBackText,pauseFooterResetText,pauseFooterTabText})
+            {
+                UsePauseBodyFont(label);label.fontSize=20;
+                label.rectTransform.sizeDelta=new Vector2(260,32);
+            }
+            ((RectTransform)pauseFooterResetIcon.transform.parent).anchoredPosition=new Vector2(150,0);
+            ((RectTransform)pauseFooterTabIcon.transform.parent).anchoredPosition=new Vector2(450,0);
             MenuReadability.RefreshFocus(modalRect);
             SetPauseControlsDeviceTab(selectedPauseControlsDeviceTab);
         }

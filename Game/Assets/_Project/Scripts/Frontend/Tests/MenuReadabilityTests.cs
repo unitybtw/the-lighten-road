@@ -133,6 +133,11 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(deviceTabs.Count(b=>b.transform.Find("Selection rule")!=null && b.transform.Find("Selection rule").gameObject.activeSelf),Is.EqualTo(1));
             Assert.That(deviceTabs.Where(b=>b.transform.Find("Wings Container")!=null).All(b=>!b.transform.Find("Wings Container").gameObject.activeSelf),Is.True);
             Capture(canvas,1280,720,"pause-controls-720p");AssertVisibleControlsFit(canvas,pause.transform);
+            var footer=pause.GetComponentsInChildren<RectTransform>().Single(r=>r.name=="Pause HollowKnight Footer");
+            var hints=footer.GetComponentsInChildren<TMP_Text>();
+            foreach(var hint in hints) Assert.That(hint.GetPreferredValues().x,Is.LessThanOrEqualTo(hint.rectTransform.rect.width+2),hint.text);
+            for(int i=0;i<hints.Length;i++)for(int j=i+1;j<hints.Length;j++)
+                Assert.That(RectOf(hints[i].rectTransform,canvas.transform).Overlaps(RectOf(hints[j].rectTransform,canvas.transform)),Is.False,"Footer hints must have separate space.");
             foreach(var badge in pause.ControlsPanel.GetComponentsInChildren<RectTransform>().Where(r=>r.name.EndsWith("Bumper Badge")))
                 Assert.That(badge.GetComponent<Image>().raycastTarget,Is.True);
             var labels=pause.ControlsPanel.GetComponentsInChildren<TMP_Text>().Where(t=>t.name=="Description");

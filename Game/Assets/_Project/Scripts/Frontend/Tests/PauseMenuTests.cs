@@ -1,5 +1,6 @@
 using TheLightenRoad.Input;
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using TheLightenRoad.Player;
 using UnityEngine;
@@ -60,6 +61,57 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(GameObject.Find("SettingsButton"), Is.Not.Null);
             Assert.That(GameObject.Find("RestartButton"), Is.Not.Null);
             Assert.That(GameObject.Find("QuitButton"), Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator PauseHomeKeepsActionsReadableAndSeparateAcrossCanvasSizes()
+        {
+            var fuelHost = new GameObject("Pause preview lantern");
+            fuelHost.AddComponent<TheLightenRoad.Lantern.LanternFuel>();
+            fuelHost.AddComponent<TheLightenRoad.Lantern.LanternController>();
+            try
+            {
+                pauseMenu.Pause();
+                yield return new WaitForSecondsRealtime(.3f);
+                var flame = pauseMenu.GetComponentsInChildren<Image>().Single(i => i.name == "Pause lantern flame");
+                Assert.That(flame.enabled, Is.True);
+                fuelHost.GetComponent<TheLightenRoad.Lantern.LanternFuel>().Initialize(0, 8);
+                pauseMenu.ShowMainView();
+                Assert.That(flame.enabled, Is.False, "An empty lantern must not display a lit flame.");
+                fuelHost.GetComponent<TheLightenRoad.Lantern.LanternFuel>().Initialize(6, 8);
+                pauseMenu.ShowMainView();
+                var buttons = pauseMenu.MainPanel.GetComponentsInChildren<Button>();
+                foreach (var button in buttons)
+                    Assert.That(((RectTransform)button.transform).rect.height, Is.GreaterThanOrEqualTo(64));
+                var settings = buttons.Single(b => b.name == "SettingsButton");
+                settings.GetComponent<MenuButtonMotion>().OnPointerEnter(null);
+                Assert.That(EventSystem.current.currentSelectedGameObject, Is.SameAs(settings.gameObject));
+                EventSystem.current.SetSelectedGameObject(buttons.Single(b => b.name == "ResumeButton").gameObject);
+                yield return new WaitForSecondsRealtime(.2f);
+                var canvas = pauseMenu.GetComponentInChildren<Canvas>();
+                foreach (var size in new[] { new Vector2Int(1920, 1080), new Vector2Int(1280, 720), new Vector2Int(1024, 768) })
+                {
+                    MenuReadabilityTests.Capture(canvas, size.x, size.y, "pause-home-" + size.x);
+                    var rects = buttons.Select(b => RelativeRect((RectTransform)b.transform, canvas.transform)).ToArray();
+                    for (int i = 0; i < rects.Length; i++)
+                    {
+                        var safe = ((RectTransform)canvas.transform).rect;
+                        Assert.That(safe.Contains(rects[i].min) && safe.Contains(rects[i].max), Is.True, buttons[i].name);
+                        for (int j = i + 1; j < rects.Length; j++) Assert.That(rects[i].Overlaps(rects[j]), Is.False);
+                    }
+                }
+                pauseMenu.RequestRestartChamber();
+                yield return new WaitForSecondsRealtime(.3f);
+                MenuReadabilityTests.Capture(canvas, 1280, 720, "pause-restart-confirmation");
+            }
+            finally { Object.DestroyImmediate(fuelHost); }
+        }
+
+        private static Rect RelativeRect(RectTransform rect, Transform canvas)
+        {
+            var corners = new Vector3[4]; rect.GetWorldCorners(corners);
+            var low = canvas.InverseTransformPoint(corners[0]); var high = canvas.InverseTransformPoint(corners[2]);
+            return Rect.MinMaxRect(low.x, low.y, high.x, high.y);
         }
 
         [UnityTest]
