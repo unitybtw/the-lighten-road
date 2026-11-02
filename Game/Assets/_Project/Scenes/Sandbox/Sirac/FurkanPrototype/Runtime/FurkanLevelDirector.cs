@@ -1,7 +1,9 @@
 using TheLightenRoad.Frontend;
+using TheLightenRoad.Input;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using TheLightenRoad.Player.Completion;
+using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -38,15 +40,14 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             Player.OnPlayerRespawned+=ResetAttempt;
             PauseMenuController.OnRestartLevelRequested = Restart;
             SpawnTutorialWhispers();
-            Show("CHAMBER 01 / QUIET ARRIVAL\nA / D to walk. SPACE to jump. Follow the rising archive blocks.",9f);
         }
 
         private void SpawnTutorialWhispers()
         {
-            DiegeticWhisper.Spawn(new Vector3(3.3f, 2.5f, 0f), "SPACE", "LEAP ACROSS THE ABYSS", WhisperAction.Jump, "furkan_jump", transform);
-            DiegeticWhisper.Spawn(new Vector3(13.5f, 2.5f, 0f), "SHIFT", "SPRINT TO VAULT THE DESK", WhisperAction.Sprint, "furkan_sprint", transform);
-            DiegeticWhisper.Spawn(new Vector3(18.2f, 2.8f, 0f), "F", "IGNITE FLARE TO PIERCE DARKNESS", WhisperAction.Flare, "furkan_flare", transform);
-            DiegeticWhisper.Spawn(new Vector3(26.7f, 2.8f, 0f), "E", "TRANSFER EMBER TO POWER LIFT", WhisperAction.Interact, "furkan_circuit", transform);
+            DiegeticWhisper.Spawn(new Vector3(1f, 2.1f, 0f), "A / D", "WALK", WhisperAction.Move, "furkan_move", transform).TriggerRadius = 2.2f;
+            DiegeticWhisper.Spawn(new Vector3(3.3f, 2.5f, 0f), "SPACE", "JUMP", WhisperAction.Jump, "furkan_jump", transform).TriggerRadius = 2.5f;
+            DiegeticWhisper.Spawn(new Vector3(13.5f, 2.5f, 0f), "SHIFT", "HOLD TO SPRINT", WhisperAction.Sprint, "furkan_sprint", transform).TriggerRadius = 2f;
+            DiegeticWhisper.Spawn(new Vector3(18.2f, 2.8f, 0f), "F", "SCOUT THE DARK AHEAD", WhisperAction.Flare, "furkan_flare", transform).TriggerRadius = 3f;
         }
         private void OnDestroy()
         {
@@ -56,10 +57,11 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         private void Update()
         {
             if(Completion!=null && Completion.IsRunning)return;
+            if(!GameControls.GameplayAllowed)return;
             var k=Keyboard.current;
-            var pad=Gamepad.current;
-            if((k!=null && k.backspaceKey.wasPressedThisFrame) || (pad!=null && pad.selectButton.wasPressedThisFrame))Restart();
-            if(Player.State!=RespawnState.Alive)return;
+            if(k!=null && k.backspaceKey.wasPressedThisFrame){Restart();return;}
+            if(Player.State!=RespawnState.Alive){if(Prompt!=null)Prompt.text="";return;}
+            promptTime=Mathf.Max(0,promptTime-Time.deltaTime);
             ArchiveCircuitNode closest=null;float distance=2.1f;
             foreach(var n in Nodes)
             {
@@ -68,17 +70,17 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             }
             if(closest!=null)
             {
-                bool interactPressed = (k!=null && k.eKey.wasPressedThisFrame) || (pad!=null && (pad.buttonNorth.wasPressedThisFrame || pad.buttonWest.wasPressedThisFrame));
+                var pad=GameControls.ActivePad;
+                bool interactPressed = (k!=null && k.eKey.wasPressedThisFrame) || (pad!=null && pad.buttonNorth.wasPressedThisFrame);
                 if(interactPressed)
                 {
                     bool changed=Circuit.TryTransfer(Player.GetComponent<LanternFuel>());
-                    Show(changed?(Circuit.Powered?"CIRCUIT POWERED\nOne ember is stored in the circuit. The platform is moving.":"EMBER RECOVERED\nThe platform freezes exactly where it is."):(Circuit.Powered?"LANTERN FULL\nMake room before recovering the circuit's ember.":"NO EMBERS\nAn ember is needed to power this circuit."),5f);
+                    Show(changed?(Circuit.Powered?"EMBER DEPOSITED / SHELF MOVING":"EMBER RECOVERED / SHELF STOPPED"):(Circuit.Powered?"LANTERN FULL / MAKE ROOM TO RECOVER":"AN EMBER IS NEEDED TO POWER THE SHELF"),3f);
                 }
-                string interactKey = pad!=null ? "Y / E" : "E";
-                if(promptTime<=0 && Prompt!=null)Prompt.text=Circuit.Powered?$"{interactKey} / RECOVER EMBER - FREEZE PLATFORM":$"{interactKey} / DEPOSIT ONE EMBER - POWER PLATFORM";
+                string interactKey = ControllerGlyphService.GetInteractPrompt();
+                if(promptTime<=0 && Prompt!=null)Prompt.text=Circuit.Powered?$"{interactKey} / RECOVER EMBER · STOP SHELF":$"{interactKey} / DEPOSIT EMBER · MOVE SHELF";
             }
-            else if(promptTime<=0 && Prompt!=null)Prompt.text=IsComplete?"CHAMBERS COMPLETE / BACKSPACE TO RESTART":(pad!=null?"RT / SCOUT WITH ONE EMBER     BACKSPACE / RESTART":"F / SCOUT WITH ONE EMBER     BACKSPACE / RESTART");
-            promptTime=Mathf.Max(0,promptTime-Time.unscaledDeltaTime);
+            else if(promptTime<=0 && Prompt!=null)Prompt.text="";
         }
         public void Show(string text,float seconds){promptTime=seconds;if(Prompt!=null)Prompt.text=text;}
         public void EnterSecondChamber(Vector3 start)
@@ -86,7 +88,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             if(Chamber==2)return;
             Chamber=2;SecondSpawn=start;Player.BeginChamber(start);
             if(ReturnShutter!=null)ReturnShutter.SetActive(true);
-            Show("CHAMBER 02 / BEGINNINGS\nScout the compact crossing. F spends one ember to reveal the dark ahead.",9f);
+            Show("THREE EMBERS RESTORED",3f);
         }
         public void Complete()
         {
@@ -108,7 +110,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             if(pickupPositions==null)return;
             foreach(Transform item in PickupRoot){item.gameObject.SetActive(false);Destroy(item.gameObject);}
             foreach(var position in pickupPositions)Instantiate(PickupPrefab,position,Quaternion.identity,PickupRoot);
-            Show("THREE EMBERS RESTORED\nChamber reset. Deposits and pickups return to their authored state.",5f);
+            Show("THREE EMBERS RESTORED",3f);
         }
         public void Restart()
         {

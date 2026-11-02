@@ -19,7 +19,15 @@ Distances are adapted to the existing player's real walk speed and jump height. 
 
 Carrying capacity is **four embers**; chamber entry and respawn restore **three**, leaving room for one found reserve. Flare permanently spends one whole ember. Depositing in a Vein is temporary; recovery refuses a full lantern without losing the circuit's stored ember.
 
-On death, this prototype resets its circuit, platform, ember pickups and optional fragment to their authored starting state, together with the player's chamber retry location and three-ember budget. Backspace restarts both chambers. E handles only the closest node, so one keypress cannot toggle the shared circuit twice.
+On death, this prototype resets its circuit, platform, ember pickups and optional fragment to their authored starting state, together with the player's chamber retry location and three-ember budget. Backspace restarts both chambers during gameplay. E handles only the closest node, so one keypress cannot toggle the shared circuit twice. Menu and reader locks also block these scene-local controls. Controller restart is available through the pause menu's confirmation, rather than a single touchpad/view-button press.
+
+## Guidance and blockout notes
+
+Nearby cues introduce walking, jumping, sprinting and Flare. The bottom prompt is reserved for a node interaction or brief event feedback; it clears during exploration. Node prompts use the shared keyboard/Xbox/PlayStation style and accept E or the controller's north button (Y / Triangle).
+
+The eleven floating blockout labels are kept under **Blockout annotations (editor reference)**, disabled by default and tagged `EditorOnly` so builds omit them. Enable that group in the editor when reviewing chapter names, node identities, shelf timing and the optional ledge. The physical nodes, guide rail, collectible, exit lighting and contextual prompts remain part of gameplay. Jump/desk instruction volumes that repeated the nearby cues have been removed.
+
+Verified on 2026-11-02 with Unity CLI / 6000.3.2f1: **17/17 related Play Mode tests passed**, including real traversal through the shelf to the exit, resource conservation, guidance, input styles and pause/modal locks. Actual 1920×1080 Game captures of arrival, the PlayStation node prompt and completion are stored in `development/sirac/previews/archive-guidance/`. Completion's hold was extended and scene loading disabled on a runtime-only copy for its still image; authored timing and routing were preserved. No standalone or physical-controller validation was performed for this pass.
 
 ## Ownership and code
 

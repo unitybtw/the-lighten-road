@@ -8,6 +8,7 @@
     "Unity.TextMeshPro",
     "UnityEngine.UI",
     "TheLightenRoad.Completion",
-    "TheLightenRoad.Frontend"
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Input"
   ]
 }

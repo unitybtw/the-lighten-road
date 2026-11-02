@@ -2500,7 +2500,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -3591,7 +3591,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4804,10 +4804,7 @@ MonoBehaviour:
   BeginsChamber: 1
   IsExit: 0
   Spawn: {x: 17.8, y: 3.25, z: 0}
-  Message: 'CHAMBER 02 / BEGINNINGS
-
-    Three embers restored. F reveals the dark
-    crossing ahead.'
+  Message: ''
 --- !u!61 &359408237
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -5367,10 +5364,6 @@ Transform:
   - {fileID: 1304308742}
   - {fileID: 1080772841}
   - {fileID: 965626107}
-  - {fileID: 1414410956}
-  - {fileID: 1568281685}
-  - {fileID: 1933663161}
-  - {fileID: 2047010294}
   - {fileID: 1832681521}
   - {fileID: 339170385}
   - {fileID: 51469159}
@@ -5403,7 +5396,6 @@ Transform:
   - {fileID: 1714999737}
   - {fileID: 1477056423}
   - {fileID: 1865530654}
-  - {fileID: 1621202319}
   - {fileID: 797061599}
   - {fileID: 265751399}
   - {fileID: 432200637}
@@ -5416,7 +5408,6 @@ Transform:
   - {fileID: 2082233310}
   - {fileID: 474843186}
   - {fileID: 1333567255}
-  - {fileID: 1624221949}
   - {fileID: 238928261}
   - {fileID: 1837620405}
   - {fileID: 1067587525}
@@ -5429,7 +5420,6 @@ Transform:
   - {fileID: 147612307}
   - {fileID: 1482309575}
   - {fileID: 636704516}
-  - {fileID: 548320995}
   - {fileID: 1468066000}
   - {fileID: 1758634180}
   - {fileID: 855041498}
@@ -5442,17 +5432,11 @@ Transform:
   - {fileID: 348645693}
   - {fileID: 654890374}
   - {fileID: 129218469}
-  - {fileID: 195287694}
   - {fileID: 444732535}
-  - {fileID: 1985524877}
   - {fileID: 1471666113}
-  - {fileID: 274074031}
   - {fileID: 168199909}
   - {fileID: 1231183918}
-  - {fileID: 1692211246}
   - {fileID: 1557043314}
-  - {fileID: 1639159485}
-  - {fileID: 2073276288}
   - {fileID: 359408235}
   - {fileID: 757406159}
   - {fileID: 495139985}
@@ -5461,6 +5445,7 @@ Transform:
   - {fileID: 1260775052}
   - {fileID: 249198}
   - {fileID: 1717944007}
+  - {fileID: 9001000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &384432827
@@ -7646,7 +7631,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -10028,8 +10013,7 @@ MonoBehaviour:
   Spawn: {x: 0, y: 0, z: 0}
   Message: 'ONE CIRCUIT / TWO NODES
 
-    E deposits one ember. Ride the shelf; recover
-    it on the far side to freeze it.'
+    Recover the same ember from either side.'
 --- !u!61 &757406161
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -24030,7 +24014,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -26690,7 +26674,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -27220,7 +27204,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -27401,7 +27385,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -27734,104 +27718,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1 &1639159484
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1639159485}
-  - component: {fileID: 1639159487}
-  - component: {fileID: 1639159486}
-  m_Layer: 0
-  m_Name: Jump prompt
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1639159485
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1639159484}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.3, y: 4, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 384308929}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1639159486
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1639159484}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3717b0ddd82564ade9fefb692f008004, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TheLightenRoad.Sirac.FurkanPrototype::TheLightenRoad.Sirac.FurkanPrototype.ArchiveTutorialTrigger
-  Director: {fileID: 384308928}
-  BeginsChamber: 0
-  IsExit: 0
-  Spawn: {x: 0, y: 0, z: 0}
-  Message: 'SPACE / JUMP
-
-    The first blocks teach your jump height. SHIFT is optional.'
---- !u!61 &1639159487
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1639159484}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 0.55, y: 9}
-  m_EdgeRadius: 0
 --- !u!1 &1660207907
 GameObject:
   m_ObjectHideFlags: 0
@@ -28547,7 +28433,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -32510,7 +32396,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -33408,7 +33294,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -34456,7 +34342,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 384308929}
+  m_Father: {fileID: 9001000002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -34971,105 +34857,6 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   m_Size: {x: 49, y: 1}
-  m_EdgeRadius: 0
---- !u!1 &2073276287
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2073276288}
-  - component: {fileID: 2073276290}
-  - component: {fileID: 2073276289}
-  m_Layer: 0
-  m_Name: Desk prompt
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2073276288
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2073276287}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 13.5, y: 4, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 384308929}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2073276289
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2073276287}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3717b0ddd82564ade9fefb692f008004, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: TheLightenRoad.Sirac.FurkanPrototype::TheLightenRoad.Sirac.FurkanPrototype.ArchiveTutorialTrigger
-  Director: {fileID: 384308928}
-  BeginsChamber: 0
-  IsExit: 0
-  Spawn: {x: 0, y: 0, z: 0}
-  Message: 'RECEPTION
-
-    The fallen desk is solid scenery. Jump onto it, then continue
-    right.'
---- !u!61 &2073276290
-BoxCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2073276287}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 0.55, y: 9}
   m_EdgeRadius: 0
 --- !u!1 &2077718350
 GameObject:
@@ -35880,6 +35667,48 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &9001000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9001000002}
+  m_Layer: 0
+  m_Name: Blockout annotations (editor reference)
+  m_TagString: EditorOnly
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &9001000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9001000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 195287694}
+  - {fileID: 274074031}
+  - {fileID: 548320995}
+  - {fileID: 1414410956}
+  - {fileID: 1568281685}
+  - {fileID: 1621202319}
+  - {fileID: 1624221949}
+  - {fileID: 1692211246}
+  - {fileID: 1933663161}
+  - {fileID: 1985524877}
+  - {fileID: 2047010294}
+  m_Father: {fileID: 384308929}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

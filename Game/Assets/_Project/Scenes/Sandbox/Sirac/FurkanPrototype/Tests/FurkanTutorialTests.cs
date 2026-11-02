@@ -227,4 +227,115 @@ public sealed class FurkanTutorialTests
         yield return null;
         Assert.That(TheLightenRoad.Input.GameControls.GameplayAllowed, Is.True, "Gameplay input must be restored after menu resume.");
     }
+
+    [UnityTest] public IEnumerator BlockoutAnnotationsStayOutOfGameplayWhileLocalGuidanceRemains()
+    {
+        string[] notes = { "01 / TUTORIAL", "02 / BEGINNINGS", "RECEPTION", "ARCHIVE EXIT",
+            "1 / 1s", "2 / 1s", "3 / 1s", "4 / 1s", "A / INSERT", "B / RECOVER", "OPTIONAL / ARCHIVE FRAGMENT" };
+        var texts = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<TMPro.TextMeshPro>(true)).ToArray();
+        foreach (string note in notes)
+        {
+            var text = texts.Single(t => t.name == note);
+            Assert.That(text.gameObject.activeInHierarchy, Is.False, note + " is an authoring annotation, not an in-world sign.");
+        }
+        // Previously learned cues may be inactive for this profile, but must remain available to new players.
+        var hints = level.GetComponentsInChildren<TheLightenRoad.Frontend.DiegeticWhisper>(true);
+        Assert.That(hints.Any(h => h.RequiredAction == TheLightenRoad.Frontend.WhisperAction.Move), Is.True);
+        Assert.That(hints.Any(h => h.RequiredAction == TheLightenRoad.Frontend.WhisperAction.Jump), Is.True);
+        Assert.That(hints.Any(h => h.RequiredAction == TheLightenRoad.Frontend.WhisperAction.Flare), Is.True);
+        yield return null;
+    }
+
+    [UnityTest] public IEnumerator ExpiredFeedbackLeavesExplorationQuietAndNodePromptsFollowInputStyle()
+    {
+        var originalStyle = TheLightenRoad.UI.ControllerGlyphService.ConfiguredStyle;
+        try
+        {
+            level.Show("Temporary feedback", .05f);
+            yield return new WaitForSeconds(.15f);
+            Assert.That(level.Prompt.text, Is.Empty, "Exploration should not carry a permanent restart/scout footer.");
+            PlaceBesideFirstNode();
+            TheLightenRoad.UI.ControllerGlyphService.ConfiguredStyle = TheLightenRoad.UI.ControllerPromptStyle.PlayStation;
+            yield return null;
+            Assert.That(level.Prompt.text, Does.Contain("TRIANGLE"));
+            TheLightenRoad.UI.ControllerGlyphService.ConfiguredStyle = TheLightenRoad.UI.ControllerPromptStyle.Keyboard;
+            yield return null;
+            Assert.That(level.Prompt.text, Does.StartWith("E /"));
+            Assert.That(level.Circuit.TryTransfer(level.Player.GetComponent<LanternFuel>()), Is.True);
+            yield return null;
+            Assert.That(level.Prompt.text, Does.Contain("RECOVER"));
+        }
+        finally { TheLightenRoad.UI.ControllerGlyphService.ConfiguredStyle = originalStyle; }
+    }
+
+    [UnityTest] public IEnumerator PauseAndModalLocksPreventCircuitTransfersAndDebugRestarts()
+    {
+        level.EnterSecondChamber(level.SecondSpawn);
+        PlaceBesideFirstNode();
+        var fuel = level.Player.GetComponent<LanternFuel>();
+        Assert.That(level.Circuit.TryTransfer(fuel), Is.True);
+        var pause = TheLightenRoad.Frontend.PauseMenuController.Instance;
+        Assert.That(pause, Is.Not.Null);
+        pause.Pause();
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E, Key.Backspace));
+        yield return null;
+        Assert.That(level.Chamber, Is.EqualTo(2), "Backspace in a menu must not restart the chamber.");
+        Assert.That(level.Circuit.Powered, Is.True, "Menu input must not drain the nearby circuit.");
+        Assert.That(fuel.TotalEmbers, Is.EqualTo(2));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        pause.Resume();
+        yield return null;
+        yield return null;
+        TheLightenRoad.Input.GameControls.BlockGameplay(level, true);
+        try
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E, Key.Backspace));
+            yield return null;
+            Assert.That(level.Chamber, Is.EqualTo(2));
+            Assert.That(level.Circuit.Powered, Is.True, "Other modal readers also own gameplay input.");
+            Assert.That(fuel.TotalEmbers, Is.EqualTo(2));
+        }
+        finally
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            TheLightenRoad.Input.GameControls.BlockGameplay(level, false);
+        }
+    }
+
+    private void PlaceBesideFirstNode()
+    {
+        var motor = level.Player.GetComponent<PlayerMotor2D>();
+        motor.enabled = false;
+        motor.Body.simulated = false;
+        level.Player.transform.position = level.Nodes[0].transform.position;
+        motor.Body.position = level.Nodes[0].transform.position;
+        Physics2D.SyncTransforms();
+    }
+
+    [UnityTest] public IEnumerator NodeInputMatchesTheDisplayedInteractionAction()
+    {
+        PlaceBesideFirstNode();
+        var fuel = level.Player.GetComponent<LanternFuel>();
+        var pad = InputSystem.AddDevice<Gamepad>();
+        try
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.E));
+            yield return null;
+            Assert.That(level.Circuit.Powered, Is.True, "E deposits the ember.");
+            Assert.That(fuel.TotalEmbers, Is.EqualTo(2));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.West));
+            yield return null;
+            Assert.That(level.Circuit.Powered, Is.True, "An unlisted face button must not transfer an ember.");
+            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.North));
+            yield return null;
+            Assert.That(level.Circuit.Powered, Is.False, "The displayed north button recovers it.");
+            Assert.That(fuel.TotalEmbers, Is.EqualTo(3));
+        }
+        finally
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            InputSystem.RemoveDevice(pad);
+        }
+    }
 }

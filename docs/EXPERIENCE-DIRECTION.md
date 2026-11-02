@@ -23,6 +23,15 @@ to change the world's identity or the player's understanding of its rules.
 - Evaluate implementation by player-visible behavior. An invisible object kept
   solely to satisfy an existence assertion is not a working feature; remove it
   and test the actual light, input, animation or transition instead.
+- Teach one action through one clear cue. Do not layer a timed paragraph, a
+  permanent control footer and a nearby key prompt over the same obstacle.
+  Keep brief action feedback and recovery messages where players need them.
+- Keep authoring notes out of play. Waypoint timings, solution labels and
+  "optional" collectible headings belong in the editor; discovering a route
+  should still involve looking at the environment.
+- Check that feedback tells the truth. A prompt must name the button that
+  actually works, respect menu/reader input locks and describe the local object
+  (a moving shelf is not a lift). Visual polish cannot compensate for a mismatch.
 
 These are project-specific review criteria, not a ban on ornament, procedural
 graphics or AI-assisted tools. The aim is a deliberate, consistent experience.

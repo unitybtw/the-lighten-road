@@ -22,6 +22,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
         private static Material lit;
         private static TMP_FontAsset font;
         private static Transform root;
+        private static Transform annotations;
         private static FurkanLevelDirector director;
         private static readonly Color Stone=new Color32(66,70,64,255),Edge=new Color32(126,119,96,255),Iron=new Color32(39,46,44,255);
         [MenuItem("Tools/The Lighten Road/Create Furkan Tutorial")]
@@ -34,6 +35,11 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
             font=AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/_Project/Scenes/Sandbox/Sirac/TestChamber/ArchiveFont.asset");
             var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
             root=new GameObject("FURKAN / TUTORIAL AND BEGINNINGS").transform;
+            var notes = new GameObject("Blockout annotations (editor reference)");
+            notes.transform.SetParent(root, false);
+            notes.tag = "EditorOnly";
+            notes.SetActive(false);
+            annotations = notes.transform;
             director=root.gameObject.AddComponent<FurkanLevelDirector>();
             var playerPrefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/PlayerPrototype.prefab");
             var player=(GameObject)PrefabUtility.InstantiatePrefab(playerPrefab);
@@ -233,10 +239,8 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
             var label=new GameObject("Instruction",typeof(RectTransform),typeof(TextMeshProUGUI));label.transform.SetParent(go.transform,false);
             var rect=label.GetComponent<RectTransform>();rect.anchorMin=rect.anchorMax=new Vector2(.5f,0);rect.anchoredPosition=new Vector2(0,127);rect.sizeDelta=new Vector2(1150,85);
             var text=label.GetComponent<TextMeshProUGUI>();text.font=font;text.fontSize=23;text.alignment=TextAlignmentOptions.Center;text.color=new Color(.90f,.87f,.75f);director.Prompt=text;
-            Trigger("Jump prompt",3.3f,false,false,Vector3.zero,"SPACE / JUMP\nThe first blocks teach your jump height. SHIFT is optional.");
-            Trigger("Desk prompt",13.5f,false,false,Vector3.zero,"RECEPTION\nThe fallen desk is solid scenery. Jump onto it, then continue right.");
-            Trigger("Chamber boundary",17.8f,true,false,new Vector3(17.8f,3.25f),"CHAMBER 02 / BEGINNINGS\nThree embers restored. F reveals the dark crossing ahead.");
-            Trigger("Circuit prompt",26.7f,false,false,Vector3.zero,"ONE CIRCUIT / TWO NODES\nE deposits one ember. Ride the shelf; recover it on the far side to freeze it.");
+            Trigger("Chamber boundary",17.8f,true,false,new Vector3(17.8f,3.25f),"");
+            Trigger("Circuit prompt",26.7f,false,false,Vector3.zero,"ONE CIRCUIT / TWO NODES\nRecover the same ember from either side.");
             Trigger("Exit",40.5f,false,true,Vector3.zero,"");
         }
         private static void Trigger(string name,float x,bool chamber,bool exit,Vector3 spawn,string message)
@@ -258,7 +262,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype.Editor
         }
         private static void Label(string words,float x,float y,float width,float size)
         {
-            var go=new GameObject(words,typeof(TextMeshPro));go.transform.SetParent(root);go.transform.position=new Vector3(x,y);
+            var go=new GameObject(words,typeof(TextMeshPro));go.transform.SetParent(annotations);go.transform.position=new Vector3(x,y);
             var t=go.GetComponent<TextMeshPro>();t.font=font;t.text=words;t.fontSize=size*10;t.alignment=TextAlignmentOptions.Center;t.color=Edge;t.rectTransform.sizeDelta=new Vector2(width,.8f);t.GetComponent<MeshRenderer>().sortingOrder=5;
         }
     }

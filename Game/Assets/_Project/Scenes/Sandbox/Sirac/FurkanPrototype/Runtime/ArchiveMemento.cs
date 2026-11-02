@@ -10,7 +10,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             var p=other.GetComponentInParent<PlayerRespawnController>();
             if(Director==null || p!=Director.Player)return;
             Director.HasMemento=true;
-            Director.Show("ARCHIVE FRAGMENT FOUND\nThe upper detour holds a memory of the world before.",8f);
+            Director.Show("ARCHIVE FRAGMENT RECOVERED",4f);
             gameObject.SetActive(false);
         }
     }

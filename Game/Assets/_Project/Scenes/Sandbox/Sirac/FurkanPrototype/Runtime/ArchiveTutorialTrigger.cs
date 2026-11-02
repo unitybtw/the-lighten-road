@@ -18,7 +18,7 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
             entered=true;
             if(BeginsChamber)Director.EnterSecondChamber(Spawn);
             if(IsExit)Director.Complete();
-            else Director.Show(Message,8f);
+            else if(!BeginsChamber && !string.IsNullOrWhiteSpace(Message))Director.Show(Message,5f);
         }
         public void ResetTrigger() => entered=false;
     }
