@@ -39,9 +39,6 @@ namespace TheLightenRoad.Player.Completion
         private CanvasGroup caption;
         private RectTransform captionRect;
         private Light2D glow;
-        private SpriteRenderer ring;
-        private Texture2D ringTexture;
-        private Sprite ringSprite;
         private AudioSource sound;
         private PlayerRespawnController lockedPlayer;
         private Behaviour[] gated;
@@ -50,7 +47,6 @@ namespace TheLightenRoad.Player.Completion
         private bool previousSimulation;
         private Vector2 previousVelocity;
         private bool loading, persistent;
-        private float ringBaseAlpha;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -125,7 +121,6 @@ namespace TheLightenRoad.Player.Completion
             }
             if (caption != null) caption.alpha = 0f;
             if (glow != null) glow.intensity = 0f;
-            if (ring != null) ring.enabled = false;
             Phase = "FadeIn";
             yield return Animate(Profile.FadeInSeconds, t => SetCurtain(1f - t));
             Unlock();
@@ -232,7 +227,6 @@ namespace TheLightenRoad.Player.Completion
             glow.pointLightOuterRadius = .2f;
             glow.pointLightInnerRadius = 0f;
             glow.intensity = 0f;
-            BuildRing(lightObject.transform);
 
             var canvasObject = new GameObject("Completion / overlay", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
             canvasObject.transform.SetParent(presentation.transform, false);
@@ -251,26 +245,24 @@ namespace TheLightenRoad.Player.Completion
             caption.blocksRaycasts = false; caption.interactable = false; caption.alpha = 0f;
             captionRect = card.GetComponent<RectTransform>();
             Stretch(captionRect);
-            var veil = Image("Reading veil", card.transform, new Color(.025f, .03f, .025f, .68f));
-            veil.rectTransform.anchorMin = new Vector2(0, .31f); veil.rectTransform.anchorMax = new Vector2(1, .69f);
-            veil.rectTransform.offsetMin = veil.rectTransform.offsetMax = Vector2.zero;
-            Text(Profile.Eyebrow, card.transform, 71f, 16f, new Color(.79f, .68f, .48f), 5f);
-            Text(Profile.Title, card.transform, 12f, 50f, new Color(.96f, .91f, .79f), 6f);
-            Text(Profile.Subtitle, card.transform, -66f, 20f, new Color(.73f, .73f, .65f), 1f);
-            var line = Image("Brass rule", card.transform, new Color(.7f, .51f, .25f, .7f));
-            line.rectTransform.sizeDelta = new Vector2(160, 1); line.rectTransform.anchoredPosition = new Vector2(0, -32);
-            var diamond = Image("Ember seal", card.transform, Profile.LightColor);
-            diamond.rectTransform.sizeDelta = new Vector2(5, 5); diamond.rectTransform.anchoredPosition = new Vector2(0, -32);
-            diamond.rectTransform.localRotation = Quaternion.Euler(0, 0, 45);
+            // A local dark glow preserves the surrounding scene instead of covering it
+            // with an opaque, full-width notification strip.
+            var backdrop = Image("Title shadow", card.transform, new Color(.008f, .008f, .006f, .94f));
+            backdrop.sprite = ArchiveInterfaceStyle.SoftGlow;
+            backdrop.rectTransform.sizeDelta = new Vector2(1280, 480);
+            Text(Profile.Eyebrow, card.transform, 48f, 24f, new Color(.75f, .66f, .51f), 2f);
+            Text(Profile.Title, card.transform, -3f, 48f, new Color(.94f, .90f, .81f), 2f);
+            if (!string.IsNullOrWhiteSpace(Profile.Subtitle))
+                Text(Profile.Subtitle, card.transform, -61f, 20f, new Color(.73f, .71f, .64f), .5f);
+            var seal = Image("Ember mark", card.transform, Profile.LightColor);
+            seal.rectTransform.sizeDelta = new Vector2(4, 4);
+            seal.rectTransform.anchoredPosition = new Vector2(0, -43);
+            seal.rectTransform.localRotation = Quaternion.Euler(0, 0, 45);
 
             bool? memento = CheckSceneMemento();
             if (memento.HasValue)
-            {
-                if (memento.Value)
-                    Text("*   ARCHIVE MEMENTO RECOVERED   *", card.transform, -102f, 13f, new Color(.98f, .86f, .52f, .95f), 3.5f);
-                else
-                    Text("-   ARCHIVE MEMENTO UNFOUND   -", card.transform, -102f, 13f, new Color(.62f, .68f, .75f, .62f), 3.5f);
-            }
+                Text(memento.Value ? "MEMENTO RECOVERED" : "MEMENTO NOT FOUND", card.transform, -82f, 20f,
+                    memento.Value ? new Color(.92f, .78f, .53f) : new Color(.67f, .65f, .58f), 1f);
 
             // The curtain must draw above the caption to conceal the scene swap completely.
             curtain.transform.SetAsLastSibling();
@@ -314,33 +306,8 @@ namespace TheLightenRoad.Player.Completion
             glow.pointLightOuterRadius = Mathf.Lerp(.3f, Profile.LightRadius, reduced ? 1f : t);
             glow.pointLightInnerRadius = glow.pointLightOuterRadius * .18f;
             glow.intensity = Profile.LightIntensity * t;
-            if (ring != null)
-            {
-                ring.enabled = !reduced;
-                ring.transform.localScale = Vector3.one * Mathf.Lerp(.5f, Profile.LightRadius * 2f, t);
-                ring.color = new Color(Profile.LightColor.r, Profile.LightColor.g, Profile.LightColor.b, Mathf.Sin(t * Mathf.PI) * ringBaseAlpha);
-            }
             caption.alpha = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.2f, 1f, t));
-            captionRect.anchoredPosition = new Vector2(0, reduced ? 0 : Mathf.Lerp(-12, 0, t));
-        }
-
-        private void BuildRing(Transform parent)
-        {
-            const int size = 256;
-            ringTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            ringTexture.name = "Completion / generated soft ring";
-            var pixels = new Color[size * size];
-            for (int y = 0; y < size; y++) for (int x = 0; x < size; x++)
-            {
-                float radius = new Vector2((x + .5f) / size * 2f - 1f, (y + .5f) / size * 2f - 1f).magnitude;
-                float alpha = Mathf.Exp(-Mathf.Pow((radius - .88f) / .025f, 2));
-                pixels[y * size + x] = new Color(1, 1, 1, alpha);
-            }
-            ringTexture.SetPixels(pixels); ringTexture.Apply();
-            ringSprite = Sprite.Create(ringTexture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-            var go = new GameObject("Light wave", typeof(SpriteRenderer)); go.transform.SetParent(parent, false);
-            ring = go.GetComponent<SpriteRenderer>(); ring.sprite = ringSprite; ring.sortingOrder = 50;
-            ring.color = Color.clear; ringBaseAlpha = .32f;
+            captionRect.anchoredPosition = new Vector2(0, 90f + (reduced ? 0 : Mathf.Lerp(-5, 0, t)));
         }
 
         private static Image Image(string name, Transform parent, Color color)
@@ -353,11 +320,11 @@ namespace TheLightenRoad.Player.Completion
         {
             var go = new GameObject(words, typeof(RectTransform), typeof(TextMeshProUGUI)); go.transform.SetParent(parent, false);
             var label = go.GetComponent<TextMeshProUGUI>();
-            label.font = Profile.Font != null ? Profile.Font : TMP_Settings.defaultFontAsset;
+            label.font = Profile.Font != null ? Profile.Font : (ArchiveInterfaceStyle.DisplayFont != null ? ArchiveInterfaceStyle.DisplayFont : TMP_Settings.defaultFontAsset);
             label.text = words; label.fontSize = size; label.color = color;
             label.characterSpacing = spacing; label.alignment = TextAlignmentOptions.Center;
             label.raycastTarget = false;
-            label.rectTransform.sizeDelta = new Vector2(1500, 90);
+            label.rectTransform.sizeDelta = new Vector2(1000, 64);
             label.rectTransform.anchoredPosition = new Vector2(0, y);
         }
         private static void Stretch(RectTransform rect)
@@ -370,9 +337,7 @@ namespace TheLightenRoad.Player.Completion
         {
             if (sound != null) sound.Stop();
             if (presentation != null) { presentation.SetActive(false); Destroy(presentation); }
-            if (ringSprite != null) Destroy(ringSprite);
-            if (ringTexture != null) Destroy(ringTexture);
-            curtain = null; caption = null; glow = null; ring = null;
+            curtain = null; caption = null; glow = null;
         }
         private void OnDisable()
         {
