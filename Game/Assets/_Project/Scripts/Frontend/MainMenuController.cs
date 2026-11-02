@@ -262,7 +262,7 @@ namespace TheLightenRoad.Frontend
                 {
                     SoundEffectManager.Instance?.PlayFlareIgnite();
                 }
-                stage?.TriggerInteractionSurge(new Vector2(0f, -65f), Vector2.zero, 1.25f);
+                stage?.IgniteLantern();
             }
 
             bool backPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -528,7 +528,7 @@ namespace TheLightenRoad.Frontend
                 groups[i].interactable=views[i]==view && introDone;
                 groups[i].blocksRaycasts=views[i]==view;
             }
-            stage?.TriggerInteractionSurge(new Vector2(0f, 40f), stageCameraFocus, 0.9f);
+            stage?.SetCameraFocus(stageCameraFocus);
 
             if (EventSystem.current != null && firstSelectable != null)
             {
@@ -574,7 +574,7 @@ namespace TheLightenRoad.Frontend
             MenuPreferences.SetSelectedRealm(selectedRealmIndex);
             RefreshRealmSelectionUI();
 
-            stage?.TriggerInteractionSurge(new Vector2(0f, 120f - index * 140f), new Vector2(-20f, 10f - index * 10f), 1.1f);
+            stage?.SetCameraFocus(new Vector2(-20f, 10f - index * 10f));
 
             if (Application.isPlaying)
             {
@@ -876,7 +876,6 @@ namespace TheLightenRoad.Frontend
             SyncSettingsUI();
             CancelSettingsReset();
             MarkSettingsChanged();
-            stage?.TriggerInteractionSurge(Vector2.zero, Vector2.zero, 1f);
             if (Application.isPlaying)
             {
                 SoundEffectManager.Instance?.PlayUIClick();
@@ -1070,11 +1069,6 @@ namespace TheLightenRoad.Frontend
                 topArchImg.color = new Color(0.86f, 0.92f, 1.0f, 0.92f);
                 topArchImg.raycastTarget = false;
             }
-
-            // Whispered Sanctuary Eyebrow
-            var eyebrow = CreateLabel("Sanctuary Eyebrow", homeHeaderRect, "-   SANCTUARY OF THE ETERNAL FLAME   -", 10.5f, moonlightSilver, new Vector2(640f, 20f), new Vector2(0.5f, 0.5f), new Vector2(0f, 54f), pivot: new Vector2(0.5f, 0.5f));
-            eyebrow.alignment = TextAlignmentOptions.Center;
-            eyebrow.characterSpacing = 5.5f;
 
             // Monumental Centered Title: THE LIGHTEN ROAD
             var mainTitle = CreateLabel("Title Lighten Road", homeHeaderRect, "THE LIGHTEN ROAD", 78f, radiantIvory, new Vector2(820f, 68f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), pivot: new Vector2(0.5f, 0.5f));
@@ -1295,7 +1289,6 @@ namespace TheLightenRoad.Frontend
             motion.IsPrimaryAction = isPrimary;
             motion.LeftAlignedItem = false;
             motion.InitializeBasePositions(Vector2.zero, Vector2.zero, Vector2.zero);
-            motion.StageFocusCanvasPosition = new Vector2(0f, yPos);
             motion.StageCameraPanOffset = cameraPan;
             motion.OnFocusedCallback = OnMenuButtonFocused;
 
@@ -1314,7 +1307,7 @@ namespace TheLightenRoad.Frontend
         {
             if (stage != null && motion != null)
             {
-                stage.TriggerInteractionSurge(motion.StageFocusCanvasPosition, motion.StageCameraPanOffset, 1.0f);
+                stage.SetCameraFocus(motion.StageCameraPanOffset);
             }
         }
 
@@ -1928,7 +1921,6 @@ namespace TheLightenRoad.Frontend
             motion.WingGroup = wingGroup;
             motion.BaseWingOffset = wingOffset;
             motion.IsPrimaryAction = isPrimary;
-            motion.StageFocusCanvasPosition = anchoredPos;
             motion.StageCameraPanOffset = Vector2.zero;
             motion.OnFocusedCallback = OnMenuButtonFocused;
 

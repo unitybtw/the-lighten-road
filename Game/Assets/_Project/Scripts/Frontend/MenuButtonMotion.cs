@@ -36,7 +36,6 @@ namespace TheLightenRoad.Frontend
         public bool IsPrimaryAction;
         public bool LeftAlignedItem;
         public float BaseWingOffset = 145f;
-        public Vector2 StageFocusCanvasPosition;
         public Vector2 StageCameraPanOffset;
         public Action<MenuButtonMotion> OnFocusedCallback;
 
@@ -199,7 +198,11 @@ namespace TheLightenRoad.Frontend
             if (!hovered)
             {
                 hovered = true;
-                NotifyFocus();
+                var selectable = GetComponent<Selectable>();
+                if (EventSystem.current != null && selectable != null && selectable.IsActive() && selectable.IsInteractable())
+                    EventSystem.current.SetSelectedGameObject(gameObject);
+                // OnSelect already sends the feedback when selection is transferred.
+                if (!selected) NotifyFocus();
             }
         }
 
@@ -221,6 +224,7 @@ namespace TheLightenRoad.Frontend
         public void OnDeselect(BaseEventData eventData)
         {
             selected = false;
+            hovered = false;
             pressed = false;
         }
 

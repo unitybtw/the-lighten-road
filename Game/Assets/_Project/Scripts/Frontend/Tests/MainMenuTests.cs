@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -53,7 +54,27 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(GameObject.Find("Great Archive Lantern"), Is.Not.Null);
             Assert.That(GameObject.Find("Cloaked Wanderer Silhouette"), Is.Not.Null);
             Assert.That(GameObject.Find("Carved Ember Veins Glow"), Is.Not.Null);
-            Assert.That(GameObject.Find("Ember Vein Energy Tether"), Is.Not.Null);
+            Assert.That(GameObject.Find("Wanderer Lantern Core").GetComponent<Image>().sprite, Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator FocusingAMenuChoiceDoesNotReigniteTheWorld()
+        {
+            _menu.SkipIntro();
+            yield return null;
+            var stage = _menu.GetComponent<ProceduralArchiveStage>();
+            stage.TickStage(10f, 1f, Vector2.zero, Vector2.zero, false);
+            var light = GameObject.Find("Hero Lantern Mid Radiance").GetComponent<Image>();
+            var brightness = light.color;
+            var button = _menu.GetComponentsInChildren<MenuButtonMotion>().Single(b => b.name == "Settings");
+            button.OnPointerEnter(null);
+            Assert.That(UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject, Is.EqualTo(button.gameObject),
+                "Pointer and controller selection must identify the same choice.");
+            stage.TickStage(0f, 1f, Vector2.zero, Vector2.zero, false);
+            Assert.That(light.color, Is.EqualTo(brightness),
+                "Menu focus should be communicated by the selected item, without relighting the archive.");
+            yield return new WaitForSecondsRealtime(.2f);
+            MenuReadabilityTests.Capture(_menu.Canvas, 1920, 1080, "menu-art-direction-home");
         }
 
         [UnityTest]

@@ -11,7 +11,7 @@ namespace TheLightenRoad.Frontend
     /// Showcases Maksim's frame-timed Light idle animation holding a lantern on the right side
     /// of the screen, with opening flare ignition, volumetric god rays, smooth multi-layered
     /// amber atmospheric illumination, hanging ceiling lamps, glowing Ember Veins,
-    /// and a dynamic Bezier energy tether flowing into the active menu item.
+    /// and quiet ambient movement around the lantern.
     /// </summary>
     public sealed class ProceduralArchiveStage : MonoBehaviour
     {
@@ -78,11 +78,8 @@ namespace TheLightenRoad.Frontend
         private float playZoomProgress;
         private float subViewFocusProgress;
         private bool isInSubView;
-        private float lastIntroIgnition;
         private Vector2 targetCameraOffset;
         private Vector2 currentCameraOffset;
-        private Vector2 targetButtonCanvasPos = new Vector2(-460f, 85f);
-        private Vector2 currentButtonCanvasPos = new Vector2(-460f, 85f);
         private RectTransform parentCanvasRectTransform;
         private Image subViewAtmosphericHaze;
 
@@ -190,11 +187,6 @@ namespace TheLightenRoad.Frontend
             subViewAtmosphericHaze.color = Color.clear;
             subViewAtmosphericHaze.raycastTarget = false;
 
-            // 8. Ethereal Tether Hook (Preserved transparently for test contracts)
-            var tetherRect = CreateAnchoredRect("Ember Vein Energy Tether", stageRoot, Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero);
-            var tetherImg = tetherRect.gameObject.AddComponent<Image>();
-            tetherImg.color = Color.clear;
-            tetherImg.raycastTarget = false;
         }
 
         private void LoadProjectArtAssetsIfNeeded()
@@ -390,12 +382,10 @@ namespace TheLightenRoad.Frontend
             }
         }
 
-        public void TriggerInteractionSurge(Vector2 buttonCanvasPosition, Vector2 cameraPanTarget, float boost = 1f)
+        public void IgniteLantern()
         {
-            surgeIntensity = Mathf.Clamp(surgeIntensity + 0.85f * boost, 0f, 1.8f);
-            pendulumBoost = Mathf.Clamp(pendulumBoost + 2.4f * boost, -6f, 6f);
-            targetButtonCanvasPos = buttonCanvasPosition;
-            targetCameraOffset = cameraPanTarget;
+            surgeIntensity = 0.85f * 1.25f;
+            pendulumBoost = 2.4f * 1.25f;
         }
 
         public void SetCameraFocus(Vector2 cameraPanTarget)
@@ -426,7 +416,6 @@ namespace TheLightenRoad.Frontend
                 ? Vector2.zero
                 : targetCameraOffset + new Vector2(-normalizedMouse.x * 24f, -normalizedMouse.y * 14f);
             currentCameraOffset = Vector2.Lerp(currentCameraOffset, desiredCam, 1f - Mathf.Exp(-dt * 4.5f));
-            currentButtonCanvasPos = Vector2.Lerp(currentButtonCanvasPos, targetButtonCanvasPos, 1f - Mathf.Exp(-dt * 10f));
 
             // Dynamic lantern canvas position (always exact to held lantern)
             Vector2 lanternCanvasPos = GetHeroLanternCanvasPosition();
@@ -613,7 +602,6 @@ namespace TheLightenRoad.Frontend
                 cursorLanternGlow.color = new Color(1.0f, 0.68f, 0.25f, (0.09f + surgeIntensity * 0.05f) * introIgnition * extinguish);
             }
 
-            lastIntroIgnition = introIgnition;
         }
 
         private void TickHero(float dt, bool reducedMotion)
