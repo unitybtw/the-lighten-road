@@ -10,10 +10,18 @@ public sealed class FollowCamera2DTests
     private GameObject targetObject;
     private FollowCamera2D cameraFollow;
     private Rigidbody2D targetBody;
+    private int reducedMotion;
+    private bool hadReducedMotion;
+    private float previousTimeScale;
 
     [SetUp]
     public void SetUp()
     {
+        hadReducedMotion = PlayerPrefs.HasKey("TLR.Menu.ReducedMotion");
+        previousTimeScale = Time.timeScale;
+        Time.timeScale = 1f;
+        reducedMotion = PlayerPrefs.GetInt("TLR.Menu.ReducedMotion", 0);
+        PlayerPrefs.SetInt("TLR.Menu.ReducedMotion", 0);
         targetObject = new GameObject("Test Target");
         targetObject.transform.position = Vector3.zero;
         targetBody = targetObject.AddComponent<Rigidbody2D>();
@@ -29,6 +37,9 @@ public sealed class FollowCamera2DTests
     [TearDown]
     public void TearDown()
     {
+        if (hadReducedMotion) PlayerPrefs.SetInt("TLR.Menu.ReducedMotion", reducedMotion);
+        else PlayerPrefs.DeleteKey("TLR.Menu.ReducedMotion");
+        Time.timeScale = previousTimeScale;
         if (cameraObject != null)
             Object.Destroy(cameraObject);
         if (targetObject != null)
@@ -96,5 +107,46 @@ public sealed class FollowCamera2DTests
 
         yield return new WaitForSeconds(0.15f);
         Assert.That(cameraFollow.IsShaking, Is.False, "Shake should expire after duration.");
+    }
+
+    [UnityTest]
+    public IEnumerator ReducedMotionStopsAnExistingShakeAndRejectsNewOnes()
+    {
+        cameraFollow.Shake(.2f, 1f);
+        Assert.That(cameraFollow.IsShaking, Is.True);
+        Time.timeScale = 0f;
+        PlayerPrefs.SetInt("TLR.Menu.ReducedMotion", 1);
+        yield return null;
+        yield return null;
+        Assert.That(cameraFollow.IsShaking, Is.False);
+        Assert.That(cameraObject.transform.position, Is.EqualTo(cameraFollow.CurrentFollowPosition));
+        cameraFollow.Shake(.2f, 1f);
+        Assert.That(cameraFollow.IsShaking, Is.False);
+    }
+
+    [UnityTest]
+    public IEnumerator TeleportSnapsCameraAndClearsOldMotion()
+    {
+        yield return null;
+        cameraFollow.Shake(.2f, 1f);
+        targetObject.transform.position = new Vector3(20f, 3f, 0f);
+        yield return null;
+        yield return null;
+        Assert.That(cameraFollow.CurrentFollowPosition.x, Is.EqualTo(20f).Within(.01f));
+        Assert.That(cameraFollow.CurrentFollowPosition.y, Is.EqualTo(4.5f).Within(.05f));
+        Assert.That(cameraFollow.IsShaking, Is.False);
+    }
+
+    [UnityTest]
+    public IEnumerator SmallVerticalMovementKeepsFrameSteadyButLargerClimbIsFollowed()
+    {
+        yield return null;
+        float initialY = cameraFollow.CurrentFollowPosition.y;
+        targetObject.transform.position += Vector3.up * .1f;
+        yield return new WaitForSeconds(.25f);
+        Assert.That(cameraFollow.CurrentFollowPosition.y, Is.EqualTo(initialY).Within(.02f));
+        targetObject.transform.position += Vector3.up * 2f;
+        yield return new WaitForSeconds(.4f);
+        Assert.That(cameraFollow.CurrentFollowPosition.y, Is.GreaterThan(initialY + 1.4f));
     }
 }

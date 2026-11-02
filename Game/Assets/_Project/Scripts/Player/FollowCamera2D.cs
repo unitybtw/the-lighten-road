@@ -9,6 +9,10 @@ namespace TheLightenRoad.Player
         [SerializeField] private Transform target;
         [SerializeField] private Vector3 offset = new Vector3(0f, 1.5f, -10f);
         [SerializeField, Min(0.01f)] private float smoothTime = 0.15f;
+        [Tooltip("Small vertical movements the camera can absorb without shifting the frame.")]
+        [SerializeField, Min(0f)] private float verticalDeadZone = 0.25f;
+        [Tooltip("Snap when the target moves this far in a single frame, such as a teleport.")]
+        [SerializeField, Min(0f)] private float teleportDistance = 8f;
 
         [Header("Horizontal Look-Ahead")]
         [SerializeField] private bool enableLookAhead = true;
@@ -122,6 +126,7 @@ namespace TheLightenRoad.Player
         private void OnEnable()
         {
             if (ActiveInstance == null) ActiveInstance = this;
+            currentFollowPosition = transform.position;
             if (target != null && targetMotor == null)
                 BindTarget(target);
         }
@@ -129,6 +134,7 @@ namespace TheLightenRoad.Player
         private void OnDisable()
         {
             if (ActiveInstance == this) ActiveInstance = null;
+            StopShake();
             UnbindTarget();
         }
 
@@ -144,10 +150,11 @@ namespace TheLightenRoad.Player
 
             if (target != null)
             {
-                BindTarget(target);
+                if (isActiveAndEnabled) BindTarget(target);
                 previousTargetPosition = target.position;
                 if (snap)
                 {
+                    StopShake();
                     currentFollowPosition = target.position + offset;
                     transform.position = currentFollowPosition;
                 }
@@ -156,12 +163,19 @@ namespace TheLightenRoad.Player
 
         public void Shake(float intensity, float duration)
         {
-            if (duration <= 0f || intensity <= 0f)
+            if (PlayerPrefs.GetInt("TLR.Menu.ReducedMotion", 0) == 1 || duration <= 0f || intensity <= 0f)
                 return;
 
             shakeIntensity = Mathf.Max(shakeIntensity, intensity);
             shakeDuration = duration;
             shakeTimer = duration;
+        }
+
+        private void StopShake()
+        {
+            if (shakeTimer > 0f) transform.position = currentFollowPosition;
+            shakeTimer = 0f;
+            shakeIntensity = 0f;
         }
 
         private void BindTarget(Transform t)
@@ -211,9 +225,17 @@ namespace TheLightenRoad.Player
                 }
             }
 
+            if (shakeTimer > 0f && PlayerPrefs.GetInt("TLR.Menu.ReducedMotion", 0) == 1) StopShake();
             float dt = Time.deltaTime;
             if (dt <= 0f)
                 return;
+
+            if (teleportDistance > 0f &&
+                (target.position - previousTargetPosition).sqrMagnitude > teleportDistance * teleportDistance)
+            {
+                SetTarget(target, snap: true);
+                return;
+            }
 
             // 1. Calculate target velocity
             Vector2 velocity;
@@ -271,6 +293,12 @@ namespace TheLightenRoad.Player
 
             // 4. Base smoothed follow
             Vector3 desiredPosition = target.position + offset + new Vector3(currentLookAheadX, currentFallLeadY, 0f);
+
+            // Preserve the frame through small hops and uneven ground, but continue to
+            // follow falls and larger elevation changes smoothly.
+            float verticalDelta = desiredPosition.y - currentFollowPosition.y;
+            desiredPosition.y = currentFollowPosition.y + Mathf.Sign(verticalDelta) *
+                Mathf.Max(0f, Mathf.Abs(verticalDelta) - Mathf.Max(0f, verticalDeadZone));
 
             // Bounds clamping if enabled
             if (enableBounds)
