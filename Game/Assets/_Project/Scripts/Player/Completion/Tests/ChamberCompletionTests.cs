@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
@@ -134,6 +135,8 @@ public sealed class ChamberCompletionTests
     [UnityTest] public IEnumerator AuthoredExitTransfersToArchiveAndRemovesPersistentPresentation()
     {
         sequence.DestinationScene="Assets/_Project/Scenes/Sandbox/Sirac/ArchiveTestChamber.unity";
+        sequence.Finished.AddListener(() => throw new System.InvalidOperationException("finish listener failed"));
+        LogAssert.Expect(LogType.Exception, new Regex("finish listener failed"));
         var body=level.Player.GetComponent<Rigidbody2D>();
         level.Player.transform.position=new Vector3(40.5f,3.25f);
         body.position=new Vector2(40.5f,3.25f);
@@ -197,5 +200,36 @@ public sealed class ChamberCompletionTests
         }
         finally {GameControls.BlockGameplay(profile,false);}
         yield return null;yield return null;
+    }
+
+    [UnityTest] public IEnumerator FailingCompletionListenersDoNotStrandThePlayer()
+    {
+        sequence.Started.AddListener(() => throw new System.InvalidOperationException("start listener failed"));
+        sequence.ScreenCovered.AddListener(() => throw new System.InvalidOperationException("cover listener failed"));
+        LogAssert.Expect(LogType.Exception, new Regex("start listener failed"));
+        LogAssert.Expect(LogType.Exception, new Regex("cover listener failed"));
+        Assert.That(sequence.TryBegin(level.Player), Is.True);
+        yield return new WaitForSecondsRealtime(1f);
+        Assert.That(sequence.HasCompleted, Is.True);
+        Assert.That(sequence.IsRunning, Is.False);
+        Assert.That(level.Player.enabled, Is.True);
+        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled, Is.True);
+        Assert.That(level.Player.GetComponent<Rigidbody2D>().simulated, Is.True);
+        Assert.That(GameControls.GameplayAllowed, Is.True);
+    }
+
+    [UnityTest] public IEnumerator CancelFromStartedListenerEndsCleanlyAndAllowsRetry()
+    {
+        UnityEngine.Events.UnityAction cancel = () => sequence.Cancel();
+        sequence.Started.AddListener(cancel);
+        Assert.That(sequence.TryBegin(level.Player), Is.True);
+        yield return null;
+        Assert.That(sequence.IsRunning, Is.False);
+        Assert.That(level.Player.enabled, Is.True);
+        Assert.That(level.Player.GetComponent<PlayerMotor2D>().enabled, Is.True);
+        Assert.That(sequence.CurtainAlpha, Is.Zero);
+        sequence.Started.RemoveListener(cancel);
+        yield return null; yield return null;
+        Assert.That(sequence.TryBegin(level.Player), Is.True);
     }
 }

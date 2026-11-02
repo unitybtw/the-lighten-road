@@ -11,3 +11,9 @@ Assign a `ChamberCompletionProfile` and an enabled Build Settings scene path to 
 ## Verification
 
 Unity 6000.3.2f1 compiled without errors or warnings. All eight completion Play Mode tests passed, including actual scene transfer, cover ordering, input release, local destination and cancellation. Project integrity passed for 599 tracked assets. The [Game view preview](previews/completion-refined.png) shows the current level exit; its hold was temporarily extended in Play Mode to allow capture and was not saved. Saved preferences and the original FirstLightTutorial editor scene were restored. No standalone build, physical controller, or audio listening pass was performed.
+
+## Event safety — 2 November 2026
+
+If a completion event listener throws, its exception is logged and the transition continues to release control and clean up its presentation. UnityEvent does not guarantee later listeners in that same event will run after one throws, so listeners should still handle their own errors. Cancelling synchronously from the Started event leaves the player unlocked and permits a later retry.
+
+Two regression cases reproduced listener and synchronous-cancel failures before this fix. The final CLI Play Mode run passed all 10 completion tests, including a throwing Finished listener during a real scene swap.

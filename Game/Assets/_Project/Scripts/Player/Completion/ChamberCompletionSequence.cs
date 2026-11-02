@@ -47,6 +47,7 @@ namespace TheLightenRoad.Player.Completion
         private bool previousSimulation;
         private Vector2 previousVelocity;
         private bool loading, persistent;
+        private int generation;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -74,25 +75,29 @@ namespace TheLightenRoad.Player.Completion
             }
             active = this;
             IsRunning = true;
+            int run = ++generation;
             Lock(player);
             BuildPresentation();
-            routine = StartCoroutine(Play());
+            var startedRoutine = StartCoroutine(Play(run));
+            if (IsRunning && generation == run) routine = startedRoutine;
             return true;
         }
 
-        private IEnumerator Play()
+        private IEnumerator Play(int run)
         {
             string completedScene = SceneManager.GetActiveScene().name;
             Phase = "Reveal";
             ControllerGlyphService.PlayHaptic(HapticCue.ChamberComplete);
-            Started.Invoke();
+            Notify(Started);
+            if (!IsRunning || generation != run || !isActiveAndEnabled) yield break;
             if (sound.clip != null) sound.Play();
             yield return Animate(Profile.RevealSeconds, t => ApplyReveal(t));
             Phase = "Hold";
             yield return Animate(Profile.HoldSeconds, t => { });
             Phase = "FadeOut";
             yield return Animate(Profile.FadeOutSeconds, t => SetCurtain(t));
-            ScreenCovered.Invoke();
+            Notify(ScreenCovered);
+            if (!IsRunning || generation != run || !isActiveAndEnabled) yield break;
             bool changesScene = !string.IsNullOrWhiteSpace(DestinationScene);
             if (changesScene)
             {
@@ -137,8 +142,14 @@ namespace TheLightenRoad.Player.Completion
             routine = null;
             if (active == this) active = null;
             Cleanup();
-            Finished.Invoke();
+            Notify(Finished);
             if (persistent) Destroy(gameObject);
+        }
+
+        private void Notify(UnityEvent listeners)
+        {
+            try { listeners?.Invoke(); }
+            catch (System.Exception error) { Debug.LogException(error, this); }
         }
 
         private IEnumerator Animate(float seconds, System.Action<float> apply)
@@ -167,7 +178,7 @@ namespace TheLightenRoad.Player.Completion
             IsRunning = false;
             Phase = "Idle";
             if (active == this) active = null;
-            Cancelled.Invoke();
+            Notify(Cancelled);
             return true;
         }
 
