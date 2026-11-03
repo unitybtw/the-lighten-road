@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using NUnit.Framework;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.UI;
@@ -113,7 +114,7 @@ public sealed class LanternHUDTests
 
         controller.SetFlared(true);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
+        Assert.That(hud.ModeText, Is.EqualTo("END FLARE"));
 
         controller.SetFlared(false);
         Step(0.05f);
@@ -133,6 +134,84 @@ public sealed class LanternHUDTests
         {
             Assert.That(hud.GetSlotColor(i), Is.EqualTo(Color.clear));
         }
+    }
+
+    [Test]
+    public void MinimalModeKeepsTheEmptyWarningVisibleDuringTheLastFlare()
+    {
+        hud.MinimalMode = true;
+        fuel.Initialize(2f, 8f);
+        hud.SetTarget(controller);
+        Step(.1f);
+        var prompts = hud.GetComponentsInChildren<CanvasGroup>().Single(g => g.name == "Prompt Labels");
+        Assert.That(prompts.alpha, Is.Zero);
+        Assert.That(controller.SetFlared(true), Is.True);
+        Step(.1f);
+        Assert.That(controller.HasActiveScout, Is.True);
+        Assert.That(fuel.IsEmpty, Is.True);
+        Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
+        Assert.That(hud.IsEmptyWarningVisible, Is.True);
+        Assert.That(prompts.alpha, Is.EqualTo(1f));
+        var key = hud.GetComponentsInChildren<RectTransform>(true).Single(r => r.name == "Bound key icon");
+        Assert.That(key.gameObject.activeSelf, Is.False, "An empty lantern must not advertise another Flare.");
+
+        fuel.AddEmbers(1);
+        Step(.1f);
+        Assert.That(hud.IsEmptyWarningVisible, Is.False);
+        Assert.That(prompts.alpha, Is.Zero, "Recovering fuel restores the chosen minimal layout.");
+    }
+
+    [Test]
+    public void FlarePromptExplainsTheCostAndDoesNotAdvertiseAnUnavailableAction()
+    {
+        Step(.1f);
+        var cost = hud.GetComponentsInChildren<TMPro.TMP_Text>(true).Single(t => t.name == "Flare cost");
+        Assert.That(cost.text, Is.EqualTo("-1 EMBER"));
+        fuel.Initialize(1f, 8f);
+        Step(.1f);
+        Assert.That(controller.SetFlared(true), Is.False);
+        Assert.That(hud.ModeText, Is.EqualTo("NEED 1 EMBER"));
+        Assert.That(cost.text, Is.Empty);
+        var key = hud.GetComponentsInChildren<RectTransform>(true).Single(r => r.name == "Bound key");
+        Assert.That(key.gameObject.activeSelf, Is.False);
+    }
+
+    [Test]
+    public void IdleReservesStayStillAndBurnAuraTracksTheSpentEmbersRemainingLife()
+    {
+        hud.Tick(1f, 1f);
+        var aura = hud.GetComponentsInChildren<UnityEngine.UI.Image>().First(i => i.name == "Ember aura");
+        Color idle = aura.color;
+        hud.Tick(0f, 100f);
+        Assert.That(aura.color, Is.EqualTo(idle), "A held reserve must not pulse just because time passes.");
+        controller.SetFlared(true);
+        controller.TickScout(controller.FlareScoutDuration * .2f);
+        hud.Tick(0f, 100f);
+        float early = hud.GetSlotBurnAuraAlpha(2);
+        float afterSpend = fuel.CurrentFuel;
+        controller.TickScout(controller.FlareScoutDuration * .5f);
+        hud.Tick(0f, 1f);
+        Assert.That(hud.GetSlotBurnAuraAlpha(2), Is.InRange(.001f, early * .5f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(afterSpend), "Presentation must never spend additional fuel.");
+    }
+
+    [UnityTest]
+    public IEnumerator LosingTheTargetHidesStaleInventoryAndReplacementDoesNotInventAPickup()
+    {
+        Step(.1f);
+        Object.DestroyImmediate(playerObject);
+        hud.Tick(.1f, 0f);
+        Assert.That(hud.Canvas.enabled, Is.False);
+
+        playerObject = new GameObject("Replacement HUD Lantern");
+        fuel = playerObject.AddComponent<LanternFuel>();
+        controller = playerObject.AddComponent<LanternController>();
+        fuel.Initialize(4f, 8f);
+        yield return new WaitForSecondsRealtime(.4f);
+        Assert.That(hud.Canvas.enabled, Is.True);
+        Assert.That(hud.Target, Is.SameAs(controller));
+        Assert.That(hud.DisplayedCharges, Is.EqualTo(4));
+        Assert.That(hud.IsShowingPickup, Is.False);
     }
 
     [Test]
@@ -296,10 +375,10 @@ public sealed class LanternHUDTests
 
         controller.SetFlared(true);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
+        Assert.That(hud.ModeText, Is.EqualTo("END FLARE"));
 
         hud.MinimalMode = false;
         Assert.That(hud.MinimalMode, Is.False);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE ACTIVE"));
+        Assert.That(hud.ModeText, Is.EqualTo("END FLARE"));
     }
 }

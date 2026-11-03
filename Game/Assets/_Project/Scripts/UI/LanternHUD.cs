@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace TheLightenRoad.UI
 {
     /// <summary>
-    /// Quiet stone reserve with two-stage wear: fade to half, then fracture and disappear.
+    /// Held ember reserve and the fading, fracturing stone spent by a Flare.
     /// Shares the controller's gameplay timeline; presentation never mutates fuel.
     /// Art and crack audio can be replaced by the artists' final assets.
     /// </summary>
@@ -31,7 +31,7 @@ namespace TheLightenRoad.UI
         [SerializeField, Range(0f, 1f)] private float emberBreakVolume = 0.25f;
 
         [Header("Minimalism & Burning Ember Feedback")]
-        [Tooltip("When enabled, hides the text prompts (key bind, mode label) and relies on the burning ember particles.")]
+        [Tooltip("Hide optional action text. An empty-lantern warning always remains visible.")]
         [SerializeField] private bool minimalMode = false;
         [Tooltip("Enable rising spark particles from the actively burning ember during Flare.")]
         [SerializeField] private bool enableBurnParticles = true;
@@ -98,6 +98,8 @@ namespace TheLightenRoad.UI
         private float popupTimer;
         private float countReaction;
         private bool subscribed;
+        private LanternController boundTarget;
+        private float bindRetryTimer;
         private AudioSource breakAudio;
         private AudioClip placeholderBreakClip;
         private int lastBurningSlot = -1;
@@ -107,6 +109,9 @@ namespace TheLightenRoad.UI
         public float GetSlotCrackAlpha(int index) => ValidSlot(index) ? slots[index].Cracks.color.a : 0f;
         public float GetSlotBurnAuraAlpha(int index) => ValidSlot(index) && slots[index].BurnAura != null ? slots[index].BurnAura.color.a : 0f;
         public int ActiveSparkCount => GetActiveSparkCount();
+        public bool IsEmptyWarningVisible => target != null && target.Fuel != null && target.Fuel.IsEmpty &&
+            canvas != null && canvas.enabled && panelGroup != null && panelGroup.alpha > 0f &&
+            promptGroup != null && promptGroup.alpha > 0f;
         public bool IsEmberActivelyBurning => target != null && target.HasActiveScout;
         private Rect lastSafeArea;
         private Vector2Int lastScreen;
@@ -139,8 +144,6 @@ namespace TheLightenRoad.UI
         public Sprite GetSlotSprite(int index) => ValidSlot(index) ? slots[index].Fill.sprite : null;
         public Color GetSlotColor(int index) => ValidSlot(index) ? slots[index].Fill.color : Color.clear;
         private bool lastChangeWasGain;
-        private Key lastToggleKey = (Key)(-1);
-        private string cachedKeyString = string.Empty;
         private string cachedModeString = string.Empty;
         private string cachedDetailString = string.Empty;
 
@@ -173,9 +176,6 @@ namespace TheLightenRoad.UI
                 maxDisplaySlots = LanternFuel.MaxEmbers;
                 BuildHierarchy();
             }
-            entrance = 0f;
-            lastCharges = -1;
-            popupTimer = countReaction = 0f;
             TryBind();
         }
 
@@ -191,19 +191,6 @@ namespace TheLightenRoad.UI
         {
             Unbind();
             target = controller;
-            lastCharges = -1;
-            popupTimer = 0f;
-            countReaction = 0f;
-            ClearAllSparks();
-            if (slots != null)
-            {
-                foreach (Slot slot in slots)
-                {
-                    slot.Charges = -1;
-                    slot.Reaction = 0f;
-                    slot.SparkSpawnTimer = 0f;
-                }
-            }
             TryBind();
         }
 
@@ -211,7 +198,8 @@ namespace TheLightenRoad.UI
         {
             if (promptGroup != null)
             {
-                promptGroup.alpha = minimalMode ? 0f : 1f;
+                bool empty = target != null && target.Fuel != null && target.Fuel.IsEmpty;
+                promptGroup.alpha = minimalMode && !empty ? 0f : 1f;
                 promptGroup.blocksRaycasts = false;
                 promptGroup.interactable = false;
             }
@@ -251,17 +239,40 @@ namespace TheLightenRoad.UI
         private void TryBind()
         {
             if (target == null)
-                target = FindAnyObjectByType<LanternController>();
-            if (target == null || subscribed || target.Fuel == null)
+                target = LanternController.ActiveInstance != null
+                    ? LanternController.ActiveInstance : FindAnyObjectByType<LanternController>();
+            if (target != null && target == boundTarget && subscribed && target.Fuel != null) return;
+            Unbind();
+            ResetPresentation();
+            if (target == null || target.Fuel == null)
+            {
+                if (canvas != null) canvas.enabled = false;
                 return;
-            target.EmberBroken += HandleEmberBroken;
+            }
+            boundTarget = target;
+            boundTarget.EmberBroken += HandleEmberBroken;
             subscribed = true;
+        }
+
+        private void ResetPresentation()
+        {
+            lastCharges = lastBurningSlot = -1;
+            entrance = popupTimer = countReaction = 0f;
+            ClearAllSparks();
+            if (slots == null) return;
+            foreach (var slot in slots)
+            {
+                slot.Charges = -1;
+                slot.Reaction = slot.SparkSpawnTimer = 0f;
+                slot.Gained = slot.Broken = false;
+            }
         }
 
         private void Unbind()
         {
-            if (subscribed && target != null) target.EmberBroken -= HandleEmberBroken;
+            if (subscribed && boundTarget != null) boundTarget.EmberBroken -= HandleEmberBroken;
             subscribed = false;
+            boundTarget = null;
         }
 
         private void HandleEmberBroken()
@@ -299,15 +310,23 @@ namespace TheLightenRoad.UI
 
         private void Update()
         {
-            if (!subscribed) TryBind();
+            if (target != boundTarget || boundTarget == null || !subscribed)
+            {
+                bindRetryTimer -= Time.unscaledDeltaTime;
+                if (target != boundTarget || (target != null && !subscribed) || bindRetryTimer <= 0f)
+                {
+                    bindRetryTimer = .35f;
+                    TryBind();
+                }
+            }
             Tick(Time.unscaledDeltaTime, Time.unscaledTime);
         }
 
         public void Tick(float deltaTime, float time)
         {
-            bool available = isActiveAndEnabled;
+            bool available = isActiveAndEnabled && target != null && target.Fuel != null;
             if (canvas != null) canvas.enabled = available;
-            if (!available || target == null || target.Fuel == null) return;
+            if (!available) return;
 
             float dt = Mathf.Max(0f, deltaTime);
             LanternFuel fuel = target.Fuel;
@@ -406,6 +425,9 @@ namespace TheLightenRoad.UI
         private void UpdateStatus(int charges)
         {
             bool active = target.HasActiveScout;
+            bool empty = charges <= 0;
+            bool hasWholeEmber = charges >= LanternFuel.ChargesPerEmber;
+            bool canUseKey = !empty && !target.IsDimming && (active || hasWholeEmber);
             var style = ControllerGlyphService.ActiveStyle;
             if(cachedPromptStyle!=style || cachedFlareKey!=target.ToggleFlareKey)
             {
@@ -414,6 +436,8 @@ namespace TheLightenRoad.UI
                 cachedFlareText=style==ControllerPromptStyle.PlayStation?"R2":style==ControllerPromptStyle.Xbox?"RT":cachedFlareKey.ToString().ToUpperInvariant();
             }
             var flareSprite = cachedFlareSprite;
+            keyIcon.gameObject.SetActive(canUseKey && flareSprite != null);
+            keyLabel.gameObject.SetActive(canUseKey && flareSprite == null);
 
             if (keyIcon != null)
             {
@@ -439,21 +463,28 @@ namespace TheLightenRoad.UI
                 if (keyLabel.text != keyText) keyLabel.text = keyText;
             }
 
-            string mode = active ? (target.IsDimming ? "DIMMING" : "FLARE ACTIVE") : charges <= 0 ? "NO EMBERS" : "FLARE";
+            // The fuel warning takes priority even while the last spent stone is still burning.
+            string mode = empty ? "NO EMBERS" : active ? (target.IsDimming ? "DIMMING" : "END FLARE")
+                : hasWholeEmber ? "FLARE" : "NEED 1 EMBER";
             if (mode != cachedModeString)
             {
                 cachedModeString = mode;
                 modeLabel.text = mode;
+                modeLabel.fontSize = empty ? 12f : 8.5f;
+                modeLabel.rectTransform.sizeDelta = new Vector2(empty ? Width : 78f, empty ? 20f : 16f);
             }
-            modeLabel.color = active ? Gold : Muted;
+            modeLabel.color = empty ? Ivory : active ? Gold : Muted;
+            modeLabel.rectTransform.anchoredPosition = new Vector2(canUseKey ? 26f : 0f, 0f);
 
-            string detail = active ? (target.ScoutProgress < .6f ? "CRACKING" : "FADING") : "";
+            // Wear is already shown on the stone. Reserve this line for the actual action cost.
+            string detail = !active && hasWholeEmber ? "-1 EMBER" : "";
             if (detail != cachedDetailString)
             {
                 cachedDetailString = detail;
                 detailLabel.text = detail;
             }
             detailLabel.color = Muted;
+            ApplyMinimalMode();
         }
 
         private void AnimateSlots(float dt, float time)
@@ -470,8 +501,7 @@ namespace TheLightenRoad.UI
                 slot.Group.alpha = EaseOut(reveal);
                 slot.Root.anchoredPosition = new Vector2(i * 28f, -(1f - EaseOut(reveal)) * 2f);
 
-                float breath = reduceMotion ? 0f : Mathf.Sin(time * 1.6f + i * 0.85f) * 0.015f;
-                float alpha = slot.Charges > 0 || i == lastBurningSlot ? (0.07f + breath) * (i == lastBurningSlot ? target.ScoutEmberLevel : 1f) : 0f;
+                float alpha = slot.Charges > 0 || i == lastBurningSlot ? .05f * (i == lastBurningSlot ? target.ScoutEmberLevel : 1f) : 0f;
                 slot.Glow.color = WithAlpha(Gold, alpha + reaction * (slot.Gained ? 0.25f : 0.1f));
                 slot.Ghost.color = WithAlpha(Ivory, !slot.Gained ? reaction * 0.35f : 0f);
                 slot.Ghost.rectTransform.anchoredPosition = new Vector2(1f,
@@ -482,39 +512,30 @@ namespace TheLightenRoad.UI
                 bool isBurningThisSlot = (target != null && target.HasActiveScout && i == lastBurningSlot);
                 if (isBurningThisSlot && slot.BurnAura != null)
                 {
-                    float heatFlicker = Mathf.PerlinNoise(time * 16f, i * 11.3f);
-                    float auraAlpha = reduceMotion ? 0.55f : (0.5f + 0.35f * heatFlicker);
-                    Color baseFire = target.ScoutIsSecondUse
-                        ? new Color(1f, 0.32f, 0.1f, auraAlpha)
-                        : new Color(1f, 0.62f, 0.18f, auraAlpha);
-                    slot.BurnAura.color = baseFire;
-                    if (!reduceMotion)
-                    {
-                        float scale = 1f + 0.14f * (heatFlicker - 0.5f);
-                        slot.BurnAura.rectTransform.localScale = new Vector3(scale, scale, 1f);
-                    }
+                    slot.BurnAura.color = new Color(1f, .62f, .18f, .18f * target.ScoutEmberLevel);
+                    slot.BurnAura.rectTransform.localScale = Vector3.one;
 
                     if (enableBurnParticles && !reduceMotion)
                     {
                         slot.SparkSpawnTimer -= dt;
                         if (slot.SparkSpawnTimer <= 0f)
                         {
-                            slot.SparkSpawnTimer = 0.06f;
+                            slot.SparkSpawnTimer = .22f;
                             if (slot.Sparks != null)
                             {
                                 for (int s = 0; s < slot.Sparks.Length; s++)
                                 {
                                     if (!slot.Sparks[s].Active)
                                     {
-                                        float maxLife = Random.Range(0.35f, 0.65f);
-                                        float size = Random.Range(3f, 5f);
+                                        float maxLife = Random.Range(.25f, .4f);
+                                        float size = Random.Range(.8f, 1.3f);
                                         slot.Sparks[s].Active = true;
                                         slot.Sparks[s].Life = maxLife;
                                         slot.Sparks[s].MaxLife = maxLife;
                                         slot.Sparks[s].BaseSize = size;
                                         slot.Sparks[s].Seed = Random.value * 100f;
-                                        slot.Sparks[s].Position = new Vector2(Random.Range(-5f, 5f), Random.Range(-4f, 6f));
-                                        slot.Sparks[s].Velocity = new Vector2(Random.Range(-10f, 10f), Random.Range(30f, 58f));
+                                        slot.Sparks[s].Position = new Vector2(Random.Range(-4f, 4f), Random.Range(-3f, 3f));
+                                        slot.Sparks[s].Velocity = new Vector2(Random.Range(-3f, 3f), Random.Range(6f, 16f));
                                         break;
                                     }
                                 }
@@ -547,7 +568,7 @@ namespace TheLightenRoad.UI
 
                         float t = 1f - Mathf.Clamp01(slot.Sparks[s].Life / slot.Sparks[s].MaxLife);
                         slot.Sparks[s].Position += slot.Sparks[s].Velocity * dt;
-                        float drift = Mathf.Sin(time * 14f + slot.Sparks[s].Seed) * 10f * dt;
+                        float drift = Mathf.Sin(time * 6f + slot.Sparks[s].Seed) * 2f * dt;
                         slot.Sparks[s].Position.x += drift;
 
                         Color sparkColor;
@@ -685,8 +706,8 @@ namespace TheLightenRoad.UI
             promptGroup = promptContainer.gameObject.AddComponent<CanvasGroup>();
             keyLabel = Text("Bound key", promptContainer, new Vector2(0f, 0f), new Vector2(16f, 16f), 8.5f, "F", Muted);
             keyIcon = Picture("Bound key icon", promptContainer, new Vector2(0f, 0f), new Vector2(22f, 22f), null, Color.clear);
-            modeLabel = Text("Action", promptContainer, new Vector2(26f, 0f), new Vector2(85f, 16f), 8.5f, "FLARE", Muted);
-            detailLabel = Text("Ember wear", promptContainer, new Vector2(110f, 0f), new Vector2(70f, 16f), 8.5f, "", Muted);
+            modeLabel = Text("Action", promptContainer, new Vector2(26f, 0f), new Vector2(78f, 16f), 8.5f, "FLARE", Muted);
+            detailLabel = Text("Flare cost", promptContainer, new Vector2(104f, 0f), new Vector2(70f, 16f), 8.5f, "", Muted);
             detailLabel.alignment = TextAlignmentOptions.MidlineRight;
 
             popupLabel = Text("Pickup receipt", panel, new Vector2(0f, -Height - 5f), new Vector2(Width, 16f), 8f, "", Color.clear, 0.4f);
