@@ -290,6 +290,11 @@ namespace TheLightenRoad.Frontend
             if (IsPaused)
             {
                 RestoreLostPauseSelection(k, g);
+                if (currentView == "settings")
+                {
+                    if ((k != null && k.qKey.wasPressedThisFrame) || (g != null && g.leftShoulder.wasPressedThisFrame)) SelectSettingsSection((pauseSettingsSection + 3) % 4);
+                    else if ((k != null && k.eKey.wasPressedThisFrame) || (g != null && g.rightShoulder.wasPressedThisFrame)) SelectSettingsSection((pauseSettingsSection + 1) % 4);
+                }
                 if (k != null)
                 {
                     if (currentView == "controls")
@@ -308,7 +313,7 @@ namespace TheLightenRoad.Frontend
 
                     if (k.rKey.wasPressedThisFrame)
                     {
-                        if (currentView == "controls") TogglePauseVibration();
+                        if (currentView == "settings") RequestResetDefaults();
                     }
                 }
 
@@ -316,7 +321,7 @@ namespace TheLightenRoad.Frontend
                 {
                     if (g.buttonNorth.wasPressedThisFrame)
                     {
-                        if (currentView == "controls") TogglePauseVibration();
+                        if (currentView == "settings") RequestResetDefaults();
                     }
 
                     if (currentView == "controls")
@@ -343,7 +348,7 @@ namespace TheLightenRoad.Frontend
             if (IsConfirmationOpen && confirmationCancelButton != null) target = confirmationCancelButton.gameObject;
             else if (currentView == "main" && resumeButton != null) target = resumeButton.gameObject;
             else if (currentView == "controls" && controlsBackButton != null) target = controlsBackButton.gameObject;
-            else if (currentView == "settings" && masterSlider != null) target = masterSlider.gameObject;
+            else if (currentView == "settings" && FirstPauseSetting != null) target = FirstPauseSetting.gameObject;
             if (target != null) EventSystem.current.SetSelectedGameObject(target);
         }
 
@@ -356,6 +361,7 @@ namespace TheLightenRoad.Frontend
             Time.timeScale = 0f;
 
             SuspendPlayerInput(true);
+            lastHomeSelection = null;
             UpdateChamberInfo();
             ShowMainView();
 
@@ -443,13 +449,12 @@ namespace TheLightenRoad.Frontend
             RefreshPauseFooterPrompts();
 
             if (EventSystem.current != null && resumeButton != null)
-            {
-                EventSystem.current.SetSelectedGameObject(resumeButton.gameObject);
-            }
+                EventSystem.current.SetSelectedGameObject(lastHomeSelection != null && lastHomeSelection.activeInHierarchy ? lastHomeSelection : resumeButton.gameObject);
         }
 
         public void ShowSettingsView()
         {
+            RememberHomeSelection();
             HideConfirmation();
             FlushPauseSettingsSave();
             currentView = "settings";
@@ -461,18 +466,15 @@ namespace TheLightenRoad.Frontend
             AnimateSubView(settingsPanelGroup);
             RefreshPauseFooterPrompts();
 
-            if (EventSystem.current != null && masterSlider != null)
-            {
-                EventSystem.current.SetSelectedGameObject(masterSlider.gameObject);
-            }
+            SelectSettingsSection(pauseSettingsSection);
         }
 
         public void ShowControlsView()
         {
+            RememberHomeSelection();
             HideConfirmation();
             FlushPauseSettingsSave();
             currentView = "controls";
-            RefreshPauseControlsQuickOptions();
             if (mainHeader != null) mainHeader.SetActive(false);
             if (mainPanel != null) mainPanel.SetActive(false);
             if (settingsPanel != null) settingsPanel.SetActive(false);
@@ -693,6 +695,7 @@ namespace TheLightenRoad.Frontend
                 reducedMotionToggle.SetIsOnWithoutNotify(MenuPreferences.ReducedMotion);
                 UpdateSwitchVisual(reducedMotionToggle);
             }
+            SyncPauseControllerSettings();
         }
 
         private static void UpdateSliderPercentLabel(Slider slider)
@@ -809,8 +812,8 @@ namespace TheLightenRoad.Frontend
             r.anchoredPosition = new Vector2(-280f, -10f);
 
             resumeButton = CreatePauseAction("ResumeButton", r, "Continue", "Return to your current attempt.", 140f, Resume);
-            var settingsBtn = CreatePauseAction("SettingsButton", r, "Settings", "Adjust audio, display and motion.", 62f, ShowSettingsView);
-            var controlsBtn = CreatePauseAction("ControlsButton", r, "Controls", "View keyboard and controller bindings.", -16f, ShowControlsView);
+            var settingsBtn = CreatePauseAction("SettingsButton", r, "Settings", "Audio, display, controller and accessibility.", 62f, ShowSettingsView);
+            var controlsBtn = CreatePauseAction("ControlsButton", r, "Button guide", "See keyboard, Xbox and PlayStation bindings.", -16f, ShowControlsView);
             var restartBtn = CreatePauseAction("RestartButton", r, "Restart chamber", "Start again from the last checkpoint.", -114f, RequestRestartChamber);
             var quitBtn = CreatePauseAction("QuitButton", r, "Return to title", "Leave this attempt and return to the title screen.", -192f, RequestQuitToMainMenu);
 
@@ -914,29 +917,7 @@ namespace TheLightenRoad.Frontend
             var resetBtn = CreateEtherealActionButton("ResetDefaultsButton", r, "Reset Defaults", new Vector2(-160f, -205f), RequestResetDefaults, isPrimary: false, width: 230f);
             settingsBackButton = CreateEtherealActionButton("SettingsBackButton", r, "<  Return to Pause", new Vector2(160f, -205f), ShowMainView, isPrimary: true, width: 260f);
 
-            var sNavButtons = new Selectable[] { masterSlider, musicSlider, effectsSlider, fullscreenToggle, vsyncToggle, reducedMotionToggle };
-            for (int i = 0; i < sNavButtons.Length; i++)
-            {
-                var nav = sNavButtons[i].navigation;
-                nav.mode = Navigation.Mode.Explicit;
-                nav.selectOnUp = i > 0 ? sNavButtons[i - 1] : settingsBackButton;
-                nav.selectOnDown = i < sNavButtons.Length - 1 ? sNavButtons[i + 1] : resetBtn;
-                sNavButtons[i].navigation = nav;
-            }
-
-            var rNav = resetBtn.navigation;
-            rNav.mode = Navigation.Mode.Explicit;
-            rNav.selectOnUp = reducedMotionToggle;
-            rNav.selectOnRight = settingsBackButton;
-            rNav.selectOnDown = masterSlider;
-            resetBtn.navigation = rNav;
-
-            var bNav = settingsBackButton.navigation;
-            bNav.mode = Navigation.Mode.Explicit;
-            bNav.selectOnUp = reducedMotionToggle;
-            bNav.selectOnLeft = resetBtn;
-            bNav.selectOnDown = masterSlider;
-            settingsBackButton.navigation = bNav;
+            BuildPauseSettingsWorkspace();
         }
 
         private readonly TMP_Text[] pauseControlsRowKeyLabels = new TMP_Text[6];
@@ -944,10 +925,7 @@ namespace TheLightenRoad.Frontend
         private readonly Button[] pauseControlsDeviceTabs = new Button[3];
         private readonly TMP_Text[] pauseControlsDeviceTabLabels = new TMP_Text[3];
         private int selectedPauseControlsDeviceTab = 0;
-        private Button pausePromptStyleButton;
-        private TMP_Text pausePromptStyleText;
-        private Button pauseVibrationButton;
-        private TMP_Text pauseVibrationText;
+        private Button controlsSettingsButton;
 
         private void BuildControlsPanel(Transform parent)
         {
@@ -969,7 +947,7 @@ namespace TheLightenRoad.Frontend
             }
 
             var titleLabel = CreateLabel("ControlsTitle", controlsPanel.transform, new Vector2(0f, 205f), new Vector2(600f, 30f),
-                "CONTROLS & GAMEPAD", 21f, TextAlignmentOptions.Center, radiantIvory);
+                "BUTTON GUIDE", 21f, TextAlignmentOptions.Center, radiantIvory);
             titleLabel.fontStyle = FontStyles.Bold;
             titleLabel.characterSpacing = 5f;
 
@@ -1023,93 +1001,20 @@ namespace TheLightenRoad.Frontend
             pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", y - step * 4, 4);
             pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5, 5);
 
-            // Quick options bar: Prompt Style and Vibration
-            pausePromptStyleButton = CreateEtherealActionButton("PausePromptStyleBtn", r, "PROMPT: < AUTO >", new Vector2(-155f, -150f), CyclePausePromptStyle, isPrimary: false, width: 280f);
-            pausePromptStyleText = pausePromptStyleButton.GetComponentInChildren<TMP_Text>();
-            if (pausePromptStyleText != null) pausePromptStyleText.fontSize = 12f;
-
-            pauseVibrationButton = CreateEtherealActionButton("PauseVibrationBtn", r, "RUMBLE: < ENABLED >", new Vector2(155f, -150f), TogglePauseVibration, isPrimary: false, width: 280f);
-            pauseVibrationText = pauseVibrationButton.GetComponentInChildren<TMP_Text>();
-            if (pauseVibrationText != null) pauseVibrationText.fontSize = 12f;
-
-            controlsBackButton = CreateEtherealActionButton("ControlsBackButton", r, "<  Return to Pause", new Vector2(0f, -205f), ShowMainView, isPrimary: true, width: 260f);
-
+            controlsSettingsButton = CreateEtherealActionButton("ControllerSettingsButton", r, "Controller settings", new Vector2(0, -232), ShowControllerSettings, false, 400);
+            controlsBackButton = CreateEtherealActionButton("ControlsBackButton", r, "Return to pause", new Vector2(0, -300), ShowMainView, true, 360);
             for (int i = 0; i < 3; i++)
-            {
-                var tabNav = pauseControlsDeviceTabs[i].navigation;
-                tabNav.mode = Navigation.Mode.Explicit;
-                tabNav.selectOnLeft = pauseControlsDeviceTabs[(i - 1 + 3) % 3];
-                tabNav.selectOnRight = pauseControlsDeviceTabs[(i + 1) % 3];
-                tabNav.selectOnDown = pausePromptStyleButton;
-                tabNav.selectOnUp = controlsBackButton;
-                pauseControlsDeviceTabs[i].navigation = tabNav;
-            }
-
-            var promptNav = pausePromptStyleButton.navigation;
-            promptNav.mode = Navigation.Mode.Explicit;
-            promptNav.selectOnUp = pauseControlsDeviceTabs[1];
-            promptNav.selectOnRight = pauseVibrationButton;
-            promptNav.selectOnDown = controlsBackButton;
-            pausePromptStyleButton.navigation = promptNav;
-
-            var vibNav = pauseVibrationButton.navigation;
-            vibNav.mode = Navigation.Mode.Explicit;
-            vibNav.selectOnUp = pauseControlsDeviceTabs[2];
-            vibNav.selectOnLeft = pausePromptStyleButton;
-            vibNav.selectOnDown = controlsBackButton;
-            pauseVibrationButton.navigation = vibNav;
-
-            var cBackNav = controlsBackButton.navigation;
-            cBackNav.mode = Navigation.Mode.Explicit;
-            cBackNav.selectOnUp = pausePromptStyleButton;
-            cBackNav.selectOnDown = pauseControlsDeviceTabs[1];
-            controlsBackButton.navigation = cBackNav;
+                pauseControlsDeviceTabs[i].navigation = new Navigation { mode = Navigation.Mode.Explicit,
+                    selectOnLeft = pauseControlsDeviceTabs[(i + 2) % 3], selectOnRight = pauseControlsDeviceTabs[(i + 1) % 3],
+                    selectOnDown = controlsSettingsButton, selectOnUp = controlsBackButton };
+            controlsSettingsButton.navigation = new Navigation { mode = Navigation.Mode.Explicit,
+                selectOnUp = pauseControlsDeviceTabs[1], selectOnDown = controlsBackButton };
+            controlsBackButton.navigation = new Navigation { mode = Navigation.Mode.Explicit,
+                selectOnUp = controlsSettingsButton, selectOnDown = pauseControlsDeviceTabs[1] };
 
             var initialStyle = ControllerGlyphService.ActiveStyle;
             int defaultTab = initialStyle == ControllerPromptStyle.PlayStation ? 2 : (initialStyle == ControllerPromptStyle.Xbox ? 1 : 0);
             SetPauseControlsDeviceTab(defaultTab);
-            RefreshPauseControlsQuickOptions();
-        }
-
-        private void CyclePausePromptStyle()
-        {
-            int current = MenuPreferences.ControllerStyle;
-            int next = (current + 1) % 4;
-            MenuPreferences.SetControllerStyle(next);
-            RefreshPauseControlsQuickOptions();
-            var active = ControllerGlyphService.ActiveStyle;
-            int targetTab = active == ControllerPromptStyle.PlayStation ? 2 : (active == ControllerPromptStyle.Xbox ? 1 : 0);
-            SetPauseControlsDeviceTab(targetTab);
-            if (Application.isPlaying) SoundEffectManager.Instance?.PlayUIClick();
-        }
-
-        private void TogglePauseVibration()
-        {
-            bool current = MenuPreferences.Vibration;
-            MenuPreferences.SetVibration(!current);
-            RefreshPauseControlsQuickOptions();
-            if (!current && Application.isPlaying)
-            {
-                ControllerGlyphService.PlayHaptic(HapticCue.Preview);
-                SoundEffectManager.Instance?.PlayUIClick();
-            }
-        }
-
-        private void RefreshPauseControlsQuickOptions()
-        {
-            if (pausePromptStyleText != null)
-            {
-                int style = MenuPreferences.ControllerStyle;
-                string label = "PROMPT: < AUTO >";
-                if (style == 1) label = "PROMPT: < XBOX >";
-                else if (style == 2) label = "PROMPT: < PLAYSTATION >";
-                else if (style == 3) label = "PROMPT: < KEYBOARD >";
-                pausePromptStyleText.text = label;
-            }
-            if (pauseVibrationText != null)
-            {
-                pauseVibrationText.text = MenuPreferences.Vibration ? "RUMBLE: < ON >" : "RUMBLE: < OFF >";
-            }
         }
 
         public void SetPauseControlsDeviceTab(int tab)
@@ -1123,13 +1028,17 @@ namespace TheLightenRoad.Frontend
                 if (marker != null) marker.gameObject.SetActive(active);
                 if (pauseControlsDeviceTabLabels[i] != null)
                 {
-                    pauseControlsDeviceTabLabels[i].text = active ? $"< {rawNames[i]} >" : rawNames[i];
+                    pauseControlsDeviceTabLabels[i].text = rawNames[i];
                     pauseControlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
                     pauseControlsDeviceTabLabels[i].fontStyle = active ? FontStyles.Bold : FontStyles.Normal;
                 }
             }
 
             if (pauseControlsRowKeyLabels[0] == null) return;
+            var movementDescription = pauseControlsRowKeyLabels[0].transform.parent.parent.Find("Description")?.GetComponent<TMP_Text>();
+            if (movementDescription != null) movementDescription.text = selectedPauseControlsDeviceTab == 0
+                ? "Walk left / right; W or Up at a ledge climbs"
+                : "Move left / right; press up at a ledge to climb.";
 
             if (selectedPauseControlsDeviceTab == 0) // Keyboard
             {
@@ -1234,7 +1143,7 @@ namespace TheLightenRoad.Frontend
             {
                 if (currentView == "settings") RequestResetDefaults();
                 else if (currentView == "main") RequestRestartChamber();
-                else if (currentView == "controls") TogglePauseVibration();
+
             });
 
             // Slot 3: SWITCH TAB
@@ -1290,11 +1199,11 @@ namespace TheLightenRoad.Frontend
 
             // Footer bar slots
             if (pauseFooterBar == null) return;
-            bool compactFooter = currentView != "controls";
+            bool compactFooter = currentView != "controls" && currentView != "settings";
             var selectSlot = (RectTransform)pauseFooterSelectIcon.transform.parent;
             var backSlot = (RectTransform)pauseFooterBackIcon.transform.parent;
-            selectSlot.anchoredPosition = new Vector2(compactFooter ? -180 : -450, 0);
-            backSlot.anchoredPosition = new Vector2(compactFooter ? 180 : -150, 0);
+            selectSlot.anchoredPosition = new Vector2(compactFooter ? -180 : (currentView == "controls" ? -360 : -450), 0);
+            backSlot.anchoredPosition = new Vector2(compactFooter ? 180 : (currentView == "controls" ? 0 : -150), 0);
 
             // Slot 0: Select
             if (pauseFooterSelectIcon != null)
@@ -1314,7 +1223,7 @@ namespace TheLightenRoad.Frontend
             }
 
             // Slot 1: Back / Resume
-            string backLabel = currentView == "main" ? "RESUME" : "BACK";
+            string backLabel = currentView == "main" ? "CONTINUE" : "BACK";
             if (pauseFooterBackIcon != null)
             {
                 if (isPad)
@@ -1331,10 +1240,10 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // Destructive actions remain deliberate menu selections, never a spare face-button shortcut.
-            if (pauseFooterResetIcon != null) pauseFooterResetIcon.transform.parent.gameObject.SetActive(currentView == "controls");
+            // Restoring preferences always opens the confirmation before changing anything.
+            if (pauseFooterResetIcon != null) pauseFooterResetIcon.transform.parent.gameObject.SetActive(currentView == "settings");
             // Slot 2: Rumble preference shortcut
-            string resetLabel = currentView == "settings" ? "RESTORE DEFAULTS" : (currentView == "controls" ? "TOGGLE RUMBLE" : "RESTART LEVEL");
+            string resetLabel = "RESTORE DEFAULTS";
             if (pauseFooterResetIcon != null)
             {
                 if (isPad)
@@ -1354,7 +1263,8 @@ namespace TheLightenRoad.Frontend
             // Slot 3: Switch Tab
             if (pauseFooterTabIcon != null)
             {
-                bool showTabSlot = (currentView == "controls");
+                bool showTabSlot = currentView == "controls" || currentView == "settings";
+                ((RectTransform)pauseFooterTabIcon.transform.parent).anchoredPosition = new Vector2(currentView == "controls" ? 360 : 450, 0);
                 pauseFooterTabIcon.transform.parent.gameObject.SetActive(showTabSlot);
                 if (showTabSlot)
                 {
@@ -1761,7 +1671,7 @@ namespace TheLightenRoad.Frontend
             var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(240f, 36f), new Vector2(0f, 0.5f), new Vector2(120f, 0f));
             var badgeImg = badge.gameObject.AddComponent<Image>();
             badgeImg.sprite = softRadialSprite;
-            badgeImg.color = new Color(1.0f, 0.72f, 0.28f, 0.16f);
+            badgeImg.color = new Color(.18f, .16f, .12f, .25f);
 
             var iconRect = CreateAnchoredRect("Glyph Icon", badge, new Vector2(34f, 34f), new Vector2(0f, 0.5f), new Vector2(24f, 0f));
             var iconImg = iconRect.gameObject.AddComponent<Image>();

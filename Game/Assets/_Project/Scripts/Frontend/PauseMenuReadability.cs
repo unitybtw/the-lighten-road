@@ -17,13 +17,11 @@ namespace TheLightenRoad.Frontend
             if(settingsTitle!=null){settingsTitle.fontSize=32;settingsTitle.rectTransform.anchoredPosition=new Vector2(0,305);settingsTitle.rectTransform.sizeDelta=new Vector2(800,48);}
             var crown=settingsRoot.Find("Settings Top Filigree") as RectTransform;
             if(crown!=null)crown.gameObject.SetActive(false);
-            Transform[] rows={masterSlider.transform.parent,musicSlider.transform.parent,effectsSlider.transform.parent,fullscreenToggle.transform,vsyncToggle.transform,reducedMotionToggle.transform};
-            for(int i=0;i<rows.Length;i++)
-            { var r=(RectTransform)rows[i];MenuReadability.Row(r);r.anchoredPosition=new Vector2(0,220-i*78); }
+            LayoutPauseSettingsWorkspace();
             var bottom=settingsRoot.Find("Settings Bottom Filigree");if(bottom!=null)bottom.gameObject.SetActive(false);
             var reset=settingsRoot.Find("ResetDefaultsButton") as RectTransform;
-            if(reset!=null)MenuReadability.Place(reset,new Vector2(-196,-286),new Vector2(360,56));
-            MenuReadability.Place((RectTransform)settingsBackButton.transform,new Vector2(196,-286),new Vector2(360,56));
+            if(reset!=null)MenuReadability.Place(reset,new Vector2(-196,-306),new Vector2(360,56));
+            MenuReadability.Place((RectTransform)settingsBackButton.transform,new Vector2(196,-306),new Vector2(360,56));
             var controlsRoot=(RectTransform)controlsPanel.transform;controlsRoot.sizeDelta=new Vector2(1040,760);
             var title=controlsRoot.Find("ControlsTitle")?.GetComponent<TMP_Text>();
             if(title!=null){title.fontSize=32;MenuReadability.Place(title.rectTransform,new Vector2(0,305),new Vector2(800,48));}
@@ -59,8 +57,7 @@ namespace TheLightenRoad.Frontend
                 if(action!=null){action.fontSize=22;MenuReadability.Place(action.rectTransform,new Vector2(370,14),new Vector2(560,32));}
                 if(description!=null){description.fontSize=20;MenuReadability.Place(description.rectTransform,new Vector2(370,-16),new Vector2(560,30));}
             }
-            MenuReadability.Place((RectTransform)pausePromptStyleButton.transform,new Vector2(-196,-232),new Vector2(360,56));
-            MenuReadability.Place((RectTransform)pauseVibrationButton.transform,new Vector2(196,-232),new Vector2(360,56));
+            MenuReadability.Place((RectTransform)controlsSettingsButton.transform,new Vector2(0,-232),new Vector2(400,56));
             MenuReadability.Place((RectTransform)controlsBackButton.transform,new Vector2(0,-300),new Vector2(360,56));
             MenuReadability.Footer(pauseFooterBar);pauseFooterBar.anchoredPosition=new Vector2(0,-378);
             pauseFooterBar.sizeDelta=new Vector2(1180,44);

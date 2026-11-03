@@ -22,7 +22,7 @@ namespace TheLightenRoad.Frontend
             optionsSubheading=surface.Find("Subheading").GetComponent<TMP_Text>();
             var index=CreateAnchoredRect("Options index",surface,new Vector2(560,380),Vector2.one*.5f,Vector2.zero);
             optionsIndex=index.gameObject;
-            string[] titles={"Audio","Video","Controller","Accessibility"};
+            string[] titles={"Audio","Display","Controller","Accessibility"};
             for(int i=0;i<4;i++)
             {
                 settingsTabs[i].transform.SetParent(index,false);
@@ -30,7 +30,7 @@ namespace TheLightenRoad.Frontend
                 settingsTabLabels[i].text=titles[i];settingsTabLabels[i].fontSize=26;
                 if(ArchiveMenuStyle.Serif!=null)settingsTabLabels[i].font=ArchiveMenuStyle.Serif;
             }
-            keyboardSettingsButton=SettingsButton(index,"Keyboard & guide",new Vector2(0,-118),new Vector2(440,52),OpenKeyboardSettings);
+            keyboardSettingsButton=SettingsButton(index,"Button guide",new Vector2(0,-118),new Vector2(440,52),OpenKeyboardSettings);
             keyboardSettingsButton.GetComponentInChildren<TMP_Text>().fontSize=26;
             foreach(var button in new[]{settingsDoneButton,resetSettingsButton})
             {
@@ -71,7 +71,7 @@ namespace TheLightenRoad.Frontend
             foreach(var section in settingsSections)section.SetActive(false);
             foreach(var tab in settingsTabs){tab.interactable=true;var focus=tab.GetComponent<SettingsLightFocus>();if(focus!=null)focus.IsCurrent=false;}
             settingsDoneButton.interactable=true;resetSettingsButton.gameObject.SetActive(false);settingsSaveStatus.gameObject.SetActive(false);
-            optionsHeading.text="Options";optionsSubheading.gameObject.SetActive(false);
+            optionsHeading.text="Settings";optionsSubheading.gameObject.SetActive(false);
             ConfigureOptionsIndexNavigation();RefreshSettingsFooterPrompts();
             if(EventSystem.current!=null)EventSystem.current.SetSelectedGameObject(settingsTabs[0].gameObject);
         }
@@ -81,7 +81,7 @@ namespace TheLightenRoad.Frontend
             optionsIndex.SetActive(false);
             settingsDoneButton.gameObject.SetActive(true);
             ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(196,-306);
-            optionsHeading.text=new[]{"Audio","Video","Controller","Accessibility"}[page];
+            optionsHeading.text=new[]{"Audio","Display","Controller","Accessibility"}[page];
             optionsSubheading.gameObject.SetActive(false);
             resetSettingsButton.gameObject.SetActive(true);settingsSaveStatus.gameObject.SetActive(true);
         }

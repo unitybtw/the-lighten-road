@@ -34,11 +34,20 @@ namespace TheLightenRoad.Frontend
 
         private void Awake()
         {
-            control = GetComponent<Selectable>();
+            control = GetComponent<Selectable>() ?? GetComponentInChildren<Selectable>(true);
         }
 
         public void OnPointerEnter(PointerEventData data)
         {
+            if (control == null || !control.IsInteractable()) return;
+            if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != control.gameObject)
+            {
+                hovered = true;
+                EventSystem.current.SetSelectedGameObject(control.gameObject);
+                // A slider is selected on its child; its row does not receive OnSelect.
+                if (control.gameObject != gameObject) PlayHoverAudio();
+                return;
+            }
             if (!hovered)
             {
                 hovered = true;
@@ -63,6 +72,7 @@ namespace TheLightenRoad.Frontend
         public void OnDeselect(BaseEventData data)
         {
             isSelected = false;
+            hovered = false;
         }
 
         private void OnDisable()
@@ -85,7 +95,9 @@ namespace TheLightenRoad.Frontend
             var curSelected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
             bool childSelected = curSelected != null && (curSelected == gameObject || curSelected.transform.IsChildOf(transform));
             bool enabledState = control == null || control.IsInteractable();
-            bool focus = (hovered || isSelected || childSelected) && enabledState;
+            // Selection owns focus when an EventSystem exists, including slider children.
+            // A stationary mouse must not keep a second row lit after keyboard navigation.
+            bool focus = (EventSystem.current != null ? childSelected : hovered || isSelected) && enabledState;
 
             blend = Mathf.MoveTowards(blend, focus ? 1f : 0f, Time.unscaledDeltaTime * 9f);
 

@@ -24,6 +24,7 @@ namespace TheLightenRoad.Frontend
         public bool IsSettingsResetOpen => settingsResetPanel != null && settingsResetPanel.activeSelf;
 
         // Controller Settings elements
+        // Keep the existing section identities; the settings index supplies the visible Controller label.
         private static readonly string[] SectionTabNames = { "Audio", "Display", "Controls", "Accessibility" };
         private Image leftBumperImg, rightBumperImg;
         private TMP_Text leftBumperText, rightBumperText;
@@ -45,7 +46,7 @@ namespace TheLightenRoad.Frontend
 
         private void BuildSettingsWorkspace()
         {
-            var surface=CreateEtherealSubViewFrame(settings,"OPTIONS","AUDIO, DISPLAY, CONTROLS & ACCESSIBILITY");
+            var surface=CreateEtherealSubViewFrame(settings,"SETTINGS","AUDIO, DISPLAY, CONTROLLER & ACCESSIBILITY");
             var backdrop=CreateAnchoredRect("Settings reading surface",surface,new Vector2(1580,1120),Vector2.one*.5f,Vector2.zero);
             backdrop.SetAsFirstSibling();
             var shade=backdrop.gameObject.AddComponent<Image>();

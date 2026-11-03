@@ -128,6 +128,15 @@ namespace TheLightenRoad.Frontend.Tests
             pause.Pause();pause.ShowSettingsView();yield return new WaitForSecondsRealtime(.25f);
             var canvas=pause.GetComponentInChildren<Canvas>();
             Capture(canvas,1280,720,"pause-settings-720p");AssertVisibleControlsFit(canvas,pause.transform);
+            for(int section=0;section<4;section++)
+            {
+                pause.SelectSettingsSection(section);
+                foreach(var resolution in new[]{new Vector2Int(1280,720),new Vector2Int(1024,768)})
+                {
+                    Capture(canvas,resolution.x,resolution.y,"pause-section-"+section+"-"+resolution.x);
+                    AssertVisibleControlsFit(canvas,pause.transform);
+                }
+            }
             pause.ShowControlsView();pause.SetPauseControlsDeviceTab(2);yield return new WaitForSecondsRealtime(.25f);
             var deviceTabs=pause.ControlsPanel.transform.Find("Pause Controls Tabs").GetComponentsInChildren<Button>();
             Assert.That(deviceTabs.Count(b=>b.transform.Find("Selection rule")!=null && b.transform.Find("Selection rule").gameObject.activeSelf),Is.EqualTo(1));

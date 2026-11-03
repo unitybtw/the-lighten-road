@@ -339,7 +339,7 @@ namespace TheLightenRoad.Frontend.Tests
         {
             pauseMenu.Pause();
             pauseMenu.ShowSettingsView();
-            var slider = pauseMenu.SettingsPanel.transform.Find("MasterSlider/Slider").GetComponent<Slider>();
+            var slider = pauseMenu.SettingsPanel.transform.Find("Audio settings/MasterSlider/Slider").GetComponent<Slider>();
             var status = pauseMenu.SettingsPanel.transform.Find("Pause settings save status").GetComponent<TMP_Text>();
             slider.value = .31f;
             Assert.That(MenuPreferences.Master, Is.EqualTo(.31f).Within(.001f), "Audio changes immediately.");
@@ -350,6 +350,87 @@ namespace TheLightenRoad.Frontend.Tests
             pauseMenu.enabled = false;
             Assert.That(status.text, Is.EqualTo("Saved automatically on this device"));
             Assert.That(Time.timeScale, Is.EqualTo(1));
+        }
+
+        [UnityTest] public IEnumerator SettingsExposeControllerPreferencesAndNavigationStaysOnTheVisiblePage()
+        {
+            Assert.That(MenuPreferences.StickDeadzone,Is.EqualTo(.15f).Within(.001f),"Constructing the menu must not rewrite saved controller preferences.");
+            pauseMenu.Pause();pauseMenu.ShowSettingsView();pauseMenu.SelectSettingsSection(2);
+            yield return new WaitForSecondsRealtime(.2f);
+            Assert.That(pauseMenu.CurrentSettingsSection,Is.EqualTo(2));
+            var root=pauseMenu.SettingsPanel.transform;
+            Assert.That(root.Find("Controller settings").gameObject.activeInHierarchy,Is.True);
+            Assert.That(root.Find("Audio settings").gameObject.activeInHierarchy,Is.False);
+            Assert.That(root.Find("Display settings").gameObject.activeInHierarchy,Is.False);
+            var rows=root.Find("Controller settings").GetComponentsInChildren<Selectable>();
+            Assert.That(rows.Length,Is.EqualTo(6),"Controller preferences must be reachable while paused.");
+            // Walk the page's explicit navigation graph, independently of the hardware mouse
+            // hovering a footer or a tab after another resolution test.
+            var selected=root.Find("Controller settings/Controller prompt style/ControllerStyleButton").GetComponent<Selectable>();
+            for(int i=0;i<6;i++)
+            {
+                Assert.That(rows.Contains(selected),Is.True,"Do not navigate into a hidden settings section.");
+                selected=selected.navigation.selectOnDown;
+            }
+            Assert.That(selected.name,Is.EqualTo("ResetDefaultsButton"));
+            var tabs=root.Find("Pause Settings Tabs").GetComponentsInChildren<Button>();
+            Assert.That(tabs.Select(t=>t.GetComponentInChildren<TMP_Text>().text),Is.EquivalentTo(new[]{"AUDIO","DISPLAY","CONTROLLER","ACCESSIBILITY"}));
+        }
+
+        [UnityTest] public IEnumerator ControllerPreferencesApplyAndTheButtonGuideDoesNotChangeThem()
+        {
+            pauseMenu.Pause();pauseMenu.ShowControllerSettings();
+            var root=pauseMenu.SettingsPanel.transform.Find("Controller settings");
+            root.Find("ControllerVibration").GetComponent<Toggle>().isOn=false;
+            root.Find("ControllerAdaptiveTriggers").GetComponent<Toggle>().isOn=false;
+            root.Find("ControllerLightbar").GetComponent<Toggle>().isOn=false;
+            root.Find("ControllerSpeaker").GetComponent<Toggle>().isOn=false;
+            root.Find("ControllerDeadzone/Slider").GetComponent<Slider>().value=.23f;
+            Assert.That(MenuPreferences.Vibration,Is.False);
+            Assert.That(MenuPreferences.AdaptiveTriggers,Is.False);
+            Assert.That(MenuPreferences.ControllerLightbar,Is.False);
+            Assert.That(MenuPreferences.ControllerSpeaker,Is.False);
+            Assert.That(MenuPreferences.StickDeadzone,Is.EqualTo(.23f).Within(.001f));
+            pauseMenu.ShowControlsView();int style=MenuPreferences.ControllerStyle;
+            pauseMenu.SetPauseControlsDeviceTab(1);pauseMenu.SetPauseControlsDeviceTab(2);
+            var movement=pauseMenu.ControlsPanel.GetComponentsInChildren<TMP_Text>().Single(t=>t.name=="Action" && t.text=="MOVE / CLIMB").transform.parent.Find("Description").GetComponent<TMP_Text>();
+            Assert.That(movement.text,Does.Not.Contain("W or Up"),"The gamepad guide must describe its own directional input.");
+            Assert.That(MenuPreferences.ControllerStyle,Is.EqualTo(style),"Browsing a device guide must not force its button symbols.");
+            pauseMenu.ControlsPanel.transform.Find("ControllerSettingsButton").GetComponent<Button>().onClick.Invoke();
+            Assert.That(pauseMenu.CurrentView,Is.EqualTo("settings"));
+            Assert.That(pauseMenu.CurrentSettingsSection,Is.EqualTo(2));
+            yield return null;
+            Assert.That(root.Find("ControllerSpeaker").GetComponent<Toggle>().isOn,Is.False);
+        }
+
+        [UnityTest] public IEnumerator ReturningToPauseRestoresTheHomeActionThatOpenedTheSubview()
+        {
+            pauseMenu.Pause();
+            var settings=pauseMenu.MainPanel.transform.Find("SettingsButton").gameObject;
+            EventSystem.current.SetSelectedGameObject(settings);pauseMenu.ShowSettingsView();pauseMenu.ShowMainView();
+            Assert.That(EventSystem.current.currentSelectedGameObject,Is.SameAs(settings));
+            var guide=pauseMenu.MainPanel.transform.Find("ControlsButton").gameObject;
+            EventSystem.current.SetSelectedGameObject(guide);pauseMenu.ShowControlsView();pauseMenu.ShowMainView();
+            Assert.That(EventSystem.current.currentSelectedGameObject,Is.SameAs(guide));
+            pauseMenu.Resume();pauseMenu.Pause();
+            Assert.That(EventSystem.current.currentSelectedGameObject.name,Is.EqualTo("ResumeButton"),"A new pause still starts with Continue.");
+            yield return null;
+        }
+
+        [UnityTest] public IEnumerator MouseAndKeyboardShareOneSettingsFocus()
+        {
+            pauseMenu.Pause();pauseMenu.ShowSettingsView();
+            var root=pauseMenu.SettingsPanel.transform.Find("Audio settings");
+            var first=root.Find("MasterSlider").GetComponent<SettingsLightFocus>();
+            var second=root.Find("MusicSlider").GetComponent<SettingsLightFocus>();
+            first.OnPointerEnter(new PointerEventData(EventSystem.current));
+            second.OnPointerEnter(new PointerEventData(EventSystem.current));
+            Assert.That(EventSystem.current.currentSelectedGameObject,Is.SameAs(root.Find("MusicSlider/Slider").gameObject));
+            // Keyboard navigation replaces the hover selection without requiring the mouse to move.
+            EventSystem.current.SetSelectedGameObject(root.Find("MasterSlider/Slider").gameObject);
+            yield return new WaitForSecondsRealtime(.2f);
+            Assert.That(second.LeftPointer.GetComponent<Image>().color.a,Is.LessThan(.01f));
+            Assert.That(first.LeftPointer.GetComponent<Image>().color.a,Is.GreaterThan(.9f));
         }
     }
 }

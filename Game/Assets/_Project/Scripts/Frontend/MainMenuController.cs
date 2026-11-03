@@ -1131,7 +1131,7 @@ namespace TheLightenRoad.Frontend
             var settingsBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Settings",
-                labelText: "OPTIONS",
+                labelText: "SETTINGS",
                 yPos: startY - stepY * 2,
                 cameraPan: new Vector2(14f, 4f),
                 onClick: ShowSettings,
@@ -1141,7 +1141,7 @@ namespace TheLightenRoad.Frontend
             var controlsBtn = CreateFramelessMenuButton(
                 centerColumn,
                 gameObjectName: "Controls & Guide",
-                labelText: "CONTROLS",
+                labelText: "BUTTON GUIDE",
                 yPos: startY - stepY * 3,
                 cameraPan: new Vector2(-12f, -6f),
                 onClick: ShowControls,
@@ -1570,7 +1570,7 @@ namespace TheLightenRoad.Frontend
 
         private void BuildFramelessControlsView()
         {
-            var surface = CreateEtherealSubViewFrame(controls, "CONTROLS", "KEYBOARD, XBOX & PLAYSTATION");
+            var surface = CreateEtherealSubViewFrame(controls, "BUTTON GUIDE", "KEYBOARD, XBOX & PLAYSTATION");
 
             // 3-way Device Switcher at top
             var tabRow = CreateAnchoredRect("Controls Device Tabs", surface, new Vector2(680f, 40f), Vector2.one * 0.5f, new Vector2(0f, 185f));
