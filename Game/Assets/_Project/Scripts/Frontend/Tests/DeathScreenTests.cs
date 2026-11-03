@@ -96,6 +96,27 @@ namespace TheLightenRoad.Frontend.Tests
             Assert.That(screen.IsVisible, Is.False);
             Assert.That(GameControls.GameplayAllowed, Is.True);
         }
+        [UnityTest] public IEnumerator DeathLanternExtinguishesOnceAndSettlesWithoutIdleMotion()
+        {
+            MenuPreferences.SetReducedMotion(false);
+            screen.PreviewDeath(DeathReason.Darkness);
+            var flame = host.GetComponentsInChildren<UnityEngine.UI.Image>().Single(i => i.name == "Last flame");
+            var halo = host.GetComponentsInChildren<UnityEngine.UI.Image>().Single(i => i.name == "Lantern halo");
+            var content = host.GetComponentsInChildren<RectTransform>().Single(r => r.name == "ContentRoot");
+            Assert.That(flame.color.a, Is.EqualTo(1f));
+            yield return Ready();
+            Assert.That(flame.color.a, Is.Zero, "A settled death screen must not show a burning lantern.");
+            Assert.That(halo.color.a, Is.Zero, "Its light must die with the flame.");
+            Vector3 position = content.anchoredPosition, scale = flame.transform.localScale;
+            yield return new WaitForSecondsRealtime(.3f);
+            Assert.That(content.anchoredPosition, Is.EqualTo((Vector2)position));
+            Assert.That(flame.transform.localScale, Is.EqualTo(scale));
+            Assert.That(flame.color.a, Is.Zero);
+            screen.HandlePlayerRespawned();
+            yield return new WaitForSecondsRealtime(.6f);
+            Assert.That(screen.IsVisible, Is.False);
+            Assert.That(GameControls.GameplayAllowed, Is.True);
+        }
         [UnityTest] public IEnumerator HeldSubmitCannotSkipTheRevealOrChooseRetry()
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));

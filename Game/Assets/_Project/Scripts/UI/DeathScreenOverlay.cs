@@ -1,6 +1,7 @@
 using System;
 using TheLightenRoad.Audio;
 using TheLightenRoad.Input;
+using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using TMPro;
 using UnityEngine;
@@ -27,17 +28,16 @@ namespace TheLightenRoad.UI
         private Canvas canvas;
         private CanvasGroup contentGroup;
         private RectTransform contentRoot, safeArea, lantern, flame;
-        private Image blackout, halo, lanternFrame, flameImage, crest;
-        private TMP_Text title, story, checkpoint, eyebrow, footer;
+        private Image blackout, halo, lanternFrame, flameImage;
+        private TMP_Text title, checkpoint, footer;
         private RectTransform glyphFooter;
         private CanvasGroup glyphGroup;
         private Image navigationGlyph, confirmGlyph, backGlyph;
-        private readonly Image[] ashes = new Image[14];
         private readonly ActionItem[] buttons = new ActionItem[2];
         private sealed class ActionItem
         {
             public RectTransform Rect;
-            public Image Glow, Left, Right;
+            public Image Underline;
             public TMP_Text Label;
             public float Focus;
         }
@@ -174,16 +174,13 @@ namespace TheLightenRoad.UI
             switch (reason)
             {
                 case DeathReason.Darkness:
-                    title.text = "The light has faded";
-                    story.text = "Your last ember went dark.\nA little light is enough to begin again.";
+                    title.text = "The light went out";
                     break;
                 case DeathReason.Void:
-                    title.text = "Lost to the depths";
-                    story.text = "The path vanished beneath your feet.\nThere is still a way back.";
+                    title.text = "You fell";
                     break;
                 default:
-                    title.text = "A light interrupted";
-                    story.text = "The ruins claimed another step.\nYour journey does not end here.";
+                    title.text = "Caught in a hazard";
                     break;
             }
             Paint(0);
@@ -339,42 +336,33 @@ namespace TheLightenRoad.UI
             blackout.raycastTarget = true;
             safeArea = Rect("Death safe area", transform, Vector2.zero, Vector2.zero);
             Stretch(safeArea);
-            contentRoot = Rect("ContentRoot", safeArea, Vector2.zero, new Vector2(1120, 820));
+            contentRoot = Rect("ContentRoot", safeArea, Vector2.zero, new Vector2(1120, 660));
             contentGroup = contentRoot.gameObject.AddComponent<CanvasGroup>();
-            halo = Picture("Lantern halo", contentRoot, new Vector2(0, 190), new Vector2(520, 380), ArchiveInterfaceStyle.SoftGlow);
-            for (int i = 0; i < ashes.Length; i++) ashes[i] = Picture("Quiet ash " + i, contentRoot, Vector2.zero, new Vector2(i % 3 == 0 ? 3 : 2, 3), PixelSprites.Spark);
-            eyebrow = Label("Archive caption", new Vector2(0, 326), new Vector2(900, 34), "THE LIGHTEN ROAD", 20, true);
-            eyebrow.characterSpacing = 3;
-            lantern = Rect("Fading lantern", contentRoot, new Vector2(0, 220), new Vector2(48, 66));
+            halo = Picture("Lantern halo", contentRoot, new Vector2(0, 204), new Vector2(180, 150), ArchiveInterfaceStyle.SoftGlow);
+            lantern = Rect("Fading lantern", contentRoot, new Vector2(0, 208), new Vector2(48, 66));
             flameImage = Picture("Last flame", lantern, new Vector2(0, -3), new Vector2(17, 24), PixelSprites.Flame);
             flame = flameImage.rectTransform;
             lanternFrame = Picture("Lantern frame", lantern, Vector2.zero, new Vector2(48, 66), PixelSprites.LanternFrame);
-            title = Label("Title", new Vector2(0, 112), new Vector2(1040, 76), "", 48, true);
+            title = Label("Title", new Vector2(0, 108), new Vector2(1040, 76), "", 48, true);
             title.characterSpacing = 1.4f;
-            crest = Picture("Archive filigree", contentRoot, new Vector2(0, 55), new Vector2(320, 26), Resources.Load<Sprite>("UI/HollowKnight_TopFiligree"));
-            if (crest.sprite == null) { crest.sprite = PixelSprites.White; crest.rectTransform.sizeDelta = new Vector2(180, 1); }
-            story = Label("Story", new Vector2(0, -8), new Vector2(940, 84), "", 24, false);
-            checkpoint = Label("Checkpoint", new Vector2(0, -83), new Vector2(900, 36), "Return to your last checkpoint.", 20, false);
-            buttons[0] = BuildButton(0, -160, "Rekindle the lantern");
-            buttons[1] = BuildButton(1, -238, "Return to title");
-            footer = Label("Hint", new Vector2(0, -354), new Vector2(1040, 40), "", 20, false);
-            glyphFooter = Rect("HintGlyphsBar", contentRoot, new Vector2(0, -354), new Vector2(1000, 44));
+            checkpoint = Label("Checkpoint", new Vector2(0, 38), new Vector2(1000, 40),
+                $"Retry from the last checkpoint with {LanternFuel.StartingEmbers} embers.", 22, false);
+            buttons[0] = BuildButton(0, -64, "Try again");
+            buttons[1] = BuildButton(1, -142, "Return to title");
+            footer = Label("Hint", new Vector2(0, -276), new Vector2(1040, 68), "", 20, false);
+            glyphFooter = Rect("HintGlyphsBar", contentRoot, new Vector2(0, -276), new Vector2(1000, 44));
             glyphGroup = glyphFooter.gameObject.AddComponent<CanvasGroup>();
             navigationGlyph = GlyphSlot("Select", -330, "CHOOSE");
             confirmGlyph = GlyphSlot("Confirm", -30, "CONFIRM");
-            backGlyph = GlyphSlot("Return", 290, "TITLE");
+            backGlyph = GlyphSlot("Return", 290, "SELECT TITLE");
             canvas.enabled = false;
         }
         private ActionItem BuildButton(int index, float y, string text)
         {
             var rect = Rect("Button_" + index, contentRoot, new Vector2(0, y), new Vector2(660, 66));
             var item = new ActionItem { Rect = rect };
-            item.Glow = Picture("Focus light", rect, Vector2.zero, new Vector2(640, 110), ArchiveInterfaceStyle.SoftGlow);
             item.Label = Text("Label", rect, Vector2.zero, new Vector2(600, 54), text, 30, true);
-            var pointer = Resources.Load<Sprite>("UI/HollowKnight_ButtonPointer");
-            item.Left = Picture("Left pointer", rect, new Vector2(-285, 0), new Vector2(38, 20), pointer);
-            item.Right = Picture("Right pointer", rect, new Vector2(285, 0), new Vector2(38, 20), pointer);
-            item.Right.rectTransform.localScale = new Vector3(-1, 1, 1);
+            item.Underline = Picture("Focus underline", rect, new Vector2(0, -27), new Vector2(64, 2), PixelSprites.White);
             return item;
         }
         private Image GlyphSlot(string name, float x, string text)
@@ -397,50 +385,29 @@ namespace TheLightenRoad.UI
                 safeArea.anchorMax = new Vector2(safe.xMax / Screen.width, safe.yMax / Screen.height);
                 safeArea.offsetMin = safeArea.offsetMax = Vector2.zero;
             }
-            contentRoot.localScale = Vector3.one * ArchiveInterfaceStyle.FitScale(safeArea.rect.size, new Vector2(1120, 820));
+            contentRoot.localScale = Vector3.one * ArchiveInterfaceStyle.FitScale(safeArea.rect.size, new Vector2(1120, 660));
         }
         private void Paint(float dt)
         {
             bool still = ArchiveInterfaceStyle.ReducedMotion;
             float a = Mathf.SmoothStep(0, 1, currentFadeAlpha);
-            blackout.color = new Color(.008f, .012f, .020f, a);
+            blackout.color = new Color(.008f, .009f, .010f, a);
             if (!returningToTitle) contentGroup.alpha = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.18f, .86f, currentFadeAlpha));
-            contentRoot.anchoredPosition = new Vector2(0, still ? 0 : Mathf.Lerp(-14, 0, a));
-            Color accent = currentReason == DeathReason.Void ? new Color(.58f, .68f, .82f) : ArchiveInterfaceStyle.Amber;
-            float breath = still ? 1 : 1 + .035f * Mathf.Sin(Time.unscaledTime * 1.9f);
-            float remaining = Mathf.Lerp(1, .13f, Mathf.Clamp01(deathElapsed / 2.2f));
-            if (targetFadeAlpha == 0) remaining = Mathf.Lerp(.13f, 1, 1 - currentFadeAlpha);
-            halo.color = new Color(accent.r, accent.g * .78f, accent.b * .5f, .11f * breath);
-            halo.rectTransform.localScale = Vector3.one * breath;
+            // One extinguish and one recovery. A dead lantern does not keep glowing or breathing.
+            float remaining = 1 - Mathf.SmoothStep(0, 1, deathElapsed / .85f);
+            if (targetFadeAlpha == 0) remaining = 1 - currentFadeAlpha;
+            halo.color = new Color(1, .65f, .2f, .12f * remaining);
             lanternFrame.color = Color.Lerp(new Color(.53f, .53f, .52f), new Color(.88f, .79f, .60f), remaining);
             flameImage.color = new Color(1, .85f, .58f, remaining);
-            flame.localScale = new Vector3(1, still ? 1 : breath, 1);
+            flame.localScale = new Vector3(1, still ? 1 : Mathf.Lerp(.4f, 1, remaining), 1);
             title.color = ArchiveInterfaceStyle.Ivory;
-            eyebrow.color = new Color(accent.r, accent.g, accent.b, .85f);
-            crest.color = new Color(.81f, .78f, .67f, .58f);
-            story.color = ArchiveInterfaceStyle.Silver;
-            checkpoint.color = new Color(.66f, .70f, .76f, .8f);
-            for (int i = 0; i < ashes.Length; i++)
-            {
-                float phase = (i * .173f + (still ? 0 : deathElapsed * .025f)) % 1;
-                float x = ((i * 197 % 101) / 100f - .5f) * 1050;
-                float y = Mathf.Lerp(-315, 305, phase);
-                // Keep the centre column clear for the message and actions.
-                if (Mathf.Abs(x) < 310) x += Mathf.Sign(x == 0 ? 1 : x) * 330;
-                ashes[i].rectTransform.anchoredPosition = new Vector2(x, y);
-                ashes[i].color = new Color(.85f, .67f, .43f, .12f * Mathf.Sin(phase * Mathf.PI));
-            }
+            checkpoint.color = ArchiveInterfaceStyle.Silver;
             for (int i = 0; i < buttons.Length; i++)
             {
                 var b = buttons[i];
                 b.Focus = Mathf.MoveTowards(b.Focus, selectedButtonIndex == i ? 1 : 0, still ? 1 : dt * 9);
-                b.Glow.color = new Color(1, .65f, .2f, b.Focus * .16f);
                 b.Label.color = Color.Lerp(ArchiveInterfaceStyle.Ivory, ArchiveInterfaceStyle.Amber, b.Focus);
-                float wings = b.Focus * (armed ? 1 : .45f);
-                b.Left.color = b.Right.color = new Color(1, .87f, .62f, wings);
-                float offset = Mathf.Min(290, b.Label.preferredWidth * .5f + 36);
-                b.Left.rectTransform.anchoredPosition = new Vector2(-offset, 0);
-                b.Right.rectTransform.anchoredPosition = new Vector2(offset, 0);
+                b.Underline.color = new Color(1, .87f, .62f, b.Focus * (armed ? 1 : .45f));
             }
             RefreshPrompts();
             footer.color = new Color(.78f, .83f, .89f, armed ? .85f : .38f);
@@ -460,7 +427,7 @@ namespace TheLightenRoad.UI
                 confirmGlyph.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Confirm, style);
                 backGlyph.sprite = ControllerGlyphService.GetActionSprite(GlyphAction.Cancel, style);
             }
-            else footer.text = "W / S  or  ↑ / ↓   CHOOSE     ENTER   CONFIRM     ESC   TITLE";
+            else footer.text = "↑ / ↓   CHOOSE     ENTER   CONFIRM     ESC   SELECT TITLE";
         }
         private TMP_Text Label(string name, Vector2 pos, Vector2 size, string text, float fontSize, bool display) => Text(name, contentRoot, pos, size, text, fontSize, display);
         private TMP_Text Text(string name, Transform parent, Vector2 pos, Vector2 size, string text, float fontSize, bool display)
