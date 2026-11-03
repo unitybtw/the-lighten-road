@@ -52,8 +52,8 @@ public sealed class PlayerSpriteAnimatorTests
     [Test] public void CatalogContainsAllDeliveredFramesAndClimbHasItsOwnRegistration()
     {
         var data = animation.Catalog;
-        Assert.That(data.Sequences.Length, Is.EqualTo(8));
-        Assert.That(data.Sequences.Sum(s => s.Frames.Length), Is.EqualTo(121));
+        Assert.That(data.Sequences.Length, Is.EqualTo(9));
+        Assert.That(data.Sequences.Sum(s => s.Frames.Length), Is.EqualTo(131));
         foreach (var s in data.Sequences)
         {
             Assert.That(s.Durations.All(d => Mathf.Abs(d - .1f) < .0001f), Is.True);

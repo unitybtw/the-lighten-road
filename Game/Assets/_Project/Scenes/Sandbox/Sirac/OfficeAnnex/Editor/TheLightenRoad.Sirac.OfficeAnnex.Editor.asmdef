@@ -1,0 +1,20 @@
+{
+  "name": "TheLightenRoad.Sirac.OfficeAnnex.Editor",
+  "references": [
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Codex",
+    "TheLightenRoad.Completion",
+    "Unity.TextMeshPro",
+    "Unity.2D.Sprite.Editor",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime",
+    "Unity.2D.Tilemap.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

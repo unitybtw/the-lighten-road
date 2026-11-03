@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-03",
+  "unity": "6000.3.2f1",
+  "suites": [
+    {
+      "report": "scene-tests-final.json",
+      "summary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "duration": 20.59
+    },
+    {
+      "report": "player-tests-final.json",
+      "summary": {
+        "total": 164,
+        "passed": 164,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      },
+      "duration": 67.32
+    }
+  ],
+  "scope": "Editor Play Mode, software input; no standalone build or physical controller run."
+}

@@ -45,7 +45,7 @@ namespace TheLightenRoad.Player.Editor
             }
             finally { PrefabUtility.UnloadPrefabContents(prefab); }
             AssetDatabase.SaveAssets();
-            Debug.Log("Imported Maksim's 8 animation sheets and updated PlayerPrototype. Source PNG/JSON bytes are unchanged.");
+            Debug.Log("Imported Maksim's animation sheets and updated PlayerPrototype. Source PNG/JSON bytes are unchanged.");
         }
         private static PlayerSpriteSequence Import(LightAnimation kind)
         {
@@ -87,7 +87,10 @@ namespace TheLightenRoad.Player.Editor
                     var id = previous.TryGetValue(frameName, out var existing) ? existing : new GUID(Hash128.Compute(path + "/" + frameName).ToString());
                     // Normal frames share a 35px registration point. Climb has a 10px taller
                     // canvas and a low-foot guide at 79px; use a 30px vertical pivot for that sheet.
-                    var pivot = new Vector2(.5f, (kind == LightAnimation.Climb ? 30f : 35f) / f.Rect.height);
+                    // Push leans forward: a seven-pixel rearward registration keeps the hands
+                    // at the capsule's contact face without moving the collider or editing the art.
+                    var pivot = new Vector2(kind == LightAnimation.Push ? .6f : .5f,
+                        (kind == LightAnimation.Climb ? 30f : 35f) / f.Rect.height);
                     rects.Add(new SpriteRect { name = frameName, spriteID = id, alignment = SpriteAlignment.Custom, pivot = pivot,
                         rect = new Rect(f.Rect.x, source.height - f.Rect.y - f.Rect.height, f.Rect.width, f.Rect.height) });
                     names.Add(new SpriteNameFileIdPair(frameName, id));
@@ -123,7 +126,7 @@ namespace TheLightenRoad.Player.Editor
                         if (c.a > 100 && c.r > 200 && c.g > 140 && c.b < 150 && c.r - c.b > 100) { sum += new Vector2(x + .5f, f.Rect.height - y - .5f); count++; }
                     }
                     if (count > 0) lastLight = (sum / count - Vector2.Scale(pivot, f.Rect.size)) / Ppu;
-                    else if (kind == LightAnimation.Climb && shirtCount > 0)
+                    else if ((kind == LightAnimation.Climb || kind == LightAnimation.Push) && shirtCount > 0)
                         lastLight = (new Vector2(shirtX / shirtCount, f.Rect.height - shirtBottom - 2.5f) - Vector2.Scale(pivot, f.Rect.size)) / Ppu;
                     offsets.Add(lastLight);
                     reaches.Add(reachX >= 0 ? (reachX - pivot.x * f.Rect.width) / Ppu : 0);
@@ -142,7 +145,7 @@ namespace TheLightenRoad.Player.Editor
                 if (clip == null) { clip = new AnimationClip(); AssetDatabase.CreateAsset(clip, clipPath); }
                 clip.name = "Light_" + name; clip.frameRate = 10;
                 var keys = new ObjectReferenceKeyframe[frames.Count]; float time = 0;
-                bool loop = kind == LightAnimation.Idle || kind == LightAnimation.Walk;
+                bool loop = kind == LightAnimation.Idle || kind == LightAnimation.Walk || kind == LightAnimation.Push;
                 for (int i = 0; i < frames.Count; i++) { keys[i] = new ObjectReferenceKeyframe { time = Mathf.Round(time * 1000) / 1000, value = sprites[i] }; time += frames[i].Duration; }
                 // Unity adds one sample interval after the last sprite key; an extra endpoint
                 // would insert a duplicate 100ms frame into every preview clip.

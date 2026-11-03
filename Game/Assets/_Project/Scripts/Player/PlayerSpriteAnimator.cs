@@ -30,11 +30,19 @@ namespace TheLightenRoad.Player
         private float unsupportedTime;
         private float supportedHeight;
         private bool hadSupport, jumpLaunched, airPoseShown;
+        private Object pushOwner;
         public bool AutomaticTicks { get; set; } = true;
         public PlayerAnimationCatalog Catalog => catalog;
         public LightAnimation CurrentAnimation => sequence != null ? sequence.Kind : LightAnimation.Idle;
         public int CurrentFrame { get; private set; }
         public SpriteRenderer Renderer => target;
+        /// <summary>Contact owners report effort; they retain responsibility for collision and movement.</summary>
+        public void SetPushing(Object owner, bool pushing)
+        {
+            if (owner == null) return;
+            if (pushing) pushOwner = owner;
+            else if (pushOwner == owner) pushOwner = null;
+        }
 
         private void Awake()
         {
@@ -66,6 +74,7 @@ namespace TheLightenRoad.Player
         }
         private void OnDisable()
         {
+            pushOwner = null;
             if (motor == null || catalog == null || target == null) return;
             motor.OnJumped -= Jumped;
             motor.OnLanded -= Landed;
@@ -81,6 +90,7 @@ namespace TheLightenRoad.Player
         }
         private void Jumped()
         {
+            pushOwner = null;
             explicitContext = holdContext = false;
             jumpLaunched = airPoseShown = true;
             Select(LightAnimation.Jump, true, true);
@@ -112,6 +122,7 @@ namespace TheLightenRoad.Player
         }
         private void Respawned()
         {
+            pushOwner = null;
             explicitContext = holdContext = false; transferFrame = -1;
             ResetAirState();
             Select(LightAnimation.Idle, false, true); RenderFrame();
@@ -167,6 +178,7 @@ namespace TheLightenRoad.Player
                 bool airborne = unsupported && (jumpLaunched || airPoseShown || (unsupportedTime >= groundAnimationGrace && dropped));
                 bool visuallySupported = motor.IsGrounded || (unsupported && !airborne && hadSupport);
                 bool moving = visuallySupported && Mathf.Abs(motor.HorizontalInput) > .05f && Mathf.Abs(motor.HorizontalSpeed) > .08f;
+                bool pushing = pushOwner != null && visuallySupported && Mathf.Abs(motor.HorizontalInput) > .05f;
                 if (airborne) { airPoseShown = true; hadSupport = false; }
                 else if (motor.IsGrounded) { hadSupport = true; supportedHeight = motor.Body.position.y; jumpLaunched = airPoseShown = false; }
                 if (airborne && CurrentAnimation != LightAnimation.Jump && CurrentAnimation != LightAnimation.Flare)
@@ -175,9 +187,10 @@ namespace TheLightenRoad.Player
                 if (!oneShot)
                 {
                     if (airborne) StartFallPose();
-                    else Select(moving ? LightAnimation.Walk : LightAnimation.Idle, false, false);
+                    else Select(pushing ? LightAnimation.Push : moving ? LightAnimation.Walk : LightAnimation.Idle, false, false);
                 }
-                float speed = CurrentAnimation == LightAnimation.Walk ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f) : 1;
+                float speed = CurrentAnimation == LightAnimation.Push ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / 1.2f, .65f, 1.1f)
+                    : CurrentAnimation == LightAnimation.Walk ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f) : 1;
                 elapsed += deltaTime * speed;
                 if (oneShot && elapsed >= sequence.Duration && (!airborne || CurrentAnimation != LightAnimation.Jump)) oneShot = false;
             }

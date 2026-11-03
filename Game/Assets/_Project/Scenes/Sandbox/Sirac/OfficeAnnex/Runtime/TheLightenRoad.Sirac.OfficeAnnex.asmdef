@@ -1,0 +1,10 @@
+{
+  "name": "TheLightenRoad.Sirac.OfficeAnnex",
+  "references": [
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Input",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Completion",
+    "Unity.TextMeshPro"
+  ]
+}

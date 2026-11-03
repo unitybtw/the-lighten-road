@@ -7,6 +7,7 @@ namespace TheLightenRoad.Frontend
     {
         private Light2D lamp;
         private static Sprite desk;
+        public static Sprite DeskSprite => desk != null ? desk : desk = BuildSprite();
         private static Sprite BuildSprite()
         {
             var tex=new Texture2D(48,56,TextureFormat.RGBA32,false){filterMode=FilterMode.Point,wrapMode=TextureWrapMode.Clamp,name="Archive desk pixels"};
@@ -25,9 +26,8 @@ namespace TheLightenRoad.Frontend
         }
         void Awake()
         {
-            if(desk==null)desk=BuildSprite();
             var go=new GameObject("Filing desk and ledger",typeof(SpriteRenderer));go.transform.SetParent(transform,false);
-            var sr=go.GetComponent<SpriteRenderer>();sr.sprite=desk;sr.sortingOrder=0;
+            var sr=go.GetComponent<SpriteRenderer>();sr.sprite=DeskSprite;sr.sortingOrder=0;
             var light=new GameObject("Desk lamp pool",typeof(Light2D));light.transform.SetParent(transform,false);light.transform.localPosition=new Vector3(.2f,1.05f,0);
             lamp=light.GetComponent<Light2D>();lamp.lightType=Light2D.LightType.Point;lamp.color=new Color(1,.71f,.34f);lamp.pointLightOuterRadius=1.65f;lamp.pointLightInnerRadius=.25f;lamp.intensity=.38f;
         }

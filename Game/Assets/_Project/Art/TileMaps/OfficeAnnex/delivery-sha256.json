@@ -1,0 +1,21 @@
+{
+  "source": "Files provided by Sira\u00e7; originals preserved byte for byte.",
+  "files": [
+    {
+      "file": "TileMapOffice_Blue_1.png",
+      "sha256": "c766ec738a9a8e5944a91ab649e3eecce1b329983b1ad1b4cd784698f33fd56b"
+    },
+    {
+      "file": "TileMapOffice_Blue_2.png",
+      "sha256": "04cd6ddada4457a62dc5f7174abbffdd70d27a0c015670cbc012499b9915e1ba"
+    },
+    {
+      "file": "TileMapOffice_Gray_1.png",
+      "sha256": "a9751e74f0f4ce866ba31e6e29bc0d4e4667beee8393f8941ad97831a7d84ca3"
+    },
+    {
+      "file": "TileMapOffice_Gray_2.png",
+      "sha256": "6c5edea657e098d80efb0cf2af55697854aaf1669493bf45c096bf63044f2189"
+    }
+  ]
+}

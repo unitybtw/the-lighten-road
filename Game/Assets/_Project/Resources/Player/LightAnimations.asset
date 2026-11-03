@@ -658,3 +658,53 @@ MonoBehaviour:
     PlantOffsets: []
     PreviewClip: {fileID: 7400000, guid: c807c67864382478fa6f27271532ed11, type: 2}
     Loop: 0
+  - Kind: 8
+    Frames:
+    - {fileID: 733500158, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: 2120932199, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: 1644660286, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: 435477103, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: -1206096616, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: -668132412, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: 2053147940, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: -1586855716, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: 375267477, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    - {fileID: -1600046669, guid: f2eb7d43ffb73479dac259993ee3ad10, type: 3}
+    Durations:
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    LanternOffsets:
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.20833333, y: -0.2361111}
+    - {x: -0.25, y: -0.18055555}
+    ReachOffsetsX: []
+    GripOffsets: []
+    SoleOffsets:
+    - {x: -0.49368688, y: -0.7916667}
+    - {x: -0.3888889, y: -0.7916667}
+    - {x: -0.45833334, y: -0.7916667}
+    - {x: -0.5416667, y: -0.7916667}
+    - {x: -0.625, y: -0.7916667}
+    - {x: -0.49368688, y: -0.7916667}
+    - {x: -0.3888889, y: -0.7916667}
+    - {x: -0.45833334, y: -0.7916667}
+    - {x: -0.5416667, y: -0.7916667}
+    - {x: -0.625, y: -0.7916667}
+    PlantOffsets: []
+    PreviewClip: {fileID: 7400000, guid: 245a5e2fefe9c496c95ab6519305e632, type: 2}
+    Loop: 1

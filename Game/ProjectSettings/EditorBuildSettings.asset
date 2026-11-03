@@ -29,6 +29,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Sandbox/Sirac/FirstLightTutorial.unity
     guid: e22d6ca9be9a94e46a13bafbe2b169c3
+  - enabled: 1
+    path: Assets/_Project/Scenes/Sandbox/Sirac/OfficeAnnex.unity
+    guid: a495954fb841e404e970946a7c19b1d0
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

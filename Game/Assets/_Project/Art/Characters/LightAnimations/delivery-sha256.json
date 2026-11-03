@@ -60,6 +60,14 @@
     {
       "file": "Walk.png",
       "sha256": "6ed0dbc0824886e60e781d8dfcfeb905203c0b78d964e13f24ce5f55a2935415"
+    },
+    {
+      "file": "Push.json",
+      "sha256": "31d3fffb9839ff65b195427c110abb2bb0332ab79676fa70f8c237fe166a7dec"
+    },
+    {
+      "file": "Push.png",
+      "sha256": "4b103cc37ce3000677826e64c31053e62217e5f3621c96ca0b63fe4977f56ea9"
     }
   ],
   "idle_frame_duration_ms": 100,
