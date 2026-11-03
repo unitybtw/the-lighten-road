@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace TheLightenRoad.UI
 {
-    /// <summary>A quiet, weathered endurance instrument. Presentation never spends stamina.</summary>
+    /// <summary>Stamina shown as woven bookcloth held between two archive binding clips.</summary>
     [DisallowMultipleComponent]
     public sealed class StaminaHUD : MonoBehaviour
     {
@@ -15,7 +15,7 @@ namespace TheLightenRoad.UI
         [Header("Layout — bottom center, reference resolution 960x540")]
         [SerializeField] private float bottomOffset = 28f;
         [SerializeField] private float hiddenOffset = -34f;
-        [SerializeField] private Vector2 barSize = new Vector2(154f, 3f);
+        [SerializeField] private Vector2 barSize = new Vector2(154f, 7f);
         [Header("Weathered ivory, iron and fired clay")]
         [SerializeField] private Color staminaColor = new Color32(194, 178, 139, 255);
         [SerializeField] private Color exhaustedColor = new Color32(170, 100, 75, 255);
@@ -31,15 +31,14 @@ namespace TheLightenRoad.UI
         [SerializeField, Min(0.1f)] private float ghostCatchupSpeed = 2.4f;
 
         private Canvas canvas;
-        private RectTransform panel, tip, sheen;
+        private RectTransform panel, tip;
         private CanvasGroup panelGroup;
-        private Image frame, fillImage, ghostImage, breath, sheenImage;
+        private Image fillImage, ghostImage, leftClip, rightClip;
         private TextMeshProUGUI label, status;
         private PlayerStamina boundTarget;
         private PlayerMotor2D motor;
         private float currentFill = 1f, ghostFill = 1f, ghostTimer, fullIdleTimer;
-        private float currentVisibility = 1f, recoveryTimer, recovering;
-        private float phase;
+        private float currentVisibility = 1f, recoveryTimer;
         private float safeBottom;
         private float bindRetryTimer;
         private Rect lastSafeArea;
@@ -59,11 +58,16 @@ namespace TheLightenRoad.UI
         public string StatusText => status != null ? status.text : string.Empty;
         public bool ReduceMotion { get => reduceMotion; set => reduceMotion = value; }
 
-        private void Awake() => BuildHierarchy();
+        private void Awake()
+        {
+            // Legacy scenes used a three-pixel channel. The woven material needs a seven-pixel face.
+            barSize.y = Mathf.Max(7f, barSize.y);
+            BuildHierarchy();
+        }
 
         private void OnEnable()
         {
-            fullIdleTimer = ghostTimer = recoveryTimer = recovering = phase = 0f;
+            fullIdleTimer = ghostTimer = recoveryTimer = 0f;
             currentVisibility = 1f;
             TryBind();
             Tick(0f);
@@ -98,7 +102,7 @@ namespace TheLightenRoad.UI
         {
             Unbind();
             target = newTarget;
-            fullIdleTimer = ghostTimer = recoveryTimer = recovering = 0f;
+            fullIdleTimer = ghostTimer = recoveryTimer = 0f;
             currentVisibility = 1f;
             TryBind();
             Tick(0f);
@@ -144,12 +148,10 @@ namespace TheLightenRoad.UI
             if (value < currentFill)
             {
                 ghostTimer = ghostDelay;
-                recovering = 0f;
                 fullIdleTimer = 0f;
             }
             else if (value > currentFill)
             {
-                recovering = 0.35f;
                 if (value >= 0.999f && currentFill < 0.999f) recoveryTimer = 0.55f;
             }
             currentFill = value;
@@ -165,31 +167,24 @@ namespace TheLightenRoad.UI
         {
             if (panel == null || boundTarget == null) return;
             float dt = Mathf.Max(0f, deltaTime);
-            phase += dt;
             recoveryTimer = Mathf.Max(0f, recoveryTimer - dt);
-            recovering = Mathf.Max(0f, recovering - dt);
             if (ghostTimer > 0f) ghostTimer = Mathf.Max(0f, ghostTimer - dt);
             else ghostFill = Mathf.MoveTowards(ghostFill, currentFill, ghostCatchupSpeed * dt);
             if (ghostFill < currentFill) ghostFill = currentFill;
 
             bool running = motor != null && motor.IsSprinting;
             bool low = currentFill <= 0.25f;
-            string state = IsExhausted ? "EXHAUSTED" : low ? "LOW" : running ? "SPRINTING"
-                : recovering > 0f ? "RECOVERING" : currentFill >= 0.999f ? "READY" : "REST";
+            string state = IsExhausted ? "EXHAUSTED" : low ? "LOW" : "";
             if (status.text != state) status.text = state;
             Color ink = IsExhausted || low ? exhaustedColor : staminaColor;
-            status.color = IsExhausted || low ? exhaustedColor : new Color32(137, 128, 106, 255);
-            fillImage.color = Color.Lerp(ink, new Color32(219, 206, 170, 255), recoveryTimer * 0.2f);
+            status.color = Color.Lerp(exhaustedColor, staminaColor, .45f);
+            fillImage.color = ink;
             fillImage.fillAmount = currentFill;
             ghostImage.fillAmount = ghostFill;
-            frame.color = Color.Lerp(borderColor, exhaustedColor, IsExhausted ? 0.45f : 0f);
-            float breathAlpha = reduceMotion || !IsExhausted ? 0.8f : 0.65f + 0.25f * (0.5f + 0.5f * Mathf.Sin(phase * 5f));
-            breath.color = new Color(ink.r, ink.g, ink.b, breathAlpha);
+            Color clipColor = Color.Lerp(Color.white, IsExhausted ? exhaustedColor : borderColor, IsExhausted ? .25f : .12f);
+            leftClip.color = rightClip.color = Color.Lerp(clipColor, Color.white, recoveryTimer / .55f * .35f);
             tip.gameObject.SetActive(currentFill > 0.01f && currentFill < 0.999f);
-            tip.anchoredPosition = new Vector2(-barSize.x / 2f + currentFill * barSize.x, 6f);
-            sheen.gameObject.SetActive(!reduceMotion && recoveryTimer > 0f);
-            sheen.anchoredPosition = new Vector2(Mathf.Lerp(-barSize.x * 0.15f, barSize.x * 1.15f, 1f - recoveryTimer / 0.55f), 0f);
-            sheenImage.color = new Color(0.85f, 0.79f, 0.64f, 0.22f * recoveryTimer / 0.55f);
+            tip.anchoredPosition = new Vector2(-barSize.x / 2f + currentFill * barSize.x, 22f);
 
             bool active = currentFill < 0.999f || IsExhausted || running || recoveryTimer > 0f;
             fullIdleTimer = active ? 0f : fullIdleTimer + dt;
@@ -212,7 +207,7 @@ namespace TheLightenRoad.UI
 
         private void BuildHierarchy()
         {
-            var root = new GameObject("Stamina HUD / etched reserve", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+            var root = new GameObject("Stamina HUD / archive binding", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
             root.transform.SetParent(transform, false);
             canvas = root.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -221,30 +216,25 @@ namespace TheLightenRoad.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(960f, 540f);
             scaler.matchWidthOrHeight = 1f;
-            panel = Rect("Endurance instrument", root.transform, new Vector2(0f, bottomOffset), new Vector2(barSize.x + 32f, 28f));
+            panel = Rect("Archive binding", root.transform, new Vector2(0f, bottomOffset), new Vector2(barSize.x + 24f, 32f));
             panelGroup = panel.gameObject.AddComponent<CanvasGroup>();
             panelGroup.interactable = panelGroup.blocksRaycasts = false;
             if (fontAsset == null) fontAsset = Resources.Load<TMP_FontAsset>("UI/EmberHUD");
-            var shadow = Graphic("Recess shadow", panel, new Vector2(0f, 5f), new Vector2(barSize.x + 11f, 11f), PixelSprites.StaminaPlate, new Color(0f, 0f, 0f, 0.35f));
-            shadow.raycastTarget = false;
-            frame = Graphic("Chipped iron edge", panel, new Vector2(0f, 6f), new Vector2(barSize.x + 8f, 7f), PixelSprites.StaminaPlate, borderColor);
-            var track = Rect("Engraved channel", panel, new Vector2(0f, 6f), barSize);
+            Graphic("Binding shadow", panel, new Vector2(0f, 20f), new Vector2(barSize.x + 12f, barSize.y + 6f), StaminaBindingArt.Cloth, new Color(0, 0, 0, .65f));
+            Graphic("Worn bookcloth", panel, new Vector2(0f, 22f), new Vector2(barSize.x, barSize.y + 4f), StaminaBindingArt.Cloth, Color.Lerp(Color.white, trackColor, .1f));
+            var track = Rect("Woven reserve", panel, new Vector2(0f, 22f), barSize);
             track.pivot = new Vector2(0.5f, 0.5f);
             track.gameObject.AddComponent<RectMask2D>();
-            StretchGraphic("Soot track", track, trackColor);
             ghostImage = StretchGraphic("Spent endurance trail", track, ghostColor, true);
             fillImage = StretchGraphic("Endurance", track, staminaColor, true);
-            for (int i = 1; i < 4; i++) Graphic("Etch " + i, panel,
-                new Vector2(-barSize.x / 2f + barSize.x * i / 4f, 6f), new Vector2(0.7f, barSize.y), PixelSprites.White, new Color(0.08f, 0.09f, 0.075f, 0.8f));
-            tip = Graphic("Remaining edge", panel, new Vector2(barSize.x / 2f, 6f), new Vector2(0.7f, barSize.y + 1f), PixelSprites.White,
-                new Color32(219, 201, 156, 210)).rectTransform;
-            breath = Graphic("Breath engraving", panel, new Vector2(-barSize.x / 2f - 13f, 11f), new Vector2(11f, 13f), PixelSprites.BreathMark, staminaColor);
-            label = Text("Stamina", panel, "STAMINA", TextAlignmentOptions.Left);
-            status = Text("State", panel, "READY", TextAlignmentOptions.Right);
-            sheen = Rect("Recovery glint", track, Vector2.zero, new Vector2(barSize.x * 0.12f, barSize.y));
-            sheen.anchorMin = sheen.anchorMax = new Vector2(0f, 0.5f);
-            sheen.pivot = new Vector2(0.5f, 0.5f);
-            sheenImage = StretchGraphic("Glint", sheen, Color.clear);
+            tip = Graphic("Loose binding thread", panel, new Vector2(barSize.x / 2f, 22f), new Vector2(4f, 7f), StaminaBindingArt.Knot, Color.white).rectTransform;
+            leftClip = Graphic("Left iron fastener", panel, new Vector2(-barSize.x / 2f - 2f, 22f), new Vector2(7f, 12f), StaminaBindingArt.Clip, Color.white);
+            rightClip = Graphic("Right iron fastener", panel, new Vector2(barSize.x / 2f + 2f, 23f), new Vector2(7f, 12f), StaminaBindingArt.Clip, Color.white);
+            rightClip.rectTransform.localScale = new Vector3(-1, 1, 1);
+            label = Text("Stamina", panel, "STAMINA", TextAlignmentOptions.Left,
+                new Vector2(-barSize.x / 2f + 29f, 0f), new Vector2(58f, 16f), 9.5f);
+            status = Text("State", panel, "", TextAlignmentOptions.Right,
+                new Vector2(barSize.x / 2f - 47f, 0f), new Vector2(94f, 16f), 10.5f);
         }
 
         private RectTransform Rect(string name, Transform parent, Vector2 position, Vector2 size)
@@ -276,7 +266,7 @@ namespace TheLightenRoad.UI
             rect.anchorMax = Vector2.one;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             var image = rect.gameObject.AddComponent<Image>();
-            image.sprite = PixelSprites.White;
+            image.sprite = StaminaBindingArt.Weave;
             image.color = color;
             image.raycastTarget = false;
             if (filled)
@@ -288,15 +278,16 @@ namespace TheLightenRoad.UI
             return image;
         }
 
-        private TextMeshProUGUI Text(string name, Transform parent, string value, TextAlignmentOptions alignment)
+        private TextMeshProUGUI Text(string name, Transform parent, string value, TextAlignmentOptions alignment,
+            Vector2 position, Vector2 size, float fontSize)
         {
-            var rect = Rect(name, parent, new Vector2(0f, 15f), new Vector2(barSize.x, 12f));
+            var rect = Rect(name, parent, position, size);
             var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
             text.font = fontAsset;
-            text.fontSize = 6.5f;
-            text.characterSpacing = 2f;
+            text.fontSize = fontSize;
+            text.characterSpacing = .5f;
             text.text = value;
-            text.color = new Color32(137, 128, 106, 255);
+            text.color = new Color32(174, 159, 129, 255);
             text.alignment = alignment;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.raycastTarget = false;
