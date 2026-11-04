@@ -10,8 +10,6 @@ namespace TheLightenRoad.Player
         [Header("Movement")]
         [Tooltip("Atmospheric walking speed through dark ruins.")]
         [SerializeField, Min(0f)] private float walkSpeed = 3.2f;
-        [Tooltip("Athletic sprint speed for crossing wide gaps and escaping.")]
-        [SerializeField, Min(0f)] private float runSpeed = 5.5f;
 
         [Header("Stamina & Endurance")]
         [SerializeField] private PlayerStamina stamina;
@@ -59,7 +57,6 @@ namespace TheLightenRoad.Player
 
         [Header("Kinetic Visual Lean")]
         [SerializeField] private bool enableKineticTilt = true;
-        [SerializeField, Range(0f, 10f)] private float maxRunTiltAngle = 3.2f;
         [SerializeField, Range(0f, 5f)] private float maxWalkTiltAngle = 1.5f;
         [SerializeField, Min(1f)] private float tiltRecoverySpeed = 30f;
 
@@ -77,10 +74,7 @@ namespace TheLightenRoad.Player
         private CapsuleCollider2D capsuleCollider;
         private InputAction move;
         private InputAction jump;
-        private InputAction sprint;
         private float horizontalInput;
-        private bool sprintToggle;
-        private int controlPadId=-1;
 
         private float coyoteTimer;
         private float jumpBufferTimer;
@@ -103,9 +97,10 @@ namespace TheLightenRoad.Player
         public Collider2D GroundCollider { get; private set; }
         public int FacingDirection => facingDirection;
         public float WalkSpeed { get => walkSpeed; set => walkSpeed = value; }
-        public float RunSpeed { get => runSpeed; set => runSpeed = value; }
+        // Legacy authoring API: retired sprint settings cannot change movement.
+        public float RunSpeed { get => walkSpeed; set { } }
         public float MoveSpeed { get => CurrentSpeed; set => walkSpeed = value; }
-        public float CurrentSpeed => IsRunning ? runSpeed : walkSpeed;
+        public float CurrentSpeed => walkSpeed;
         public bool IsRunning { get; private set; }
         public bool IsSprinting => IsRunning;
         public PlayerStamina Stamina => stamina;
@@ -133,7 +128,7 @@ namespace TheLightenRoad.Player
         {
             TraversalLocked = locked;
             horizontalInput = jumpBufferTimer = coyoteTimer = 0f;
-            sprintToggle = jumpReleased = IsRunning = false;
+            jumpReleased = IsRunning = false;
             previousVerticalVelocity = 0f;
             groundStateInitialized = false;
             if (locked) { IsGrounded = false; GroundCollider = null; }
@@ -185,10 +180,6 @@ namespace TheLightenRoad.Player
             jump = new InputAction("Jump", InputActionType.Button, "<Keyboard>/space");
             jump.AddBinding(GameControls.JumpPath);
 
-            sprint = new InputAction("Sprint", InputActionType.Button);
-            sprint.AddBinding("<Keyboard>/leftShift");
-            sprint.AddBinding("<Keyboard>/rightShift");
-            sprint.AddBinding(GameControls.SprintHoldPath);
         }
 
         private void OnEnable()
@@ -196,7 +187,6 @@ namespace TheLightenRoad.Player
             if (ActiveInstance == null) ActiveInstance = this;
             move?.Enable();
             jump?.Enable();
-            sprint?.Enable();
             groundStateInitialized = false;
             IsGrounded = CheckGrounded();
         }
@@ -209,13 +199,9 @@ namespace TheLightenRoad.Player
                 return;
             }
             var pad=GameControls.ActivePad;
-            int padId=pad!=null?pad.deviceId:-1;
-            if(padId!=controlPadId){sprintToggle=false;controlPadId=padId;}
             float keyboardMove=move.ReadValue<float>();
             float padMove=GameControls.MoveAxis(pad);
             horizontalInput=Mathf.Abs(keyboardMove)>.01f?keyboardMove:padMove;
-            if(Mathf.Abs(horizontalInput)<.05f)sprintToggle=false;
-            else if(pad!=null && pad.leftStickButton.wasPressedThisFrame)sprintToggle=!sprintToggle;
 
             if (jump.WasPressedThisFrame())
             {
@@ -243,7 +229,7 @@ namespace TheLightenRoad.Player
                 float targetTilt = 0f;
                 if (IsGrounded && Mathf.Abs(horizontalInput) > 0.05f)
                 {
-                    targetTilt = -horizontalInput * (IsRunning ? maxRunTiltAngle : maxWalkTiltAngle);
+                    targetTilt = -horizontalInput * maxWalkTiltAngle;
                 }
                 currentTilt = Mathf.MoveTowards(currentTilt, targetTilt, tiltRecoverySpeed * Time.deltaTime);
                 visualTransform.localRotation = Quaternion.Euler(0f, 0f, currentTilt);
@@ -283,41 +269,11 @@ namespace TheLightenRoad.Player
                 jumpBufferTimer -= Time.fixedDeltaTime;
             }
 
-            bool sprintHeld = sprintToggle || (sprint != null && (sprint.IsPressed() || sprint.ReadValue<float>() > 0.5f))
-                || (Keyboard.current != null && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed));
-            bool hasHorizontalInput = Mathf.Abs(horizontalInput) > 0.05f;
-
-            if (IsGrounded)
-            {
-                bool canSprint = sprintHeld && hasHorizontalInput && (stamina == null || stamina.CanSprint);
-                if (canSprint)
-                {
-                    IsRunning = true;
-                    if (stamina != null)
-                    {
-                        stamina.ConsumeSprint(Time.fixedDeltaTime);
-                    }
-                }
-                else
-                {
-                    IsRunning = false;
-                    if (stamina != null)
-                    {
-                        stamina.Regenerate(Time.fixedDeltaTime);
-                    }
-                }
-            }
-            else
-            {
-                // In air: retain running momentum if we jumped while running
-                if (IsRunning && stamina != null && sprintHeld)
-                {
-                    stamina.ConsumeSprint(Time.fixedDeltaTime * 0.5f);
-                }
-            }
+            IsRunning = false;
+            if (stamina != null) stamina.Regenerate(Time.fixedDeltaTime);
 
             var velocity = body.linearVelocity;
-            float currentMoveSpeed = IsRunning ? runSpeed : walkSpeed;
+            float currentMoveSpeed = walkSpeed;
             float targetSpeed = horizontalInput * currentMoveSpeed;
 
             float accelRate;
@@ -349,10 +305,6 @@ namespace TheLightenRoad.Player
                 jumpBufferTimer = 0f;
                 jumpReleased = false;
 
-                if (IsRunning && stamina != null)
-                {
-                    stamina.TryConsumeJump();
-                }
 
                 ApplySquash(jumpStretch);
                 OnJumped?.Invoke();
@@ -496,9 +448,7 @@ namespace TheLightenRoad.Player
             if (ActiveInstance == this) ActiveInstance = null;
             move?.Disable();
             jump?.Disable();
-            sprint?.Disable();
             horizontalInput = 0f;
-            sprintToggle=false;
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;
             jumpReleased = false;
@@ -519,7 +469,6 @@ namespace TheLightenRoad.Player
             if (ActiveInstance == this) ActiveInstance = null;
             move?.Dispose();
             jump?.Dispose();
-            sprint?.Dispose();
         }
     }
 }

@@ -21,6 +21,7 @@ namespace TheLightenRoad.Frontend
         private readonly HashSet<string> failed=new HashSet<string>();
         private readonly Queue<string> queue=new Queue<string>();
         private readonly Dictionary<string,string> textByKey=new Dictionary<string,string>();
+        private readonly Dictionary<ArchiveLog,Content> contentByLog=new Dictionary<ArchiveLog,Content>();
         private bool running;
         private Process worker;
         private string requestFile;
@@ -29,16 +30,30 @@ namespace TheLightenRoad.Frontend
         {
             using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(Profile+"\n"+text))).Replace("-","").ToLowerInvariant();
         }
+        private sealed class Content
+        {
+            public string Title,Body,Text,Key;
+        }
+        private Content ContentFor(ArchiveLog log)
+        {
+            if(contentByLog.TryGetValue(log,out var content) && content.Title==log.Title && content.Body==log.Text)return content;
+            // The reader polls while synthesis runs. Normalize and hash only when
+            // the authored title or story changes, never on each display frame.
+            string text=SpokenText(log);
+            content=new Content{Title=log.Title,Body=log.Text,Text=text,Key=CacheKey(text)};
+            contentByLog[log]=content;
+            return content;
+        }
         public AudioClip GetReadyClip(ArchiveLog log)
         {
             if(log==null)return null;if(log.Audio!=null)return log.Audio;
-            return ready.TryGetValue(CacheKey(SpokenText(log)),out var clip)?clip:null;
+            return ready.TryGetValue(ContentFor(log).Key,out var clip)?clip:null;
         }
-        public bool IsPending(ArchiveLog log)=>log!=null && pending.Contains(CacheKey(SpokenText(log)));
+        public bool IsPending(ArchiveLog log)=>log!=null && pending.Contains(ContentFor(log).Key);
         public void Prepare(ArchiveLog log)
         {
             if(log==null || log.Audio!=null)return;
-            string text=SpokenText(log),key=CacheKey(text);
+            var content=ContentFor(log);string text=content.Text,key=content.Key;
             if(ready.ContainsKey(key)||pending.Contains(key)||failed.Contains(key))return;
             pending.Add(key);textByKey[key]=text;queue.Enqueue(key);
             if(!running){running=true;StartCoroutine(Drain());}
@@ -100,7 +115,7 @@ namespace TheLightenRoad.Frontend
             string file=requestFile;requestFile=null;
             if(!string.IsNullOrWhiteSpace(file)){try{File.Delete(file);}catch(IOException){}catch(UnauthorizedAccessException){}}
         }
-        private void OnDisable(){StopAllCoroutines();CleanWorker();pending.Clear();queue.Clear();textByKey.Clear();running=false;foreach(var clip in ready.Values)if(clip!=null)Destroy(clip);ready.Clear();}
-        private void OnDestroy(){StopAllCoroutines();CleanWorker();foreach(var clip in ready.Values)if(clip!=null)Destroy(clip);ready.Clear();}
+        private void OnDisable(){StopAllCoroutines();CleanWorker();pending.Clear();queue.Clear();textByKey.Clear();contentByLog.Clear();running=false;foreach(var clip in ready.Values)if(clip!=null)Destroy(clip);ready.Clear();}
+        private void OnDestroy(){StopAllCoroutines();CleanWorker();foreach(var clip in ready.Values)if(clip!=null)Destroy(clip);ready.Clear();contentByLog.Clear();}
     }
 }

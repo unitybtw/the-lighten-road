@@ -38,7 +38,7 @@ namespace TheLightenRoad.Sirac.LevelMap
             emberPositions = new Vector3[pickups.childCount];
             for (int i = 0; i < emberPositions.Length; i++) emberPositions[i] = pickups.GetChild(i).position;
             BuildNote();
-            Show("THE RUINED ARCHIVE", "A/D Walk   SHIFT Sprint   SPACE Jump   F Scout   BACKSPACE Restart", 6f);
+            Show("THE RUINED ARCHIVE", "A/D Walk   SPACE Jump   F Scout   BACKSPACE Restart", 6f);
         }
 
         private void Update()

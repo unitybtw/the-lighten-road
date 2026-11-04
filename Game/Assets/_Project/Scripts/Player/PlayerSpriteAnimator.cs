@@ -31,6 +31,12 @@ namespace TheLightenRoad.Player
         private float supportedHeight;
         private bool hadSupport, jumpLaunched, airPoseShown;
         private Object pushOwner;
+        private PlayerActionWalkLayer actionWalkLayer;
+        private float walkElapsed;
+        private bool walkingAction;
+        public bool HasWalkingActionLayer => walkingAction && actionWalkLayer != null && actionWalkLayer.Legs.gameObject.activeSelf;
+        public SpriteRenderer WalkingLegsRenderer => actionWalkLayer != null ? actionWalkLayer.Legs : null;
+        public int WalkingLegFrame { get; private set; } = -1;
         public bool AutomaticTicks { get; set; } = true;
         public PlayerAnimationCatalog Catalog => catalog;
         public LightAnimation CurrentAnimation => sequence != null ? sequence.Kind : LightAnimation.Idle;
@@ -68,6 +74,7 @@ namespace TheLightenRoad.Player
             if (lantern != null) lantern.FlareChanged += FlareChanged;
             if (fuel != null) fuel.FuelChanged += FuelChanged;
             if (recovery != null) recovery.OnPlayerRespawned += Respawned;
+            walkElapsed = 0;
             ResetAirState();
             Select(LightAnimation.Idle, false, true);
             RenderFrame();
@@ -75,6 +82,7 @@ namespace TheLightenRoad.Player
         private void OnDisable()
         {
             pushOwner = null;
+            ClearWalkingAction();
             if (motor == null || catalog == null || target == null) return;
             motor.OnJumped -= Jumped;
             motor.OnLanded -= Landed;
@@ -103,7 +111,8 @@ namespace TheLightenRoad.Player
         }
         private void FlareChanged(bool active)
         {
-            if (active && IsAlive && !explicitContext) Select(LightAnimation.Flare, true, true);
+            // Airborne legs retain the jump/fall pose; the light/fuel event still happens normally.
+            if (active && IsAlive && !explicitContext && motor.IsGrounded) Select(LightAnimation.Flare, true, true);
         }
         private bool IsAlive => recovery == null || recovery.State == RespawnState.Alive;
         private void FuelChanged(float current, float capacity)
@@ -124,6 +133,7 @@ namespace TheLightenRoad.Player
         {
             pushOwner = null;
             explicitContext = holdContext = false; transferFrame = -1;
+            walkElapsed = 0;
             ResetAirState();
             Select(LightAnimation.Idle, false, true); RenderFrame();
         }
@@ -160,10 +170,11 @@ namespace TheLightenRoad.Player
             elapsed = sequence != null ? sequence.Duration : 0;
         }
 
-        private void LateUpdate() { if (AutomaticTicks) Tick(Time.deltaTime); }
+        private void LateUpdate() { if (AutomaticTicks && Time.timeScale > 0f) Tick(Time.deltaTime); }
         public void Tick(float deltaTime)
         {
             if (sequence == null || target == null || !IsAlive || deltaTime <= 0) return;
+            walkingAction = false;
             if (explicitContext)
             {
                 elapsed += deltaTime;
@@ -181,7 +192,7 @@ namespace TheLightenRoad.Player
                 bool pushing = pushOwner != null && visuallySupported && Mathf.Abs(motor.HorizontalInput) > .05f;
                 if (airborne) { airPoseShown = true; hadSupport = false; }
                 else if (motor.IsGrounded) { hadSupport = true; supportedHeight = motor.Body.position.y; jumpLaunched = airPoseShown = false; }
-                if (airborne && CurrentAnimation != LightAnimation.Jump && CurrentAnimation != LightAnimation.Flare)
+                if (airborne && CurrentAnimation != LightAnimation.Jump)
                     StartFallPose();
                 if (moving && oneShot && (CurrentAnimation == LightAnimation.Landing || CurrentAnimation == LightAnimation.EmberSwap)) oneShot = false;
                 if (!oneShot)
@@ -192,6 +203,12 @@ namespace TheLightenRoad.Player
                 float speed = CurrentAnimation == LightAnimation.Push ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / 1.2f, .65f, 1.1f)
                     : CurrentAnimation == LightAnimation.Walk ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f) : 1;
                 elapsed += deltaTime * speed;
+                if (moving)
+                {
+                    if (CurrentAnimation == LightAnimation.Walk) walkElapsed = elapsed;
+                    else walkElapsed += deltaTime * Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f);
+                }
+                walkingAction = moving && oneShot && CurrentAnimation == LightAnimation.Flare;
                 if (oneShot && elapsed >= sequence.Duration && (!airborne || CurrentAnimation != LightAnimation.Jump)) oneShot = false;
             }
             RenderFrame();
@@ -201,8 +218,16 @@ namespace TheLightenRoad.Player
             if (catalog == null || (!restart && sequence != null && sequence.Kind == kind)) return;
             var next = catalog.Find(kind);
             if (next == null || next.Frames == null || next.Frames.Length == 0) return;
-            sequence = next; elapsed = 0; oneShot = once; CurrentFrame = 0;
+            ClearWalkingAction();
+            sequence = next; elapsed = !restart && kind == LightAnimation.Walk ? walkElapsed : 0;
+            oneShot = once; CurrentFrame = 0;
         }
+        private void ClearWalkingAction()
+        {
+            walkingAction = false; WalkingLegFrame = -1;
+            if (actionWalkLayer != null) actionWalkLayer.Clear();
+        }
+        private void OnDestroy() { if (actionWalkLayer != null) actionWalkLayer.Dispose(); }
         private void RenderFrame()
         {
             if (sequence == null || target == null) return;
@@ -210,6 +235,19 @@ namespace TheLightenRoad.Player
             if (CurrentFrame < 0) return;
             target.sprite = sequence.Frames[CurrentFrame];
             target.flipX = motor.FacingDirection < 0;
+            if (walkingAction && !explicitContext && CurrentAnimation == LightAnimation.Flare)
+            {
+                var walk = catalog.Find(LightAnimation.Walk);
+                if (walk != null && walk.Frames != null && walk.Frames.Length > 0)
+                {
+                    if (actionWalkLayer == null) actionWalkLayer = new PlayerActionWalkLayer(target);
+                    WalkingLegFrame = walk.FrameAt(walkElapsed);
+                    float upperWaist = sequence.WaistOffsetsX != null && CurrentFrame < sequence.WaistOffsetsX.Length ? sequence.WaistOffsetsX[CurrentFrame] : 0;
+                    float lowerWaist = walk.WaistOffsetsX != null && WalkingLegFrame < walk.WaistOffsetsX.Length ? walk.WaistOffsetsX[WalkingLegFrame] : 0;
+                    actionWalkLayer.Show(sequence.Frames[CurrentFrame], walk.Frames[WalkingLegFrame], upperWaist - lowerWaist);
+                }
+            }
+            else ClearWalkingAction();
             if (motor.LanternTransform != null && sequence.LanternOffsets != null && CurrentFrame < sequence.LanternOffsets.Length)
             {
                 var offset = sequence.LanternOffsets[CurrentFrame];

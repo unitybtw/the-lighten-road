@@ -95,11 +95,11 @@ namespace TheLightenRoad.Sirac.Editor
             ambient.color = Color.black;
 
             Backdrop();
-            // Floor top is y=0. Main-route pits are 2m wide; jump rise is at most 1m.
+            // Floor top is y=0. The 1.6m pits leave landing margin at walking speed.
             Floor("Intake and archive", -8f, 17f);
-            Floor("Service island", 19f, 22f);
-            Floor("Service landing", 24f, 39f);
-            Floor("Recovery and exit", 41f, 62f);
+            Floor("Service island", 18.6f, 22f);
+            Floor("Service landing", 23.6f, 39f);
+            Floor("Recovery and exit", 40.6f, 62f);
             Solid("West boundary", -8.35f, 2f, 0.7f, 9f, Stone);
             Solid("East boundary", 62.35f, 2f, 0.7f, 9f, Stone);
             Ceiling("Intake ceiling", -8f, 1f, 4.2f);
@@ -117,9 +117,9 @@ namespace TheLightenRoad.Sirac.Editor
             Crate("Blackout high jump", 36f, 1f, 1.3f);
             Crate("Exit low jump", 46.5f, 0.65f, 1.3f);
             Crate("Exit optional step", 50.5f, 1f, 1.5f);
-            Hazard("Service trench A", 17f, 19f);
-            Hazard("Service trench B", 22f, 24f);
-            Hazard("Blackout trench", 39f, 41f);
+            Hazard("Service trench A", 17f, 18.6f);
+            Hazard("Service trench B", 22f, 23.6f);
+            Hazard("Blackout trench", 39f, 40.6f);
 
             // Visible shelves establish scale and provide meaningful silhouettes during scouting.
             Shelf(-1f, 2.1f, 2.3f, 2.5f);
@@ -139,7 +139,7 @@ namespace TheLightenRoad.Sirac.Editor
             Marker(markers, "Checkpoint 01", 14f, ChamberMarker.MarkerKind.Checkpoint, 1,
                 "CHECKPOINT 01", "Service crossing ahead.", 2.5f);
             Marker(markers, "03 / SERVICE CROSSING", 15.8f, ChamberMarker.MarkerKind.Zone, 0,
-                "03 / SERVICE CROSSING", "Two 2m gaps. Scout the landing before jumping; falls return to Checkpoint 01.", 3.6f);
+                "03 / SERVICE CROSSING", "Two short gaps. Approach the edge and hold SPACE; falls return to Checkpoint 01.", 3.6f);
             Marker(markers, "Checkpoint 02", 32.5f, ChamberMarker.MarkerKind.Checkpoint, 2,
                 "CHECKPOINT 02", "Blackout corridor ahead.", 2.5f);
             Marker(markers, "04 / BLACKOUT", 33.8f, ChamberMarker.MarkerKind.Zone, 0,
@@ -164,7 +164,7 @@ namespace TheLightenRoad.Sirac.Editor
             AssetDatabase.SaveAssetIfDirty(lit);
             Selection.activeGameObject = root;
             SceneView.lastActiveSceneView?.Frame(new Bounds(new Vector3(27f, 1.5f), new Vector3(74f, 12f, 1f)), false);
-            return "Created ArchiveTestChamber: five sections, three 2m trenches, two checkpoints, eight pickups, and a resettable exit. No shared scene, prefab, or project setting was edited.";
+            return "Created ArchiveTestChamber: five sections, three 1.6m trenches, two checkpoints, three pickups, and a resettable exit. No shared scene, prefab, or project setting was edited.";
         }
 
         private static readonly Color Stone = new Color32(73, 82, 85, 255);

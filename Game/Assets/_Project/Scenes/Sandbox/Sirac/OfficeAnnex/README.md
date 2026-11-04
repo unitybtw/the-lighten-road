@@ -8,7 +8,7 @@ The short route uses the four delivered office sheets as real 32px Tilemap cells
 
 1. Walk through the abandoned reception and push the archive crate toward the high blue landing. Push is automatic during grounded side contact with movement into the crate. It works in both directions.
 2. Jump onto the crate, then jump and press Up/W at the landing edge to climb. The authored landing is too high for a direct grounded grab. A checkpoint on the upper route prevents repeating this approach after a fall.
-3. Sprint-jump the service shaft to the reading wing. The two ember pickups are reserves rather than a trail marking the solution.
+3. Jump the service shaft to the reading wing. The two ember pickups are reserves rather than a trail marking the solution.
 4. Read the existing office ledger at the lamp-lit desk with E or the controller's north button. It uses the current Codex reader and record; no new lore was invented for the scene. The desk renders behind the character and does not block walking.
 5. Enter the exit door area to play the existing lantern-led completion sequence. This is the end of this standalone route; it does not unlock or load an unfinished chapter.
 

@@ -4,6 +4,8 @@ using TheLightenRoad.Audio;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 
 public sealed class SoundEffectManagerTests
@@ -227,6 +229,46 @@ public sealed class SoundEffectManagerTests
 
         sfxManager.AdjustVolume(-0.2f);
         Assert.That(sfxManager.MasterSFXVolume, Is.EqualTo(0.8f).Within(0.01f));
+    }
+
+    [UnityTest]
+    public IEnumerator OrdinaryKeyboardInputDoesNotChangeEffectsVolume()
+    {
+        var previousKeyboard = Keyboard.current;
+        var background = InputSystem.settings.backgroundBehavior;
+        var editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+        float timeScale = Time.timeScale;
+        Keyboard keyboard = null;
+        try
+        {
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            keyboard = InputSystem.AddDevice<Keyboard>();
+            keyboard.MakeCurrent();
+            sfxManager.MasterSFXVolume = .63f;
+            foreach (float scale in new[] { 1f, 0f })
+            {
+                Time.timeScale = scale;
+                foreach (var key in new[] { Key.N, Key.Comma, Key.Period })
+                {
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+                    yield return null;
+                    yield return null;
+                    Assert.That(keyboard[key].isPressed, Is.True, "The simulated key must reach the input system.");
+                    Assert.That(sfxManager.MasterSFXVolume, Is.EqualTo(.63f).Within(.001f), key + " must not bypass audio settings.");
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                    yield return null;
+                }
+            }
+        }
+        finally
+        {
+            Time.timeScale = timeScale;
+            if (keyboard != null && keyboard.added) InputSystem.RemoveDevice(keyboard);
+            if (previousKeyboard != null && previousKeyboard.added) previousKeyboard.MakeCurrent();
+            InputSystem.settings.backgroundBehavior = background;
+            InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+        }
     }
 
     [Test]

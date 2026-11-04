@@ -152,8 +152,8 @@ namespace TheLightenRoad.Sirac.OfficeAnnex.Tests
                 4, "Jump and climb from the crate onto the records landing.");
             Keys(Key.D); yield return Until(() => motor.Body.position.x >= 25.45f, 4, "Reach the shaft approach.");
             Keys(); yield return null;
-            Keys(Key.Space, Key.D, Key.LeftShift); yield return new WaitForSeconds(.75f); Keys();
-            yield return Until(() => motor.IsGrounded && motor.Body.position.x > 29, 2, "Sprint-jump the service shaft.");
+            Keys(Key.Space, Key.D); yield return new WaitForSeconds(.95f); Keys();
+            yield return Until(() => motor.IsGrounded && motor.Body.position.x > 28, 2, "Jump the service shaft.");
             Keys(Key.D); yield return Until(() => motor.Body.position.x >= 33.3f, 2, "Reach the ledger desk.");
             Keys(); yield return new WaitForSeconds(.1f);
             Keys(Key.E); yield return null; yield return null; Keys(); yield return null;

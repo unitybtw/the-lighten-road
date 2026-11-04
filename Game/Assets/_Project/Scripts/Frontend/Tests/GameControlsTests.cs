@@ -80,7 +80,7 @@ namespace TheLightenRoad.Frontend.Tests
             yield return null;yield return null;
             Assert.That(lantern.Fuel.TotalCharges,Is.EqualTo(count-2));
         }
-        [UnityTest] public IEnumerator SprintIsIndependentFromFlareAndHasAToggle()
+        [UnityTest] public IEnumerator ShoulderAndStickPressCannotEnableSprint()
         {
             var floor=new GameObject("Control test floor",typeof(BoxCollider2D));
             floor.transform.position=new Vector3(0,-.5f);floor.GetComponent<BoxCollider2D>().size=new Vector2(100,1);
@@ -91,20 +91,28 @@ namespace TheLightenRoad.Frontend.Tests
             {
                 yield return new WaitForSeconds(.7f);
                 Assert.That(motor.IsGrounded,Is.True);
+                float startX=motor.Body.position.x;
                 InputSystem.QueueStateEvent(pad,new GamepadState{leftStick=Vector2.right,rightTrigger=1});
                 yield return new WaitForSeconds(.08f);
                 Assert.That(motor.IsRunning,Is.False,"R2 must never double as sprint.");
+                Assert.That(motor.HorizontalSpeed,Is.EqualTo(motor.WalkSpeed).Within(.1f));
                 InputSystem.QueueStateEvent(pad,new GamepadState{leftStick=Vector2.right}.WithButton(GamepadButton.LeftShoulder));
                 yield return new WaitForSeconds(.08f);
-                Assert.That(motor.IsRunning,Is.True);
+                Assert.That(motor.IsRunning,Is.False);
+                Assert.That(motor.HorizontalSpeed,Is.EqualTo(motor.WalkSpeed).Within(.1f));
                 InputSystem.QueueStateEvent(pad,new GamepadState{leftStick=Vector2.right}.WithButton(GamepadButton.LeftStick));
                 yield return new WaitForSeconds(.08f);
+                Assert.That(motor.IsRunning,Is.False,"L3 must not enable sprint in the walking-only game.");
+                Assert.That(motor.HorizontalSpeed,Is.EqualTo(motor.WalkSpeed).Within(.1f));
                 InputSystem.QueueStateEvent(pad,new GamepadState{leftStick=Vector2.right});
                 yield return new WaitForSeconds(.08f);
-                Assert.That(motor.IsRunning,Is.True,"L3 is a toggle, not a button to hold while steering.");
+                Assert.That(motor.IsRunning,Is.False,"Releasing L3 must not leave a hidden sprint toggle.");
+                Assert.That(motor.HorizontalSpeed,Is.EqualTo(motor.WalkSpeed).Within(.1f));
+                Assert.That(motor.Body.position.x,Is.GreaterThan(startX+.3f),"Walking must still move the player with these buttons pressed.");
                 InputSystem.QueueStateEvent(pad,new GamepadState());yield return new WaitForSeconds(.08f);
                 InputSystem.QueueStateEvent(pad,new GamepadState{leftStick=Vector2.right});yield return new WaitForSeconds(.08f);
-                Assert.That(motor.IsRunning,Is.False,"Stopping movement releases toggle sprint.");
+                Assert.That(motor.IsRunning,Is.False);
+                Assert.That(motor.HorizontalSpeed,Is.EqualTo(motor.WalkSpeed).Within(.1f));
             }
             finally{Object.DestroyImmediate(floor);}
         }

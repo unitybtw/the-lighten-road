@@ -42,7 +42,7 @@ namespace TheLightenRoad.Frontend
         private Slider deadzoneSlider;
         private TMP_Text deadzoneValueText;
         private TMP_Text controllerMappingSummaryText;
-        private readonly Image[] controllerMappingIcons = new Image[5];
+        private readonly Image[] controllerMappingIcons = new Image[4];
 
         private void BuildSettingsWorkspace()
         {
@@ -169,9 +169,9 @@ namespace TheLightenRoad.Frontend
             controllerMappingSummaryText.alignment=TextAlignmentOptions.Center;
             controllerMappingSummaryText.characterSpacing=1.2f;
 
-            string[] actionNames = { "JUMP", "FLARE", "SPRINT", "INTERACT", "PAUSE" };
-            float[] xOffsets = { -252f, -126f, 0f, 126f, 252f };
-            for (int i = 0; i < 5; i++)
+            string[] actionNames = { "JUMP", "FLARE", "INTERACT", "PAUSE" };
+            float[] xOffsets = { -225f, -75f, 75f, 225f };
+            for (int i = 0; i < 4; i++)
             {
                 var slot = CreateAnchoredRect("Slot_" + i, guideCard, new Vector2(124, 36), new Vector2(0.5f, 0.5f), new Vector2(xOffsets[i], -14));
                 var iconRect = CreateAnchoredRect("Icon", slot, new Vector2(32, 32), new Vector2(0, 0.5f), new Vector2(18, 0));
@@ -728,11 +728,11 @@ namespace TheLightenRoad.Frontend
                 }
                 else
                 {
-                    controllerMappingSummaryText.text = "KEYBOARD & MOUSE: [SPACE] JUMP  [F/LMB] FLARE  [SHIFT] SPRINT  [E] INTERACT  [ESC] PAUSE";
+                    controllerMappingSummaryText.text = "KEYBOARD & MOUSE: [SPACE] JUMP  [F/LMB] FLARE  [E] INTERACT  [ESC] PAUSE";
                 }
 
-                GlyphAction[] actions = { GlyphAction.Jump, GlyphAction.Flare, GlyphAction.Sprint, GlyphAction.Interact, GlyphAction.Pause };
-                for (int i = 0; i < 5; i++)
+                GlyphAction[] actions = { GlyphAction.Jump, GlyphAction.Flare, GlyphAction.Interact, GlyphAction.Pause };
+                for (int i = 0; i < 4; i++)
                 {
                     if (controllerMappingIcons[i] != null)
                     {

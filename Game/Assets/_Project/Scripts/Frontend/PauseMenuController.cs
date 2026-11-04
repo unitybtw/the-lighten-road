@@ -920,8 +920,8 @@ namespace TheLightenRoad.Frontend
             BuildPauseSettingsWorkspace();
         }
 
-        private readonly TMP_Text[] pauseControlsRowKeyLabels = new TMP_Text[6];
-        private readonly Image[] pauseControlsRowIcons = new Image[6];
+        private readonly TMP_Text[] pauseControlsRowKeyLabels = new TMP_Text[5];
+        private readonly Image[] pauseControlsRowIcons = new Image[5];
         private readonly Button[] pauseControlsDeviceTabs = new Button[3];
         private readonly TMP_Text[] pauseControlsDeviceTabLabels = new TMP_Text[3];
         private int selectedPauseControlsDeviceTab = 0;
@@ -996,10 +996,9 @@ namespace TheLightenRoad.Frontend
             float step = 40f;
             pauseControlsRowKeyLabels[0] = CreateControlRow(r, "[ A / D  or  ARROWS ]", "MOVE / CLIMB", "Walk left / right; W or Up at a ledge climbs", y, 0);
             pauseControlsRowKeyLabels[1] = CreateControlRow(r, "[ SPACE ]", "JUMP", "Jump and variable jump height", y - step, 1);
-            pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ LEFT SHIFT ]", "SPRINT", "Run faster (consumes stamina)", y - step * 2, 2);
-            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", y - step * 3, 3);
-            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", y - step * 4, 4);
-            pauseControlsRowKeyLabels[5] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 5, 5);
+            pauseControlsRowKeyLabels[2] = CreateControlRow(r, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", y - step * 2, 2);
+            pauseControlsRowKeyLabels[3] = CreateControlRow(r, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", y - step * 3, 3);
+            pauseControlsRowKeyLabels[4] = CreateControlRow(r, "[ ESC / P ]", "PAUSE MENU", "Open pause menu and controls guide", y - step * 4, 4);
 
             controlsSettingsButton = CreateEtherealActionButton("ControllerSettingsButton", r, "Controller settings", new Vector2(0, -232), ShowControllerSettings, false, 400);
             controlsBackButton = CreateEtherealActionButton("ControlsBackButton", r, "Return to pause", new Vector2(0, -300), ShowMainView, true, 360);
@@ -1047,14 +1046,13 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
                 pauseControlsRowKeyLabels[1].text = "[ SPACE ]";
-                pauseControlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
-                pauseControlsRowKeyLabels[3].text = "[ F ]";
-                pauseControlsRowKeyLabels[4].text = "[ E ]";
-                pauseControlsRowKeyLabels[5].text = "[ ESC / P ]";
+                pauseControlsRowKeyLabels[2].text = "[ F ]";
+                pauseControlsRowKeyLabels[3].text = "[ E ]";
+                pauseControlsRowKeyLabels[4].text = "[ ESC / P ]";
             }
             else if (selectedPauseControlsDeviceTab == 1) // Xbox
             {
-                string[] xbIcons = { "LeftStick", "A", "LB", "RT", "Y", "Menu" };
+                string[] xbIcons = { "LeftStick", "A", "RT", "Y", "Menu" };
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                 {
                     if (pauseControlsRowIcons[i] != null)
@@ -1066,14 +1064,13 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 pauseControlsRowKeyLabels[1].text = "[ A ]  (SOUTH)";
-                pauseControlsRowKeyLabels[2].text = "[ LB HOLD / LS TOGGLE ]";
-                pauseControlsRowKeyLabels[3].text = "[ RT ]";
-                pauseControlsRowKeyLabels[4].text = "[ Y ]";
-                pauseControlsRowKeyLabels[5].text = "[ MENU ]";
+                pauseControlsRowKeyLabels[2].text = "[ RT ]";
+                pauseControlsRowKeyLabels[3].text = "[ Y ]";
+                pauseControlsRowKeyLabels[4].text = "[ MENU ]";
             }
             else // PlayStation
             {
-                string[] psIcons = { "LeftStick", "Cross", "L1", "R2", "Triangle", "Options" };
+                string[] psIcons = { "LeftStick", "Cross", "R2", "Triangle", "Options" };
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                 {
                     if (pauseControlsRowIcons[i] != null)
@@ -1085,10 +1082,9 @@ namespace TheLightenRoad.Frontend
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 pauseControlsRowKeyLabels[1].text = "[ CROSS ]";
-                pauseControlsRowKeyLabels[2].text = "[ L1 HOLD / L3 TOGGLE ]";
-                pauseControlsRowKeyLabels[3].text = "[ R2 ]";
-                pauseControlsRowKeyLabels[4].text = "[ TRIANGLE ]";
-                pauseControlsRowKeyLabels[5].text = "[ OPTIONS ]";
+                pauseControlsRowKeyLabels[2].text = "[ R2 ]";
+                pauseControlsRowKeyLabels[3].text = "[ TRIANGLE ]";
+                pauseControlsRowKeyLabels[4].text = "[ OPTIONS ]";
             }
         }
 

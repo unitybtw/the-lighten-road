@@ -31,7 +31,7 @@ namespace TheLightenRoad.Sirac.OfficeAnnex.Editor
         private static Transform level;
         private static readonly RectInt[] SolidRects =
         {
-            new RectInt(-4, -4, 18, 4), new RectInt(14, -4, 12, 8), new RectInt(29, -4, 12, 7),
+            new RectInt(-4, -4, 18, 4), new RectInt(14, -4, 12, 8), new RectInt(28, -4, 13, 7),
             new RectInt(-4, 0, 2, 10), new RectInt(39, 3, 2, 8)
         };
 

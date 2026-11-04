@@ -149,4 +149,35 @@ public sealed class FollowCamera2DTests
         yield return new WaitForSeconds(.4f);
         Assert.That(cameraFollow.CurrentFollowPosition.y, Is.GreaterThan(initialY + 1.4f));
     }
+    private void AssertViewportInside(Rect area)
+    {
+        var view = cameraObject.GetComponent<Camera>();
+        foreach (var uv in new[] { Vector2.zero, Vector2.one, Vector2.up, Vector2.right })
+        {
+            var point = view.ViewportToWorldPoint(new Vector3(uv.x, uv.y, 10));
+            Assert.That(point.x, Is.InRange(area.xMin - .001f, area.xMax + .001f));
+            Assert.That(point.y, Is.InRange(area.yMin - .001f, area.yMax + .001f));
+        }
+    }
+    [UnityTest] public IEnumerator WorldEdgesContainTheWholeViewportAfterSnapsAndEdgeShakes()
+    {
+        var view = cameraObject.GetComponent<Camera>(); view.orthographic = true; view.aspect = 16f / 9f;
+        var area = new Rect(-10, -5, 20, 10); cameraFollow.SetWorldBounds(area, 3);
+        foreach (var position in new[] { new Vector2(-30,-30),new Vector2(30,30),new Vector2(-30,30),new Vector2(30,-30) })
+        {
+            targetObject.transform.position = position;
+            cameraFollow.SetTarget(targetObject.transform, true); AssertViewportInside(area);
+            cameraFollow.Shake(.8f,.2f); yield return new WaitForSeconds(.08f); AssertViewportInside(area);
+        }
+    }
+    [UnityTest] public IEnumerator OversizedViewFitsTheRoomAndPausedAspectChangesRemainContained()
+    {
+        var view = cameraObject.GetComponent<Camera>(); view.orthographic = true; view.aspect = 32f / 9f;
+        var area = new Rect(-4,-2,8,4);cameraFollow.SetWorldBounds(area,3);
+        cameraFollow.SetTarget(targetObject.transform,true);AssertViewportInside(area);
+        Assert.That(view.orthographicSize, Is.EqualTo(1.125f).Within(.001f));
+        Time.timeScale = 0; view.aspect = 16f / 9f; yield return null; yield return null;
+        AssertViewportInside(area); Assert.That(view.orthographicSize, Is.EqualTo(2).Within(.001f));
+    }
+
 }

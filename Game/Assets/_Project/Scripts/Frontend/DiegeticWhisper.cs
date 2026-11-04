@@ -137,6 +137,7 @@ namespace TheLightenRoad.Frontend
 
         private void OnEnable()
         {
+            if (requiredAction == WhisperAction.Sprint) { gameObject.SetActive(false); return; }
             ControllerGlyphService.OnPromptStyleChanged -= RefreshText;
             ControllerGlyphService.OnPromptStyleChanged += RefreshText;
             FindPlayerReferences();

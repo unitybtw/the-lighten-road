@@ -99,9 +99,9 @@ public sealed class ArchiveTestChamberTests
                 float foot = position.y - 0.8f;
                 bool obstacle = Physics2D.RaycastAll(new Vector2(position.x + 0.45f, foot + 0.2f), Vector2.right, 0.65f)
                     .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
-                bool gapUpcoming = !Physics2D.RaycastAll(new Vector2(position.x + 2.0f, foot + 0.35f), Vector2.down, 0.75f)
-                    .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
-                bool gapEdge = !Physics2D.RaycastAll(new Vector2(position.x + 0.6f, foot + 0.35f), Vector2.down, 0.75f)
+                // Approach before taking off; the removed sprint used to cover
+                // the extra early-launch distance from the old long-range probe.
+                bool gapEdge = !Physics2D.RaycastAll(new Vector2(position.x + 0.4f, foot + 0.35f), Vector2.down, 0.75f)
                     .Any(h => !h.collider.isTrigger && h.collider.GetComponentInParent<PlayerMotor2D>() == null);
 
                 // Release Space between presses even if a short overhead collision ends a jump early.
@@ -111,10 +111,9 @@ public sealed class ArchiveTestChamberTests
                     jumpHold = gapEdge ? 0.65f : 0.45f;
                 }
                 spaceHeld = jumpHold > 0f;
-                bool sprint = spaceHeld || gapUpcoming;
                 InputSystem.QueueStateEvent(keyboard, spaceHeld
-                    ? (sprint ? new KeyboardState(Key.D, Key.Space, Key.LeftShift) : new KeyboardState(Key.D, Key.Space))
-                    : (sprint ? new KeyboardState(Key.D, Key.LeftShift) : new KeyboardState(Key.D)));
+                    ? new KeyboardState(Key.D, Key.Space)
+                    : new KeyboardState(Key.D));
             }
             yield return new WaitForFixedUpdate();
             jumpHold -= Time.fixedDeltaTime;

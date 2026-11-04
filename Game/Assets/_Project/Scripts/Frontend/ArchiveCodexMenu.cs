@@ -56,12 +56,21 @@ namespace TheLightenRoad.Frontend
         static void ResetStatics(){IsOpen=false;closedFrame=-10;SceneManager.sceneLoaded-=Install;SceneManager.sceneLoaded+=Install;}
         static void Install(Scene scene,LoadSceneMode mode)
         {
-            if(Object.FindAnyObjectByType<PlayerMotor2D>()==null || Object.FindAnyObjectByType<ArchiveCodexMenu>()!=null)return;
-            CreateStandby();
+            bool hasPlayer=false;
+            foreach(var root in scene.GetRootGameObjects())
+            {
+                if(root.GetComponentInChildren<ArchiveCodexMenu>(true)!=null)return;
+                if(root.GetComponentInChildren<PlayerMotor2D>()!=null)hasPlayer=true;
+            }
+            if(hasPlayer)CreateStandby(scene);
         }
-        public static ArchiveCodexMenu CreateStandby()
+        public static ArchiveCodexMenu CreateStandby()=>CreateStandby(SceneManager.GetActiveScene());
+        private static ArchiveCodexMenu CreateStandby(Scene scene)
         {
             var root=new GameObject("Archive Codex");root.SetActive(false);
+            // Additive sceneLoaded runs before the caller selects its new active scene.
+            // Keep the reader with its player, so unloading the old room cannot remove it.
+            SceneManager.MoveGameObjectToScene(root,scene);
             var reader=root.AddComponent<ArchiveCodexMenu>();reader.deferPresentation=true;
             root.SetActive(true);return reader;
         }

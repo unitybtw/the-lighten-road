@@ -138,13 +138,13 @@ public sealed class StaminaHUDTests
     }
 
     [Test]
-    public void DisabledHudHidesAndRebindsToCurrentReserve()
+    public void RetiredHudStaysHiddenWhenReenabled()
     {
         hud.enabled = false;
         Assert.That(hud.Canvas.enabled, Is.False);
         stamina.ConsumeSprint(2f);
         hud.enabled = true;
-        Assert.That(hud.Canvas.enabled, Is.True);
+        Assert.That(hud.Canvas.enabled, Is.False, "Sprinting was retired; its HUD must stay hidden.");
         Assert.That(hud.DisplayedFill, Is.EqualTo(0.6f).Within(0.001f));
         stamina.ConsumeSprint(1f);
         Assert.That(hud.DisplayedFill, Is.EqualTo(0.4f).Within(0.001f));

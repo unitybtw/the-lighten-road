@@ -1,6 +1,5 @@
 using TheLightenRoad.Lantern;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace TheLightenRoad.Audio
 {
@@ -399,32 +398,12 @@ namespace TheLightenRoad.Audio
             }
 
             TickExhaustion(Time.unscaledDeltaTime);
-            HandleSFXShortcuts();
 
             playerCheckTimer -= Time.unscaledDeltaTime;
             if (playerCheckTimer <= 0f)
             {
                 playerCheckTimer = 2.0f;
                 PlayerAudioController.AttachToAllMotors();
-            }
-        }
-
-        private void HandleSFXShortcuts()
-        {
-            var kb = Keyboard.current;
-            if (kb == null) return;
-
-            if (kb.nKey.wasPressedThisFrame)
-            {
-                ToggleMute();
-            }
-            else if (kb.commaKey.wasPressedThisFrame)
-            {
-                AdjustVolume(-0.05f);
-            }
-            else if (kb.periodKey.wasPressedThisFrame)
-            {
-                AdjustVolume(0.05f);
             }
         }
 

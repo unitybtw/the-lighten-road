@@ -22,7 +22,7 @@ namespace TheLightenRoad.Audio
         [Tooltip("Seconds between footstep sounds while walking.")]
         [SerializeField, Min(0.1f)] private float walkInterval = 0.44f;
         [Tooltip("Seconds between footstep sounds while sprinting.")]
-        [SerializeField, Min(0.1f)] private float sprintInterval = 0.28f;
+        [HideInInspector, SerializeField, Min(0.1f)] private float sprintInterval = 0.28f;
 
         private float footstepTimer;
         private float skidCooldown;
@@ -269,21 +269,13 @@ namespace TheLightenRoad.Audio
                 footstepTimer -= dt;
                 if (footstepTimer <= 0f)
                 {
-                    bool isSprinting = motor.IsSprinting;
-                    footstepTimer = isSprinting ? sprintInterval : walkInterval;
+                    footstepTimer = walkInterval;
 
                     var sfx = SoundEffectManager.Instance;
                     if (sfx != null)
                     {
                         var surface = GetCurrentSurface();
-                        if (isSprinting)
-                        {
-                            sfx.PlaySprintFootstep(surface);
-                        }
-                        else
-                        {
-                            sfx.PlayWalkFootstep(surface);
-                        }
+                        sfx.PlayWalkFootstep(surface);
                     }
                 }
             }

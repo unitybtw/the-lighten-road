@@ -257,11 +257,7 @@ namespace TheLightenRoad.Frontend
 
             if (!introIgnitePlayed && age >= 0.20f)
             {
-                introIgnitePlayed = true;
-                if (Application.isPlaying && !MenuPreferences.ReducedMotion)
-                {
-                    SoundEffectManager.Instance?.PlayFlareIgnite();
-                }
+                PlayIntroIgnition();
                 stage?.IgniteLantern();
             }
 
@@ -486,11 +482,22 @@ namespace TheLightenRoad.Frontend
             }
         }
 
+        private void PlayIntroIgnition()
+        {
+            if (introIgnitePlayed) return;
+            introIgnitePlayed = true;
+            if (!Application.isPlaying) return;
+            var sound = SoundEffectManager.Instance;
+            // This deliberate menu cue is independent of visual motion comfort and
+            // gameplay's spawn-sound grace period. Effects/Master still control its gain.
+            if (sound != null) sound.PlayOneShot(sound.FlareIgniteClip, .9f, 1f, true);
+        }
+
         public void SkipIntro()
         {
             age = Mathf.Max(age, 3.0f);
             introDone = true;
-            introIgnitePlayed = true;
+            PlayIntroIgnition();
             if (curtain != null && !loading && !quitting)
             {
                 curtain.color = new Color(0.012f, 0.018f, 0.038f, 0f);
@@ -1562,8 +1569,8 @@ namespace TheLightenRoad.Frontend
         // SUB-VIEW 3: CONTROLS & GUIDE (CENTERED HOLLOW-KNIGHT KEYBINDING ROWS)
         // =====================================================================
 
-        private readonly TMP_Text[] controlsRowKeyLabels = new TMP_Text[6];
-        private readonly Image[] controlsRowIcons = new Image[6];
+        private readonly TMP_Text[] controlsRowKeyLabels = new TMP_Text[5];
+        private readonly Image[] controlsRowIcons = new Image[5];
         private readonly Button[] controlsDeviceTabs = new Button[3];
         private readonly TMP_Text[] controlsDeviceTabLabels = new TMP_Text[3];
         private int selectedControlsDeviceTab = 0;
@@ -1588,10 +1595,9 @@ namespace TheLightenRoad.Frontend
 
             controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE / CLIMB", "Walk left / right; W or Up at a ledge climbs", 135f, 0);
             controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Hold to jump higher; release for a short hop", 84f, 1);
-            controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ LEFT SHIFT ]", "SPRINT", "Run faster across hazards (uses Stamina)", 33f, 2);
-            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", -18f, 3);
-            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", -69f, 4);
-            controlsRowKeyLabels[5] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -120f, 5);
+            controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", 33f, 2);
+            controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", -18f, 3);
+            controlsRowKeyLabels[4] = CreateCenteredControlRow(surface, "[ ESC ]", "PAUSE MENU", "Open tactical pause, options & guide", -69f, 4);
 
             BuildControllerGuide(surface);
             controlsFirst = CreateEtherealActionButton(surface, "Back", new Vector2(0f, -268f), BackFromControls, isPrimary: true, width: 310f);
@@ -1625,14 +1631,13 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
                 controlsRowKeyLabels[1].text = "[ SPACE ]";
-                controlsRowKeyLabels[2].text = "[ LEFT SHIFT ]";
-                controlsRowKeyLabels[3].text = "[ F ]";
-                controlsRowKeyLabels[4].text = "[ E ]";
-                controlsRowKeyLabels[5].text = "[ ESC ]";
+                controlsRowKeyLabels[2].text = "[ F ]";
+                controlsRowKeyLabels[3].text = "[ E ]";
+                controlsRowKeyLabels[4].text = "[ ESC ]";
             }
             else if (selectedControlsDeviceTab == 1) // Xbox
             {
-                string[] xbIcons = { "LeftStick", "A", "LB", "RT", "Y", "Menu" };
+                string[] xbIcons = { "LeftStick", "A", "RT", "Y", "Menu" };
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                 {
                     if (controlsRowIcons[i] != null)
@@ -1644,14 +1649,13 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ A ]";
-                controlsRowKeyLabels[2].text = "[ LB HOLD / LS TOGGLE ]";
-                controlsRowKeyLabels[3].text = "[ RT ]";
-                controlsRowKeyLabels[4].text = "[ Y ]";
-                controlsRowKeyLabels[5].text = "[ MENU ]";
+                controlsRowKeyLabels[2].text = "[ RT ]";
+                controlsRowKeyLabels[3].text = "[ Y ]";
+                controlsRowKeyLabels[4].text = "[ MENU ]";
             }
             else // PlayStation
             {
-                string[] psIcons = { "LeftStick", "Cross", "L1", "R2", "Triangle", "Options" };
+                string[] psIcons = { "LeftStick", "Cross", "R2", "Triangle", "Options" };
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                 {
                     if (controlsRowIcons[i] != null)
@@ -1663,10 +1667,9 @@ namespace TheLightenRoad.Frontend
 
                 controlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
                 controlsRowKeyLabels[1].text = "[ CROSS ]";
-                controlsRowKeyLabels[2].text = "[ L1 HOLD / L3 TOGGLE ]";
-                controlsRowKeyLabels[3].text = "[ R2 ]";
-                controlsRowKeyLabels[4].text = "[ TRIANGLE ]";
-                controlsRowKeyLabels[5].text = "[ OPTIONS ]";
+                controlsRowKeyLabels[2].text = "[ R2 ]";
+                controlsRowKeyLabels[3].text = "[ TRIANGLE ]";
+                controlsRowKeyLabels[4].text = "[ OPTIONS ]";
             }
         }
 

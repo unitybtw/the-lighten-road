@@ -10,20 +10,46 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.SceneManagement;
 namespace TheLightenRoad.Frontend.Tests
 {
     public class ArchiveCodexTests
     {
         private readonly List<Object> created=new List<Object>();
+        private readonly List<Scene> temporaryScenes=new List<Scene>();
+        private Scene originalScene;
         T New<T>() where T:ScriptableObject{var x=ScriptableObject.CreateInstance<T>();created.Add(x);return x;}
         GameObject Go(string n){var x=new GameObject(n);created.Add(x);return x;}
         [SetUp] public void Setup()
         {
+            originalScene=SceneManager.GetActiveScene();
             var a=New<ArchiveLog>();a.Id="a";a.Title="Keeper";a.Text="A discovered record.";a.RoomClue="Drain the shelf.";
             var b=New<ArchiveLog>();b.Id="b";b.Title="Margin";b.Text=new string('x',1800);
             var catalog=New<ArchiveCatalog>();catalog.Logs=new[]{a,b};catalog.Channel=New<SocialChannel>();catalog.Channel.delivery=New<StoredDelivery>();catalog.Channel.membership=New<AmbientMembership>();CodexSession.Begin(catalog);
         }
         [TearDown] public void Cleanup(){foreach(var o in created)if(o!=null)Object.DestroyImmediate(o);created.Clear();CodexSession.End();Time.timeScale=1;}
+        [UnityTearDown] public IEnumerator CleanupScenes()
+        {
+            if(originalScene.IsValid() && originalScene.isLoaded)SceneManager.SetActiveScene(originalScene);
+            foreach(var scene in temporaryScenes)if(scene.IsValid() && scene.isLoaded)yield return SceneManager.UnloadSceneAsync(scene);
+            temporaryScenes.Clear();
+        }
+        [UnityTest] public IEnumerator AdditiveRoomKeepsItsOwnStandbyAfterThePreviousRoomUnloads()
+        {
+            var previous=SceneManager.CreateScene("Previous reader room");temporaryScenes.Add(previous);
+            var destination=SceneManager.CreateScene("Destination reader room");temporaryScenes.Add(destination);
+            SceneManager.SetActiveScene(previous);
+            var oldReader=ArchiveCodexMenu.CreateStandby();
+            var player=Go("Destination reader player");SceneManager.MoveGameObjectToScene(player,destination);player.AddComponent<PlayerMotor2D>();
+            typeof(ArchiveCodexMenu).GetMethod("Install",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Static)
+                .Invoke(null,new object[]{destination,LoadSceneMode.Additive});
+            var reader=destination.GetRootGameObjects().Select(r=>r.GetComponent<ArchiveCodexMenu>()).Single(r=>r!=null);
+            Assert.That(reader,Is.Not.SameAs(oldReader));Assert.That(reader.PresentationCreated,Is.False);
+            CodexSession.Discover("a");Assert.That(reader.EntryCount,Is.EqualTo(1));
+            SceneManager.SetActiveScene(destination);yield return SceneManager.UnloadSceneAsync(previous);
+            Assert.That(oldReader==null,Is.True);Assert.That(reader!=null && reader.isActiveAndEnabled,Is.True);
+            reader.Open("a");Assert.That(ArchiveCodexMenu.IsOpen,Is.True);reader.Close();
+        }
         [Test] public void StandbyReaderKeepsDiscoveryButCreatesNoBookResourcesUntilAValidOpen()
         {
             var menu=ArchiveCodexMenu.CreateStandby();created.Add(menu.gameObject);

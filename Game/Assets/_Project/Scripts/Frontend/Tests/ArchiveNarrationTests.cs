@@ -27,6 +27,38 @@ namespace TheLightenRoad.Frontend.Tests
    Assert.That(ArchiveNarration.CacheKey(text),Is.EqualTo("d2d80a97424247b8230decbbea94018f0d3db35c1d0c71abc641c98b82bcf4b8"));
    Assert.That(ArchiveNarration.CacheKey(text+" New words."),Is.Not.EqualTo(ArchiveNarration.CacheKey(text)));
   }
+  [Test] public void PollingUnchangedNarrationDoesNotGrowTheManagedHeap()
+  {
+   var narration=Host().AddComponent<ArchiveNarration>();var log=Asset<ArchiveLog>();
+   log.Title="The keeper's ledger";log.Text="A record waiting for its voice.\nThe lamps have gone quiet.";
+   for(int i=0;i<4;i++){narration.GetReadyClip(log);narration.IsPending(log);}
+   // This Editor's Mono returns zero from GetAllocatedBytesForCurrentThread,
+   // even for a positive allocation control. Compare the used heap after a GC instead.
+   GC.Collect();long before=UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong();bool unexpected=false;
+   for(int i=0;i<1000;i++)unexpected|=narration.GetReadyClip(log)!=null || narration.IsPending(log);
+   long growth=UnityEngine.Profiling.Profiler.GetMonoUsedSizeLong()-before;
+   Assert.That(unexpected,Is.False);
+   Assert.That(growth,Is.LessThanOrEqualTo(16384),"Unchanged reader polling must not rebuild strings and hashes every frame.");
+  }
+  [Test] public void EditingARecordInvalidatesItsReadyAndPendingLookupWhileAuthoredAudioWins()
+  {
+   var narration=Host().AddComponent<ArchiveNarration>();var log=Asset<ArchiveLog>();
+   log.Title="Old heading";log.Text="Old story.";
+   var clip=AudioClip.Create("Cached original voice",240,1,24000,false);owned.Add(clip);
+   var fields=System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance;
+   var ready=(Dictionary<string,AudioClip>)typeof(ArchiveNarration).GetField("ready",fields).GetValue(narration);
+   var pending=(HashSet<string>)typeof(ArchiveNarration).GetField("pending",fields).GetValue(narration);
+   string originalKey=ArchiveNarration.CacheKey(ArchiveNarration.SpokenText(log));ready.Add(originalKey,clip);pending.Add(originalKey);
+   Assert.That(narration.GetReadyClip(log),Is.SameAs(clip));Assert.That(narration.IsPending(log),Is.True);
+   log.Title="Revised heading";
+   Assert.That(narration.GetReadyClip(log),Is.Null);Assert.That(narration.IsPending(log),Is.False);
+   log.Title="Old heading";log.Text="Revised story.";
+   Assert.That(narration.GetReadyClip(log),Is.Null);Assert.That(narration.IsPending(log),Is.False);
+   log.Text="Old story.";
+   Assert.That(narration.GetReadyClip(log),Is.SameAs(clip));Assert.That(narration.IsPending(log),Is.True);
+   var authored=AudioClip.Create("Authored voice",240,1,24000,false);owned.Add(authored);log.Audio=authored;
+   Assert.That(narration.GetReadyClip(log),Is.SameAs(authored));
+  }
   [UnityTest] public IEnumerator BakedCatalogClipsLoadOfflineAndReuseOneClip()
   {
    var narration=Host().AddComponent<ArchiveNarration>();var catalog=Resources.Load<ArchiveCatalog>("Codex/ArchiveCatalog");

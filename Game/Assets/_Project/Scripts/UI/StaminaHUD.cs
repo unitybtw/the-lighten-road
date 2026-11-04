@@ -63,6 +63,7 @@ namespace TheLightenRoad.UI
             // Legacy scenes used a three-pixel channel. The woven material needs a seven-pixel face.
             barSize.y = Mathf.Max(7f, barSize.y);
             BuildHierarchy();
+            canvas.enabled = false; // Endurance display retired with sprinting.
         }
 
         private void OnEnable()
@@ -165,6 +166,7 @@ namespace TheLightenRoad.UI
 
         public void Tick(float deltaTime)
         {
+            if (canvas != null) canvas.enabled = false;
             if (panel == null || boundTarget == null) return;
             float dt = Mathf.Max(0f, deltaTime);
             recoveryTimer = Mathf.Max(0f, recoveryTimer - dt);

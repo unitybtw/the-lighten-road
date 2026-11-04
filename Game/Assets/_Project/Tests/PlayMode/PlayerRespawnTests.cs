@@ -1,6 +1,7 @@
 using System.Collections;
 using NUnit.Framework;
 using TheLightenRoad.Lantern;
+using TheLightenRoad.Input;
 using TheLightenRoad.Player;
 using TheLightenRoad.UI;
 using UnityEngine.InputSystem;
@@ -206,14 +207,31 @@ public sealed class PlayerRespawnTests
         try
         {
             overlay.enabled=false;respawnController.AutoRespawnEnabled=false;respawnController.AllowManualRespawnInput=true;
-            respawnController.Kill(DeathReason.Hazard);yield return new WaitForSeconds(.5f);
-            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead));
-            Time.timeScale=0;InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));yield return null;yield return null;
+            respawnController.Kill(DeathReason.Hazard);
+            float deadline=Time.realtimeSinceStartup+3;
+            while(respawnController.State==RespawnState.Dying && Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead), "Wait for the actual death state before testing its input.");
+            Time.timeScale=0;InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));
+            deadline=Time.realtimeSinceStartup+2;
+            while(!keyboard.spaceKey.isPressed && Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(keyboard.spaceKey.isPressed, Is.True, "The paused submit must reach the input system.");
+            yield return null;
             Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead), "Pause-menu submit must not also respawn the player behind it.");
-            InputSystem.QueueStateEvent(keyboard,new KeyboardState());yield return null;
-            Time.timeScale=1;yield return null;
-            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));yield return null;yield return null;
-            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive));
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState());
+            deadline=Time.realtimeSinceStartup+2;
+            while(keyboard.spaceKey.isPressed && Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(keyboard.spaceKey.isPressed, Is.False, "A fresh press requires the paused submit to be released first.");
+            Time.timeScale=1;
+            deadline=Time.realtimeSinceStartup+2;
+            while(!GameControls.GameplayAllowedExcept(respawnController) && Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(GameControls.GameplayAllowedExcept(respawnController), Is.True, "Recovery input must become eligible after the world is unpaused.");
+            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));
+            deadline=Time.realtimeSinceStartup+2;
+            while(!keyboard.spaceKey.isPressed && Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(keyboard.spaceKey.isPressed, Is.True, "The fresh recovery press must reach the input system.");
+            deadline=Time.realtimeSinceStartup+2;
+            while(respawnController.State!=RespawnState.Alive && Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive), "An eligible, delivered fresh press must recover the player.");
         }
         finally
         {

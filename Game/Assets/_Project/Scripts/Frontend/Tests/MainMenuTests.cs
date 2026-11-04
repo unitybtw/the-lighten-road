@@ -78,6 +78,98 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
+        public IEnumerator ReducedMotionKeepsTheCurrentMenuFocusVisibleWithoutMovingItsText()
+        {
+            _menu.SkipIntro();MenuPreferences.SetReducedMotion(true);
+            yield return null;
+            var button=_menu.GetComponentsInChildren<MenuButtonMotion>().Single(b=>b.name=="Settings");
+            button.OnDeselect(null);yield return new WaitForSecondsRealtime(.12f);
+            var textPosition=button.Text.rectTransform.anchoredPosition;
+            var leftPosition=button.LeftWing!=null?button.LeftWing.anchoredPosition:Vector2.zero;
+            var rightPosition=button.RightWing!=null?button.RightWing.anchoredPosition:Vector2.zero;
+            var idleColor=button.Text.color;
+            button.OnSelect(null);button.OnPointerDown(null);
+            yield return new WaitForSecondsRealtime(.12f);
+            Assert.That(button.Text.rectTransform.localScale,Is.EqualTo(Vector3.one));
+            Assert.That(button.Text.rectTransform.anchoredPosition,Is.EqualTo(textPosition));
+            Assert.That(button.transform.localScale,Is.EqualTo(Vector3.one));
+            if(button.LeftWing!=null)Assert.That(button.LeftWing.anchoredPosition,Is.EqualTo(leftPosition));
+            if(button.RightWing!=null)Assert.That(button.RightWing.anchoredPosition,Is.EqualTo(rightPosition));
+            Assert.That(button.WingGroup.alpha,Is.GreaterThan(.99f),"Keep the menu's existing selection ornaments visible.");
+            Assert.That(button.Text.color,Is.Not.EqualTo(idleColor));
+            button.OnPointerUp(null);button.OnDeselect(null);
+            yield return new WaitForSecondsRealtime(.12f);
+            Assert.That(button.Text.rectTransform.localScale,Is.EqualTo(Vector3.one));
+            Assert.That(button.Text.rectTransform.anchoredPosition,Is.EqualTo(textPosition));
+            Assert.That(button.WingGroup.alpha,Is.LessThan(.01f));
+            MenuPreferences.SetReducedMotion(false);button.OnSelect(null);
+            yield return new WaitForSecondsRealtime(.15f);
+            Assert.That(button.Text.rectTransform.localScale.x,Is.GreaterThan(1.005f),"Normal motion remains available when comfort mode is off.");
+        }
+
+        [UnityTest]
+        public IEnumerator ReducedMotionKeepsAnOptionalFlameCursorStationary()
+        {
+            // Exercise this reusable component's optional cursor without adding one
+            // to the authored menu, which currently uses selection ornaments.
+            _menu.SkipIntro();MenuPreferences.SetReducedMotion(true);
+            var fixture=new GameObject("Optional cursor regression",typeof(RectTransform));
+            fixture.transform.SetParent(_host.transform,false);fixture.SetActive(false);
+            var label=new GameObject("Fixture label",typeof(RectTransform),typeof(TMPro.TextMeshProUGUI));
+            label.transform.SetParent(fixture.transform,false);
+            var cursor=new GameObject("Fixture flame",typeof(RectTransform),typeof(Image));
+            cursor.transform.SetParent(fixture.transform,false);
+            var button=fixture.AddComponent<MenuButtonMotion>();button.Text=label.GetComponent<TMPro.TMP_Text>();
+            button.FlameCursorRect=cursor.GetComponent<RectTransform>();button.FlameCursorImage=cursor.GetComponent<Image>();
+            button.InitializeBasePositions(Vector2.zero,Vector2.zero,new Vector2(-40,4));fixture.SetActive(true);
+            yield return null;var cursorPosition=button.FlameCursorRect.anchoredPosition;
+            button.OnSelect(null);button.OnPointerDown(null);yield return new WaitForSecondsRealtime(.12f);
+            Assert.That(button.FlameCursorRect.anchoredPosition,Is.EqualTo(cursorPosition));
+            Assert.That(button.FlameCursorRect.localScale,Is.EqualTo(Vector3.one));
+            Assert.That(button.FlameCursorImage.color.a,Is.GreaterThan(.99f));
+            button.OnPointerUp(null);button.OnDeselect(null);yield return new WaitForSecondsRealtime(.12f);
+            Assert.That(button.FlameCursorRect.anchoredPosition,Is.EqualTo(cursorPosition));
+            Assert.That(button.FlameCursorRect.localScale,Is.EqualTo(Vector3.one));
+            Assert.That(button.FlameCursorImage.color.a,Is.LessThan(.01f));
+            MenuPreferences.SetReducedMotion(false);
+        }
+
+        [UnityTest]
+        public IEnumerator ReducedMotionSkipsTheVisualIntroButRetainsOneIgnitionSound()
+        {
+            // SetUp's active menu may have already run Start before the iterator
+            // begins. Create a fresh disabled host so the preference predates Awake/Start.
+            Object.DestroyImmediate(_host);
+            MenuPreferences.SetReducedMotion(true);
+            var sound=TheLightenRoad.Audio.SoundEffectManager.Instance;
+            var field=typeof(TheLightenRoad.Audio.SoundEffectManager).GetField("flareIgniteClip",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance);
+            var original=field.GetValue(sound);
+            var clip=AudioClip.Create("Menu ignition regression",48000,1,24000,false);
+            field.SetValue(sound,clip);
+            try
+            {
+                _host=new GameObject("Reduced motion startup regression");_host.SetActive(false);
+                _host.AddComponent<AudioListener>();_menu=_host.AddComponent<MainMenuController>();
+                _host.SetActive(true);
+                float deadline=Time.realtimeSinceStartup+2;
+                while(!_menu.IntroComplete && Time.realtimeSinceStartup<deadline)yield return null;
+                Assert.That(_menu.IntroComplete,Is.True);
+                Assert.That(sound.GetComponents<AudioSource>().Count(s=>s.clip==clip),Is.EqualTo(1),
+                    "Visual comfort must not mute the lantern cue, including during scene-start grace.");
+                yield return new WaitForSecondsRealtime(.08f);
+                _menu.SkipIntro();yield return null;
+                Assert.That(sound.GetComponents<AudioSource>().Count(s=>s.clip==clip),Is.EqualTo(1),"Skipping an already completed intro must not replay its sound.");
+            }
+            finally
+            {
+                field.SetValue(sound,original);
+                foreach(var source in sound.GetComponents<AudioSource>())if(source.clip==clip){source.Stop();source.clip=null;}
+                Object.Destroy(clip);
+                MenuPreferences.SetReducedMotion(false);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator SubViews_SwitchCleanlyBetweenRealmsSettingsControlsAndCredits()
         {
             yield return null;

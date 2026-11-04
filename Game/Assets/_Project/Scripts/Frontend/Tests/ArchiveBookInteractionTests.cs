@@ -34,6 +34,22 @@ namespace TheLightenRoad.Frontend.Tests
         [TearDown] public void Cleanup(){if(changedFocusSettings){InputSystem.settings.backgroundBehavior=oldBackground;InputSystem.settings.editorInputBehaviorInPlayMode=oldEditorInput;changedFocusSettings=false;}if(mouseActions!=null)mouseActions.devices=originalUiDevices;if(scriptedMouse!=null){InputSystem.RemoveDevice(scriptedMouse);scriptedMouse=null;}if(originalMouse!=null && originalMouse.added)originalMouse.MakeCurrent();foreach(var item in owned)if(item!=null)Object.DestroyImmediate(item);owned.Clear();CodexSession.End();MenuPreferences.SetReducedMotion(reduced);Time.timeScale=1;}
         string Counter()=>menu.GetComponentsInChildren<TMP_Text>(true).Single(t=>t.name=="Page counter").text;
         Vector2 Point(float x,float y=2.2f)=>view.ScreenPoint(new Vector3(x,y,-.16f));
+        [Test] public void PreviewCapturePreservesTheLiveCamerasPendingFraming()
+        {
+            view.SetOpening(1);view.FitModel(true);var open=view.BookCamera.transform.localPosition;
+            view.SetOpening(0);view.FitModel(true);var closed=view.BookCamera.transform.localPosition;
+            Assert.That(Vector3.Distance(open,closed),Is.GreaterThan(.001f));
+            view.SetOpening(1);
+            string path=System.IO.Path.Combine(Application.temporaryCachePath,"archive-framing-preview.png");
+            try
+            {
+                view.CapturePreview(640,480,path);
+                Assert.That(view.BookCamera.transform.localPosition,Is.EqualTo(closed),"Preview framing must not move the live camera.");
+                for(int i=0;i<2000;i++)view.FitModel(false);
+                Assert.That(Vector3.Distance(view.BookCamera.transform.localPosition,open),Is.LessThan(.002f),"Capturing a preview must not consume the pending live refit.");
+            }
+            finally{System.IO.File.Delete(path);view.SetOpening(1);view.FitModel(true);}
+        }
         [UnityTest] public IEnumerator MouseStateEventsDragAndReleaseThroughTheInputModule()
         {
             oldBackground=InputSystem.settings.backgroundBehavior;oldEditorInput=InputSystem.settings.editorInputBehaviorInPlayMode;changedFocusSettings=true;

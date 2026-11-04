@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace TheLightenRoad.Audio
 {
@@ -150,7 +149,6 @@ namespace TheLightenRoad.Audio
             }
 
             TickFade(Time.unscaledDeltaTime);
-            HandleDebugInputs();
         }
 
         public void EnsureAudioSource()
@@ -329,25 +327,5 @@ namespace TheLightenRoad.Audio
             Debug.Log($"[BackgroundMusicManager] Music Volume set to {targetVolume:P0}");
         }
 
-        private void HandleDebugInputs()
-        {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (Keyboard.current != null)
-            {
-                if (Keyboard.current.mKey.wasPressedThisFrame)
-                {
-                    ToggleMute();
-                }
-                else if (Keyboard.current.leftBracketKey.wasPressedThisFrame)
-                {
-                    AdjustVolume(-0.05f);
-                }
-                else if (Keyboard.current.rightBracketKey.wasPressedThisFrame)
-                {
-                    AdjustVolume(0.05f);
-                }
-            }
-#endif
-        }
     }
 }

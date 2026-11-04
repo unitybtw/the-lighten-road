@@ -46,7 +46,6 @@ namespace TheLightenRoad.Sirac.FurkanPrototype
         {
             DiegeticWhisper.Spawn(new Vector3(1f, 2.1f, 0f), "A / D", "WALK", WhisperAction.Move, "furkan_move", transform).TriggerRadius = 2.2f;
             DiegeticWhisper.Spawn(new Vector3(3.3f, 2.5f, 0f), "SPACE", "JUMP", WhisperAction.Jump, "furkan_jump", transform).TriggerRadius = 2.5f;
-            DiegeticWhisper.Spawn(new Vector3(13.5f, 2.5f, 0f), "SHIFT", "HOLD TO SPRINT", WhisperAction.Sprint, "furkan_sprint", transform).TriggerRadius = 2f;
             DiegeticWhisper.Spawn(new Vector3(18.2f, 2.8f, 0f), "F", "SCOUT THE DARK AHEAD", WhisperAction.Flare, "furkan_flare", transform).TriggerRadius = 3f;
         }
         private void OnDestroy()

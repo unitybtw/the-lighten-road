@@ -77,6 +77,7 @@ namespace TheLightenRoad.Player.Editor
                 var rects = new List<SpriteRect>(); var names = new List<SpriteNameFileIdPair>();
                 var offsets = new List<Vector2>();
                 var reaches = new List<float>();
+                var waists = new List<float>();
                 var grips = new List<Vector2>();
                 var soles = new List<Vector2>();
                 var plants = new List<Vector2>();
@@ -101,12 +102,14 @@ namespace TheLightenRoad.Player.Editor
                     float reachY = 0; int reachCount = 0;
                     int soleY = -1; float soleX = 0; int soleCount = 0;
                     int plantX = -1, plantY = -1;
+                    float waistX = 0; int waistCount = 0;
                     int shirtBottom = -1; float shirtX = 0; int shirtCount = 0;
                     for (int y = 0; y < (int)f.Rect.height; y++) for (int x = 0; x < (int)f.Rect.width; x++)
                     {
                         Color32 c = source.GetPixel((int)f.Rect.x + x, source.height - (int)f.Rect.y - y - 1);
                         if (c.a > 100)
                         {
+                            if (y == 42 && x >= 24 && x <= 48) { waistX += x + .5f; waistCount++; }
                             if (y < f.Rect.height * .65f && c.r > 100 && c.g > 100 && c.b > 100)
                             {
                                 if (x + .5f > reachX) { reachX = x + .5f; reachY = 0; reachCount = 0; }
@@ -129,6 +132,7 @@ namespace TheLightenRoad.Player.Editor
                     else if ((kind == LightAnimation.Climb || kind == LightAnimation.Push) && shirtCount > 0)
                         lastLight = (new Vector2(shirtX / shirtCount, f.Rect.height - shirtBottom - 2.5f) - Vector2.Scale(pivot, f.Rect.size)) / Ppu;
                     offsets.Add(lastLight);
+                    waists.Add(waistCount > 0 ? (waistX / waistCount - pivot.x * f.Rect.width) / Ppu : 0);
                     reaches.Add(reachX >= 0 ? (reachX - pivot.x * f.Rect.width) / Ppu : 0);
                     if (reachCount == 0 || soleCount == 0 || plantX < 0) throw new InvalidDataException("Missing visible pose registration in " + frameName);
                     grips.Add((new Vector2(reachX, f.Rect.height - reachY / reachCount) - Vector2.Scale(pivot, f.Rect.size)) / Ppu);
@@ -152,7 +156,7 @@ namespace TheLightenRoad.Player.Editor
                 AnimationUtility.SetObjectReferenceCurve(clip, EditorCurveBinding.PPtrCurve("Placeholder Visual", typeof(SpriteRenderer), "m_Sprite"), keys);
                 var clipSettings = AnimationUtility.GetAnimationClipSettings(clip); clipSettings.loopTime = loop;
                 AnimationUtility.SetAnimationClipSettings(clip, clipSettings); EditorUtility.SetDirty(clip);
-                return new PlayerSpriteSequence { Kind = kind, Frames = sprites, Durations = frames.Select(f => f.Duration).ToArray(), LanternOffsets = offsets.ToArray(), ReachOffsetsX = kind == LightAnimation.Climb ? reaches.ToArray() : Array.Empty<float>(), GripOffsets = kind == LightAnimation.Climb ? grips.ToArray() : Array.Empty<Vector2>(), SoleOffsets = soles.ToArray(), PlantOffsets = kind == LightAnimation.Climb ? plants.ToArray() : Array.Empty<Vector2>(), PreviewClip = clip, Loop = loop };
+                return new PlayerSpriteSequence { Kind = kind, Frames = sprites, Durations = frames.Select(f => f.Duration).ToArray(), LanternOffsets = offsets.ToArray(), ReachOffsetsX = kind == LightAnimation.Climb ? reaches.ToArray() : Array.Empty<float>(), GripOffsets = kind == LightAnimation.Climb ? grips.ToArray() : Array.Empty<Vector2>(), SoleOffsets = soles.ToArray(), PlantOffsets = kind == LightAnimation.Climb ? plants.ToArray() : Array.Empty<Vector2>(), WaistOffsetsX = kind == LightAnimation.Walk || kind == LightAnimation.Flare ? waists.ToArray() : Array.Empty<float>(), PreviewClip = clip, Loop = loop };
             }
             finally { UnityEngine.Object.DestroyImmediate(source); }
         }

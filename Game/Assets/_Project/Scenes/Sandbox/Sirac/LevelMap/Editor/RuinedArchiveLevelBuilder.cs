@@ -69,8 +69,8 @@ namespace TheLightenRoad.Sirac.Editor
             route.Configure(player.GetComponent<PlayerRespawnController>(), emberRoot, pickupPrefab, font);
 
             Floor("Intake to bridge", -10f, 32f);
-            Floor("Service landing", 34.2f, 46f);
-            Floor("Exit landing", 48.2f, 62f);
+            Floor("Service landing", 33.6f, 46f);
+            Floor("Exit landing", 47.6f, 62f);
             Solid("West wall", -10.4f, 3.5f, 0.8f, 9f, Stone);
             Solid("East wall", 62.4f, 3.5f, 0.8f, 9f, Stone);
             Room("01 / INTAKE", -10f, 1f, 4.0f);
@@ -106,9 +106,9 @@ namespace TheLightenRoad.Sirac.Editor
             CollapsedArch(51f, 3.6f);
             SpikeField("Learning spikes / lower passage", 12.4f, 3, 0f);
             SpikeField("Service spikes", 27.2f, 3, 0f);
-            Trench("Broken bridge", 32f, 34.2f);
-            SpikeField("Gallery spikes", 41f, 4, 0f);
-            Trench("Final crossing", 46f, 48.2f);
+            Trench("Broken bridge", 32f, 33.6f);
+            SpikeField("Gallery spikes", 41f, 3, 0f);
+            Trench("Final crossing", 46f, 47.6f);
 
             var voidGo = new GameObject("Void safety plane", typeof(BoxCollider2D), typeof(HazardTrigger2D));
             voidGo.transform.SetParent(dangers);
@@ -119,11 +119,11 @@ namespace TheLightenRoad.Sirac.Editor
             voidData.FindProperty("deathReason").enumValueIndex = (int)DeathReason.Void;
             voidData.ApplyModifiedPropertiesWithoutUndo();
 
-            Marker(-5f, ArchiveRouteVolume.VolumeKind.Hint, 0, "01 / INTAKE", "Walk safely. Hold SHIFT to sprint; release it to recover stamina.", 2.9f);
+            Marker(-5f, ArchiveRouteVolume.VolumeKind.Hint, 0, "01 / INTAKE", "Walk safely. Hold jump for height; release for a short hop.", 2.9f);
             Marker(1.0f, ArchiveRouteVolume.VolumeKind.Hint, 0, "02 / THE UPPER OFFICE", "The shelves lead to an optional ember. The lower passage has exposed spikes.", 3.0f);
-            Marker(22.5f, ArchiveRouteVolume.VolumeKind.Checkpoint, 1, "REST POINT / 01", "Scout the floor. Clear the spikes, rest on the landing, then sprint-jump the broken bridge.", 2.7f);
-            Marker(26.1f, ArchiveRouteVolume.VolumeKind.Hint, 0, "03 / SERVICE CROSSING", "SHIFT + SPACE crosses the hazards. Land before releasing SPACE for a full jump.", 3.0f);
-            Marker(37.7f, ArchiveRouteVolume.VolumeKind.Checkpoint, 2, "REST POINT / 02", "Let stamina recover here. One final ember lies ahead of the gallery.", 3.0f);
+            Marker(22.5f, ArchiveRouteVolume.VolumeKind.Checkpoint, 1, "REST POINT / 01", "Scout the floor. Clear the spikes, rest on the landing, then jump the broken bridge.", 2.7f);
+            Marker(26.1f, ArchiveRouteVolume.VolumeKind.Hint, 0, "03 / SERVICE CROSSING", "Approach the edge, then hold SPACE for a full jump. Land before the next crossing.", 3.0f);
+            Marker(37.7f, ArchiveRouteVolume.VolumeKind.Checkpoint, 2, "REST POINT / 02", "Rest here and scout the gallery. One final ember lies ahead.", 3.0f);
             Marker(40f, ArchiveRouteVolume.VolumeKind.Hint, 0, "04 / THE COLLAPSED GALLERY", "Two separate jumps. A safe run-up and landing surround each hazard.", 3.0f);
             Marker(58f, ArchiveRouteVolume.VolumeKind.Exit, 0, "ARCHIVE REACHED", "Route complete. BACKSPACE restores all three embers and checkpoints.", 3.0f);
 
@@ -163,7 +163,7 @@ namespace TheLightenRoad.Sirac.Editor
             Selection.activeGameObject = root;
             if (SceneView.lastActiveSceneView != null)
                 SceneView.lastActiveSceneView.Frame(new Bounds(new Vector3(26f, 2f), new Vector3(75f, 13f, 1f)), false);
-            return "MovementSandbox redesigned: 72m, optional upper office, three embers, two checkpoints, five spike fields, two 2.2m gaps. Existing player, UI, audio and lantern tuning retained.";
+            return "MovementSandbox redesigned: 72m, optional upper office, three embers, two checkpoints, five spike fields, two 1.6m gaps. Existing player, UI, audio and lantern tuning retained.";
         }
 
         private static void PrepareSpikes()
@@ -323,7 +323,8 @@ namespace TheLightenRoad.Sirac.Editor
         private static void Trench(string name, float left, float right)
         {
             Solid("Sunken bed / " + name, (left + right) / 2f, -1.55f, right - left, 0.45f, Iron);
-            SpikeField(name + " / spikes", left, 5, -1.28f);
+            // Keep the submerged spikes inside the narrower walking-speed trench.
+            SpikeField(name + " / spikes", (left + right) * .5f - .66f, 3, -1.28f);
             for (int side = 0; side < 2; side++)
             {
                 float x = side == 0 ? left - 0.22f : right + 0.22f;

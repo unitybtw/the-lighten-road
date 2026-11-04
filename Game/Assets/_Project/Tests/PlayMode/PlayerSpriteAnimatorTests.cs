@@ -70,6 +70,8 @@ public sealed class PlayerSpriteAnimatorTests
         Assert.That(data.Find(LightAnimation.Climb).PlantOffsets.Length, Is.EqualTo(27));
         Assert.That(data.Find(LightAnimation.Climb).ReachOffsetsX.All(x => !float.IsNaN(x) && !float.IsInfinity(x)), Is.True);
         Assert.That(data.Find(LightAnimation.Idle).Frames[0].pivot.y, Is.EqualTo(35));
+        Assert.That(data.Find(LightAnimation.Walk).WaistOffsetsX.Length, Is.EqualTo(10));
+        Assert.That(data.Find(LightAnimation.Flare).WaistOffsetsX.Length, Is.EqualTo(12));
     }
     [UnityTest] public IEnumerator WalkingAndFacingUseTheDeliveredFramesWithoutChangingPhysics()
     {
@@ -85,6 +87,80 @@ public sealed class PlayerSpriteAnimatorTests
         Assert.That(motor.LanternTransform.localPosition.x, Is.LessThan(0));
         Assert.That(collider.size, Is.EqualTo(size));
         Assert.That(player.transform.localScale, Is.EqualTo(Vector3.one));
+    }
+    [UnityTest] public IEnumerator WalkingFlareKeepsTheArmsAnimatingAndTheLegsSteppingInBothDirections()
+    {
+        var shape = player.GetComponent<CapsuleCollider2D>().size;
+        var lantern = player.GetComponent<LanternController>();
+        var fuel = player.GetComponent<LanternFuel>();
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(.2f);
+        float initialFuel = fuel.CurrentFuel;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.F));
+        yield return new WaitForSeconds(.1f);
+        Assert.That(lantern.IsFlared, Is.True);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Flare));
+        Assert.That(animation.HasWalkingActionLayer, Is.True);
+        Assert.That(animation.Renderer.sprite.texture, Is.SameAs(animation.Catalog.Find(LightAnimation.Flare).Frames[0].texture));
+        Assert.That(animation.WalkingLegsRenderer.sprite.texture, Is.SameAs(animation.Catalog.Find(LightAnimation.Walk).Frames[0].texture));
+        Assert.That(animation.WalkingLegsRenderer.sortingOrder, Is.EqualTo(animation.Renderer.sortingOrder));
+        int upper = animation.CurrentFrame, lower = animation.WalkingLegFrame;
+        var legSprite = animation.WalkingLegsRenderer.sprite;
+        yield return new WaitForSeconds(.22f);
+        Assert.That(animation.CurrentFrame, Is.GreaterThan(upper));
+        Assert.That(animation.WalkingLegFrame, Is.Not.EqualTo(lower));
+        Assert.That(animation.WalkingLegsRenderer.sprite, Is.Not.SameAs(legSprite));
+        Assert.That(motor.HorizontalSpeed, Is.EqualTo(motor.WalkSpeed).Within(.15f));
+        Assert.That(fuel.CurrentFuel, Is.EqualTo(initialFuel - LanternFuel.ChargesPerEmber));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        yield return new WaitForSeconds(.15f);
+        Assert.That(animation.HasWalkingActionLayer, Is.True);
+        Assert.That(animation.Renderer.flipX && animation.WalkingLegsRenderer.flipX, Is.True);
+        Assert.That(player.GetComponent<CapsuleCollider2D>().size, Is.EqualTo(shape));
+        Assert.That(player.transform.localScale, Is.EqualTo(Vector3.one));
+    }
+    [UnityTest] public IEnumerator StoppingDuringFlareRestoresTheOriginalFullPoseAndJumpClearsWalkingLegs()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D)); yield return new WaitForSeconds(.2f);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.F)); yield return new WaitForSeconds(.1f);
+        Assert.That(animation.HasWalkingActionLayer, Is.True);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState()); yield return new WaitForSeconds(.12f);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Flare));
+        Assert.That(animation.HasWalkingActionLayer, Is.False);
+        Assert.That(animation.Renderer.sprite, Is.SameAs(animation.Catalog.Find(LightAnimation.Flare).Frames[animation.CurrentFrame]));
+        Assert.That(animation.WalkingLegsRenderer.gameObject.activeSelf, Is.False);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D)); yield return new WaitForSeconds(.1f);
+        Assert.That(animation.HasWalkingActionLayer, Is.True);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.Space)); yield return new WaitForSeconds(.06f);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
+        Assert.That(animation.HasWalkingActionLayer, Is.False);
+        Assert.That(animation.WalkingLegsRenderer.gameObject.activeSelf, Is.False);
+        Assert.That(motor.Body.linearVelocity.y, Is.GreaterThan(1));
+    }
+    [UnityTest] public IEnumerator PauseFreezesBothFlareAndGaitAndDisableRemovesTheExtraRenderer()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D)); yield return new WaitForSeconds(.2f);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.F)); yield return new WaitForSeconds(.1f);
+        Assert.That(animation.HasWalkingActionLayer, Is.True);
+        Time.timeScale = 0;
+        int upper = animation.CurrentFrame, lower = animation.WalkingLegFrame;
+        Sprite sprite = animation.WalkingLegsRenderer.sprite;
+        yield return new WaitForSecondsRealtime(.15f);
+        Assert.That(animation.CurrentFrame, Is.EqualTo(upper)); Assert.That(animation.WalkingLegFrame, Is.EqualTo(lower));
+        Assert.That(animation.WalkingLegsRenderer.sprite, Is.SameAs(sprite));
+        Time.timeScale = 1; animation.enabled = false;
+        Assert.That(animation.WalkingLegsRenderer.gameObject.activeSelf, Is.False);
+        animation.enabled = true; yield return null;
+        Assert.That(animation.HasWalkingActionLayer, Is.False);
+    }
+    [UnityTest] public IEnumerator IgnitingWhileAirborneDoesNotReplaceTheJumpWithStandingLegs()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space)); yield return new WaitForSeconds(.1f);
+        Assert.That(motor.IsGrounded, Is.False);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space, Key.F)); yield return new WaitForSeconds(.08f);
+        Assert.That(player.GetComponent<LanternController>().IsFlared, Is.True);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
+        Assert.That(animation.HasWalkingActionLayer, Is.False);
     }
     [UnityTest] public IEnumerator RealJumpAndLandingDriveTheirOwnAnimations()
     {

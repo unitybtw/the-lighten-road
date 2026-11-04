@@ -1,0 +1,19 @@
+{
+  "name": "TheLightenRoad.Sirac.OfficeLevel.Editor",
+  "references": [
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Input",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Completion",
+    "TheLightenRoad.Codex",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Sirac.OfficeLevel",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime",
+    "TheLightenRoad.Lantern"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

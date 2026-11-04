@@ -1,0 +1,13 @@
+{
+  "name": "TheLightenRoad.Sirac.OfficeLevel",
+  "references": [
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Input",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Completion",
+    "TheLightenRoad.Codex",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Lantern"
+  ]
+}

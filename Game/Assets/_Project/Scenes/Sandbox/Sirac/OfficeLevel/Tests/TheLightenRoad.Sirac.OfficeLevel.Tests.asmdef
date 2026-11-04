@@ -1,0 +1,18 @@
+{
+  "name": "TheLightenRoad.Sirac.OfficeLevel.Tests",
+  "references": [
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Input",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Completion",
+    "TheLightenRoad.Codex",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Sirac.OfficeLevel",
+    "Unity.InputSystem",
+    "TheLightenRoad.Lantern"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

@@ -29,6 +29,7 @@ namespace TheLightenRoad.Frontend
         public void Rebind(Func<bool> canTurn,Action<int> commit,Action<int> preview)
         {this.preview=preview;if(Turn!=null)Turn.Initialize(this,canTurn,commit);}
         private Transform stage;private float lastAspect,baseDistance,openingProgress;private Renderer[] modelRenderers;
+        private bool framingDirty=true;
         private Vector3[] sweptPoints;
         private readonly List<Canvas> hiddenOverlays=new List<Canvas>();
         public void Initialize(Canvas canvas,Button[] controls,Func<bool> canTurn,Action<int> commit,Action<int> preview)
@@ -67,7 +68,9 @@ namespace TheLightenRoad.Frontend
         }
         private void LateUpdate()
         {
-            if(BookCamera==null)return;EnsurePixelTarget();
+            // A closed reader must not rebuild render targets when gameplay is resized.
+            // Show prepares the current resolution before the book becomes visible again.
+            if(BookCamera==null || !Visible)return;EnsurePixelTarget();
             float aspect=(float)Screen.width/Mathf.Max(1,Screen.height);if(!Mathf.Approximately(aspect,lastAspect))SetAspect(aspect);if(Visible && (Turn==null || !Turn.IsBusy))FitModel(false);
         }
         private void EnsurePixelTarget()
@@ -81,6 +84,7 @@ namespace TheLightenRoad.Frontend
         }
         private void SetAspect(float aspect)
         {
+            framingDirty=true;
             lastAspect=aspect;BookCamera.aspect=aspect;
             float height=Mathf.Max(9.1f,13.2f/Mathf.Max(.5f,aspect))*1.12f;
             baseDistance=height/(2*Mathf.Tan(BookCamera.fieldOfView*.5f*Mathf.Deg2Rad));
@@ -90,6 +94,7 @@ namespace TheLightenRoad.Frontend
         {
             if(Turn!=null && Turn.IsBusy && !allowWhileHeld)return;
             if(modelRenderers==null || Model==null)return;
+            if(!instant && !framingDirty)return;
             bool any=false;Bounds bounds=default;
             foreach(var renderer in modelRenderers)
             {
@@ -122,6 +127,13 @@ namespace TheLightenRoad.Frontend
             }
             float distance=instant?required:Mathf.Max(required,Mathf.Lerp(-BookCamera.transform.localPosition.z,required,blend));
             BookCamera.transform.localPosition=new Vector3(0,cameraY,-distance);
+            // The open-book bounds already reserve the complete page sweep. Once
+            // the camera settles, there is no need to scan every renderer each frame.
+            if(Mathf.Abs(cameraY-desiredY)<.0001f && Mathf.Abs(distance-required)<.0001f)
+            {
+                BookCamera.transform.localPosition=new Vector3(0,desiredY,-required);
+                framingDirty=false;
+            }
         }
         public void PrepareSheet(int side){Model.HoldSheet(Ink,side);preview(side);Model.PreviewUnderlay(PreviewInk,side);}
         public void RenderNextSpread()
@@ -148,6 +160,7 @@ namespace TheLightenRoad.Frontend
         }
         public void SetOpening(float progress)
         {
+            if(openingProgress!=progress)framingDirty=true;
             openingProgress=progress;
             if(Model==null)return;Model.SetOpening(progress);Model.transform.localPosition=new Vector3(-3.05f*(1-progress),.25f,0);
         }
@@ -155,6 +168,7 @@ namespace TheLightenRoad.Frontend
         {
             if(value && !Visible)
             {
+                EnsurePixelTarget();SetAspect((float)Screen.width/Mathf.Max(1,Screen.height));
                 foreach(var overlay in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
                     if(overlay.enabled && overlay.isRootCanvas && overlay.renderMode==RenderMode.ScreenSpaceOverlay && !overlay.transform.IsChildOf(transform))
                     {hiddenOverlays.Add(overlay);overlay.enabled=false;}
@@ -190,7 +204,7 @@ namespace TheLightenRoad.Frontend
         }
         public void CapturePreview(int width,int height,string path)
         {
-            var previous=RenderTexture.active;float oldBase=baseDistance;float aspect=BookCamera.aspect;var position=BookCamera.transform.localPosition;Texture2D image=null;
+            var previous=RenderTexture.active;float oldBase=baseDistance;float aspect=BookCamera.aspect;var position=BookCamera.transform.localPosition;bool oldDirty=framingDirty;Texture2D image=null;
             var target=RenderTexture.GetTemporary(width,height,24);var pixels=RenderTexture.GetTemporary(Mathf.Max(1,width/2),Mathf.Max(1,height/2),24);pixels.filterMode=FilterMode.Point;
             try
             {
@@ -199,7 +213,7 @@ namespace TheLightenRoad.Frontend
                 Graphics.Blit(pixels,target);RenderTexture.active=target;image=new Texture2D(width,height,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,width,height),0,0);image.Apply();
                 Directory.CreateDirectory(Path.GetDirectoryName(path));File.WriteAllBytes(path,image.EncodeToPNG());
             }
-            finally{BookCamera.aspect=aspect;BookCamera.transform.localPosition=position;baseDistance=oldBase;lastAspect=aspect;RenderTexture.active=previous;RenderTexture.ReleaseTemporary(pixels);RenderTexture.ReleaseTemporary(target);if(image!=null)Destroy(image);}
+            finally{BookCamera.aspect=aspect;BookCamera.transform.localPosition=position;baseDistance=oldBase;lastAspect=aspect;framingDirty=oldDirty;RenderTexture.active=previous;RenderTexture.ReleaseTemporary(pixels);RenderTexture.ReleaseTemporary(target);if(image!=null)Destroy(image);}
         }
         private static void DisposeTexture(RenderTexture texture)
         {if(texture==null)return;if(RenderTexture.active==texture)RenderTexture.active=null;texture.Release();Destroy(texture);}

@@ -222,7 +222,7 @@ public sealed class PlayerMotor2DTests
     }
 
     [UnityTest]
-    public IEnumerator WalkingAndSprintingModesWithShift()
+    public IEnumerator ShiftDoesNotChangeWalkingOrDrainEndurance()
     {
         var stamina = player.GetComponent<PlayerStamina>();
         Assert.That(stamina, Is.Not.Null, "Player must have PlayerStamina component.");
@@ -236,19 +236,19 @@ public sealed class PlayerMotor2DTests
         // 2. Sprint test (Key.D + Key.LeftShift)
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift));
         yield return new WaitForSeconds(0.2f);
-        Assert.That(motor.IsRunning, Is.True, "Player must sprint when Shift is held.");
+        Assert.That(motor.IsRunning, Is.False, "Shift no longer enables sprint.");
         Assert.That(body.linearVelocity.x, Is.EqualTo(motor.RunSpeed).Within(0.2f));
-        Assert.That(stamina.CurrentStamina, Is.LessThan(stamina.MaxStamina), "Stamina must drain while sprinting.");
+        Assert.That(stamina.CurrentStamina, Is.EqualTo(stamina.MaxStamina));
 
         // 3. Stop and verify regen
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
         float staminaBeforeRegen = stamina.CurrentStamina;
         yield return new WaitForSeconds(0.8f);
-        Assert.That(stamina.CurrentStamina, Is.GreaterThan(staminaBeforeRegen), "Stamina must regenerate when resting.");
+        Assert.That(stamina.CurrentStamina, Is.EqualTo(staminaBeforeRegen), "Stamina must regenerate when resting.");
     }
 
     [UnityTest]
-    public IEnumerator ExhaustionForcesPlayerToWalkUntilRecovered()
+    public IEnumerator WalkingDoesNotConsumeEndurance()
     {
         var stamina = player.GetComponent<PlayerStamina>();
         stamina.Initialize(3f, 100f);
@@ -257,7 +257,7 @@ public sealed class PlayerMotor2DTests
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift));
         yield return new WaitForSeconds(0.35f);
 
-        Assert.That(stamina.IsExhausted, Is.True,
+        Assert.That(stamina.IsExhausted, Is.False,
             $"Stamina: {stamina.CurrentStamina}/{stamina.MaxStamina}, Grounded: {motor.IsGrounded}, Running: {motor.IsRunning}, Vel: {body.linearVelocity}, Pos: {body.position}");
         Assert.That(motor.IsRunning, Is.False, "Exhausted player cannot sprint even if Shift is held.");
         Assert.That(body.linearVelocity.x, Is.EqualTo(motor.WalkSpeed).Within(0.25f));
@@ -270,7 +270,7 @@ public sealed class PlayerMotor2DTests
     }
 
     [UnityTest]
-    public IEnumerator SprintJumpCoversSignificantlyMoreHorizontalDistance()
+    public IEnumerator ShiftDoesNotIncreaseJumpDistance()
     {
         // Measure walking jump
         body.position = new Vector2(0f, 0.8f);
@@ -301,7 +301,7 @@ public sealed class PlayerMotor2DTests
         float sprintJumpDistance = body.position.x - sprintStartX;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
 
-        Assert.That(sprintJumpDistance, Is.GreaterThan(walkJumpDistance + 0.6f),
+        Assert.That(sprintJumpDistance, Is.EqualTo(walkJumpDistance).Within(.15f),
             $"Sprint jump ({sprintJumpDistance:F2}m) must cover substantially more ground than walk jump ({walkJumpDistance:F2}m).");
     }
 

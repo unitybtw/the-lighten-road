@@ -42,6 +42,50 @@ namespace TheLightenRoad.Player
         [SerializeField] private Vector2 boundsMin = new Vector2(-50f, -10f);
         [SerializeField] private Vector2 boundsMax = new Vector2(50f, 20f);
 
+        [Tooltip("Bounds describe the world edges, including the entire orthographic viewport.")]
+        [SerializeField] private bool boundsContainView;
+        [SerializeField, Min(.1f)] private float boundedViewSize = 3.7f;
+        private Camera view;
+        public bool HasWorldBounds => enableBounds && boundsContainView;
+        public Rect WorldBounds => new Rect(boundsMin, boundsMax - boundsMin);
+
+        /// <summary>Opt in to room edges; existing center-bound scenes keep their original mode.</summary>
+        public void SetWorldBounds(Rect limits, float viewSize = -1f)
+        {
+            if (limits.width <= 0 || limits.height <= 0) throw new System.ArgumentOutOfRangeException(nameof(limits));
+            if (view == null) view = GetComponent<Camera>();
+            if (!view.orthographic) throw new System.InvalidOperationException("World bounds require an orthographic camera.");
+            enableBounds = boundsContainView = true; boundsMin = limits.min; boundsMax = limits.max;
+            boundedViewSize = viewSize > 0 ? viewSize : view.orthographicSize;
+            UpdateBoundedView();
+            currentFollowPosition = Constrain(transform.position);
+            transform.position = currentFollowPosition; followVelocity = Vector3.zero;
+        }
+        private void UpdateBoundedView()
+        {
+            if (!HasWorldBounds) return;
+            if (view == null) view = GetComponent<Camera>();
+            float aspect = Mathf.Max(.01f, view.aspect);
+            view.orthographicSize = Mathf.Max(.01f, Mathf.Min(boundedViewSize,
+                (boundsMax.y - boundsMin.y) * .5f, (boundsMax.x - boundsMin.x) * .5f / aspect));
+        }
+        private Vector3 Constrain(Vector3 position)
+        {
+            if (!enableBounds) return position;
+            float halfY = HasWorldBounds && view != null ? view.orthographicSize : 0;
+            float halfX = HasWorldBounds && view != null ? halfY * view.aspect : 0;
+            position.x = Mathf.Clamp(position.x, boundsMin.x + halfX, boundsMax.x - halfX);
+            position.y = Mathf.Clamp(position.y, boundsMin.y + halfY, boundsMax.y - halfY);
+            return position;
+        }
+        private void ConstrainFollow()
+        {
+            var safe = Constrain(currentFollowPosition);
+            if (!Mathf.Approximately(safe.x, currentFollowPosition.x)) followVelocity.x = 0;
+            if (!Mathf.Approximately(safe.y, currentFollowPosition.y)) followVelocity.y = 0;
+            currentFollowPosition = safe;
+        }
+
         private Vector3 followVelocity;
         private Vector3 currentFollowPosition;
         private float currentLookAheadX;
@@ -87,6 +131,8 @@ namespace TheLightenRoad.Player
         {
             if (ActiveInstance == null) ActiveInstance = this;
             var cam = GetComponent<Camera>();
+            view = cam;
+            UpdateBoundedView();
             if (cam != null)
             {
                 cam.clearFlags = CameraClearFlags.SolidColor;
@@ -108,6 +154,11 @@ namespace TheLightenRoad.Player
 
         private void Start()
         {
+            UpdateBoundedView();
+            if (HasWorldBounds)
+            {
+                ConstrainFollow(); transform.position = Constrain(transform.position);
+            }
             if (target == null)
             {
                 var player = PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<PlayerMotor2D>();
@@ -118,7 +169,7 @@ namespace TheLightenRoad.Player
             }
             else
             {
-                currentFollowPosition = target.position + offset;
+                currentFollowPosition = Constrain(target.position + offset);
                 transform.position = currentFollowPosition;
             }
         }
@@ -140,6 +191,7 @@ namespace TheLightenRoad.Player
 
         public void SetTarget(Transform newTarget, bool snap = false)
         {
+            UpdateBoundedView();
             UnbindTarget();
             target = newTarget;
             followVelocity = Vector3.zero;
@@ -155,7 +207,7 @@ namespace TheLightenRoad.Player
                 if (snap)
                 {
                     StopShake();
-                    currentFollowPosition = target.position + offset;
+                    currentFollowPosition = Constrain(target.position + offset);
                     transform.position = currentFollowPosition;
                 }
             }
@@ -212,6 +264,11 @@ namespace TheLightenRoad.Player
 
         private void LateUpdate()
         {
+            UpdateBoundedView();
+            if (HasWorldBounds)
+            {
+                ConstrainFollow(); transform.position = Constrain(transform.position);
+            }
             if (target == null)
             {
                 var player = PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<PlayerMotor2D>();
@@ -303,12 +360,13 @@ namespace TheLightenRoad.Player
             // Bounds clamping if enabled
             if (enableBounds)
             {
-                desiredPosition.x = Mathf.Clamp(desiredPosition.x, boundsMin.x, boundsMax.x);
-                desiredPosition.y = Mathf.Clamp(desiredPosition.y, boundsMin.y, boundsMax.y);
+                desiredPosition = Constrain(desiredPosition);
             }
 
             currentFollowPosition = Vector3.SmoothDamp(
                 currentFollowPosition, desiredPosition, ref followVelocity, smoothTime);
+
+            if (HasWorldBounds) ConstrainFollow();
 
             // 5. Screen Shake Trauma
             Vector3 shakeOffset = Vector3.zero;
@@ -325,7 +383,7 @@ namespace TheLightenRoad.Player
                     shakeIntensity = 0f;
             }
 
-            transform.position = currentFollowPosition + shakeOffset;
+            transform.position = HasWorldBounds ? Constrain(currentFollowPosition + shakeOffset) : currentFollowPosition + shakeOffset;
         }
     }
 }

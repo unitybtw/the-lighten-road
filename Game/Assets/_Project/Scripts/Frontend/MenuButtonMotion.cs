@@ -99,9 +99,10 @@ namespace TheLightenRoad.Frontend
 
         private void ApplyVisuals(bool instant)
         {
+            bool reducedMotion = MenuPreferences.ReducedMotion;
             float smooth = SmoothStep(focusBlend);
             float t = Time.unscaledTime;
-            float pulse = MenuPreferences.ReducedMotion ? 1f : (0.90f + 0.10f * Mathf.Sin(t * 4.5f));
+            float pulse = reducedMotion ? 1f : (0.90f + 0.10f * Mathf.Sin(t * 4.5f));
 
             // 1. Typography scale, horizontal slide, lantern glow color & letter spacing
             if (Text != null)
@@ -111,7 +112,7 @@ namespace TheLightenRoad.Frontend
                 Text.color = Color.Lerp(baseCol, targetCol, smooth);
                 Text.characterSpacing = 1.4f;
 
-                float scale = Mathf.Lerp(1f, 1.012f, smooth) - pressBlend * 0.025f;
+                float scale = reducedMotion ? 1f : Mathf.Lerp(1f, 1.012f, smooth) - pressBlend * 0.025f;
                 Text.rectTransform.localScale = new Vector3(scale, scale, 1f);
 
                 if (LeftAlignedItem)
@@ -145,8 +146,8 @@ namespace TheLightenRoad.Frontend
                 float flickerY = MenuPreferences.ReducedMotion ? 1f : (0.92f + 0.14f * Mathf.Sin(t * 9.5f));
                 float flickerX = MenuPreferences.ReducedMotion ? 1f : (0.94f + 0.10f * Mathf.Cos(t * 7.1f));
 
-                FlameCursorRect.anchoredPosition = baseFlameAnchoredPos + new Vector2(Mathf.Lerp(-6f, 2f, smooth), bobY);
-                float baseScale = Mathf.Lerp(0.35f, 1.12f, smooth);
+                FlameCursorRect.anchoredPosition = reducedMotion ? baseFlameAnchoredPos : baseFlameAnchoredPos + new Vector2(Mathf.Lerp(-6f, 2f, smooth), bobY);
+                float baseScale = reducedMotion ? 1f : Mathf.Lerp(0.35f, 1.12f, smooth);
                 FlameCursorRect.localScale = new Vector3(baseScale * flickerX, baseScale * flickerY, 1f);
 
                 if (FlameCursorImage != null)
@@ -165,12 +166,12 @@ namespace TheLightenRoad.Frontend
             {
                 float targetAlpha = IsPrimaryAction ? 0.32f : 0.24f;
                 SoftGlow.color = new Color(1.0f, 0.76f, 0.30f, Mathf.Lerp(0f, targetAlpha, smooth));
-                float glowScale = Mathf.Lerp(0.90f, 1.06f, smooth);
+                float glowScale = reducedMotion ? 1f : Mathf.Lerp(0.90f, 1.06f, smooth);
                 SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
             }
 
             // 4. Symmetrical Wings (Hollow Knight / Lighten Road inward-gliding selection pointers)
-            float wingSlide = Mathf.Lerp(BaseWingOffset + 18f, BaseWingOffset, smooth);
+            float wingSlide = reducedMotion ? BaseWingOffset : Mathf.Lerp(BaseWingOffset + 18f, BaseWingOffset, smooth);
             if (LeftWing != null) LeftWing.anchoredPosition = new Vector2(-wingSlide, 0f);
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
             if (WingGroup != null) WingGroup.alpha = smooth;

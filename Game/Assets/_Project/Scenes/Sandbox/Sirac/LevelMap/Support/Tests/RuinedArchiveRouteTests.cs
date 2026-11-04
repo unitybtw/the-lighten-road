@@ -90,15 +90,15 @@ public sealed class RuinedArchiveRouteTests
         Assert.That(motor.Body.position.x, Is.GreaterThanOrEqualTo(x - 0.1f), "Blocked walking to " + x + " at " + motor.Body.position + " velocity=" + motor.Body.linearVelocity);
     }
 
-    private IEnumerator SprintJumpTo(float x, float minFloor)
+    private IEnumerator WalkJumpTo(float x, float minFloor)
     {
         Assert.That(motor.IsGrounded, Is.True, "Jump needs a safe launch pad at " + motor.Body.position);
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.Space));
         yield return new WaitForSeconds(0.08f);
         float timeout = Time.time + 1.5f;
         while (motor.Body.position.x < x && Time.time < timeout)
         {
-            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.LeftShift, Key.Space));
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.Space));
             Assert.That(player.State, Is.EqualTo(RespawnState.Alive), "Jump hit a hazard at " + motor.Body.position);
             yield return new WaitForFixedUpdate();
         }
@@ -119,17 +119,19 @@ public sealed class RuinedArchiveRouteTests
         int deaths = 0;
         player.OnPlayerDied += reason => deaths++;
         yield return WalkTo(1.3f);
-        yield return SprintJumpTo(3.1f, 0.9f);
-        yield return WalkTo(11.4f);
-        yield return SprintJumpTo(14.5f, 0f);
-        yield return WalkTo(26.2f);
-        yield return SprintJumpTo(29.4f, 0f);
-        yield return WalkTo(31.4f);
-        yield return SprintJumpTo(34.8f, 0f);
-        yield return WalkTo(40f);
-        yield return SprintJumpTo(43.2f, 0f);
-        yield return WalkTo(45.4f);
-        yield return SprintJumpTo(48.8f, 0f);
+        yield return WalkJumpTo(3.1f, 0.9f);
+        // Walk close enough to use the actual walking jump, rather than spending
+        // the first metre of its range on the old sprint launch approach.
+        yield return WalkTo(12f);
+        yield return WalkJumpTo(14.5f, 0f);
+        yield return WalkTo(26.8f);
+        yield return WalkJumpTo(29.4f, 0f);
+        yield return WalkTo(31.6f);
+        yield return WalkJumpTo(34.8f, 0f);
+        yield return WalkTo(40.6f);
+        yield return WalkJumpTo(43.2f, 0f);
+        yield return WalkTo(45.6f);
+        yield return WalkJumpTo(48.8f, 0f);
         yield return WalkTo(58f);
         Assert.That(route.IsComplete, Is.True);
         Assert.That(route.CheckpointIndex, Is.EqualTo(2));
@@ -142,12 +144,12 @@ public sealed class RuinedArchiveRouteTests
         // Leave room for the route and office rewards under the three-ember cap.
         player.GetComponent<LanternFuel>().Initialize(2f, 6f);
         yield return WalkTo(1.3f);
-        yield return SprintJumpTo(3.1f, 0.9f);
-        yield return SprintJumpTo(5.7f, 1.8f);
-        yield return SprintJumpTo(8.3f, 2.7f);
-        yield return SprintJumpTo(10.9f, 3.5f);
+        yield return WalkJumpTo(3.1f, 0.9f);
+        yield return WalkJumpTo(5.7f, 1.8f);
+        yield return WalkJumpTo(8.3f, 2.7f);
+        yield return WalkJumpTo(10.9f, 3.5f);
         yield return WalkTo(14f);
-        yield return SprintJumpTo(15.6f, 4.1f);
+        yield return WalkJumpTo(15.6f, 4.1f);
         Assert.That(route.GetComponentsInChildren<EmberPickup>().Length, Is.EqualTo(1), "Main-route and office embers must both be collectible.");
     }
 

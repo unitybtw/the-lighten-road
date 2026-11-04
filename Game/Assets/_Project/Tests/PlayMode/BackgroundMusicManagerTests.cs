@@ -2,6 +2,8 @@ using System.Collections;
 using NUnit.Framework;
 using TheLightenRoad.Audio;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 
 public sealed class BackgroundMusicManagerTests
@@ -181,6 +183,51 @@ public sealed class BackgroundMusicManagerTests
 
         musicManager.AdjustVolume(-0.5f);
         Assert.That(musicManager.TargetVolume, Is.GreaterThanOrEqualTo(0.05f));
+    }
+
+    [UnityTest]
+    public IEnumerator OrdinaryKeyboardInputDoesNotChangeMusicVolumeOrMute()
+    {
+        var previousKeyboard = Keyboard.current;
+        var background = InputSystem.settings.backgroundBehavior;
+        var editorInput = InputSystem.settings.editorInputBehaviorInPlayMode;
+        float timeScale = Time.timeScale;
+        Keyboard keyboard = null;
+        try
+        {
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            keyboard = InputSystem.AddDevice<Keyboard>();
+            keyboard.MakeCurrent();
+            musicManager.TargetVolume = .23f;
+            musicManager.Play(testClip, 0);
+            musicManager.TickFade(.1f);
+            foreach (float scale in new[] { 1f, 0f })
+            {
+                Time.timeScale = scale;
+                foreach (var key in new[] { Key.M, Key.LeftBracket, Key.RightBracket })
+                {
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
+                    yield return null;
+                    yield return null;
+                    Assert.That(keyboard[key].isPressed, Is.True, "The simulated key must reach the input system.");
+                    musicManager.TickFade(.6f);
+                    Assert.That(musicManager.TargetVolume, Is.EqualTo(.23f).Within(.001f), key + " must not bypass audio settings.");
+                    Assert.That(musicManager.CurrentVolume, Is.EqualTo(.23f).Within(.001f));
+                    Assert.That(musicManager.IsPlaying, Is.True, key + " must not silently mute music.");
+                    InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+                    yield return null;
+                }
+            }
+        }
+        finally
+        {
+            Time.timeScale = timeScale;
+            if (keyboard != null && keyboard.added) InputSystem.RemoveDevice(keyboard);
+            if (previousKeyboard != null && previousKeyboard.added) previousKeyboard.MakeCurrent();
+            InputSystem.settings.backgroundBehavior = background;
+            InputSystem.settings.editorInputBehaviorInPlayMode = editorInput;
+        }
     }
 
     [UnityTest]

@@ -13,6 +13,7 @@ namespace TheLightenRoad.Player
         public float[] Durations;
         public Vector2[] LanternOffsets;
         public float[] ReachOffsetsX;
+        public float[] WaistOffsetsX;
         public Vector2[] GripOffsets;
         public Vector2[] SoleOffsets;
         public Vector2[] PlantOffsets;

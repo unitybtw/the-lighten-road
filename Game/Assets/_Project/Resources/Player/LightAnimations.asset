@@ -48,6 +48,7 @@ MonoBehaviour:
     - {x: 0.375, y: 0.47499996}
     - {x: 0.375, y: 0.44722217}
     ReachOffsetsX: []
+    WaistOffsetsX: []
     GripOffsets: []
     SoleOffsets:
     - {x: -0.125, y: -0.7916667}
@@ -98,6 +99,17 @@ MonoBehaviour:
     - {x: 0.3472222, y: 0.47499996}
     - {x: 0.3472222, y: 0.44722217}
     ReachOffsetsX: []
+    WaistOffsetsX:
+    - -0.055555556
+    - -0.055555556
+    - 0
+    - -0.013888889
+    - -0.013888889
+    - -0.055555556
+    - -0.055555556
+    - 0
+    - -0.013888889
+    - -0.013888889
     GripOffsets: []
     SoleOffsets:
     - {x: -0.064814776, y: -0.7916667}
@@ -136,6 +148,7 @@ MonoBehaviour:
     - {x: 0.45833334, y: 0.50277776}
     - {x: 0.4861111, y: 0.4194444}
     ReachOffsetsX: []
+    WaistOffsetsX: []
     GripOffsets: []
     SoleOffsets:
     - {x: -0.041666668, y: -0.7916667}
@@ -167,6 +180,7 @@ MonoBehaviour:
     - {x: 0.5138889, y: 0.25277773}
     - {x: 0.45833334, y: 0.44722217}
     ReachOffsetsX: []
+    WaistOffsetsX: []
     GripOffsets: []
     SoleOffsets:
     - {x: -0.083333336, y: -0.7638889}
@@ -218,6 +232,19 @@ MonoBehaviour:
     - {x: 0.375, y: 0.47499996}
     - {x: 0.375, y: 0.44722217}
     ReachOffsetsX: []
+    WaistOffsetsX:
+    - -0.099358976
+    - -0.099358976
+    - -0.099358976
+    - -0.099358976
+    - -0.08440171
+    - -0.08440171
+    - -0.08440171
+    - -0.08440171
+    - -0.099358976
+    - -0.099358976
+    - -0.099358976
+    - -0.099358976
     GripOffsets: []
     SoleOffsets:
     - {x: -0.125, y: -0.7916667}
@@ -342,6 +369,7 @@ MonoBehaviour:
     - {x: 0.375, y: 0.47499996}
     - {x: 0.375, y: 0.44722217}
     ReachOffsetsX: []
+    WaistOffsetsX: []
     GripOffsets: []
     SoleOffsets:
     - {x: -0.125, y: -0.7916667}
@@ -494,6 +522,7 @@ MonoBehaviour:
     - -0.125
     - 0.20833333
     - 0.31944445
+    WaistOffsetsX: []
     GripOffsets:
     - {x: -0.20833333, y: 1.2638888}
     - {x: -0.20833333, y: 1.2638888}
@@ -636,6 +665,7 @@ MonoBehaviour:
     - {x: 0.2638889, y: -0.21944444}
     - {x: 0.2638889, y: -0.21944444}
     ReachOffsetsX: []
+    WaistOffsetsX: []
     GripOffsets: []
     SoleOffsets:
     - {x: -0.06944445, y: -0.7916667}
@@ -693,6 +723,7 @@ MonoBehaviour:
     - {x: -0.20833333, y: -0.2361111}
     - {x: -0.25, y: -0.18055555}
     ReachOffsetsX: []
+    WaistOffsetsX: []
     GripOffsets: []
     SoleOffsets:
     - {x: -0.49368688, y: -0.7916667}

@@ -150,7 +150,10 @@ namespace TheLightenRoad.Frontend.Tests
             foreach(var badge in pause.ControlsPanel.GetComponentsInChildren<RectTransform>().Where(r=>r.name.EndsWith("Bumper Badge")))
                 Assert.That(badge.GetComponent<Image>().raycastTarget,Is.True);
             var labels=pause.ControlsPanel.GetComponentsInChildren<TMP_Text>().Where(t=>t.name=="Description");
-            Assert.That(labels.Count(),Is.EqualTo(6));Assert.That(labels.All(t=>t.fontSize>=20),Is.True);
+            Assert.That(labels.Count(),Is.EqualTo(5));Assert.That(labels.All(t=>t.fontSize>=20),Is.True);
+            Assert.That(pause.ControlsPanel.GetComponentsInChildren<TMP_Text>(true).Any(t=>
+                t.text.IndexOf("sprint",System.StringComparison.OrdinalIgnoreCase)>=0),Is.False,
+                "The walking-only guide must not advertise a removed sprint action.");
             foreach(var badge in pause.ControlsPanel.GetComponentsInChildren<RectTransform>().Where(r=>r.name=="Keycap Badge"))
             {
                 var icon=(RectTransform)badge.Find("Glyph Icon");var key=badge.Find("Key Text").GetComponent<TMP_Text>();
