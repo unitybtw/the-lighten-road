@@ -115,6 +115,48 @@ namespace TheLightenRoad.Frontend.Tests
         }
 
         [UnityTest]
+        public IEnumerator ReversingPauseMotionContinuesFromTheVisibleFrame()
+        {
+            yield return null;
+            var modal = pauseMenu.GetComponentsInChildren<RectTransform>(true).Single(t => t.name == "ModalContainer");
+            var group = pauseMenu.GetComponentsInChildren<CanvasGroup>(true).Single(g => g.name == "PauseCanvas");
+            pauseMenu.Pause();
+            yield return new WaitForSecondsRealtime(.06f);
+            Vector3 openingScale = modal.localScale;
+            Vector2 openingPosition = modal.anchoredPosition;
+            pauseMenu.Resume();
+            Assert.That(Vector3.Distance(modal.localScale, openingScale), Is.LessThan(.005f));
+            Assert.That(Vector2.Distance(modal.anchoredPosition, openingPosition), Is.LessThan(1f));
+            yield return new WaitForSecondsRealtime(.04f);
+            float closingAlpha = group.alpha;
+            Vector3 closingScale = modal.localScale;
+            Vector2 closingPosition = modal.anchoredPosition;
+            pauseMenu.Pause();
+            Assert.That(group.alpha, Is.GreaterThanOrEqualTo(closingAlpha - .02f));
+            Assert.That(Vector3.Distance(modal.localScale, closingScale), Is.LessThan(.005f));
+            Assert.That(Vector2.Distance(modal.anchoredPosition, closingPosition), Is.LessThan(1f));
+            yield return new WaitForSecondsRealtime(.3f);
+            Assert.That(group.alpha, Is.EqualTo(1f));
+            Assert.That(modal.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(modal.anchoredPosition, Is.EqualTo(Vector2.zero));
+        }
+
+        [UnityTest]
+        public IEnumerator ReducedMotionUsesFadesWithoutZoomOrTranslation()
+        {
+            MenuPreferences.SetReducedMotion(true);
+            var modal = pauseMenu.GetComponentsInChildren<RectTransform>(true).Single(t => t.name == "ModalContainer");
+            pauseMenu.Pause();
+            Assert.That(modal.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(modal.anchoredPosition, Is.EqualTo(Vector2.zero));
+            yield return new WaitForSecondsRealtime(.08f);
+            pauseMenu.Resume();
+            Assert.That(modal.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(modal.anchoredPosition, Is.EqualTo(Vector2.zero));
+            yield return new WaitForSecondsRealtime(.08f);
+        }
+
+        [UnityTest]
         public IEnumerator PauseMenu_PausesAndResumesTimeScaleCorrectly()
         {
             yield return null;

@@ -81,6 +81,29 @@ public sealed class FollowCamera2DTests
     }
 
     [UnityTest]
+    public IEnumerator SlowMovementDoesNotPullTheCameraToFullLookAhead()
+    {
+        cameraFollow.LookAheadDistance = 1f;
+        targetBody.linearVelocity = new Vector2(.4f, 0f);
+        yield return new WaitForSeconds(.5f);
+        Assert.That(cameraFollow.CurrentLookAheadX, Is.InRange(.005f, .12f));
+        targetBody.linearVelocity = new Vector2(4f, 0f);
+        yield return new WaitForSeconds(.4f);
+        Assert.That(cameraFollow.CurrentLookAheadX, Is.GreaterThan(.7f));
+    }
+
+    [UnityTest]
+    public IEnumerator StoppedFallReturnsTheFrameWithoutALongDownwardDrift()
+    {
+        targetBody.linearVelocity = new Vector2(0f, -12f);
+        yield return new WaitForSeconds(.4f);
+        Assert.That(cameraFollow.CurrentFallLeadY, Is.LessThan(-.5f));
+        targetBody.linearVelocity = Vector2.zero;
+        yield return new WaitForSeconds(.35f);
+        Assert.That(cameraFollow.CurrentFallLeadY, Is.GreaterThan(-.15f));
+    }
+
+    [UnityTest]
     public IEnumerator CameraAnticipatesFallWhenDescendingRapidly()
     {
         cameraFollow.EnableFallAnticipation = true;

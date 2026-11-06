@@ -88,6 +88,39 @@ public sealed class PlayerSpriteAnimatorTests
         Assert.That(collider.size, Is.EqualTo(size));
         Assert.That(player.transform.localScale, Is.EqualTo(Vector3.one));
     }
+    [UnityTest] public IEnumerator WalkCadenceSlowsWithActualMotionWithoutAMinimumSteppingRate()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(.2f);
+        animation.AutomaticTicks = false;
+        animation.enabled = false; animation.enabled = true;
+        motor.Body.linearVelocity = new Vector2(motor.WalkSpeed, 0);
+        animation.Tick(.2f);
+        int fullSpeedFrame = animation.CurrentFrame;
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Walk));
+        Assert.That(fullSpeedFrame, Is.EqualTo(2), "Normal walking must retain the delivered 100ms frames, not accelerate the art's one-second cycle.");
+        animation.enabled = false; animation.enabled = true;
+        motor.Body.linearVelocity = new Vector2(motor.WalkSpeed * .1f, 0);
+        animation.Tick(.2f);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Walk));
+        Assert.That(animation.CurrentFrame, Is.Zero, "Slow analog movement must not be forced to play at half the full-speed cadence.");
+        animation.AutomaticTicks = true;
+    }
+    [UnityTest] public IEnumerator WalkingAfterAStopStartsAtTheFirstStepInsteadOfAStaleRaisedFoot()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(.3f);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        yield return new WaitForSeconds(.15f);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Idle));
+        animation.AutomaticTicks = false;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(.08f);
+        animation.Tick(.001f);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Walk));
+        Assert.That(animation.CurrentFrame, Is.Zero);
+        animation.AutomaticTicks = true;
+    }
     [UnityTest] public IEnumerator WalkingFlareKeepsTheArmsAnimatingAndTheLegsSteppingInBothDirections()
     {
         var shape = player.GetComponent<CapsuleCollider2D>().size;
@@ -161,6 +194,45 @@ public sealed class PlayerSpriteAnimatorTests
         Assert.That(player.GetComponent<LanternController>().IsFlared, Is.True);
         Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
         Assert.That(animation.HasWalkingActionLayer, Is.False);
+    }
+    [UnityTest] public IEnumerator LanternLightSettlesBetweenWalkMarkersButSnapsOnFacingChanges()
+    {
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        yield return new WaitForSeconds(.2f);
+        Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Walk));
+        animation.AutomaticTicks = false;
+        bool sawSmoothedFrame = false;
+        for (int step = 0; step < 120; step++)
+        {
+            int frame = animation.CurrentFrame;
+            Vector3 before = motor.LanternTransform.localPosition;
+            animation.Tick(.01f);
+            if (frame == animation.CurrentFrame) continue;
+            Vector3 desired = ExpectedLanternAnchor();
+            if (Vector3.Distance(before, desired) < .01f) continue;
+            Vector3 after = motor.LanternTransform.localPosition;
+            Assert.That(Vector3.Distance(after, desired), Is.LessThan(Vector3.Distance(before, desired)));
+            Assert.That(Vector3.Distance(after, desired), Is.GreaterThan(.0001f));
+            sawSmoothedFrame = true;
+            break;
+        }
+        Assert.That(sawSmoothedFrame, Is.True, "The real walk markers should settle instead of stepping the room light.");
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        yield return new WaitForSeconds(.15f);
+        animation.Tick(.01f);
+        Assert.That(motor.FacingDirection, Is.EqualTo(-1));
+        Assert.That(Vector3.Distance(motor.LanternTransform.localPosition, ExpectedLanternAnchor()), Is.LessThan(.0001f),
+            "Turning must place the source on the new hand immediately, without sweeping through the body.");
+    }
+
+    private Vector3 ExpectedLanternAnchor()
+    {
+        var sequence = animation.Catalog.Find(animation.CurrentAnimation);
+        var point = sequence.LanternOffsets[animation.CurrentFrame];
+        Vector3 local = new Vector3(point.x * (animation.Renderer.flipX ? -1 : 1), point.y, 0f);
+        var anchor = player.transform.InverseTransformPoint(animation.Renderer.transform.TransformPoint(local));
+        anchor.z = motor.LanternTransform.localPosition.z;
+        return anchor;
     }
     [UnityTest] public IEnumerator RealJumpAndLandingDriveTheirOwnAnimations()
     {

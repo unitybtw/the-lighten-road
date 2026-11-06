@@ -52,7 +52,11 @@ public sealed class LanternHUDTests
         try
         {
             ControllerGlyphService.ConfiguredStyle=ControllerPromptStyle.Keyboard;
+            hud.Tick(5f, 5f);
+            var prompts = hud.GetComponentsInChildren<CanvasGroup>().Single(g => g.name == "Prompt Labels");
+            Assert.That(prompts.alpha, Is.Zero);
             controller.ToggleFlareKey=UnityEngine.InputSystem.Key.G;hud.Tick(0,0);
+            Assert.That(prompts.alpha, Is.EqualTo(1f), "A changed binding must bring the hint back.");
             var labels=hud.GetComponentsInChildren<TMPro.TMP_Text>(true);
             Assert.That(System.Array.Exists(labels,label=>label.text=="G"),Is.True);
             controller.ToggleFlareKey=UnityEngine.InputSystem.Key.F;hud.Tick(0,0);
@@ -110,18 +114,20 @@ public sealed class LanternHUDTests
     {
         fuel.Initialize(6f, 10f);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
+        Assert.That(hud.ModeText, Is.EqualTo("Flare"));
 
         controller.SetFlared(true);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("END FLARE"));
+        Assert.That(hud.ModeText, Is.EqualTo("Dim"));
 
         controller.SetFlared(false);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("DIMMING"));
+        Assert.That(hud.ModeText, Is.EqualTo("Dimming"));
+        Assert.That(hud.GetComponentsInChildren<CanvasGroup>().Single(g => g.name == "Prompt Labels").alpha, Is.Zero,
+            "The stone already shows the transition; no extra status line is needed.");
         controller.TickScout(controller.TransitionDuration);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
+        Assert.That(hud.ModeText, Is.EqualTo("Flare"));
     }
 
     [Test]
@@ -129,7 +135,7 @@ public sealed class LanternHUDTests
     {
         fuel.Initialize(0f, 10f);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
+        Assert.That(hud.ModeText, Is.EqualTo("No embers"));
         for (int i = 0; i < 4; i++)
         {
             Assert.That(hud.GetSlotColor(i), Is.EqualTo(Color.clear));
@@ -149,7 +155,7 @@ public sealed class LanternHUDTests
         Step(.1f);
         Assert.That(controller.HasActiveScout, Is.True);
         Assert.That(fuel.IsEmpty, Is.True);
-        Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
+        Assert.That(hud.ModeText, Is.EqualTo("No embers"));
         Assert.That(hud.IsEmptyWarningVisible, Is.True);
         Assert.That(prompts.alpha, Is.EqualTo(1f));
         var key = hud.GetComponentsInChildren<RectTransform>(true).Single(r => r.name == "Bound key icon");
@@ -162,16 +168,14 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void FlarePromptExplainsTheCostAndDoesNotAdvertiseAnUnavailableAction()
+    public void ContextualHintOmitsTheCostAndDoesNotAdvertiseAnUnavailableAction()
     {
         Step(.1f);
-        var cost = hud.GetComponentsInChildren<TMPro.TMP_Text>(true).Single(t => t.name == "Flare cost");
-        Assert.That(cost.text, Is.EqualTo("-1 EMBER"));
+        Assert.That(hud.GetComponentsInChildren<TMPro.TMP_Text>(true).Any(t => t.name == "Flare cost"), Is.False);
         fuel.Initialize(1f, 8f);
         Step(.1f);
         Assert.That(controller.SetFlared(true), Is.False);
-        Assert.That(hud.ModeText, Is.EqualTo("NEED 1 EMBER"));
-        Assert.That(cost.text, Is.Empty);
+        Assert.That(hud.ModeText, Is.EqualTo("Need 1 ember"));
         var key = hud.GetComponentsInChildren<RectTransform>(true).Single(r => r.name == "Bound key");
         Assert.That(key.gameObject.activeSelf, Is.False);
     }
@@ -193,6 +197,36 @@ public sealed class LanternHUDTests
         hud.Tick(0f, 1f);
         Assert.That(hud.GetSlotBurnAuraAlpha(2), Is.InRange(.001f, early * .5f));
         Assert.That(fuel.CurrentFuel, Is.EqualTo(afterSpend), "Presentation must never spend additional fuel.");
+    }
+
+    [Test]
+    public void ActionHintLeavesSpaceAroundTheReserveAndFadesUntilNeeded()
+    {
+        Step(.6f);
+        var labels = hud.GetComponentsInChildren<TMPro.TMP_Text>(true);
+        var action = labels.Single(t => t.name == "Action");
+        var key = labels.Single(t => t.name == "Bound key");
+        var prompts = hud.GetComponentsInChildren<CanvasGroup>().Single(g => g.name == "Prompt Labels");
+        float gap = action.rectTransform.anchoredPosition.x - key.rectTransform.anchoredPosition.x - key.rectTransform.sizeDelta.x;
+        Assert.That(gap, Is.GreaterThanOrEqualTo(12f));
+        Assert.That(action.fontSize, Is.GreaterThanOrEqualTo(12f));
+        Assert.That(-prompts.GetComponent<RectTransform>().anchoredPosition.y - 30f, Is.GreaterThanOrEqualTo(12f));
+        foreach (var aura in hud.GetComponentsInChildren<UnityEngine.UI.Image>().Where(i => i.name == "Ember aura"))
+            Assert.That(aura.color.a, Is.Zero, "An unused reserve needs no persistent halo.");
+        Assert.That(hud.ActiveSparkCount, Is.Zero);
+
+        hud.Tick(5f, 5f);
+        Assert.That(prompts.alpha, Is.Zero, "Exploration should settle to just the reserve icons.");
+        Assert.That(hud.GetComponentsInChildren<CanvasGroup>().Single(g => g.name == "Ember 1").alpha, Is.EqualTo(1f));
+        controller.SetFlared(true);
+        hud.Tick(.1f, 5.1f);
+        Assert.That(hud.ModeText, Is.EqualTo("Dim"));
+        Assert.That(prompts.alpha, Is.EqualTo(1f), "The new available action should briefly explain itself.");
+        hud.Tick(5f, 10.1f);
+        Assert.That(prompts.alpha, Is.Zero);
+        fuel.Initialize(0f, 8f);
+        hud.Tick(5f, 15.1f);
+        Assert.That(hud.IsEmptyWarningVisible, Is.True, "The survival warning must never time out with optional hints.");
     }
 
     [UnityTest]
@@ -276,7 +310,7 @@ public sealed class LanternHUDTests
         Step(.7f);
         Assert.That(hud.GetSlotColor(0), Is.EqualTo(Color.clear));
         Assert.That(hud.BreakFeedbackCount, Is.EqualTo(1));
-        Assert.That(hud.ModeText, Is.EqualTo("NO EMBERS"));
+        Assert.That(hud.ModeText, Is.EqualTo("No embers"));
     }
 
     [Test]
@@ -293,7 +327,7 @@ public sealed class LanternHUDTests
         Assert.That(hud.GetSlotColor(0), Is.EqualTo(Color.white));
         Assert.That(hud.GetSlotColor(1), Is.Not.EqualTo(Color.white));
         Assert.That(hud.ActiveEmberLevel, Is.EqualTo(0.5f).Within(0.001f));
-        Assert.That(hud.PickupText, Is.EqualTo("+1 EMBER"));
+        Assert.That(hud.PickupText, Is.EqualTo("+1"));
     }
 
     [Test]
@@ -321,7 +355,7 @@ public sealed class LanternHUDTests
         Step(0.1f);
         Assert.That(hud.DisplayedCharges, Is.EqualTo(6));
         Assert.That(hud.IsShowingPickup, Is.True);
-        Assert.That(hud.PickupText, Is.EqualTo("+1 EMBER"));
+        Assert.That(hud.PickupText, Is.EqualTo("+1"));
         Assert.That(hud.Canvas.GetComponentInChildren<CanvasGroup>().alpha, Is.EqualTo(1f));
     }
 
@@ -340,7 +374,7 @@ public sealed class LanternHUDTests
     }
 
     [Test]
-    public void BurningEmberEmitsSparksAndHeatAuraWhileFlareIsActive()
+    public void BurningEmberKeepsItsWearFeedbackWithoutEmittingHudSparks()
     {
         fuel.Initialize(6f, 10f); // 3 embers
         Step(0.1f);
@@ -353,7 +387,8 @@ public sealed class LanternHUDTests
 
         Assert.That(hud.IsEmberActivelyBurning, Is.True);
         Assert.That(hud.GetSlotBurnAuraAlpha(2), Is.GreaterThan(0f));
-        Assert.That(hud.ActiveSparkCount, Is.GreaterThan(0));
+        Assert.That(hud.ActiveSparkCount, Is.Zero);
+        Assert.That(hud.GetComponentsInChildren<UnityEngine.UI.Image>(true).Any(i=>i.name.StartsWith("Spark ")), Is.False);
 
         controller.SetFlared(false);
         controller.TickScout(controller.TransitionDuration);
@@ -371,14 +406,14 @@ public sealed class LanternHUDTests
         fuel.Initialize(4f, 10f);
         Step(0.1f);
         Assert.That(hud.MinimalMode, Is.True);
-        Assert.That(hud.ModeText, Is.EqualTo("FLARE"));
+        Assert.That(hud.ModeText, Is.EqualTo("Flare"));
 
         controller.SetFlared(true);
         Step(0.05f);
-        Assert.That(hud.ModeText, Is.EqualTo("END FLARE"));
+        Assert.That(hud.ModeText, Is.EqualTo("Dim"));
 
         hud.MinimalMode = false;
         Assert.That(hud.MinimalMode, Is.False);
-        Assert.That(hud.ModeText, Is.EqualTo("END FLARE"));
+        Assert.That(hud.ModeText, Is.EqualTo("Dim"));
     }
 }

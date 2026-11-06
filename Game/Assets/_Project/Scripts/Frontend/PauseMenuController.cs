@@ -1985,15 +1985,25 @@ namespace TheLightenRoad.Frontend
         {
             float duration = MenuPreferences.ReducedMotion ? 0.05f : 0.22f;
             float elapsed = 0f;
-
-            SetOpenVisualState(0f);
+            // An interrupted close continues from the frame already on screen.
+            if (canvasGroup != null && canvasGroup.alpha <= .001f)
+                SetOpenVisualState(0f);
+            float startAlpha = canvasGroup != null ? canvasGroup.alpha : 0f;
+            Vector3 startScale = modalRect != null ? modalRect.localScale : Vector3.one;
+            Vector2 startPosition = modalRect != null ? modalRect.anchoredPosition : Vector2.zero;
 
             while (elapsed < duration)
             {
-                elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                SetOpenVisualState(t);
+                float smooth = EaseOutCubic(t);
+                if (canvasGroup != null) canvasGroup.alpha = Mathf.Lerp(startAlpha, 1f, smooth);
+                if (modalRect != null)
+                {
+                    modalRect.localScale = MenuPreferences.ReducedMotion ? Vector3.one : Vector3.Lerp(startScale, Vector3.one, smooth);
+                    modalRect.anchoredPosition = MenuPreferences.ReducedMotion ? Vector2.zero : Vector2.Lerp(startPosition, Vector2.zero, smooth);
+                }
                 yield return null;
+                elapsed += Time.unscaledDeltaTime;
             }
 
             SetOpenVisualState(1f);
@@ -2005,10 +2015,11 @@ namespace TheLightenRoad.Frontend
             float duration = MenuPreferences.ReducedMotion ? 0.04f : 0.14f;
             float elapsed = 0f;
             float startAlpha = canvasGroup != null ? canvasGroup.alpha : 1f;
+            Vector3 startScale = modalRect != null ? modalRect.localScale : Vector3.one;
+            Vector2 startPosition = modalRect != null ? modalRect.anchoredPosition : Vector2.zero;
 
             while (elapsed < duration)
             {
-                elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 float smooth = EaseInCubic(t);
 
@@ -2018,11 +2029,11 @@ namespace TheLightenRoad.Frontend
                 }
                 if (modalRect != null)
                 {
-                    float scale = Mathf.Lerp(1.0f, 0.95f, smooth);
-                    modalRect.localScale = new Vector3(scale, scale, 1f);
-                    modalRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(0f, -14f, smooth));
+                    modalRect.localScale = MenuPreferences.ReducedMotion ? Vector3.one : Vector3.Lerp(startScale, new Vector3(.985f, .985f, 1f), smooth);
+                    modalRect.anchoredPosition = MenuPreferences.ReducedMotion ? Vector2.zero : Vector2.Lerp(startPosition, new Vector2(0f, -6f), smooth);
                 }
                 yield return null;
+                elapsed += Time.unscaledDeltaTime;
             }
 
             SetClosedVisualState();
@@ -2035,9 +2046,9 @@ namespace TheLightenRoad.Frontend
             if (canvasGroup != null) canvasGroup.alpha = smooth;
             if (modalRect != null)
             {
-                float scale = Mathf.Lerp(0.92f, 1.0f, smooth);
+                float scale = MenuPreferences.ReducedMotion ? 1f : Mathf.Lerp(0.985f, 1.0f, smooth);
                 modalRect.localScale = new Vector3(scale, scale, 1f);
-                modalRect.anchoredPosition = new Vector2(0f, Mathf.Lerp(-24f, 0f, smooth));
+                modalRect.anchoredPosition = MenuPreferences.ReducedMotion ? Vector2.zero : new Vector2(0f, Mathf.Lerp(-8f, 0f, smooth));
             }
 
         }

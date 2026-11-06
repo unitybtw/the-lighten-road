@@ -29,6 +29,8 @@ namespace TheLightenRoad.Player
         [Tooltip("Maximum downward offset when falling rapidly.")]
         [SerializeField, Min(0f)] private float fallLeadDistance = 1.2f;
         [SerializeField, Min(0.01f)] private float fallSmoothTime = 0.35f;
+        [Tooltip("Return to the normal frame promptly after a landing or a stopped fall.")]
+        [SerializeField, Min(0.01f)] private float fallRecoverySmoothTime = 0.16f;
 
         [Header("Screen Shake & Juice")]
         [SerializeField] private bool enableLandingShake = true;
@@ -310,14 +312,11 @@ namespace TheLightenRoad.Player
             float targetLookAheadX = 0f;
             if (enableLookAhead)
             {
-                if (Mathf.Abs(velocity.x) > 0.25f)
-                {
-                    targetLookAheadX = Mathf.Sign(velocity.x) * lookAheadDistance;
-                }
-                else if (targetMotor != null)
-                {
-                    targetLookAheadX = targetMotor.FacingDirection * idleLookAheadDistance;
-                }
+                float restingLead = targetMotor != null ? targetMotor.FacingDirection * idleLookAheadDistance : 0f;
+                float referenceSpeed = targetMotor != null ? Mathf.Max(.1f, targetMotor.WalkSpeed) : 4f;
+                float speedWeight = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(Mathf.Abs(velocity.x) / referenceSpeed));
+                // A slow stick movement should not swing the frame as far as a full walk.
+                targetLookAheadX = Mathf.Lerp(restingLead, Mathf.Sign(velocity.x) * lookAheadDistance, speedWeight);
                 currentLookAheadX = Mathf.SmoothDamp(
                     currentLookAheadX, targetLookAheadX, ref lookAheadVelocity, lookAheadSmoothTime);
             }
@@ -341,7 +340,8 @@ namespace TheLightenRoad.Player
                     targetFallLeadY = -factor * fallLeadDistance;
                 }
                 currentFallLeadY = Mathf.SmoothDamp(
-                    currentFallLeadY, targetFallLeadY, ref fallLeadVelocity, fallSmoothTime);
+                    currentFallLeadY, targetFallLeadY, ref fallLeadVelocity,
+                    Mathf.Approximately(targetFallLeadY, 0f) ? fallRecoverySmoothTime : fallSmoothTime);
             }
             else
             {

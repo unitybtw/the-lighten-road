@@ -34,6 +34,9 @@ namespace TheLightenRoad.Player
         private PlayerActionWalkLayer actionWalkLayer;
         private float walkElapsed;
         private bool walkingAction;
+        private bool hasLightAnchor;
+        private int lightFacing;
+        private LightAnimation lightAnimation;
         public bool HasWalkingActionLayer => walkingAction && actionWalkLayer != null && actionWalkLayer.Legs.gameObject.activeSelf;
         public SpriteRenderer WalkingLegsRenderer => actionWalkLayer != null ? actionWalkLayer.Legs : null;
         public int WalkingLegFrame { get; private set; } = -1;
@@ -75,6 +78,7 @@ namespace TheLightenRoad.Player
             if (fuel != null) fuel.FuelChanged += FuelChanged;
             if (recovery != null) recovery.OnPlayerRespawned += Respawned;
             walkElapsed = 0;
+            hasLightAnchor = false;
             ResetAirState();
             Select(LightAnimation.Idle, false, true);
             RenderFrame();
@@ -134,6 +138,7 @@ namespace TheLightenRoad.Player
             pushOwner = null;
             explicitContext = holdContext = false; transferFrame = -1;
             walkElapsed = 0;
+            hasLightAnchor = false;
             ResetAirState();
             Select(LightAnimation.Idle, false, true); RenderFrame();
         }
@@ -200,18 +205,22 @@ namespace TheLightenRoad.Player
                     if (airborne) StartFallPose();
                     else Select(pushing ? LightAnimation.Push : moving ? LightAnimation.Walk : LightAnimation.Idle, false, false);
                 }
+                // At normal walk speed, retain the artist's 100ms frames. Slow
+                // analog movement scales proportionally without a minimum cadence.
+                float gaitRate = Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed);
                 float speed = CurrentAnimation == LightAnimation.Push ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / 1.2f, .65f, 1.1f)
-                    : CurrentAnimation == LightAnimation.Walk ? Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f) : 1;
+                    : CurrentAnimation == LightAnimation.Walk ? gaitRate : 1;
                 elapsed += deltaTime * speed;
                 if (moving)
                 {
                     if (CurrentAnimation == LightAnimation.Walk) walkElapsed = elapsed;
-                    else walkElapsed += deltaTime * Mathf.Clamp(Mathf.Abs(motor.HorizontalSpeed) / Mathf.Max(.1f, motor.WalkSpeed), .55f, 1.8f);
+                    else walkElapsed += deltaTime * gaitRate;
                 }
+                else if (CurrentAnimation == LightAnimation.Idle) walkElapsed = 0;
                 walkingAction = moving && oneShot && CurrentAnimation == LightAnimation.Flare;
                 if (oneShot && elapsed >= sequence.Duration && (!airborne || CurrentAnimation != LightAnimation.Jump)) oneShot = false;
             }
-            RenderFrame();
+            RenderFrame(deltaTime);
         }
         private void Select(LightAnimation kind, bool once, bool restart)
         {
@@ -228,7 +237,7 @@ namespace TheLightenRoad.Player
             if (actionWalkLayer != null) actionWalkLayer.Clear();
         }
         private void OnDestroy() { if (actionWalkLayer != null) actionWalkLayer.Dispose(); }
-        private void RenderFrame()
+        private void RenderFrame(float deltaTime = 0f)
         {
             if (sequence == null || target == null) return;
             CurrentFrame = sequence.FrameAt(elapsed);
@@ -255,7 +264,17 @@ namespace TheLightenRoad.Player
                 var local = new Vector3(offset.x * (target.flipX ? -1 : 1), offset.y, 0);
                 var position = transform.InverseTransformPoint(target.transform.TransformPoint(local));
                 position.z = originalLightPosition.z;
-                motor.LanternTransform.localPosition = position;
+                var previous = motor.LanternTransform.localPosition;
+                // The artwork keeps its authored cadence. Only the light between its
+                // hand markers settles, avoiding room-wide lighting steps at every frame.
+                bool snap = !hasLightAnchor || deltaTime <= 0f || explicitContext ||
+                    lightFacing != motor.FacingDirection || lightAnimation != CurrentAnimation ||
+                    (position - previous).sqrMagnitude > 1f;
+                motor.LanternTransform.localPosition = snap ? position
+                    : Vector3.Lerp(previous, position, 1f - Mathf.Exp(-deltaTime / .035f));
+                hasLightAnchor = true;
+                lightFacing = motor.FacingDirection;
+                lightAnimation = CurrentAnimation;
             }
         }
     }
