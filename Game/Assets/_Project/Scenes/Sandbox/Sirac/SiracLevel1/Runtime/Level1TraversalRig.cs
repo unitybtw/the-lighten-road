@@ -14,7 +14,7 @@ namespace TheLightenRoad.Sirac.Level1
     /// Coordinates SiracLevel1 traversal rules:
     /// - Calibrates 1x2 box jump and 2-box ledge grab reach
     /// - Ladder climbing via W / S
-    /// - Flare freezes character in place, keeps Embers non-consumed, and pans camera horizontally via A / D
+    /// - Flare freezes character in place, spends an Ember via LanternController, and pans camera horizontally via A / D
     /// </summary>
     public sealed class Level1TraversalRig : MonoBehaviour
     {
@@ -26,7 +26,7 @@ namespace TheLightenRoad.Sirac.Level1
         [Header("Flare Camera Pan")]
         [SerializeField, Min(0.5f)] private float panSpeed = 6.5f;
         [SerializeField, Min(0.5f)] private float maxPanOffset = 8.0f;
-        [SerializeField] private bool preventEmberConsumption = true;
+        [SerializeField] private bool preventEmberConsumption = false;
 
         private PlayerMotor2D motor;
         private PlayerLedgeClimb ledgeClimb;

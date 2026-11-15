@@ -173,6 +173,10 @@ namespace TheLightenRoad.Sirac.Level1
             {
                 VeinStateValue = 0;
             }
+            else if (slottedEmber != EmberColor.None)
+            {
+                VeinStateValue = MapEmberToState(slottedEmber);
+            }
             else if (activeLensOverride == LanternLensType.Invert)
             {
                 VeinStateValue = -1;
@@ -183,7 +187,7 @@ namespace TheLightenRoad.Sirac.Level1
             }
             else
             {
-                VeinStateValue = MapEmberToState(slottedEmber);
+                VeinStateValue = 0;
             }
 
             UpdateVisualCues();

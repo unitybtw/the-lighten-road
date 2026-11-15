@@ -442,15 +442,19 @@ namespace TheLightenRoad.Sirac.Level1.Editor
                 ledgeSo.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            ctx.Route.TraversalRig = playerGo.GetComponent<Level1TraversalRig>() ?? playerGo.AddComponent<Level1TraversalRig>();
+            var rig = playerGo.GetComponent<Level1TraversalRig>() ?? playerGo.AddComponent<Level1TraversalRig>();
+            rig.PreventEmberConsumption = false;
+            var rigSo = new SerializedObject(rig);
+            var preventProp = rigSo.FindProperty("preventEmberConsumption");
+            if (preventProp != null) preventProp.boolValue = false;
+            rigSo.ApplyModifiedPropertiesWithoutUndo();
+            ctx.Route.TraversalRig = rig;
+
             ctx.Route.LensController = playerGo.GetComponent<LanternLensController>() ?? playerGo.AddComponent<LanternLensController>();
             var inv = playerGo.GetComponent<EmberInventoryController>() ?? playerGo.AddComponent<EmberInventoryController>();
             var invSo = new SerializedObject(inv);
             var startProp = invSo.FindProperty("startingEmbers");
-            startProp.arraySize = 3;
-            startProp.GetArrayElementAtIndex(0).enumValueIndex = (int)EmberColor.Orange;
-            startProp.GetArrayElementAtIndex(1).enumValueIndex = (int)EmberColor.Cyan;
-            startProp.GetArrayElementAtIndex(2).enumValueIndex = (int)EmberColor.Crimson;
+            startProp.arraySize = 0;
             invSo.ApplyModifiedPropertiesWithoutUndo();
             ctx.Route.EmberInventory = inv;
 
@@ -1070,7 +1074,7 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             SpawnWhisperHint(group, "Hint Move & Jump", new Vector2(3.4f, 1.85f), "A / D · SPACE", "TRAVERSE THE FLOOR", WhisperAction.Move);
             SpawnWhisperHint(group, "Hint Ledge & Ladder", new Vector2(20.5f, 1.2f), "W / S", "CLIMB SHAFT & ATTIC", WhisperAction.ProximityOnly);
             SpawnWhisperHint(group, "Hint Flare Pan", new Vector2(34.5f, 3.0f), "F", "FLARE & SURVEY WITH A / D", WhisperAction.Flare);
-            SpawnWhisperHint(group, "Hint Lenses", new Vector2(23.5f, -3.6f), "Q / E", "SHIFT LANTERN LENS", WhisperAction.ProximityOnly);
+            SpawnWhisperHint(group, "Hint Lenses", new Vector2(18.5f, -3.6f), "Q / E · C", "SHIFT LENS & CYCLE EMBER", WhisperAction.ProximityOnly);
 
             // 4. 4-State Vein & All 9 Vein-Driven Mechanism Types integrated along carved chambers
             ctx.Route.MultiStateVein = AddAdvancedVein(ctx, group, "Multi-State Mechanism Vein", new Vector2(23.5f, -5.0f), EmberColor.None, false, art);

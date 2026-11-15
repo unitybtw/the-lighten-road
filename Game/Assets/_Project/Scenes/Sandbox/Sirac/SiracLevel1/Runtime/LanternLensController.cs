@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using TheLightenRoad.Frontend;
 using TheLightenRoad.Input;
+using TheLightenRoad.Interaction;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using UnityEngine;
@@ -20,9 +21,15 @@ namespace TheLightenRoad.Sirac.Level1
     {
         [SerializeField] private float lensEffectRadius = 100f;
 
+        private const float VeinLensOverrideRadius = 6.5f;
+        private const float MechanismLensOverrideRadius = 7.5f;
+
         private LanternController lantern;
         private Light2D lanternLight;
         private float cachedBaseIntensity = -1f;
+        private EmberVein[] cachedEmberVeins;
+        private DiegeticWhisper[] cachedArchiveWhispers;
+        private bool interactablesCached;
 
         private static readonly Color AmberColor = new Color(1f, 0.62f, 0.24f, 1f);
         private static readonly Color EtherealCyan = new Color(0.20f, 0.92f, 1.0f, 1f);
@@ -85,6 +92,22 @@ namespace TheLightenRoad.Sirac.Level1
             SyncLanternLight();
         }
 
+        private void CacheWorldInteractables()
+        {
+            if (interactablesCached) return;
+            interactablesCached = true;
+            cachedEmberVeins = FindObjectsByType<EmberVein>(FindObjectsSortMode.None);
+
+            var allWhispers = FindObjectsByType<DiegeticWhisper>(FindObjectsSortMode.None);
+            var archiveList = new List<DiegeticWhisper>(8);
+            for (int i = 0; i < allWhispers.Length; i++)
+            {
+                if (allWhispers[i] != null && allWhispers[i].HasArchiveLog)
+                    archiveList.Add(allWhispers[i]);
+            }
+            cachedArchiveWhispers = archiveList.ToArray();
+        }
+
         private bool IsInteractingWithVeinNearby()
         {
             var veins = AdvancedEmberVein.ActiveVeins;
@@ -99,7 +122,7 @@ namespace TheLightenRoad.Sirac.Level1
             }
 
             Vector2 origin = transform.position;
-            const float maxDistSq = 2.4f * 2.4f;
+            const float advDistSq = 2.5f * 2.5f;
             for (int i = veins.Count - 1; i >= 0; i--)
             {
                 var v = veins[i];
@@ -108,9 +131,35 @@ namespace TheLightenRoad.Sirac.Level1
                     veins.RemoveAt(i);
                     continue;
                 }
-                if (v.isActiveAndEnabled && ((Vector2)v.transform.position - origin).sqrMagnitude <= maxDistSq)
+                if (v.isActiveAndEnabled && ((Vector2)v.transform.position - origin).sqrMagnitude <= advDistSq)
                     return true;
             }
+
+            CacheWorldInteractables();
+
+            const float emberVeinDistSq = 3.2f * 3.2f;
+            if (cachedEmberVeins != null)
+            {
+                for (int i = 0; i < cachedEmberVeins.Length; i++)
+                {
+                    var ev = cachedEmberVeins[i];
+                    if (ev != null && ev.isActiveAndEnabled && ((Vector2)ev.transform.position - origin).sqrMagnitude <= emberVeinDistSq)
+                        return true;
+                }
+            }
+
+            if (cachedArchiveWhispers != null)
+            {
+                for (int i = 0; i < cachedArchiveWhispers.Length; i++)
+                {
+                    var whisper = cachedArchiveWhispers[i];
+                    if (whisper == null || !whisper.isActiveAndEnabled) continue;
+                    float r = whisper.TriggerRadius;
+                    if (((Vector2)whisper.transform.position - origin).sqrMagnitude <= r * r)
+                        return true;
+                }
+            }
+
             return false;
         }
 
@@ -145,7 +194,10 @@ namespace TheLightenRoad.Sirac.Level1
 
             LanternLensType effectiveLens = IsSuppressedByShadowRealm ? LanternLensType.Normal : ActiveLens;
             Vector2 origin = transform.position;
-            float radiusSq = lensEffectRadius * lensEffectRadius;
+            float ghostRadiusSq = lensEffectRadius * lensEffectRadius;
+            const float veinRadiusSq = VeinLensOverrideRadius * VeinLensOverrideRadius;
+            const float mechRadiusSq = MechanismLensOverrideRadius * MechanismLensOverrideRadius;
+
             for (int i = RegisteredReactives.Count - 1; i >= 0; i--)
             {
                 var reactive = RegisteredReactives[i];
@@ -156,7 +208,17 @@ namespace TheLightenRoad.Sirac.Level1
                 }
                 if (!mb.isActiveAndEnabled) continue;
                 float distSq = ((Vector2)mb.transform.position - origin).sqrMagnitude;
-                bool inRange = !IsSuppressedByShadowRealm && distSq <= radiusSq;
+                float limitSq = ghostRadiusSq;
+                if (reactive is AdvancedEmberVein)
+                {
+                    limitSq = Mathf.Min(ghostRadiusSq, veinRadiusSq);
+                }
+                else if (reactive is VeinDrivenMechanism2D mech && !mech.IsGhostType)
+                {
+                    limitSq = Mathf.Min(ghostRadiusSq, mechRadiusSq);
+                }
+
+                bool inRange = !IsSuppressedByShadowRealm && distSq <= limitSq;
                 reactive.ApplyLensField(effectiveLens, inRange);
             }
         }

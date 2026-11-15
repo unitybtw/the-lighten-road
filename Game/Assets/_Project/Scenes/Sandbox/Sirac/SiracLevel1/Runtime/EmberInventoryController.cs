@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TheLightenRoad.Frontend;
 using TheLightenRoad.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,8 +8,9 @@ using UnityEngine.InputSystem;
 namespace TheLightenRoad.Sirac.Level1
 {
     /// <summary>
-    /// Tracks carried Embers (Orange/Cyan/Crimson). Embers are NEVER consumed;
-    /// they are inserted into and recovered from AdvancedEmberVein sockets.
+    /// Tracks carried Vein Embers (Orange/Cyan/Crimson). Embers are inserted into
+    /// and recovered from AdvancedEmberVein sockets without being destroyed, with at
+    /// most one instance per color.
     /// </summary>
     public sealed class EmberInventoryController : MonoBehaviour
     {
@@ -37,19 +39,38 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Update()
         {
-            if (!GameControls.GameplayAllowed) return;
+            if (!GameControls.GameplayAllowed || ArchiveCodexMenu.IsOpen || ArchiveCodexMenu.ClosedThisFrame)
+                return;
+
             var kb = Keyboard.current;
-            if (kb != null && kb.tabKey.wasPressedThisFrame)
+            if (kb == null) return;
+
+            if (kb.cKey.wasPressedThisFrame)
             {
                 CycleSelectedEmber();
+            }
+            else if (kb.digit1Key.wasPressedThisFrame && carriedEmbers.Count >= 1)
+            {
+                SelectColor(carriedEmbers[0]);
+            }
+            else if (kb.digit2Key.wasPressedThisFrame && carriedEmbers.Count >= 2)
+            {
+                SelectColor(carriedEmbers[1]);
+            }
+            else if (kb.digit3Key.wasPressedThisFrame && carriedEmbers.Count >= 3)
+            {
+                SelectColor(carriedEmbers[2]);
             }
         }
 
         public void AddEmber(EmberColor color)
         {
             if (color == EmberColor.None) return;
-            carriedEmbers.Add(color);
-            if (SelectedColor == EmberColor.None) SelectedColor = color;
+            if (!carriedEmbers.Contains(color))
+            {
+                carriedEmbers.Add(color);
+            }
+            SelectedColor = color;
             OnInventoryChanged?.Invoke();
         }
 
@@ -97,10 +118,7 @@ namespace TheLightenRoad.Sirac.Level1
 
         public void ReturnFromVein(EmberColor color)
         {
-            if (color == EmberColor.None) return;
-            carriedEmbers.Add(color);
-            if (SelectedColor == EmberColor.None) SelectedColor = color;
-            OnInventoryChanged?.Invoke();
+            AddEmber(color);
         }
 
         private void SyncSelectedColor()

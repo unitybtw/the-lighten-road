@@ -31,6 +31,7 @@ namespace TheLightenRoad.Frontend
     {
         [Header("Archive Terminal (optional)")]
         public TheLightenRoad.Codex.ArchiveLog ArchiveLog;
+        public bool HasArchiveLog => ArchiveLog != null;
         public bool TryReadArchive()
         {
             if(ArchiveLog==null)return false;

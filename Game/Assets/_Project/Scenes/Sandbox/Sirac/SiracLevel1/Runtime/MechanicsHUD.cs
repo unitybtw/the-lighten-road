@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TheLightenRoad.Frontend;
 using TheLightenRoad.UI;
 using TMPro;
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace TheLightenRoad.Sirac.Level1
         public ShadowRealmZone2D ShadowRealm;
         public CentralCoreFinale2D CentralCore;
 
-        private const int MaxEmberSlots = 6;
+        private const int MaxEmberSlots = 3;
         private const int CoreBeamSlots = 4;
         private const float HintShowDuration = 4f;
         private const float HintFadeDuration = 1.2f;
@@ -54,6 +55,7 @@ namespace TheLightenRoad.Sirac.Level1
         private TextMeshProUGUI lensLabel;
         private TextMeshProUGUI lensHintLabel;
 
+        private CanvasGroup emberRowGroup;
         private readonly Image[] emberIcons = new Image[MaxEmberSlots];
         private readonly Image[] emberHalos = new Image[MaxEmberSlots];
         private readonly float[] emberPops = new float[MaxEmberSlots];
@@ -132,6 +134,15 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Update()
         {
+            if (canvas != null)
+            {
+                canvas.enabled = !ArchiveCodexMenu.IsOpen;
+            }
+            if (ArchiveCodexMenu.IsOpen)
+            {
+                return;
+            }
+
             UpdateSafeArea();
             if ((LensController == null || EmberInventory == null || ShadowRealm == null ||
                  CentralCore == null || cachedMementos == null || cachedMementos.Length == 0) &&
@@ -265,28 +276,38 @@ namespace TheLightenRoad.Sirac.Level1
             const float rowY = -39f;
             const float stepX = 17f;
 
+            var rowGo = new GameObject("EmberRow", typeof(RectTransform), typeof(CanvasGroup));
+            var rowRt = rowGo.GetComponent<RectTransform>();
+            rowRt.SetParent(clusterAnchor, false);
+            rowRt.anchorMin = Vector2.zero;
+            rowRt.anchorMax = Vector2.one;
+            rowRt.offsetMin = Vector2.zero;
+            rowRt.offsetMax = Vector2.zero;
+            emberRowGroup = rowGo.GetComponent<CanvasGroup>();
+            emberRowGroup.alpha = 0f;
+
             for (int i = 0; i < MaxEmberSlots; i++)
             {
                 float x = -11f - i * stepX;
 
-                var halo = CreateIcon($"EmberHalo_{i}", clusterAnchor, PixelSprites.Glow, new Vector2(30f, 30f), Color.clear, topRight: true);
+                var halo = CreateIcon($"EmberHalo_{i}", rowRt, PixelSprites.Glow, new Vector2(30f, 30f), Color.clear, topRight: true);
                 halo.rectTransform.anchoredPosition = new Vector2(x, rowY);
                 emberHalos[i] = halo;
 
-                var icon = CreateIcon($"EmberSlot_{i}", clusterAnchor, PixelSprites.EmberEmpty, new Vector2(12f, 16f), Muted, topRight: true);
+                var icon = CreateIcon($"EmberSlot_{i}", rowRt, PixelSprites.EmberEmpty, new Vector2(12f, 16f), Muted, topRight: true);
                 icon.rectTransform.anchoredPosition = new Vector2(x, rowY);
                 emberIcons[i] = icon;
             }
 
-            emberSelector = CreateIcon("EmberSelector", clusterAnchor, Level1PixelArt.SelectorDiamond, new Vector2(7f, 7f), Ivory, topRight: true);
+            emberSelector = CreateIcon("EmberSelector", rowRt, Level1PixelArt.SelectorDiamond, new Vector2(7f, 7f), Ivory, topRight: true);
             emberSelectorRect = emberSelector.rectTransform;
             emberSelectorRect.anchoredPosition = new Vector2(-11f, rowY - 12f);
             emberSelector.enabled = false;
 
             float textX = -11f - 3 * stepX - 6f;
-            emberLabel = CreateHudText("EmberLabel", clusterAnchor, new Vector2(textX, rowY + 2f), 11f, TextAlignmentOptions.MidlineRight, Ivory);
-            emberHintLabel = CreateHudText("EmberHint", clusterAnchor, new Vector2(textX, rowY - 9f), 9f, TextAlignmentOptions.MidlineRight, Muted);
-            emberHintLabel.text = "Tab";
+            emberLabel = CreateHudText("EmberLabel", rowRt, new Vector2(textX, rowY + 2f), 11f, TextAlignmentOptions.MidlineRight, Ivory);
+            emberHintLabel = CreateHudText("EmberHint", rowRt, new Vector2(textX, rowY - 9f), 9f, TextAlignmentOptions.MidlineRight, Muted);
+            emberHintLabel.text = "C";
         }
 
         private void BuildProgressRow()
@@ -803,6 +824,13 @@ namespace TheLightenRoad.Sirac.Level1
                 : Mathf.Clamp01(hintTimer / HintFadeDuration) * 0.72f;
             if (lensHintLabel != null) lensHintLabel.alpha = hintAlpha;
             if (emberHintLabel != null) emberHintLabel.alpha = trackedEmberCount > 1 ? hintAlpha : 0f;
+            if (emberRowGroup != null)
+            {
+                float targetEmberAlpha = trackedEmberCount > 0 ? 1f : 0f;
+                emberRowGroup.alpha = (reduced || dt <= 0f)
+                    ? targetEmberAlpha
+                    : Mathf.MoveTowards(emberRowGroup.alpha, targetEmberAlpha, dt * 6f);
+            }
 
             // Smooth Shadow Realm crimson monochrome wash + vignette
             float targetShadow = (ShadowRealm != null && ShadowRealm.IsPlayerInside) ? 1f : 0f;

@@ -34,6 +34,9 @@ namespace TheLightenRoad.Sirac.Level1
         private bool lastVisualPhasedOut;
 
         public int EffectiveState { get; private set; }
+        public bool IsGhostType => MechanismType == VeinMechanismType.GhostDoor
+                                   || MechanismType == VeinMechanismType.GhostCrate
+                                   || MechanismType == VeinMechanismType.GhostElevator;
         public bool IsPhasedOut { get; private set; }
         public bool IsOpen { get; private set; }
         public bool MovingToB { get; private set; } = true;
@@ -87,7 +90,8 @@ namespace TheLightenRoad.Sirac.Level1
         private void ResolveEffectiveState()
         {
             int state = SourceVein != null ? SourceVein.VeinStateValue : 0;
-            if (hasLensOverride)
+            bool canLensOverride = SourceVein == null || SourceVein.SlottedEmber == EmberColor.None;
+            if (hasLensOverride && canLensOverride)
             {
                 if (lensInRange == LanternLensType.Ethereal) state = 2;
                 else if (lensInRange == LanternLensType.Invert) state = -1;
@@ -107,9 +111,7 @@ namespace TheLightenRoad.Sirac.Level1
         {
             ResolveEffectiveState();
 
-            bool isGhostType = MechanismType == VeinMechanismType.GhostDoor
-                               || MechanismType == VeinMechanismType.GhostCrate
-                               || MechanismType == VeinMechanismType.GhostElevator;
+            bool isGhostType = IsGhostType;
 
             // State 2 (Ethereal) or Cyan Lens removes collisions (ghost phase-out)
             IsPhasedOut = EffectiveState == 2;

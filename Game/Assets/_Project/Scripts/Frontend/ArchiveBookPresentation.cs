@@ -68,6 +68,14 @@ namespace TheLightenRoad.Frontend
         }
         private void LateUpdate()
         {
+            if(Visible)
+            {
+                for(int i=hiddenOverlays.Count-1;i>=0;i--)
+                {
+                    var overlay=hiddenOverlays[i];
+                    if(overlay!=null && overlay.enabled)overlay.enabled=false;
+                }
+            }
             // A closed reader must not rebuild render targets when gameplay is resized.
             // Show prepares the current resolution before the book becomes visible again.
             if(BookCamera==null || !Visible)return;EnsurePixelTarget();
