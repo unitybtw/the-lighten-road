@@ -17,6 +17,8 @@ namespace TheLightenRoad.Sirac.Level1
         [SerializeField, Min(0.5f)] private float height = 4f;
         [SerializeField, Min(0.5f)] private float climbSpeed = 3.4f;
 
+        public static readonly List<ClimbableLadder2D> ActiveLadders = new List<ClimbableLadder2D>(8);
+
         private BoxCollider2D triggerCollider;
 
         public float Height
@@ -36,7 +38,18 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Awake()
         {
+            if (!ActiveLadders.Contains(this)) ActiveLadders.Add(this);
             SyncColliderSize();
+        }
+
+        private void OnEnable()
+        {
+            if (!ActiveLadders.Contains(this)) ActiveLadders.Add(this);
+        }
+
+        private void OnDestroy()
+        {
+            ActiveLadders.Remove(this);
         }
 
         public void SyncColliderSize()

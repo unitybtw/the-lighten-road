@@ -40,12 +40,14 @@ namespace TheLightenRoad.Sirac.OfficeLevel
             bool playerActive = playerCollider != null && playerCollider.enabled &&
                 playerCollider.gameObject.activeInHierarchy && playerBody != null && playerBody.simulated;
             Vector2 playerVelocity = playerActive ? playerBody.linearVelocity : Vector2.zero;
+            Vector2 playerBoundsCenter = playerActive ? (Vector2)playerCollider.bounds.center : Vector2.zero;
             float movement = Mathf.Clamp01(playerVelocity.magnitude / 3.2f);
             Vector2 cameraCenter = transform.position;
             var light = lantern != null ? lantern.LanternLight : null;
             bool lightActive = light != null && light.isActiveAndEnabled && light.intensity > 0f;
             Vector2 lightPosition = lightActive ? (Vector2)light.transform.position : Vector2.zero;
             float lightRadius = lightActive ? light.pointLightOuterRadius : 0f;
+            float lightRadiusSq = lightRadius * lightRadius;
             float lightStrength = lightActive ? Mathf.Clamp01(light.intensity / .55f) : 0f;
             for (int i = 0; i < count; i++)
             {
@@ -56,14 +58,14 @@ namespace TheLightenRoad.Sirac.OfficeLevel
                 if (!InAir(position) || Mathf.Abs(position.x - cameraCenter.x) > 10f ||
                     Mathf.Abs(position.y - cameraCenter.y) > 5f)
                 { p.remainingLifetime = 0f; buffer[i] = p; continue; }
-                if (playerActive && movement > .03f)
+                if (playerActive && movement > .03f && (position - playerBoundsCenter).sqrMagnitude < 2.5f)
                 {
                     Vector2 nearest = playerCollider.ClosestPoint(position);
                     Vector2 away = position - nearest;
                     float distance = away.magnitude;
                     if (distance < .55f)
                     {
-                        if (distance < .001f) away = position - (Vector2)playerCollider.bounds.center;
+                        if (distance < .001f) away = position - playerBoundsCenter;
                         if (away.sqrMagnitude < .000001f) away = Vector2.up;
                         float influence = 1f - distance / .55f;
                         Vector2 current = p.velocity;
@@ -79,9 +81,15 @@ namespace TheLightenRoad.Sirac.OfficeLevel
                     if (!InAir(position + direction * .12f)) fade = Mathf.Min(fade, .2f);
                     else if (!InAir(position + direction * .25f)) fade = Mathf.Min(fade, .6f);
                 }
-                float lightFalloff = lightRadius > .001f
-                    ? Mathf.Sqrt(Mathf.Clamp01(1f - Vector2.Distance(position, lightPosition) / lightRadius))
-                    : 0f;
+                float lightFalloff = 0f;
+                if (lightRadius > .001f)
+                {
+                    float lightDistSq = (position - lightPosition).sqrMagnitude;
+                    if (lightDistSq < lightRadiusSq)
+                    {
+                        lightFalloff = Mathf.Sqrt(Mathf.Clamp01(1f - Mathf.Sqrt(lightDistSq) / lightRadius));
+                    }
+                }
                 var color = p.startColor;
                 color.a = (byte)Mathf.RoundToInt(255f * BaseAlpha * fade * lightFalloff * lightStrength);
                 p.startColor = color;

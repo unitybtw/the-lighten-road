@@ -25,6 +25,10 @@ namespace TheLightenRoad.Sirac.Level1
             new Vector2Int(-1, 0)  // West
         };
 
+        private readonly Dictionary<Vector2Int, ConduitNode2D> lookup = new Dictionary<Vector2Int, ConduitNode2D>(16);
+        private readonly HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+        private readonly Queue<ConduitNode2D> queue = new Queue<ConduitNode2D>(16);
+
         public bool IsOutputPowered { get; private set; }
         public int LastSeed { get; private set; }
 
@@ -94,7 +98,7 @@ namespace TheLightenRoad.Sirac.Level1
         public bool EvaluateNetwork()
         {
             RegisterNodes();
-            var lookup = new Dictionary<Vector2Int, ConduitNode2D>();
+            lookup.Clear();
             foreach (var node in Nodes)
             {
                 if (node == null) continue;
@@ -107,8 +111,8 @@ namespace TheLightenRoad.Sirac.Level1
 
             if (hasVeinPower && lookup.TryGetValue(SourceCell, out var startNode))
             {
-                var visited = new HashSet<Vector2Int>();
-                var queue = new Queue<ConduitNode2D>();
+                visited.Clear();
+                queue.Clear();
                 visited.Add(SourceCell);
                 startNode.IsPowered = true;
                 queue.Enqueue(startNode);

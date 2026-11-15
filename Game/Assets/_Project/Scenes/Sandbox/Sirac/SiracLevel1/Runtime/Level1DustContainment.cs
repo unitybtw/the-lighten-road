@@ -16,6 +16,7 @@ namespace TheLightenRoad.Sirac.Level1
         private ParticleSystem.Particle[] buffer;
         private Rigidbody2D playerBody;
         private LanternController lantern;
+        private float nextPlayerResolveTime;
 
         private static readonly Vector2[] Directions =
         {
@@ -101,22 +102,32 @@ namespace TheLightenRoad.Sirac.Level1
             }
         }
 
-        private bool InAir(Vector2 p)
+        private bool TryGetAirMargin(Vector2 p, out float margin)
         {
             if (carvedAirRects == null || carvedAirRects.Length == 0)
+            {
+                margin = 10f;
                 return true;
+            }
 
+            bool inside = false;
+            float bestMargin = 0f;
             for (int i = 0; i < carvedAirRects.Length; i++)
             {
                 var r = carvedAirRects[i];
                 if (p.x > r.xMin + 0.08f && p.x < r.xMax - 0.08f &&
                     p.y > r.yMin + 0.08f && p.y < r.yMax - 0.08f)
                 {
-                    return true;
+                    inside = true;
+                    float m = Mathf.Min(Mathf.Min(p.x - r.xMin, r.xMax - p.x), Mathf.Min(p.y - r.yMin, r.yMax - p.y));
+                    if (m > bestMargin) bestMargin = m;
                 }
             }
-            return false;
+            margin = bestMargin;
+            return inside;
         }
+
+        private bool InAir(Vector2 p) => TryGetAirMargin(p, out _);
 
         private void LateUpdate()
         {
@@ -128,8 +139,11 @@ namespace TheLightenRoad.Sirac.Level1
             if (particles == null || !particles.isPlaying)
                 return;
 
-            if (playerCollider == null || lantern == null)
+            if ((playerCollider == null || lantern == null) && (!Application.isPlaying || Time.unscaledTime >= nextPlayerResolveTime))
+            {
                 ResolvePlayer();
+                nextPlayerResolveTime = Time.unscaledTime + 0.5f;
+            }
 
             int capacity = particles.main.maxParticles;
             if (buffer == null || buffer.Length < capacity)
@@ -139,6 +153,7 @@ namespace TheLightenRoad.Sirac.Level1
             bool playerActive = playerCollider != null && playerCollider.enabled &&
                 playerCollider.gameObject.activeInHierarchy && playerBody != null && playerBody.simulated;
             Vector2 playerVelocity = playerActive ? playerBody.linearVelocity : Vector2.zero;
+            Vector2 playerBoundsCenter = playerActive ? (Vector2)playerCollider.bounds.center : Vector2.zero;
             float movement = Mathf.Clamp01(playerVelocity.magnitude / 3.2f);
 
             Vector2 cameraCenter = transform.position;
@@ -146,6 +161,7 @@ namespace TheLightenRoad.Sirac.Level1
             bool lightActive = light != null && light.isActiveAndEnabled && light.intensity > 0f;
             Vector2 lightPosition = lightActive ? (Vector2)light.transform.position : Vector2.zero;
             float lightRadius = lightActive ? light.pointLightOuterRadius : 0f;
+            float lightRadiusSq = lightRadius * lightRadius;
             float lightStrength = lightActive ? Mathf.Clamp01(light.intensity / 0.55f) : 0f;
 
             for (int i = 0; i < count; i++)
@@ -153,7 +169,7 @@ namespace TheLightenRoad.Sirac.Level1
                 var p = buffer[i];
                 Vector2 position = p.position;
 
-                if (!InAir(position) || Mathf.Abs(position.x - cameraCenter.x) > 8.5f ||
+                if (!TryGetAirMargin(position, out float airMargin) || Mathf.Abs(position.x - cameraCenter.x) > 8.5f ||
                     Mathf.Abs(position.y - cameraCenter.y) > 5.0f)
                 {
                     p.remainingLifetime = 0f;
@@ -161,14 +177,14 @@ namespace TheLightenRoad.Sirac.Level1
                     continue;
                 }
 
-                if (playerActive && movement > 0.03f && dt > 0f)
+                if (playerActive && movement > 0.03f && dt > 0f && (position - playerBoundsCenter).sqrMagnitude < 2.5f)
                 {
                     Vector2 nearest = playerCollider.ClosestPoint(position);
                     Vector2 away = position - nearest;
                     float distance = away.magnitude;
                     if (distance < 0.60f)
                     {
-                        if (distance < 0.001f) away = position - (Vector2)playerCollider.bounds.center;
+                        if (distance < 0.001f) away = position - playerBoundsCenter;
                         if (away.sqrMagnitude < 0.000001f) away = Vector2.up;
                         float influence = 1f - distance / 0.60f;
                         Vector2 current = p.velocity;
@@ -180,17 +196,24 @@ namespace TheLightenRoad.Sirac.Level1
                 }
 
                 float wallFade = 1f;
-                for (int d = 0; d < Directions.Length; d++)
+                if (airMargin <= 0.38f)
                 {
-                    if (!InAir(position + Directions[d] * 0.14f)) wallFade = Mathf.Min(wallFade, 0.25f);
-                    else if (!InAir(position + Directions[d] * 0.30f)) wallFade = Mathf.Min(wallFade, 0.65f);
+                    for (int d = 0; d < Directions.Length; d++)
+                    {
+                        if (!InAir(position + Directions[d] * 0.14f)) wallFade = Mathf.Min(wallFade, 0.25f);
+                        else if (!InAir(position + Directions[d] * 0.30f)) wallFade = Mathf.Min(wallFade, 0.65f);
+                    }
                 }
 
                 float lightFactor = minAmbientAlphaFactor;
                 if (lightRadius > 0.001f)
                 {
-                    float radial = Mathf.Sqrt(Mathf.Clamp01(1f - Vector2.Distance(position, lightPosition) / lightRadius));
-                    lightFactor = Mathf.Max(minAmbientAlphaFactor, radial * lightStrength);
+                    float lightDistSq = (position - lightPosition).sqrMagnitude;
+                    if (lightDistSq < lightRadiusSq)
+                    {
+                        float radial = Mathf.Sqrt(Mathf.Clamp01(1f - Mathf.Sqrt(lightDistSq) / lightRadius));
+                        lightFactor = Mathf.Max(minAmbientAlphaFactor, radial * lightStrength);
+                    }
                 }
 
                 var color = p.startColor;

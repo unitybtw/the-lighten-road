@@ -41,6 +41,7 @@ namespace TheLightenRoad.Sirac.Level1
         private bool hasBaseCameraOffset;
         private bool wasFlareFreezeApplied;
         private float cachedFuelBeforeFlare = -1f;
+        private float nextCameraSearchTime;
 
         private static readonly FieldInfo MaxLipHeightField =
             typeof(PlayerLedgeClimb).GetField("maximumLipHeight", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -99,7 +100,15 @@ namespace TheLightenRoad.Sirac.Level1
             if (lantern == null) lantern = GetComponent<LanternController>();
             if (fuel == null) fuel = GetComponent<LanternFuel>();
             if (lensController == null) lensController = GetComponent<LanternLensController>();
-            if (followCamera == null) followCamera = FollowCamera2D.ActiveInstance ?? FindFirstObjectByType<FollowCamera2D>();
+            if (followCamera == null)
+            {
+                followCamera = FollowCamera2D.ActiveInstance;
+                if (followCamera == null && (!Application.isPlaying || Time.unscaledTime >= nextCameraSearchTime))
+                {
+                    followCamera = FindFirstObjectByType<FollowCamera2D>();
+                    nextCameraSearchTime = Time.unscaledTime + 0.5f;
+                }
+            }
 
             if (body != null && body.gravityScale > 0.01f)
             {
@@ -317,10 +326,27 @@ namespace TheLightenRoad.Sirac.Level1
 
         public ClimbableLadder2D FindOverlappingLadder()
         {
-            var ladders = FindObjectsByType<ClimbableLadder2D>(FindObjectsSortMode.None);
-            foreach (var ladder in ladders)
+            var ladders = ClimbableLadder2D.ActiveLadders;
+            if (ladders.Count == 0)
             {
-                if (ladder != null && ladder.isActiveAndEnabled && ladder.ContainsPosition(transform.position))
+                var found = FindObjectsByType<ClimbableLadder2D>(FindObjectsSortMode.None);
+                for (int i = 0; i < found.Length; i++)
+                {
+                    if (found[i] != null && !ladders.Contains(found[i]))
+                        ladders.Add(found[i]);
+                }
+            }
+
+            Vector3 pos = transform.position;
+            for (int i = ladders.Count - 1; i >= 0; i--)
+            {
+                var ladder = ladders[i];
+                if (ladder == null)
+                {
+                    ladders.RemoveAt(i);
+                    continue;
+                }
+                if (ladder.isActiveAndEnabled && ladder.ContainsPosition(pos))
                 {
                     return ladder;
                 }

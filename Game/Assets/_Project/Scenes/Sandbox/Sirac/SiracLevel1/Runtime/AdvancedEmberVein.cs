@@ -23,6 +23,8 @@ namespace TheLightenRoad.Sirac.Level1
         public SpriteRenderer BarricadeRenderer;
         [SerializeField] private float gearSpinSpeed = 95f;
 
+        public static readonly List<AdvancedEmberVein> ActiveVeins = new List<AdvancedEmberVein>(16);
+
         private EmberColor slottedEmber = EmberColor.None;
         private LanternLensType? activeLensOverride;
         private EmberInventoryController nearbyInventory;
@@ -45,8 +47,22 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Awake()
         {
+            if (!ActiveVeins.Contains(this)) ActiveVeins.Add(this);
+            LanternLensController.RegisterReactive(this);
             slottedEmber = initialEmber;
             RecomputeStateAndVisuals();
+        }
+
+        private void OnEnable()
+        {
+            if (!ActiveVeins.Contains(this)) ActiveVeins.Add(this);
+            LanternLensController.RegisterReactive(this);
+        }
+
+        private void OnDestroy()
+        {
+            ActiveVeins.Remove(this);
+            LanternLensController.UnregisterReactive(this);
         }
 
         private void Update()
@@ -116,6 +132,7 @@ namespace TheLightenRoad.Sirac.Level1
 
         public void ApplyLensOverride(LanternLensType? lens)
         {
+            if (activeLensOverride == lens) return;
             activeLensOverride = lens;
             RecomputeStateAndVisuals();
         }

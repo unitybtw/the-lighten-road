@@ -27,6 +27,19 @@ namespace TheLightenRoad.Sirac.Level1
         private static readonly Color AmberColor = new Color(1f, 0.62f, 0.24f, 1f);
         private static readonly Color EtherealCyan = new Color(0.20f, 0.92f, 1.0f, 1f);
         private static readonly Color InvertCrimson = new Color(1.0f, 0.20f, 0.32f, 1f);
+        private static readonly List<ILensReactive> RegisteredReactives = new List<ILensReactive>(32);
+
+        public static void RegisterReactive(ILensReactive reactive)
+        {
+            if (reactive != null && !RegisteredReactives.Contains(reactive))
+                RegisteredReactives.Add(reactive);
+        }
+
+        public static void UnregisterReactive(ILensReactive reactive)
+        {
+            if (reactive != null)
+                RegisteredReactives.Remove(reactive);
+        }
 
         public LanternLensType ActiveLens { get; private set; } = LanternLensType.Normal;
         public bool IsSuppressedByShadowRealm { get; set; }
@@ -74,10 +87,28 @@ namespace TheLightenRoad.Sirac.Level1
 
         private bool IsInteractingWithVeinNearby()
         {
-            var veins = FindObjectsByType<AdvancedEmberVein>(FindObjectsSortMode.None);
-            foreach (var v in veins)
+            var veins = AdvancedEmberVein.ActiveVeins;
+            if (veins.Count == 0)
             {
-                if (v != null && Vector2.Distance(transform.position, v.transform.position) <= 2.4f)
+                var found = FindObjectsByType<AdvancedEmberVein>(FindObjectsSortMode.None);
+                for (int i = 0; i < found.Length; i++)
+                {
+                    if (found[i] != null && !veins.Contains(found[i]))
+                        veins.Add(found[i]);
+                }
+            }
+
+            Vector2 origin = transform.position;
+            const float maxDistSq = 2.4f * 2.4f;
+            for (int i = veins.Count - 1; i >= 0; i--)
+            {
+                var v = veins[i];
+                if (v == null)
+                {
+                    veins.RemoveAt(i);
+                    continue;
+                }
+                if (v.isActiveAndEnabled && ((Vector2)v.transform.position - origin).sqrMagnitude <= maxDistSq)
                     return true;
             }
             return false;
@@ -102,16 +133,31 @@ namespace TheLightenRoad.Sirac.Level1
 
         public void ApplyLensEffectsNow()
         {
-            LanternLensType effectiveLens = IsSuppressedByShadowRealm ? LanternLensType.Normal : ActiveLens;
-            var allMono = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-            foreach (var mb in allMono)
+            if (RegisteredReactives.Count == 0)
             {
-                if (mb is ILensReactive reactive)
+                var allMono = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+                for (int i = 0; i < allMono.Length; i++)
                 {
-                    float dist = Vector2.Distance(transform.position, mb.transform.position);
-                    bool inRange = !IsSuppressedByShadowRealm && dist <= lensEffectRadius;
-                    reactive.ApplyLensField(effectiveLens, inRange);
+                    if (allMono[i] is ILensReactive discovered)
+                        RegisterReactive(discovered);
                 }
+            }
+
+            LanternLensType effectiveLens = IsSuppressedByShadowRealm ? LanternLensType.Normal : ActiveLens;
+            Vector2 origin = transform.position;
+            float radiusSq = lensEffectRadius * lensEffectRadius;
+            for (int i = RegisteredReactives.Count - 1; i >= 0; i--)
+            {
+                var reactive = RegisteredReactives[i];
+                if (!(reactive is MonoBehaviour mb) || mb == null)
+                {
+                    RegisteredReactives.RemoveAt(i);
+                    continue;
+                }
+                if (!mb.isActiveAndEnabled) continue;
+                float distSq = ((Vector2)mb.transform.position - origin).sqrMagnitude;
+                bool inRange = !IsSuppressedByShadowRealm && distSq <= radiusSq;
+                reactive.ApplyLensField(effectiveLens, inRange);
             }
         }
 

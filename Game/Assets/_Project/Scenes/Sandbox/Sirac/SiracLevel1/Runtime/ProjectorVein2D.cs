@@ -18,7 +18,15 @@ namespace TheLightenRoad.Sirac.Level1
         [Range(1, 8)] public int MaxBounces = 6;
         public LineRenderer BeamLine;
 
-        private readonly List<Vector3> beamPoints = new List<Vector3>();
+        private readonly List<Vector3> beamPoints = new List<Vector3>(8);
+        private readonly List<Vector3> lastSyncedPoints = new List<Vector3>(8);
+        private readonly RaycastHit2D[] hitBuffer = new RaycastHit2D[24];
+        private static readonly ContactFilter2D RaycastFilter = new ContactFilter2D
+        {
+            useTriggers = true,
+            useLayerMask = false,
+            useDepth = false
+        };
         private CentralCoreFinale2D activeHitCore;
 
         public IReadOnlyList<Vector3> LastBeamPoints => beamPoints;
@@ -92,95 +100,113 @@ namespace TheLightenRoad.Sirac.Level1
             beamPoints.Add(origin);
 
             LightMirror2D lastMirror = null;
+            Physics2D.SyncTransforms();
 
             for (int bounce = 0; bounce < MaxBounces; bounce++)
             {
-                Physics2D.SyncTransforms();
-                var hits = Physics2D.RaycastAll(origin + dir * 0.04f, dir, MaxBeamDistance);
-                System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-
-                RaycastHit2D? validHit = null;
-                foreach (var h in hits)
+                int hitCount = Physics2D.Raycast(origin + dir * 0.04f, dir, RaycastFilter, hitBuffer, MaxBeamDistance);
+                for (int i = 1; i < hitCount; i++)
                 {
+                    var key = hitBuffer[i];
+                    int j = i - 1;
+                    while (j >= 0 && hitBuffer[j].distance > key.distance)
+                    {
+                        hitBuffer[j + 1] = hitBuffer[j];
+                        j--;
+                    }
+                    hitBuffer[j + 1] = key;
+                }
+
+                bool hasValidHit = false;
+                RaycastHit2D hit = default;
+                LightMirror2D hitMirror = null;
+                DarknessBarrier2D hitBarrier = null;
+                AdvancedEmberVein hitVein = null;
+                CentralCoreFinale2D hitCore = null;
+
+                for (int i = 0; i < hitCount; i++)
+                {
+                    var h = hitBuffer[i];
                     if (h.collider == null || h.collider.gameObject == gameObject) continue;
-                    var m = h.collider.GetComponent<LightMirror2D>();
-                    if (m != null)
+                    if (h.collider.TryGetComponent<LightMirror2D>(out var m))
                     {
                         if (m == lastMirror) continue;
-                        validHit = h;
+                        hasValidHit = true;
+                        hit = h;
+                        hitMirror = m;
                         break;
                     }
-                    var b = h.collider.GetComponent<DarknessBarrier2D>();
-                    if (b != null && !b.IsMelted)
+                    if (h.collider.TryGetComponent<DarknessBarrier2D>(out var b) && !b.IsMelted)
                     {
-                        validHit = h;
+                        hasValidHit = true;
+                        hit = h;
+                        hitBarrier = b;
                         break;
                     }
-                    var v = h.collider.GetComponent<AdvancedEmberVein>();
-                    if (v != null && v.IsCorrupted)
+                    if (h.collider.TryGetComponent<AdvancedEmberVein>(out var v) && v.IsCorrupted)
                     {
-                        validHit = h;
+                        hasValidHit = true;
+                        hit = h;
+                        hitVein = v;
                         break;
                     }
-                    if (h.collider.GetComponent<CentralCoreFinale2D>() != null)
+                    if (h.collider.TryGetComponent<CentralCoreFinale2D>(out var c))
                     {
-                        validHit = h;
+                        hasValidHit = true;
+                        hit = h;
+                        hitCore = c;
                         break;
                     }
-                    if (!h.collider.isTrigger && h.collider.GetComponent<Player.PlayerMotor2D>() == null)
+                    if (!h.collider.isTrigger && !h.collider.TryGetComponent<Player.PlayerMotor2D>(out _))
                     {
-                        validHit = h;
+                        hasValidHit = true;
+                        hit = h;
                         break;
                     }
                 }
 
-                if (!validHit.HasValue)
+                if (!hasValidHit)
                 {
                     beamPoints.Add(origin + dir * MaxBeamDistance);
                     break;
                 }
 
-                var hit = validHit.Value;
                 beamPoints.Add(hit.point);
 
-                var mirror = hit.collider.GetComponent<LightMirror2D>();
-                if (mirror != null)
+                if (hitMirror != null)
                 {
-                    if (mirror.IsCorrupted)
+                    if (hitMirror.IsCorrupted)
                     {
                         LastBeamAbsorbedByCorruptedMirror = true;
                         break;
                     }
 
-                    Vector2 normal = mirror.GetNormal();
+                    Vector2 normal = hitMirror.GetNormal();
                     if (Mathf.Abs(Vector2.Dot(dir, normal)) < 0.05f)
                     {
                         break;
                     }
                     dir = Vector2.Reflect(dir, normal).normalized;
                     origin = hit.point;
-                    lastMirror = mirror;
+                    lastMirror = hitMirror;
                     continue;
                 }
 
-                var barrier = hit.collider.GetComponent<DarknessBarrier2D>();
-                if (barrier != null && !barrier.IsMelted)
+                if (hitBarrier != null && !hitBarrier.IsMelted)
                 {
-                    barrier.ApplyBeamHit(dt);
+                    hitBarrier.ApplyBeamHit(dt);
                     break;
                 }
 
-                var vein = hit.collider.GetComponent<AdvancedEmberVein>();
-                if (vein != null && vein.IsCorrupted)
+                if (hitVein != null && hitVein.IsCorrupted)
                 {
-                    vein.CleanseCorruption();
+                    hitVein.CleanseCorruption();
                     break;
                 }
 
-                var core = hit.collider.GetComponent<CentralCoreFinale2D>();
-                if (core != null)
+                if (hitCore != null)
                 {
-                    hitCoreThisFrame = core;
+                    hitCoreThisFrame = hitCore;
                     break;
                 }
 
@@ -207,10 +233,29 @@ namespace TheLightenRoad.Sirac.Level1
         private void SyncLineRenderer()
         {
             if (BeamLine == null) return;
-            BeamLine.positionCount = beamPoints.Count;
-            for (int i = 0; i < beamPoints.Count; i++)
+
+            int count = beamPoints.Count;
+            if (count == lastSyncedPoints.Count)
             {
-                BeamLine.SetPosition(i, beamPoints[i]);
+                bool unchanged = true;
+                for (int i = 0; i < count; i++)
+                {
+                    if ((beamPoints[i] - lastSyncedPoints[i]).sqrMagnitude > 0.00001f)
+                    {
+                        unchanged = false;
+                        break;
+                    }
+                }
+                if (unchanged) return;
+            }
+
+            BeamLine.positionCount = count;
+            lastSyncedPoints.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                Vector3 pt = beamPoints[i];
+                BeamLine.SetPosition(i, pt);
+                lastSyncedPoints.Add(pt);
             }
         }
     }

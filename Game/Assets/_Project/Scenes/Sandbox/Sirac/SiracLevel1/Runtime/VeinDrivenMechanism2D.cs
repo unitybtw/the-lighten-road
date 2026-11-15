@@ -30,6 +30,8 @@ namespace TheLightenRoad.Sirac.Level1
         private LanternLensType lensInRange = LanternLensType.Normal;
         private bool externalForceOpen;
         private int lastResolvedState;
+        private int lastVisualTintState = int.MinValue;
+        private bool lastVisualPhasedOut;
 
         public int EffectiveState { get; private set; }
         public bool IsPhasedOut { get; private set; }
@@ -39,6 +41,7 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Awake()
         {
+            LanternLensController.RegisterReactive(this);
             if (SolidCollider == null) SolidCollider = GetComponent<Collider2D>();
             if (VisualRenderer == null) VisualRenderer = GetComponent<SpriteRenderer>();
             if (PointA == Vector3.zero && PointB == Vector3.zero)
@@ -49,6 +52,16 @@ namespace TheLightenRoad.Sirac.Level1
             ResolveEffectiveState();
         }
 
+        private void OnEnable()
+        {
+            LanternLensController.RegisterReactive(this);
+        }
+
+        private void OnDestroy()
+        {
+            LanternLensController.UnregisterReactive(this);
+        }
+
         private void Update()
         {
             StepMechanism(Time.deltaTime);
@@ -56,8 +69,13 @@ namespace TheLightenRoad.Sirac.Level1
 
         public void ApplyLensField(LanternLensType lens, bool inRange)
         {
-            hasLensOverride = inRange && lens != LanternLensType.Normal;
-            lensInRange = inRange ? lens : LanternLensType.Normal;
+            bool nextHasOverride = inRange && lens != LanternLensType.Normal;
+            LanternLensType nextLens = inRange ? lens : LanternLensType.Normal;
+            if (hasLensOverride == nextHasOverride && lensInRange == nextLens)
+                return;
+
+            hasLensOverride = nextHasOverride;
+            lensInRange = nextLens;
             ResolveEffectiveState();
         }
 
@@ -95,12 +113,17 @@ namespace TheLightenRoad.Sirac.Level1
 
             // State 2 (Ethereal) or Cyan Lens removes collisions (ghost phase-out)
             IsPhasedOut = EffectiveState == 2;
-            if (SolidCollider != null)
+            if (SolidCollider != null && SolidCollider.enabled == IsPhasedOut)
             {
                 SolidCollider.enabled = !IsPhasedOut;
             }
 
-            UpdateVisualTint(isGhostType);
+            if (lastVisualTintState != EffectiveState || lastVisualPhasedOut != IsPhasedOut)
+            {
+                lastVisualTintState = EffectiveState;
+                lastVisualPhasedOut = IsPhasedOut;
+                UpdateVisualTint(isGhostType);
+            }
 
             if (dt <= 0f) return;
 

@@ -98,6 +98,12 @@ namespace TheLightenRoad.Sirac.Level1
 
         private MementoCollectible2D[] cachedMementos;
         private int lastMementoSlotsBuilt = -1;
+        private float nextTargetResolveTime;
+        private string lastLensLabelText;
+        private string lastEmberLabelText;
+        private int lastDisplayedBeams = -1;
+        private int lastDisplayedMementos = -1;
+        private int lastDisplayedTotalMementos = -1;
 
         public bool IsMonochromeRedActive => ShadowRealm != null
             ? ShadowRealm.IsPlayerInside
@@ -127,7 +133,13 @@ namespace TheLightenRoad.Sirac.Level1
         private void Update()
         {
             UpdateSafeArea();
-            ResolveTargets();
+            if ((LensController == null || EmberInventory == null || ShadowRealm == null ||
+                 CentralCore == null || cachedMementos == null || cachedMementos.Length == 0) &&
+                Time.unscaledTime >= nextTargetResolveTime)
+            {
+                ResolveTargets();
+                nextTargetResolveTime = Time.unscaledTime + 0.5f;
+            }
             SyncStateFromTargets(immediate: false);
             AnimateVisuals(Time.unscaledDeltaTime);
         }
@@ -494,7 +506,12 @@ namespace TheLightenRoad.Sirac.Level1
 
             if (lensLabel != null)
             {
-                lensLabel.text = inShadow ? "Extinguished" : FormatLensName(lens);
+                string nextLensText = inShadow ? "Extinguished" : FormatLensName(lens);
+                if (lastLensLabelText != nextLensText)
+                {
+                    lastLensLabelText = nextLensText;
+                    lensLabel.text = nextLensText;
+                }
             }
 
             // Ember inventory strip
@@ -570,9 +587,14 @@ namespace TheLightenRoad.Sirac.Level1
 
             if (emberLabel != null)
             {
-                emberLabel.text = carriedCount == 0
+                string nextEmberText = carriedCount == 0
                     ? string.Empty
                     : (usageBlocked ? "Sealed" : FormatEmberName(selected));
+                if (lastEmberLabelText != nextEmberText)
+                {
+                    lastEmberLabelText = nextEmberText;
+                    emberLabel.text = nextEmberText;
+                }
                 float textShift = -11f - displaySlots * 17f - 6f;
                 emberLabel.rectTransform.anchoredPosition = new Vector2(textShift, -37f);
                 if (emberHintLabel != null)
@@ -601,8 +623,9 @@ namespace TheLightenRoad.Sirac.Level1
                 corePrisms[i].sprite = lit ? Level1PixelArt.CorePrismLit : Level1PixelArt.CorePrismEmpty;
                 corePrisms[i].color = lit ? NormalAmber : new Color(Muted.r, Muted.g, Muted.b, 0.42f);
             }
-            if (coreCountLabel != null)
+            if (coreCountLabel != null && beams != lastDisplayedBeams)
             {
+                lastDisplayedBeams = beams;
                 coreCountLabel.text = $"{beams}/{CoreBeamSlots}";
                 coreCountLabel.color = beams >= CoreBeamSlots ? NormalAmber : Muted;
             }
@@ -633,8 +656,11 @@ namespace TheLightenRoad.Sirac.Level1
                 }
                 trackedMementoCount = collectedMementos;
             }
-            if (mementoCountLabel != null)
+            if (mementoCountLabel != null &&
+                (collectedMementos != lastDisplayedMementos || totalMementos != lastDisplayedTotalMementos))
             {
+                lastDisplayedMementos = collectedMementos;
+                lastDisplayedTotalMementos = totalMementos;
                 mementoCountLabel.text = $"{collectedMementos}/{totalMementos}";
                 mementoCountLabel.color = collectedMementos >= totalMementos ? Ivory : Muted;
             }

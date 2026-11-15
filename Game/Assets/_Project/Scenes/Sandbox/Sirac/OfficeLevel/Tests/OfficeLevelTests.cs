@@ -21,6 +21,7 @@ namespace TheLightenRoad.Sirac.OfficeLevel.Tests
         private PlayerMotor2D motor;
         private Rigidbody2D crate;
         private Keyboard keyboard, previousKeyboard;
+        private Key[] heldKeys = Array.Empty<Key>();
         private InputSettings.BackgroundBehavior background;
         private InputSettings.EditorInputBehaviorInPlayMode editorInput;
         private Camera camera;
@@ -32,7 +33,7 @@ namespace TheLightenRoad.Sirac.OfficeLevel.Tests
             background=InputSystem.settings.backgroundBehavior;editorInput=InputSystem.settings.editorInputBehaviorInPlayMode;
             InputSystem.settings.backgroundBehavior=InputSettings.BackgroundBehavior.IgnoreFocus;
             InputSystem.settings.editorInputBehaviorInPlayMode=InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
-            previousKeyboard=Keyboard.current;keyboard=InputSystem.AddDevice<Keyboard>();keyboard.MakeCurrent();
+            previousKeyboard=Keyboard.current;if(previousKeyboard!=null && previousKeyboard.added)InputSystem.DisableDevice(previousKeyboard);keyboard=InputSystem.AddDevice<Keyboard>();keyboard.MakeCurrent();
 #if UNITY_EDITOR
             scene=UnityEditor.SceneManagement.EditorSceneManager.LoadSceneInPlayMode("Assets/_Project/Scenes/Sandbox/Sirac/Office.unity",new LoadSceneParameters(LoadSceneMode.Additive));
             while(!scene.isLoaded)yield return null;
@@ -49,7 +50,7 @@ namespace TheLightenRoad.Sirac.OfficeLevel.Tests
             if(exit!=null && exit.IsRunning)exit.Cancel();
             Time.timeScale=1;
             if(keyboard!=null)InputSystem.RemoveDevice(keyboard);
-            if(previousKeyboard!=null && previousKeyboard.added)previousKeyboard.MakeCurrent();
+            if(previousKeyboard!=null && previousKeyboard.added){InputSystem.EnableDevice(previousKeyboard);previousKeyboard.MakeCurrent();}
             InputSystem.settings.backgroundBehavior=background;InputSystem.settings.editorInputBehaviorInPlayMode=editorInput;
             if(previousScene.IsValid() && previousScene.isLoaded)SceneManager.SetActiveScene(previousScene);
             if(scene.IsValid() && scene.isLoaded)yield return SceneManager.UnloadSceneAsync(scene);
@@ -57,7 +58,7 @@ namespace TheLightenRoad.Sirac.OfficeLevel.Tests
         }
         private T[] All<T>() where T:Component => scene.GetRootGameObjects().SelectMany(r=>r.GetComponentsInChildren<T>(true)).ToArray();
         private T Find<T>() where T:Component => All<T>().Single();
-        private void Keys(params Key[] keys)=>InputSystem.QueueStateEvent(keyboard,new KeyboardState(keys));
+        private void Keys(params Key[] keys){heldKeys=keys??Array.Empty<Key>();keyboard.MakeCurrent();InputSystem.QueueStateEvent(keyboard,new KeyboardState(heldKeys));}
         private void AssertView()
         {
             Assert.That(follow.HasWorldBounds,Is.True);
@@ -72,7 +73,7 @@ namespace TheLightenRoad.Sirac.OfficeLevel.Tests
         private IEnumerator Until(Func<bool> condition,float seconds,string message)
         {
             float end=Time.realtimeSinceStartup+seconds;
-            while(!condition() && Time.realtimeSinceStartup<end){AssertView();yield return null;}
+            while(!condition() && Time.realtimeSinceStartup<end){if(Keyboard.current!=keyboard)keyboard.MakeCurrent();if(heldKeys.Length>0 && !keyboard[heldKeys[0]].isPressed)InputState.Change(keyboard,new KeyboardState(heldKeys));AssertView();yield return null;}
             Assert.That(condition(),Is.True,message+" actor="+motor.Body.position+" crate="+crate.position+" pose="+motor.GetComponent<PlayerSpriteAnimator>().CurrentAnimation);
         }
         private IEnumerator Warp(Vector2 p)
