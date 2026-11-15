@@ -51,7 +51,6 @@ namespace TheLightenRoad.Frontend
             backdrop.SetAsFirstSibling();
             var shade=backdrop.gameObject.AddComponent<Image>();
             shade.sprite=softRadialSprite;shade.color=new Color(.006f,.010f,.020f,.96f);shade.raycastTarget=false;
-            BuildSettingsLanterns(surface);
             SettingsRule(surface,"Top tab rule",new Vector2(0,150),720);
             var crest = CreateAnchoredRect("Settings Bottom Filigree", surface, new Vector2(340f, 22f), Vector2.one * 0.5f, new Vector2(0f, -215f));
             if (bottomCrestSprite != null)
@@ -820,38 +819,6 @@ namespace TheLightenRoad.Frontend
                 focus.LeftPointer = leftPointer;
                 focus.RightPointer = rightPointer;
                 focus.PointerOffset = offset;
-            }
-        }
-        private void BuildSettingsLanterns(RectTransform parent)
-        {
-            var ambience=parent.gameObject.AddComponent<SettingsLanternAmbience>();
-            ambience.Visibility=settingsGroup;
-            ambience.Pivots=new RectTransform[2];ambience.Glows=new Image[2];
-            var lampSprite=hangingLampSprite;
-            var chainSprite=chainLinkSprite;
-            if(lampSprite==null && stage!=null)
-            {
-                foreach(var source in stage.GetComponentsInChildren<Image>())
-                {
-                    if(source.name=="Ceiling Lamp Head")lampSprite=source.sprite;
-                    if(source.name=="ChainLink_0")chainSprite=source.sprite;
-                }
-            }
-            for(int i=0;i<2;i++)
-            {
-                var pivot=CreateAnchoredRect("Settings archive lantern "+i,parent,new Vector2(100,100),Vector2.one*.5f,i==0?new Vector2(-430,425):new Vector2(430,425));
-                pivot.pivot=new Vector2(.5f,1);pivot.localScale=Vector3.one*(i==0?.9f:.9f);
-                ambience.Pivots[i]=pivot;
-                for(int c=0;c<4;c++)
-                {
-                    var chain=CreateAnchoredRect("Chain",pivot,new Vector2(12,26),new Vector2(.5f,1),new Vector2(0,-10-c*20));
-                    var image=chain.gameObject.AddComponent<Image>();image.sprite=chainSprite;image.color=new Color(.62f,.72f,.86f,.75f);image.raycastTarget=false;
-                }
-                var glowRect=CreateAnchoredRect("Archive lamplight",pivot,new Vector2(360,480),new Vector2(.5f,1),new Vector2(0,-215));
-                var light=glowRect.gameObject.AddComponent<Image>();light.sprite=softRadialSprite;light.raycastTarget=false;light.color=new Color(1,.68f,.25f,.12f);
-                ambience.Glows[i]=light;
-                var cage=CreateAnchoredRect("Cage lamp",pivot,new Vector2(76,106),new Vector2(.5f,1),new Vector2(0,-135));
-                var lamp=cage.gameObject.AddComponent<Image>();lamp.sprite=lampSprite;lamp.preserveAspect=true;lamp.color=new Color(.88f,.92f,.98f);lamp.raycastTarget=false;
             }
         }
         private TMP_Text SettingsText(RectTransform parent,string words,Vector2 position,float size,Color color,float width)

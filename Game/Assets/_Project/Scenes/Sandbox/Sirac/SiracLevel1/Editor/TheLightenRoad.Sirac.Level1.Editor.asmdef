@@ -1,0 +1,29 @@
+{
+  "name": "TheLightenRoad.Sirac.Level1.Editor",
+  "rootNamespace": "TheLightenRoad.Sirac.Level1.Editor",
+  "references": [
+    "TheLightenRoad.Sirac.Level1",
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Sirac.OfficeAnnex.Editor",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.Completion",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Codex",
+    "TheLightenRoad.Audio",
+    "TheLightenRoad.Effects",
+    "TheLightenRoad.UI",
+    "TheLightenRoad.Glyphs",
+    "TheLightenRoad.Relays",
+    "TheLightenRoad.Mechanisms",
+    "TheLightenRoad.Interaction",
+    "Unity.TextMeshPro",
+    "Unity.2D.Sprite.Editor",
+    "Unity.2D.Tilemap.Editor",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

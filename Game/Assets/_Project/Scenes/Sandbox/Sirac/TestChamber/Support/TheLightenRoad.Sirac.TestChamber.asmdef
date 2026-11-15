@@ -6,6 +6,7 @@
     "TheLightenRoad.Lantern",
     "TheLightenRoad.Completion",
     "TheLightenRoad.Frontend",
+    "TheLightenRoad.Input",
     "TheLightenRoad.UI",
     "Unity.InputSystem",
     "UnityEngine.UI",

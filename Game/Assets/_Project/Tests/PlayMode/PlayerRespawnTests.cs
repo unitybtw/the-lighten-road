@@ -202,41 +202,43 @@ public sealed class PlayerRespawnTests
     {
         var previousKeyboard=Keyboard.current;var keyboard=InputSystem.AddDevice<Keyboard>();keyboard.MakeCurrent();
         var background=InputSystem.settings.backgroundBehavior;var editor=InputSystem.settings.editorInputBehaviorInPlayMode;
+        var updateMode=InputSystem.settings.updateMode;
         InputSystem.settings.backgroundBehavior=InputSettings.BackgroundBehavior.IgnoreFocus;
         InputSystem.settings.editorInputBehaviorInPlayMode=InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+        InputSystem.settings.updateMode=InputSettings.UpdateMode.ProcessEventsManually;
         try
         {
+            Assert.That(keyboard.spaceKey.wasPressedThisFrame, Is.False);
+            InputSystem.Update();
+            InputState.Change(keyboard,new KeyboardState());
             overlay.enabled=false;respawnController.AutoRespawnEnabled=false;respawnController.AllowManualRespawnInput=true;
             respawnController.Kill(DeathReason.Hazard);
             float deadline=Time.realtimeSinceStartup+3;
-            while(respawnController.State==RespawnState.Dying && Time.realtimeSinceStartup<deadline)yield return null;
+            while(respawnController.State==RespawnState.Dying && Time.realtimeSinceStartup<deadline){InputSystem.Update();yield return null;}
             Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead), "Wait for the actual death state before testing its input.");
-            Time.timeScale=0;InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));
-            deadline=Time.realtimeSinceStartup+2;
-            while(!keyboard.spaceKey.isPressed && Time.realtimeSinceStartup<deadline)yield return null;
+            Time.timeScale=0;
+            InputState.Change(keyboard,new KeyboardState(Key.Space));
             Assert.That(keyboard.spaceKey.isPressed, Is.True, "The paused submit must reach the input system.");
             yield return null;
             Assert.That(respawnController.State, Is.EqualTo(RespawnState.Dead), "Pause-menu submit must not also respawn the player behind it.");
-            InputSystem.QueueStateEvent(keyboard,new KeyboardState());
-            deadline=Time.realtimeSinceStartup+2;
-            while(keyboard.spaceKey.isPressed && Time.realtimeSinceStartup<deadline)yield return null;
+            InputState.Change(keyboard,new KeyboardState());
             Assert.That(keyboard.spaceKey.isPressed, Is.False, "A fresh press requires the paused submit to be released first.");
+            yield return null;
             Time.timeScale=1;
+            InputSystem.Update();
             deadline=Time.realtimeSinceStartup+2;
-            while(!GameControls.GameplayAllowedExcept(respawnController) && Time.realtimeSinceStartup<deadline)yield return null;
+            while(!GameControls.GameplayAllowedExcept(respawnController) && Time.realtimeSinceStartup<deadline){InputSystem.Update();yield return null;}
             Assert.That(GameControls.GameplayAllowedExcept(respawnController), Is.True, "Recovery input must become eligible after the world is unpaused.");
-            InputSystem.QueueStateEvent(keyboard,new KeyboardState(Key.Space));
-            deadline=Time.realtimeSinceStartup+2;
-            while(!keyboard.spaceKey.isPressed && Time.realtimeSinceStartup<deadline)yield return null;
+            InputState.Change(keyboard,new KeyboardState(Key.Space));
             Assert.That(keyboard.spaceKey.isPressed, Is.True, "The fresh recovery press must reach the input system.");
-            deadline=Time.realtimeSinceStartup+2;
-            while(respawnController.State!=RespawnState.Alive && Time.realtimeSinceStartup<deadline)yield return null;
+            yield return null;
             Assert.That(respawnController.State, Is.EqualTo(RespawnState.Alive), "An eligible, delivered fresh press must recover the player.");
         }
         finally
         {
             Time.timeScale=1;InputSystem.RemoveDevice(keyboard);
             if(previousKeyboard!=null && previousKeyboard.added)previousKeyboard.MakeCurrent();
+            InputSystem.settings.updateMode=updateMode;
             InputSystem.settings.backgroundBehavior=background;InputSystem.settings.editorInputBehaviorInPlayMode=editor;
         }
     }

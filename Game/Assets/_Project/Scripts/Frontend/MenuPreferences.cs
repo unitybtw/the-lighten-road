@@ -107,6 +107,7 @@ namespace TheLightenRoad.Frontend
         public static void SetSelectedRealm(int index)
         {
             PlayerPrefs.SetInt(Prefix + "SelectedRealm", Mathf.Max(0, index));
+            Save();
         }
 
         public static void SetControllerStyle(int style)

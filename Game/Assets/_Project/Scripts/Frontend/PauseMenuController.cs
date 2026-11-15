@@ -124,6 +124,37 @@ namespace TheLightenRoad.Frontend
         {
             Time.timeScale = 1f;
             IsPaused = false;
+            SceneManager.sceneLoaded -= InstallInGameplayScene;
+            SceneManager.sceneLoaded += InstallInGameplayScene;
+        }
+
+        private static void InstallInGameplayScene(Scene scene, LoadSceneMode mode)
+        {
+            if (!Application.isPlaying || string.IsNullOrEmpty(scene.path)) return;
+
+            bool hasPlayer = false;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                if (root.GetComponentInChildren<MainMenuController>(true) != null ||
+                    root.GetComponentInChildren<PauseMenuController>(true) != null)
+                {
+                    return;
+                }
+
+                if (root.GetComponentInChildren<PlayerMotor2D>(true) != null ||
+                    root.GetComponentInChildren<PlayerRespawnController>(true) != null)
+                {
+                    hasPlayer = true;
+                }
+            }
+
+            if (!hasPlayer || Instance != null) return;
+
+            var host = new GameObject("Pause Menu");
+            host.SetActive(false);
+            SceneManager.MoveGameObjectToScene(host, scene);
+            host.AddComponent<PauseMenuController>();
+            host.SetActive(true);
         }
 
 #if UNITY_EDITOR
@@ -612,6 +643,30 @@ namespace TheLightenRoad.Frontend
             else if (sceneName.Contains("ArchiveTest"))
             {
                 chamberName = "Archive Test Chamber";
+            }
+            else if (sceneName == "SiracLevel1")
+            {
+                chamberName = "Level 1 — Corporate Archive";
+            }
+            else if (sceneName == "Level1")
+            {
+                chamberName = "Level 1";
+            }
+            else if (sceneName == "Level2")
+            {
+                chamberName = "Level 2";
+            }
+            else if (sceneName.Contains("OfficeAnnex"))
+            {
+                chamberName = "Office Annex";
+            }
+            else if (sceneName == "Office")
+            {
+                chamberName = "Archive Office";
+            }
+            else if (sceneName.Contains("MovementSandbox"))
+            {
+                chamberName = "Movement Sandbox";
             }
 
             if (chamberTitleLabel != null)

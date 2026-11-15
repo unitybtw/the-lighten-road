@@ -140,8 +140,22 @@ namespace TheLightenRoad.UI
 
         private void OnValidate()
         {
+#if UNITY_EDITOR
+            if (Application.isPlaying) return;
+            UnityEditor.EditorApplication.delayCall -= DeferredValidate;
+            UnityEditor.EditorApplication.delayCall += DeferredValidate;
+#else
             ApplyMinimalMode();
+#endif
         }
+
+#if UNITY_EDITOR
+        private void DeferredValidate()
+        {
+            UnityEditor.EditorApplication.delayCall -= DeferredValidate;
+            if (this != null && !Application.isPlaying) ApplyMinimalMode();
+        }
+#endif
 
         private void OnEnable()
         {

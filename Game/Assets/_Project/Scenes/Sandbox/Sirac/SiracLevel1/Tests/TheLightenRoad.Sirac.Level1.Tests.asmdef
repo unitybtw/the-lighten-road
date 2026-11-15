@@ -1,0 +1,23 @@
+{
+  "name": "TheLightenRoad.Sirac.Level1.Tests",
+  "rootNamespace": "TheLightenRoad.Sirac.Level1.Tests",
+  "references": [
+    "TheLightenRoad.Sirac.Level1",
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.Completion",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Glyphs",
+    "TheLightenRoad.Relays",
+    "TheLightenRoad.Mechanisms",
+    "TheLightenRoad.Interaction",
+    "TheLightenRoad.UI",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "TheLightenRoad.Sirac.Level1",
+  "rootNamespace": "TheLightenRoad.Sirac.Level1",
+  "references": [
+    "TheLightenRoad.Player",
+    "TheLightenRoad.Lantern",
+    "TheLightenRoad.Frontend",
+    "TheLightenRoad.Glyphs",
+    "TheLightenRoad.Relays",
+    "TheLightenRoad.Mechanisms",
+    "TheLightenRoad.Interaction",
+    "TheLightenRoad.Sirac.OfficeAnnex",
+    "TheLightenRoad.Completion",
+    "TheLightenRoad.Input",
+    "TheLightenRoad.UI",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Universal.2D.Runtime"
+  ]
+}

@@ -1,4 +1,5 @@
 using TheLightenRoad.Frontend;
+using TheLightenRoad.Input;
 using TheLightenRoad.Lantern;
 using TheLightenRoad.Player;
 using TheLightenRoad.Player.Completion;
@@ -70,7 +71,7 @@ namespace TheLightenRoad.Sirac.TestChamber
             var pad = Gamepad.current;
             bool restart = (Keyboard.current != null && Keyboard.current.backspaceKey.wasPressedThisFrame)
                         || (pad != null && pad.selectButton.wasPressedThisFrame);
-            if (restart)
+            if (GameControls.GameplayAllowed && restart)
                 RestartRoute();
             noteTimer = Mathf.Max(0f, noteTimer - Time.unscaledDeltaTime);
             if (note != null)

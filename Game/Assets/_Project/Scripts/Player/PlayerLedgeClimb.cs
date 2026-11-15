@@ -60,7 +60,7 @@ namespace TheLightenRoad.Player
             motor = GetComponent<PlayerMotor2D>();
             poses = GetComponent<PlayerSpriteAnimator>();
             recovery = GetComponent<PlayerRespawnController>();
-            lantern = GetComponent<LanternController>();
+            lantern = GetComponent<LanternController>() ?? GetComponentInChildren<LanternController>(true);
             capsule = GetComponent<CapsuleCollider2D>();
             body = GetComponent<Rigidbody2D>();
             filter = new ContactFilter2D { useTriggers = false };

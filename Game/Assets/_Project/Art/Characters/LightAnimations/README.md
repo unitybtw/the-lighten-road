@@ -5,7 +5,7 @@
 | Animation | Frames | Canvas per frame | Authored duration | Runtime use |
 | --- | ---: | --- | ---: | --- |
 | Idle | 10 | 70 × 70 | 1.0 s loop* | Standing and the animated main-menu character |
-| Walk | 10 | 70 × 70 | 1.0 s loop | Movement; playback rate follows walking speed |
+| Walk | 10 | 70 × 70 | 1.0 s loop | Movement; authored timing at normal walking speed, proportionally slower for analog movement |
 | Jump | 6 | 70 × 70 | 0.6 s | Real jump event; confirmed walk-offs enter the airborne hold directly after visual contact grace |
 | Landing | 5 | 70 × 70 | 0.5 s | Real landing event; movement can interrupt |
 | Flare | 12 | 70 × 70 | 1.2 s | Successful flare ignition |
@@ -35,3 +35,9 @@ See [current traversal behavior and verification](../../../../../../development/
 Push is appended to the existing enum, retaining all older serialized indices. `AnnexPushBlock` reports actual grounded side contact through `SetPushing(owner, bool)`; it never replaces the player motor or owns a traversal/input lock. Push loops at the delivered timing with a modest speed adjustment. Jump, explicit climb context and flare retain their animation priority. Its stowed lantern uses the waist anchor while no flame pixels are visible. The new contact owner is present only in the OfficeAnnex test scene.
 
 Walking during Flare keeps the delivered upper-body action and plays the delivered Walk leg frames on an independent gait clock. A pixel-preserving split at source row 42 and imported horizontal waist registrations join the two strips; textures, source frame timing, movement speed, colliders and Flare cost are unchanged. Stopping restores the original full-body Flare sprite. Walking resumes from the retained gait phase. Jump/fall and explicit climb contexts remove the walking layer, and pause freezes both clocks immediately. The small native sprite cache is owned by the actor and released with it.
+
+Walk cadence uses actual horizontal velocity relative to the motor's normal walking
+speed. The delivered 100ms frame timing is retained at full walk speed, making one
+complete cycle take one second. Slow analog movement has no minimum
+playback-rate clamp. Entering Idle clears the walking phase so a new walk starts on
+the first step; the active Flare leg layer retains its own uninterrupted phase.

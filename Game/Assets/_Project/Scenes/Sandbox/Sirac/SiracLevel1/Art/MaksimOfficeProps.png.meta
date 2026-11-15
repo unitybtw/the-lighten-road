@@ -1,0 +1,585 @@
+fileFormatVersion: 2
+guid: 3a009a5b0eb1343068131f2491009bce
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7912770747755484545
+    second: MaksimOfficeProps_0
+  - first:
+      213: -6023477523022734561
+    second: MaksimOfficeProps_1
+  - first:
+      213: -2887969759885316667
+    second: MaksimOfficeProps_2
+  - first:
+      213: 3251877800316617223
+    second: MaksimOfficeProps_3
+  - first:
+      213: 4648540776592191367
+    second: MaksimOfficeProps_4
+  - first:
+      213: -2947560854140974625
+    second: MaksimOfficeProps_5
+  - first:
+      213: 4993544920613848845
+    second: MaksimOfficeProps_6
+  - first:
+      213: 284517933334513131
+    second: MaksimOfficeProps_7
+  - first:
+      213: 2553990621785442114
+    second: MaksimOfficeProps_8
+  - first:
+      213: -4412810680183057471
+    second: MaksimOfficeProps_9
+  - first:
+      213: -3895146505947734285
+    second: MaksimOfficeProps_10
+  - first:
+      213: 897084012867165721
+    second: MaksimOfficeProps_11
+  - first:
+      213: -1123987761499551157
+    second: MaksimOfficeProps_12
+  - first:
+      213: 5804155645725680676
+    second: MaksimOfficeProps_13
+  - first:
+      213: 5323043304740434189
+    second: MaksimOfficeProps_14
+  - first:
+      213: 3375007767945298672
+    second: MaksimOfficeProps_15
+  - first:
+      213: 6651790791456370298
+    second: MaksimOfficeProps_16
+  - first:
+      213: -2601893680689301824
+    second: MaksimOfficeProps_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Sofa
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 83
+        width: 66
+        height: 33
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c514b4c88d14c492fb1db14e45fe1dc3
+      internalID: 1552596555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Armchair_Right
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 83
+        width: 32
+        height: 33
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bdc4d20cc2152e32224db17d14fc3355
+      internalID: -1509772048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Armchair_Front
+      rect:
+        serializedVersion: 2
+        x: 162
+        y: 83
+        width: 30
+        height: 33
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 747aebbd4c916ac5517836ee755921ce
+      internalID: 1353251929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Armchair_Left
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 83
+        width: 32
+        height: 33
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6cb7abd985ef3be8c8da8ab882b90ac4
+      internalID: -633603454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WallShelf
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 111
+        width: 34
+        height: 5
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a19906a359985d7e5995fa7f5aa30c8
+      internalID: 1925657627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FlowerPot
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 67
+        width: 25
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bcc2d9eefb90ec6fb1c2e108c59af8fc
+      internalID: -1673098125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BooksSmall
+      rect:
+        serializedVersion: 2
+        x: 134
+        y: 68
+        width: 8
+        height: 10
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fcae0da73a2a27958502aeceed5afecf
+      internalID: 2015674054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BooksLarge
+      rect:
+        serializedVersion: 2
+        x: 144
+        y: 68
+        width: 11
+        height: 10
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2cd8f259a3144eaa98271a5cbc343025
+      internalID: -1533939298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CoffeeTable
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 51
+        width: 37
+        height: 14
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c20b337a9551cef706e709f97b7ec2cc
+      internalID: -1479863814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WaterCooler_Left
+      rect:
+        serializedVersion: 2
+        x: 242
+        y: 35
+        width: 16
+        height: 43
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e23f193344cae27b31ca5b91f6a70d48
+      internalID: -221606582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WaterCooler_Front
+      rect:
+        serializedVersion: 2
+        x: 264
+        y: 35
+        width: 15
+        height: 43
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9faee140314adcf79afaa3459befb59e
+      internalID: -804957934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: WaterCooler_Right
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 35
+        width: 16
+        height: 43
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60e480dc604376afb38d53e4de3e6f16
+      internalID: 2094690842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: BrokenDebris
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 51
+        width: 31
+        height: 9
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75cb427bd39a6b62a4f84316886059d2
+      internalID: -1787928564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DeskLamp
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 51
+        width: 9
+        height: 12
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52e34b5325b68d3ac108d4d96d2477ee
+      internalID: 492317401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeakingBin
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 46
+        width: 11
+        height: 18
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4158617b639ad90ac3a46087b6a2327f
+      internalID: -387651499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FilingCabinet_Right
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 3
+        width: 21
+        height: 29
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a5c445fd32aea134bec696aec874ccfe
+      internalID: 1081349138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FilingCabinet_Front
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 3
+        width: 16
+        height: 29
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c556ccbc73bfaed0a9bf9611f814b4ea
+      internalID: 1910240526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FilingCabinet_Left
+      rect:
+        serializedVersion: 2
+        x: 194
+        y: 3
+        width: 21
+        height: 29
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ca7c6c21e0f2184638c42c66497543c
+      internalID: 418353886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: e50bad76699f54ea58e944f595424311
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Armchair_Front: 1353251929
+      Armchair_Left: -633603454
+      Armchair_Right: -1509772048
+      BooksLarge: -1533939298
+      BooksSmall: 2015674054
+      BrokenDebris: -1787928564
+      CoffeeTable: -1479863814
+      DeskLamp: 492317401
+      FilingCabinet_Front: 1910240526
+      FilingCabinet_Left: 418353886
+      FilingCabinet_Right: 1081349138
+      FlowerPot: -1673098125
+      LeakingBin: -387651499
+      Sofa: 1552596555
+      WallShelf: 1925657627
+      WaterCooler_Front: -804957934
+      WaterCooler_Left: -221606582
+      WaterCooler_Right: 2094690842
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

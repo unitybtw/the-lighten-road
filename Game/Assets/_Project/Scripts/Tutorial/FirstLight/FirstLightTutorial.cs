@@ -130,7 +130,7 @@ namespace TheLightenRoad.FirstLight
         private void OnRespawn()
         {
             Gate(false);
-            fuel.Initialize(Stage>=FirstLightStage.Scout?LanternFuel.ChamberFuel:(1+CollectedReserves)*LanternFuel.ChargesPerEmber,LanternFuel.MaximumFuel);
+            fuel.Initialize(!HasIgnited?0f:(Stage>=FirstLightStage.Scout?LanternFuel.ChamberFuel:(1+CollectedReserves)*LanternFuel.ChargesPerEmber),LanternFuel.MaximumFuel);
             lantern.enabled=HasIgnited;Player.KillOnFuelDepleted=HasIgnited;
             if(HasIgnited && Stage<FirstLightStage.Move)Enter(FirstLightStage.Move);
         }
