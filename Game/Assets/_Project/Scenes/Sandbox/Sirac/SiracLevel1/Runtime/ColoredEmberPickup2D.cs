@@ -47,7 +47,7 @@ namespace TheLightenRoad.Sirac.Level1
             if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
             if (spriteRenderer != null)
             {
-                if (spriteRenderer.sprite == null) spriteRenderer.sprite = TheLightenRoad.UI.PixelSprites.EmberFull;
+                spriteRenderer.sprite = Level1PixelArt.VeinEmberCrystal;
                 spriteRenderer.color = LanternLensController.GetEmberColorTint(ColorType);
             }
         }

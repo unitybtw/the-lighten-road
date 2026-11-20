@@ -13,10 +13,28 @@ namespace TheLightenRoad.Sirac.Level1
         public MirrorRail2D AttachedRail;
         public SpriteRenderer MirrorRenderer;
 
+        public static readonly List<LightMirror2D> ActiveMirrors = new List<LightMirror2D>(8);
+
         private void Awake()
         {
+            if (!ActiveMirrors.Contains(this)) ActiveMirrors.Add(this);
             if (MirrorRenderer == null) MirrorRenderer = GetComponent<SpriteRenderer>();
             SyncVisual();
+        }
+
+        private void OnEnable()
+        {
+            if (!ActiveMirrors.Contains(this)) ActiveMirrors.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ActiveMirrors.Remove(this);
+        }
+
+        private void OnDestroy()
+        {
+            ActiveMirrors.Remove(this);
         }
 
         private void Update()
@@ -27,11 +45,35 @@ namespace TheLightenRoad.Sirac.Level1
             {
                 var motor = Player.PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<Player.PlayerMotor2D>();
                 var player = motor != null ? motor.gameObject : GameObject.FindGameObjectWithTag("Player");
-                if (player != null && Vector2.Distance(transform.position, player.transform.position) <= 2.5f)
+                if (player != null && IsClosestMirrorTo(player.transform.position, 2.5f))
                 {
                     RotateMirror(45f);
                 }
             }
+        }
+
+        private bool IsClosestMirrorTo(Vector2 playerPos, float maxRadius)
+        {
+            float myDistSq = ((Vector2)transform.position - playerPos).sqrMagnitude;
+            if (myDistSq > maxRadius * maxRadius) return false;
+
+            for (int i = ActiveMirrors.Count - 1; i >= 0; i--)
+            {
+                var other = ActiveMirrors[i];
+                if (other == null)
+                {
+                    ActiveMirrors.RemoveAt(i);
+                    continue;
+                }
+                if (other == this || !other.isActiveAndEnabled) continue;
+                float otherDistSq = ((Vector2)other.transform.position - playerPos).sqrMagnitude;
+                if (otherDistSq < myDistSq - 0.0001f ||
+                    (Mathf.Abs(otherDistSq - myDistSq) <= 0.0001f && other.GetInstanceID() < GetInstanceID()))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void RotateMirror(float stepDegrees = 45f)

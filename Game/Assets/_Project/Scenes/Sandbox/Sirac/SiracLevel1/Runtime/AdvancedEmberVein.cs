@@ -73,7 +73,7 @@ namespace TheLightenRoad.Sirac.Level1
                 if (kb != null && kb.eKey.wasPressedThisFrame)
                 {
                     var inv = nearbyInventory ?? FindFirstObjectByType<EmberInventoryController>();
-                    if (inv != null && Vector2.Distance(transform.position, inv.transform.position) <= 2.4f)
+                    if (inv != null && IsClosestActiveVeinTo(inv.transform.position, 2.4f))
                     {
                         TryInteract(inv);
                     }
@@ -88,6 +88,30 @@ namespace TheLightenRoad.Sirac.Level1
                     GearTransform.Rotate(0f, 0f, dir * gearSpinSpeed * Time.deltaTime);
                 }
             }
+        }
+
+        private bool IsClosestActiveVeinTo(Vector2 playerPos, float maxRadius)
+        {
+            float myDistSq = ((Vector2)transform.position - playerPos).sqrMagnitude;
+            if (myDistSq > maxRadius * maxRadius) return false;
+
+            for (int i = ActiveVeins.Count - 1; i >= 0; i--)
+            {
+                var other = ActiveVeins[i];
+                if (other == null)
+                {
+                    ActiveVeins.RemoveAt(i);
+                    continue;
+                }
+                if (other == this || !other.isActiveAndEnabled) continue;
+                float otherDistSq = ((Vector2)other.transform.position - playerPos).sqrMagnitude;
+                if (otherDistSq < myDistSq - 0.0001f ||
+                    (Mathf.Abs(otherDistSq - myDistSq) <= 0.0001f && other.GetInstanceID() < GetInstanceID()))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void OnTriggerEnter2D(Collider2D other)

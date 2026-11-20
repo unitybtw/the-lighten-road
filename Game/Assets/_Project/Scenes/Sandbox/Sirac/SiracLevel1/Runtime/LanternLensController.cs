@@ -247,6 +247,11 @@ namespace TheLightenRoad.Sirac.Level1
             else
             {
                 lanternLight.color = GetLensColor(ActiveLens);
+                if (lantern != null && lanternLight.intensity <= 0.01f)
+                {
+                    lanternLight.intensity = Mathf.Max(0.75f, lantern.DimIntensity);
+                    lanternLight.pointLightOuterRadius = Mathf.Max(lanternLight.pointLightOuterRadius, lantern.DimRadius);
+                }
             }
         }
 

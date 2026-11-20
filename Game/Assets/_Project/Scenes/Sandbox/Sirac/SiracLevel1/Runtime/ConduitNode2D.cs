@@ -18,6 +18,8 @@ namespace TheLightenRoad.Sirac.Level1
 
         [HideInInspector] public ConduitGridController Grid;
 
+        public static readonly List<ConduitNode2D> ActiveNodes = new List<ConduitNode2D>(16);
+
         public bool IsPowered { get; internal set; }
 
         private Vector3 baseScale = Vector3.one;
@@ -26,6 +28,7 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Awake()
         {
+            if (!ActiveNodes.Contains(this)) ActiveNodes.Add(this);
             if (NodeRenderer == null) NodeRenderer = GetComponent<SpriteRenderer>();
             if (NodeRenderer != null && NodeRenderer.sprite == null)
             {
@@ -34,6 +37,21 @@ namespace TheLightenRoad.Sirac.Level1
             baseScale = transform.localScale;
             EnsureAuraRenderer();
             ApplyRotationVisual();
+        }
+
+        private void OnEnable()
+        {
+            if (!ActiveNodes.Contains(this)) ActiveNodes.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            ActiveNodes.Remove(this);
+        }
+
+        private void OnDestroy()
+        {
+            ActiveNodes.Remove(this);
         }
 
         private void Update()
@@ -57,11 +75,35 @@ namespace TheLightenRoad.Sirac.Level1
             {
                 var motor = Player.PlayerMotor2D.ActiveInstance ?? FindFirstObjectByType<Player.PlayerMotor2D>();
                 var player = motor != null ? motor.gameObject : GameObject.FindGameObjectWithTag("Player");
-                if (player != null && Vector2.Distance(transform.position, player.transform.position) <= 2.4f)
+                if (player != null && IsClosestUnlockedNodeTo(player.transform.position, 2.2f))
                 {
                     RotateClockwise();
                 }
             }
+        }
+
+        public bool IsClosestUnlockedNodeTo(Vector2 playerPos, float maxRadius)
+        {
+            float myDistSq = ((Vector2)transform.position - playerPos).sqrMagnitude;
+            if (myDistSq > maxRadius * maxRadius) return false;
+
+            for (int i = ActiveNodes.Count - 1; i >= 0; i--)
+            {
+                var other = ActiveNodes[i];
+                if (other == null)
+                {
+                    ActiveNodes.RemoveAt(i);
+                    continue;
+                }
+                if (other == this || !other.isActiveAndEnabled || other.Locked) continue;
+                float otherDistSq = ((Vector2)other.transform.position - playerPos).sqrMagnitude;
+                if (otherDistSq < myDistSq - 0.0001f ||
+                    (Mathf.Abs(otherDistSq - myDistSq) <= 0.0001f && other.GetInstanceID() < GetInstanceID()))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void RotateClockwise()

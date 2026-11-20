@@ -21,11 +21,22 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void Awake()
         {
+            LanternLensController.RegisterReactive(this);
             if (RailStart == Vector3.zero && RailEnd == Vector3.zero)
             {
                 RailStart = transform.position;
                 RailEnd = transform.position + Vector3.right * 3f;
             }
+        }
+
+        private void OnEnable()
+        {
+            LanternLensController.RegisterReactive(this);
+        }
+
+        private void OnDestroy()
+        {
+            LanternLensController.UnregisterReactive(this);
         }
 
         private void Update()

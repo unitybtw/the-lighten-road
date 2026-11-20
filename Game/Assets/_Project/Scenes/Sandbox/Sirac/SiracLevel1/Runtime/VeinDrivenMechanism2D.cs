@@ -14,6 +14,7 @@ namespace TheLightenRoad.Sirac.Level1
     {
         public VeinMechanismType MechanismType = VeinMechanismType.MovingPlatform;
         public AdvancedEmberVein SourceVein;
+        public AdvancedEmberVein SecondaryVein;
         public VeinDrivenMechanism2D LinkedTarget;
 
         [Header("Motion Endpoints")]
@@ -89,9 +90,10 @@ namespace TheLightenRoad.Sirac.Level1
 
         private void ResolveEffectiveState()
         {
-            int state = SourceVein != null ? SourceVein.VeinStateValue : 0;
-            bool canLensOverride = SourceVein == null || SourceVein.SlottedEmber == EmberColor.None;
-            if (hasLensOverride && canLensOverride)
+            int state = (SecondaryVein != null && SecondaryVein.VeinStateValue != 0)
+                ? SecondaryVein.VeinStateValue
+                : (SourceVein != null ? SourceVein.VeinStateValue : 0);
+            if (hasLensOverride)
             {
                 if (lensInRange == LanternLensType.Ethereal) state = 2;
                 else if (lensInRange == LanternLensType.Invert) state = -1;

@@ -64,6 +64,7 @@ namespace TheLightenRoad.Sirac.Level1
         private TextMeshProUGUI emberLabel;
         private TextMeshProUGUI emberHintLabel;
 
+        private RectTransform progressRowRoot;
         private readonly Image[] corePrisms = new Image[CoreBeamSlots];
         private readonly float[] corePops = new float[CoreBeamSlots];
         private readonly List<Image> mementoSeals = new List<Image>();
@@ -315,25 +316,33 @@ namespace TheLightenRoad.Sirac.Level1
             const float rowY = -68f;
             const float prismStep = 12f;
 
+            var progressGo = new GameObject("ProgressRow", typeof(RectTransform));
+            progressRowRoot = progressGo.GetComponent<RectTransform>();
+            progressRowRoot.SetParent(clusterAnchor, false);
+            progressRowRoot.anchorMin = Vector2.zero;
+            progressRowRoot.anchorMax = Vector2.one;
+            progressRowRoot.offsetMin = Vector2.zero;
+            progressRowRoot.offsetMax = Vector2.zero;
+
             // Core Crystals (right side, 4 prisms)
             for (int i = 0; i < CoreBeamSlots; i++)
             {
                 // Left-to-right reading order ending at x = -8
                 int visualIndex = CoreBeamSlots - 1 - i;
                 float x = -9f - visualIndex * prismStep;
-                var prism = CreateIcon($"CorePrism_{i}", clusterAnchor, Level1PixelArt.CorePrismEmpty, new Vector2(9f, 13f), Muted, topRight: true);
+                var prism = CreateIcon($"CorePrism_{i}", progressRowRoot, Level1PixelArt.CorePrismEmpty, new Vector2(9f, 13f), Ivory, topRight: true);
                 prism.rectTransform.anchoredPosition = new Vector2(x, rowY);
                 corePrisms[i] = prism;
             }
 
             float coreCountX = -9f - (CoreBeamSlots - 1) * prismStep - 10f;
-            coreCountLabel = CreateHudText("CoreCount", clusterAnchor, new Vector2(coreCountX, rowY), 9f, TextAlignmentOptions.MidlineRight, Muted);
+            coreCountLabel = CreateHudText("CoreCount", progressRowRoot, new Vector2(coreCountX, rowY), 9f, TextAlignmentOptions.MidlineRight, Muted);
 
             // Subtle vertical brass tick between Core and Mementos
-            var divider = CreateIcon("ProgressTick", clusterAnchor, PixelSprites.White, new Vector2(1f, 9f), new Color(Gold.r, Gold.g, Gold.b, 0.35f), topRight: true);
+            var divider = CreateIcon("ProgressTick", progressRowRoot, PixelSprites.White, new Vector2(1f, 9f), new Color(Gold.r, Gold.g, Gold.b, 0.45f), topRight: true);
             divider.rectTransform.anchoredPosition = new Vector2(coreCountX - 24f, rowY);
 
-            mementoCountLabel = CreateHudText("MementoCount", clusterAnchor, new Vector2(coreCountX - 30f, rowY), 9f, TextAlignmentOptions.MidlineRight, Muted);
+            mementoCountLabel = CreateHudText("MementoCount", progressRowRoot, new Vector2(coreCountX - 30f, rowY), 9f, TextAlignmentOptions.MidlineRight, Muted);
             EnsureMementoSeals(2);
         }
 
@@ -351,11 +360,12 @@ namespace TheLightenRoad.Sirac.Level1
 
             const float rowY = -68f;
             float baseX = -90f;
+            Transform parentRoot = progressRowRoot != null ? progressRowRoot : clusterAnchor;
             for (int i = 0; i < clamped; i++)
             {
                 int visualIdx = clamped - 1 - i;
                 float x = baseX - visualIdx * 13f;
-                var seal = CreateIcon($"MementoSeal_{i}", clusterAnchor, Level1PixelArt.MementoSealEmpty, new Vector2(11f, 11f), Muted, topRight: true);
+                var seal = CreateIcon($"MementoSeal_{i}", parentRoot, Level1PixelArt.MementoSealEmpty, new Vector2(11f, 11f), Ivory, topRight: true);
                 seal.rectTransform.anchoredPosition = new Vector2(x, rowY);
                 mementoSeals.Add(seal);
                 mementoPops.Add(0f);
@@ -412,7 +422,7 @@ namespace TheLightenRoad.Sirac.Level1
             filRt.anchorMax = new Vector2(0.5f, 1f);
             filRt.pivot = new Vector2(0.5f, 1f);
             filRt.anchoredPosition = new Vector2(0f, -22f);
-            filRt.sizeDelta = new Vector2(180f, 8f);
+            filRt.sizeDelta = new Vector2(184f, 23f);
 
             bannerFiligree = filGo.GetComponent<Image>();
             bannerFiligree.sprite = filigreeSprite;
@@ -551,7 +561,8 @@ namespace TheLightenRoad.Sirac.Level1
                 trackedSelectedEmber = selected;
             }
 
-            int displaySlots = Mathf.Max(3, carriedCount);
+            const float emberRowY = -39f;
+            const float emberStepX = 18f;
             int selectedIndex = -1;
 
             for (int i = 0; i < MaxEmberSlots; i++)
@@ -560,13 +571,17 @@ namespace TheLightenRoad.Sirac.Level1
                 var halo = emberHalos[i];
                 if (icon == null) continue;
 
-                bool showSlot = i < displaySlots;
+                bool showSlot = i < carriedCount && EmberInventory != null;
                 icon.enabled = showSlot;
 
-                if (i < carriedCount && EmberInventory != null)
+                if (showSlot)
                 {
+                    // Pack carried embers left-to-right flush against the right margin (-11f)
+                    float slotX = -11f - (carriedCount - 1 - i) * emberStepX;
+                    icon.rectTransform.anchoredPosition = new Vector2(slotX, emberRowY);
+
                     EmberColor col = EmberInventory.CarriedEmbers[i];
-                    icon.sprite = PixelSprites.EmberFull;
+                    icon.sprite = Level1PixelArt.VeinEmberCrystal;
                     Color tint = LanternLensController.GetEmberColorTint(col);
                     icon.color = usageBlocked ? Color.Lerp(tint, SuppressedSlate, 0.7f) : tint;
 
@@ -574,22 +589,18 @@ namespace TheLightenRoad.Sirac.Level1
                     if (isSel)
                     {
                         selectedIndex = i;
-                        if (!immediate && selectedIndex != trackedEmberCount)
-                        {
-                            selectorTargetX = -11f - i * 17f;
-                        }
+                        selectorTargetX = slotX;
                     }
 
                     if (halo != null)
                     {
+                        halo.rectTransform.anchoredPosition = new Vector2(slotX, emberRowY);
                         halo.enabled = !usageBlocked && isSel;
                         halo.color = new Color(tint.r, tint.g, tint.b, isSel ? 0.28f : 0f);
                     }
                 }
                 else
                 {
-                    icon.sprite = PixelSprites.EmberEmpty;
-                    icon.color = new Color(Muted.r, Muted.g, Muted.b, 0.32f);
                     if (halo != null) halo.enabled = false;
                 }
             }
@@ -599,7 +610,7 @@ namespace TheLightenRoad.Sirac.Level1
                 emberSelector.enabled = selectedIndex >= 0 && carriedCount > 0;
                 if (selectedIndex >= 0)
                 {
-                    selectorTargetX = -11f - selectedIndex * 17f;
+                    selectorTargetX = -11f - (carriedCount - 1 - selectedIndex) * emberStepX;
                     Color selTint = LanternLensController.GetEmberColorTint(selected);
                     emberSelector.color = usageBlocked ? Muted : Color.Lerp(selTint, Ivory, 0.45f);
                     if (immediate) selectorCurrentX = selectorTargetX;
@@ -610,13 +621,13 @@ namespace TheLightenRoad.Sirac.Level1
             {
                 string nextEmberText = carriedCount == 0
                     ? string.Empty
-                    : (usageBlocked ? "Sealed" : FormatEmberName(selected));
+                    : (usageBlocked ? "Embers Sealed" : FormatEmberName(selected));
                 if (lastEmberLabelText != nextEmberText)
                 {
                     lastEmberLabelText = nextEmberText;
                     emberLabel.text = nextEmberText;
                 }
-                float textShift = -11f - displaySlots * 17f - 6f;
+                float textShift = -11f - Mathf.Max(0, carriedCount - 1) * emberStepX - 14f;
                 emberLabel.rectTransform.anchoredPosition = new Vector2(textShift, -37f);
                 if (emberHintLabel != null)
                 {
@@ -642,7 +653,7 @@ namespace TheLightenRoad.Sirac.Level1
             {
                 bool lit = i < beams;
                 corePrisms[i].sprite = lit ? Level1PixelArt.CorePrismLit : Level1PixelArt.CorePrismEmpty;
-                corePrisms[i].color = lit ? NormalAmber : new Color(Muted.r, Muted.g, Muted.b, 0.42f);
+                corePrisms[i].color = lit ? NormalAmber : new Color(Ivory.r, Ivory.g, Ivory.b, 0.72f);
             }
             if (coreCountLabel != null && beams != lastDisplayedBeams)
             {
@@ -665,7 +676,7 @@ namespace TheLightenRoad.Sirac.Level1
                     Color relicColor = m != null && m.IsSecretMemento
                         ? new Color(0.84f, 0.64f, 1.0f, 1f)
                         : Ivory;
-                    mementoSeals[i].color = got ? relicColor : new Color(Muted.r, Muted.g, Muted.b, 0.42f);
+                    mementoSeals[i].color = got ? relicColor : new Color(Ivory.r, Ivory.g, Ivory.b, 0.72f);
                 }
             }
             if (collectedMementos != trackedMementoCount)
@@ -831,6 +842,15 @@ namespace TheLightenRoad.Sirac.Level1
                     ? targetEmberAlpha
                     : Mathf.MoveTowards(emberRowGroup.alpha, targetEmberAlpha, dt * 6f);
             }
+            if (progressRowRoot != null)
+            {
+                float targetY = trackedEmberCount > 0 ? 0f : 26f;
+                float currentY = progressRowRoot.anchoredPosition.y;
+                float nextY = (reduced || dt <= 0f)
+                    ? targetY
+                    : Mathf.Lerp(currentY, targetY, 1f - Mathf.Exp(-14f * dt));
+                progressRowRoot.anchoredPosition = new Vector2(0f, nextY);
+            }
 
             // Smooth Shadow Realm crimson monochrome wash + vignette
             float targetShadow = (ShadowRealm != null && ShadowRealm.IsPlayerInside) ? 1f : 0f;
@@ -882,9 +902,9 @@ namespace TheLightenRoad.Sirac.Level1
         {
             switch (lens)
             {
-                case LanternLensType.Ethereal: return "Ethereal";
-                case LanternLensType.Invert: return "Invert";
-                default: return "Amber";
+                case LanternLensType.Ethereal: return "Ethereal Lens";
+                case LanternLensType.Invert: return "Invert Lens";
+                default: return "Amber Lens";
             }
         }
 
@@ -892,9 +912,9 @@ namespace TheLightenRoad.Sirac.Level1
         {
             switch (color)
             {
-                case EmberColor.Orange: return "Amber";
-                case EmberColor.Cyan: return "Ethereal";
-                case EmberColor.Crimson: return "Invert";
+                case EmberColor.Orange: return "Orange Ember";
+                case EmberColor.Cyan: return "Cyan Ember";
+                case EmberColor.Crimson: return "Crimson Ember";
                 default: return string.Empty;
             }
         }

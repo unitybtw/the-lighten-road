@@ -20,8 +20,8 @@ namespace TheLightenRoad.Sirac.Level1
     {
         [Header("Jump & Ledge Calibration")]
         [SerializeField, Min(0.1f)] private float calibratedWalkSpeed = 3.5f;
-        [SerializeField, Min(0.1f)] private float calibratedJumpSpeed = 8.4f;
-        [SerializeField, Min(0.5f)] private float calibratedLedgeMaxHeight = 2.05f;
+        [SerializeField, Min(0.1f)] private float calibratedJumpSpeed = 9.2f;
+        [SerializeField, Min(0.5f)] private float calibratedLedgeMaxHeight = 2.25f;
 
         [Header("Flare Camera Pan")]
         [SerializeField, Min(0.5f)] private float panSpeed = 6.5f;
@@ -132,6 +132,12 @@ namespace TheLightenRoad.Sirac.Level1
             if (ledgeClimb != null && MaxLipHeightField != null)
             {
                 MaxLipHeightField.SetValue(ledgeClimb, calibratedLedgeMaxHeight);
+            }
+
+            var respawn = GetComponent<PlayerRespawnController>();
+            if (respawn != null)
+            {
+                respawn.KillOnFuelDepleted = false;
             }
         }
 
@@ -306,7 +312,12 @@ namespace TheLightenRoad.Sirac.Level1
                     if (ladder != null)
                     {
                         StartClimbing(ladder);
+                        return;
                     }
+                }
+                if (verticalInput > 0.5f && ledgeClimb != null && !ledgeClimb.IsClimbing)
+                {
+                    ledgeClimb.TryBeginClimb();
                 }
                 return;
             }
