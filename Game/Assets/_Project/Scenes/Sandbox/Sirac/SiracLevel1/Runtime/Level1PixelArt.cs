@@ -33,6 +33,7 @@ namespace TheLightenRoad.Sirac.Level1
         public static Sprite LensFrame => GetOrCreate("LensFrame", BuildLensFrameTexture);
         public static Sprite LensCore => GetOrCreate("LensCore", BuildLensCoreTexture);
         public static Sprite SelectorDiamond => GetOrCreate("SelectorDiamond", BuildSelectorDiamondTexture);
+        public static Sprite VeinEmberCrystal => GetOrCreate("VeinEmberCrystal", BuildVeinEmberCrystalTexture);
         public static Sprite MementoSealEmpty => GetOrCreate("MementoSealEmpty", () => BuildMementoSealTexture(false));
         public static Sprite MementoSealLit => GetOrCreate("MementoSealLit", () => BuildMementoSealTexture(true));
         public static Sprite CorePrismEmpty => GetOrCreate("CorePrismEmpty", () => BuildCorePrismTexture(false));
@@ -52,6 +53,12 @@ namespace TheLightenRoad.Sirac.Level1
         public static Sprite ArchiveWallTile => GetOrCreate("ArchiveWallTile", BuildArchiveWallTileTexture);
         public static Sprite HazardWater => GetOrCreate("HazardWater", BuildHazardWaterTexture);
         public static Sprite SecretDoor => GetOrCreate("SecretDoor", BuildSecretDoorTexture, new Vector4(3f, 3f, 3f, 3f));
+        public static Sprite SteelBookcase => GetOrCreate("SteelBookcase", BuildSteelBookcaseTexture);
+        public static Sprite NoticeBoard => GetOrCreate("NoticeBoard", BuildNoticeBoardTexture);
+        public static Sprite WallClock => GetOrCreate("WallClock", BuildWallClockTexture);
+        public static Sprite RoomSignPlate => GetOrCreate("RoomSignPlate", BuildRoomSignPlateTexture);
+        public static Sprite PlasterWallPatch => GetOrCreate("PlasterWallPatch", BuildPlasterWallPatchTexture);
+        public static Sprite RebarBeamEnd => GetOrCreate("RebarBeamEnd", BuildRebarBeamEndTexture);
 
         public static Sprite GetConduitPipe(ConduitPipeShape shape)
         {
@@ -81,9 +88,16 @@ namespace TheLightenRoad.Sirac.Level1
             yield return ("DarknessVeil", BuildDarknessVeilTexture(), new Vector4(3f, 3f, 3f, 3f));
             yield return ("BreakawayPlank", BuildBreakawayPlankTexture(), new Vector4(4f, 2f, 4f, 2f));
             yield return ("MementoRelic", BuildMementoSealTexture(true), Vector4.zero);
+            yield return ("VeinEmberCrystal", BuildVeinEmberCrystalTexture(), Vector4.zero);
             yield return ("ArchiveWallTile", BuildArchiveWallTileTexture(), Vector4.zero);
             yield return ("HazardWater", BuildHazardWaterTexture(), Vector4.zero);
             yield return ("SecretDoor", BuildSecretDoorTexture(), new Vector4(3f, 3f, 3f, 3f));
+            yield return ("SteelBookcase", BuildSteelBookcaseTexture(), Vector4.zero);
+            yield return ("NoticeBoard", BuildNoticeBoardTexture(), Vector4.zero);
+            yield return ("WallClock", BuildWallClockTexture(), Vector4.zero);
+            yield return ("RoomSignPlate", BuildRoomSignPlateTexture(), Vector4.zero);
+            yield return ("PlasterWallPatch", BuildPlasterWallPatchTexture(), Vector4.zero);
+            yield return ("RebarBeamEnd", BuildRebarBeamEndTexture(), Vector4.zero);
         }
 
         private static Sprite GetOrCreate(string key, System.Func<Texture2D> builder, Vector4 border = default)
@@ -196,6 +210,44 @@ namespace TheLightenRoad.Sirac.Level1
             return tex;
         }
 
+        private static Texture2D BuildVeinEmberCrystalTexture()
+        {
+            var tex = NewTex(12, 16);
+            for (int y = 1; y <= 14; y++)
+            {
+                int halfW;
+                if (y <= 3) halfW = y;
+                else if (y <= 10) halfW = 4;
+                else halfW = 15 - y;
+
+                for (int dx = -halfW; dx <= halfW; dx++)
+                {
+                    int x = 5 + dx;
+                    if (x < 0 || x >= 12) continue;
+                    bool edge = Mathf.Abs(dx) == halfW || y == 1 || y == 14;
+                    if (edge)
+                    {
+                        SetPx(tex, x, y, Ink);
+                    }
+                    else if (dx <= -1 && y >= 5 && y <= 11)
+                    {
+                        SetPx(tex, x, y, PureHi);
+                    }
+                    else if (dx <= 0 || y >= 9)
+                    {
+                        SetPx(tex, x, y, PureMid);
+                    }
+                    else
+                    {
+                        SetPx(tex, x, y, PureLow);
+                    }
+                }
+            }
+            SetPx(tex, 4, 10, PureHi);
+            SetPx(tex, 5, 11, PureHi);
+            return tex;
+        }
+
         private static Texture2D BuildMementoSealTexture(bool lit)
         {
             var tex = NewTex(11, 11);
@@ -211,16 +263,20 @@ namespace TheLightenRoad.Sirac.Level1
                 }
                 else if (m == 4)
                 {
-                    SetPx(tex, x, y, lit ? PureLow : IronDark);
+                    SetPx(tex, x, y, lit ? PureLow : IronLight);
                 }
                 else if (lit)
                 {
                     if (m <= 1) SetPx(tex, x, y, PureHi);
                     else SetPx(tex, x, y, y >= cy && x <= cx ? PureHi : PureMid);
                 }
+                else if (m == 3)
+                {
+                    SetPx(tex, x, y, IronMid);
+                }
                 else if (m <= 2)
                 {
-                    SetPx(tex, x, y, new Color32(42, 38, 36, 175));
+                    SetPx(tex, x, y, new Color32(42, 38, 36, 210));
                 }
             }
             return tex;
@@ -242,7 +298,8 @@ namespace TheLightenRoad.Sirac.Level1
                     }
                     else if (!lit)
                     {
-                        SetPx(tex, x, y, Mathf.Abs(dx) <= 1 ? new Color32(50, 46, 44, 190) : IronDark);
+                        bool rim = Mathf.Abs(dx) == halfW - 1 || y == 1 || y == 11;
+                        SetPx(tex, x, y, rim ? IronLight : new Color32(46, 42, 40, 210));
                     }
                     else
                     {
@@ -553,6 +610,174 @@ namespace TheLightenRoad.Sirac.Level1
                 SetPx(tex, 3, y, StoneLight);
                 SetPx(tex, 12, y, StoneLight);
             }
+            return tex;
+        }
+
+        private static Texture2D BuildSteelBookcaseTexture()
+        {
+            // 46x58 Maksim-palette desaturated steel 3-shelf archive bookcase
+            var tex = NewTex(46, 58);
+            var steelDark = new Color32(42, 44, 46, 255);
+            var steelMid = new Color32(76, 80, 84, 255);
+            var steelHi = new Color32(118, 122, 126, 255);
+            var cavity = new Color32(18, 19, 21, 255);
+            var bookA = new Color32(138, 140, 142, 255);
+            var bookB = new Color32(96, 98, 102, 255);
+            var bookC = new Color32(166, 168, 168, 255);
+
+            FillRect(tex, 0, 0, 45, 57, Ink);
+            FillRect(tex, 1, 1, 44, 56, steelDark);
+            FillRect(tex, 2, 2, 43, 55, steelMid);
+            FillRect(tex, 2, 54, 43, 55, steelHi);
+
+            // Three recessed shelf bays (y bottom->top: 4..18, 21..35, 38..52)
+            int[] shelfYs = { 4, 21, 38 };
+            for (int s = 0; s < shelfYs.Length; s++)
+            {
+                int y0 = shelfYs[s];
+                int y1 = y0 + 13;
+                FillRect(tex, 4, y0, 41, y1, Ink);
+                FillRect(tex, 5, y0 + 1, 40, y1 - 1, cavity);
+                // Glass glare & shelf ledge
+                FillRect(tex, 4, y0, 41, y0 + 1, steelHi);
+                if (s == 2)
+                {
+                    // Subtle cracked glass corner in top bay matching reference
+                    SetPx(tex, 7, y1 - 2, steelHi); SetPx(tex, 8, y1 - 3, steelHi);
+                    SetPx(tex, 9, y1 - 3, steelHi); SetPx(tex, 8, y1 - 4, steelHi);
+                    SetPx(tex, 10, y1 - 5, steelHi);
+                }
+
+                // Books & archive folders on shelf
+                int bx = s == 0 ? 7 : (s == 1 ? 15 : 8);
+                int count = s == 2 ? 7 : 6;
+                for (int b = 0; b < count; b++)
+                {
+                    int bw = (b % 3 == 1) ? 3 : 2;
+                    int bh = 7 + ((b * 3 + s * 2) % 5);
+                    if (bx + bw >= 39) break;
+                    Color32 col = b % 3 == 0 ? bookA : (b % 3 == 1 ? bookC : bookB);
+                    FillRect(tex, bx, y0 + 2, bx + bw - 1, y0 + 1 + bh, col);
+                    FillRect(tex, bx, y0 + 2, bx, y0 + 1 + bh, steelDark);
+                    bx += bw + (b == 2 ? 4 : 1);
+                }
+            }
+            return tex;
+        }
+
+        private static Texture2D BuildNoticeBoardTexture()
+        {
+            var tex = NewTex(36, 26);
+            var frame = new Color32(82, 85, 88, 255);
+            var backing = new Color32(148, 150, 152, 255);
+            var paper = new Color32(216, 214, 206, 255);
+            var line = new Color32(72, 74, 78, 255);
+            FillRect(tex, 0, 0, 35, 25, Ink);
+            FillRect(tex, 1, 1, 34, 24, frame);
+            FillRect(tex, 3, 3, 32, 22, Ink);
+            FillRect(tex, 4, 4, 31, 21, backing);
+            // Pinned documents
+            FillRect(tex, 6, 11, 12, 19, paper);
+            FillRect(tex, 14, 13, 21, 20, paper);
+            FillRect(tex, 23, 10, 29, 18, paper);
+            FillRect(tex, 9, 5, 16, 10, paper);
+            FillRect(tex, 19, 5, 26, 11, paper);
+            FillRect(tex, 7, 16, 11, 16, line);
+            FillRect(tex, 15, 17, 20, 17, line);
+            FillRect(tex, 24, 14, 28, 14, line);
+            return tex;
+        }
+
+        private static Texture2D BuildWallClockTexture()
+        {
+            var tex = NewTex(14, 14);
+            var face = new Color32(186, 188, 184, 255);
+            var rim = new Color32(72, 74, 78, 255);
+            float cx = 6.5f, cy = 6.5f;
+            for (int y = 0; y < 14; y++)
+            for (int x = 0; x < 14; x++)
+            {
+                float d = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                if (d > 6.6f) continue;
+                if (d >= 5.6f) SetPx(tex, x, y, Ink);
+                else if (d >= 4.7f) SetPx(tex, x, y, rim);
+                else SetPx(tex, x, y, face);
+            }
+            SetPx(tex, 6, 6, Ink);
+            SetPx(tex, 6, 8, Ink); SetPx(tex, 6, 9, Ink);
+            SetPx(tex, 8, 6, Ink); SetPx(tex, 9, 7, Ink);
+            return tex;
+        }
+
+        private static Texture2D BuildRoomSignPlateTexture()
+        {
+            var tex = NewTex(20, 6);
+            var plate = new Color32(68, 70, 74, 255);
+            var text = new Color32(178, 180, 176, 255);
+            FillRect(tex, 0, 0, 19, 5, Ink);
+            FillRect(tex, 1, 1, 18, 4, plate);
+            // Tiny glyph pixels for "LE401"
+            for (int x = 3; x <= 16; x += 3)
+            {
+                FillRect(tex, x, 2, x + 1, 3, text);
+            }
+            return tex;
+        }
+
+        private static Texture2D BuildPlasterWallPatchTexture()
+        {
+            // 320x128 crisp 32-PPU concrete plaster patch (10x4 units at 0.5 scale) with organic torn right edge & diagonal crack
+            const int w = 320, h = 128;
+            var tex = NewTex(w, h);
+            var concrete = new Color32(114, 118, 120, 255);
+            var mid = new Color32(94, 98, 100, 255);
+            var darkStain = new Color32(76, 80, 82, 255);
+            var edgeInk = new Color32(28, 30, 32, 255);
+
+            for (int y = 0; y < h; y++)
+            {
+                int cutX = 278 + (int)(Mathf.Sin(y * 0.08f) * 20f + Mathf.Cos(y * 0.21f) * 11f);
+                if (y > 92) cutX -= (y - 92) / 2;
+                for (int x = 0; x < w && x <= cutX; x++)
+                {
+                    if (x >= cutX - 1)
+                    {
+                        SetPx(tex, x, y, edgeInk);
+                        continue;
+                    }
+                    uint hash = (uint)(x * 73856093 ^ y * 19349663);
+                    bool speck = (hash % 23u) == 0u;
+                    bool topDamp = y > 108 && ((x + (int)(hash % 7u)) % 11 < 3);
+                    SetPx(tex, x, y, topDamp ? darkStain : (speck ? mid : concrete));
+                }
+            }
+
+            // Crisp 1-pixel diagonal hairline stress crack (matching 32-PPU prop line weight)
+            for (int i = 0; i < 118; i++)
+            {
+                int cx = 36 + i;
+                int cy = 96 - (i / 3) + ((i % 13 == 0) ? 1 : 0);
+                if (cx < 260) SetPx(tex, cx, cy, edgeInk);
+            }
+            // Secondary small crack lower right
+            for (int i = 0; i < 48; i++)
+            {
+                int cx = 175 + i;
+                int cy = 54 + (i / 4) - ((i % 9 == 0) ? 1 : 0);
+                if (cx < 265) SetPx(tex, cx, cy, edgeInk);
+            }
+            return tex;
+        }
+
+        private static Texture2D BuildRebarBeamEndTexture()
+        {
+            var tex = NewTex(16, 12);
+            var metal = new Color32(74, 76, 80, 255);
+            FillRect(tex, 0, 7, 13, 9, Ink);
+            FillRect(tex, 0, 8, 11, 8, metal);
+            FillRect(tex, 0, 2, 15, 4, Ink);
+            FillRect(tex, 0, 3, 13, 3, metal);
+            SetPx(tex, 13, 10, Ink); SetPx(tex, 14, 1, Ink);
             return tex;
         }
     }

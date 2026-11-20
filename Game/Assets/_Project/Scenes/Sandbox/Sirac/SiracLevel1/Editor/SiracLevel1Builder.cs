@@ -31,29 +31,144 @@ namespace TheLightenRoad.Sirac.Level1.Editor
     {
         public const string ScenePath = "Assets/_Project/Scenes/Sandbox/Sirac/SiracLevel1.unity";
         private const string FolderRoot = "Assets/_Project/Scenes/Sandbox/Sirac/SiracLevel1";
-        private const string PropsSheetPath = FolderRoot + "/Art/MaksimOfficeProps.png";
+        private const string PropsSheetPath = FolderRoot + "/Art/MaksimOfficePropsV2.png";
         private const string TileRoot = "Assets/_Project/Art/TileMaps/OfficeAnnex/Tiles";
 
         private static readonly (string Name, Rect Rect)[] MaksimPropRects =
         {
-            ("Sofa", new Rect(3, 83, 66, 33)),
-            ("Armchair_Right", new Rect(121, 83, 32, 33)),
-            ("Armchair_Front", new Rect(162, 83, 30, 33)),
-            ("Armchair_Left", new Rect(201, 83, 32, 33)),
-            ("WallShelf", new Rect(244, 111, 34, 5)),
-            ("FlowerPot", new Rect(94, 67, 25, 16)),
-            ("BooksSmall", new Rect(134, 68, 8, 10)),
-            ("BooksLarge", new Rect(144, 68, 11, 10)),
-            ("CoffeeTable", new Rect(159, 51, 37, 14)),
-            ("WaterCooler_Left", new Rect(242, 35, 16, 43)),
-            ("WaterCooler_Front", new Rect(264, 35, 15, 43)),
-            ("WaterCooler_Right", new Rect(285, 35, 16, 43)),
-            ("BrokenDebris", new Rect(94, 51, 31, 9)),
-            ("DeskLamp", new Rect(137, 51, 9, 12)),
-            ("LeakingBin", new Rect(204, 46, 11, 18)),
-            ("FilingCabinet_Right", new Rect(139, 3, 21, 29)),
-            ("FilingCabinet_Front", new Rect(169, 3, 16, 29)),
-            ("FilingCabinet_Left", new Rect(194, 3, 21, 29))
+            ("Drip_TallLeft", new Rect(21, 238, 22, 48)),
+            ("Drip_TopFork", new Rect(42, 274, 18, 61)),
+            ("Drip_PipeThin", new Rect(64, 255, 2, 16)),
+            ("WallBrick_Small", new Rect(71, 255, 11, 16)),
+            ("CopierMachine", new Rect(66, 287, 33, 48)),
+            ("DeskStand_Tall", new Rect(110, 303, 12, 16)),
+            ("DoubleTable", new Rect(94, 255, 62, 29)),
+            ("ArchiveLocker", new Rect(130, 303, 25, 32)),
+            ("Window_WideA", new Rect(162, 302, 31, 33)),
+            ("Window_Narrow", new Rect(200, 302, 25, 33)),
+            ("Window_WideB", new Rect(230, 302, 31, 33)),
+            ("LockerHalf", new Rect(160, 265, 16, 32)),
+            ("LockerOpen", new Rect(189, 264, 34, 34)),
+            ("Window_DoubleB", new Rect(229, 265, 31, 33)),
+            ("Door_Closed", new Rect(265, 268, 46, 67)),
+            ("Door_Open", new Rect(315, 268, 46, 67)),
+            ("Plant_SmallA", new Rect(367, 322, 13, 13)),
+            ("Plant_SmallB", new Rect(382, 322, 10, 12)),
+            ("Clipboard_Wall", new Rect(385, 301, 11, 9)),
+            ("DeskLamp_1", new Rect(368, 287, 13, 11)),
+            ("DeskLamp_2", new Rect(383, 287, 13, 11)),
+            ("DeskLamp_3", new Rect(369, 275, 13, 11)),
+            ("DeskLamp_4", new Rect(383, 275, 13, 11)),
+            ("Crystal_MedA", new Rect(402, 278, 17, 28)),
+            ("Crystal_LargeA", new Rect(420, 310, 22, 23)),
+            ("CollapseFrameA", new Rect(446, 305, 74, 30)),
+            ("CollapseFrameB", new Rect(449, 282, 71, 22)),
+            ("Tarp_Drape", new Rect(19, 181, 43, 53)),
+            ("Tarp_Corner", new Rect(66, 183, 16, 51)),
+            ("CRT_Top1", new Rect(86, 217, 23, 17)),
+            ("CRT_Top2", new Rect(111, 217, 20, 17)),
+            ("CRT_Top3", new Rect(132, 217, 23, 17)),
+            ("CRT_Bot1", new Rect(86, 196, 23, 17)),
+            ("CRT_Bot2", new Rect(111, 196, 20, 17)),
+            ("CRT_Bot3", new Rect(132, 196, 23, 17)),
+            ("Printer_1", new Rect(158, 218, 22, 14)),
+            ("Printer_2", new Rect(182, 217, 21, 13)),
+            ("Printer_3", new Rect(158, 203, 22, 14)),
+            ("Printer_4", new Rect(182, 203, 21, 13)),
+            ("FallenPillar", new Rect(207, 190, 65, 44)),
+            ("WaterCooler_Left", new Rect(276, 191, 16, 43)),
+            ("WaterCooler_Front", new Rect(296, 191, 16, 43)),
+            ("WaterCooler_Right", new Rect(316, 191, 15, 43)),
+            ("FallenChairPipe", new Rect(335, 194, 32, 40)),
+            ("FallenDeskSlab", new Rect(375, 195, 38, 39)),
+            ("Drip_WideTee", new Rect(417, 199, 34, 35)),
+            ("Crystal_LargeB", new Rect(456, 200, 31, 32)),
+            ("Crystal_MedB", new Rect(491, 200, 16, 27)),
+            ("Blinds_Window", new Rect(19, 143, 33, 34)),
+            ("Drip_Bracket", new Rect(56, 143, 12, 34)),
+            ("Sofa", new Rect(72, 144, 66, 33)),
+            ("Sofa_Ruined", new Rect(142, 144, 66, 33)),
+            ("Armchair_Left", new Rect(212, 144, 32, 33)),
+            ("Armchair_Right", new Rect(248, 144, 32, 33)),
+            ("Armchair_DmgA", new Rect(284, 144, 32, 33)),
+            ("Armchair_DmgB", new Rect(320, 144, 32, 33)),
+            ("GlassDoor_A", new Rect(356, 144, 31, 33)),
+            ("GlassDoor_B", new Rect(391, 144, 31, 33)),
+            ("Armchair_Front", new Rect(426, 144, 30, 33)),
+            ("Armchair_FrontDmg", new Rect(460, 144, 30, 33)),
+            ("Door_Shattered", new Rect(494, 144, 29, 33)),
+            ("LockerClosed_2", new Rect(19, 107, 25, 32)),
+            ("Crystal_LargeC", new Rect(48, 110, 27, 29)),
+            ("Cabinet_OpenBot", new Rect(79, 110, 25, 29)),
+            ("Cabinet_OpenTop", new Rect(108, 110, 25, 29)),
+            ("FilingCabinet_Left", new Rect(137, 110, 21, 29)),
+            ("FilingCabinet_Right", new Rect(162, 110, 21, 29)),
+            ("FilingCabinet_Front", new Rect(187, 110, 16, 29)),
+            ("Cabinet_Empty", new Rect(207, 110, 16, 29)),
+            ("Crystal_TinyA", new Rect(227, 112, 14, 11)),
+            ("Crystal_SlantR", new Rect(245, 111, 20, 26)),
+            ("Crystal_TallR", new Rect(266, 111, 19, 28)),
+            ("Desk_WideDrawA", new Rect(288, 112, 45, 27)),
+            ("Desk_WideDrawB", new Rect(337, 112, 45, 27)),
+            ("Desk_WideBackA", new Rect(386, 112, 45, 27)),
+            ("Desk_WideBackB", new Rect(435, 112, 45, 27)),
+            ("Desk_FrontA", new Rect(19, 76, 44, 27)),
+            ("Desk_FrontB", new Rect(67, 76, 44, 27)),
+            ("Desk_BackA", new Rect(115, 76, 44, 27)),
+            ("Desk_BackB", new Rect(163, 76, 44, 27)),
+            ("Tower_A", new Rect(211, 76, 16, 27)),
+            ("Tower_B", new Rect(231, 76, 16, 27)),
+            ("Tower_C", new Rect(251, 76, 15, 27)),
+            ("WallPanel_A", new Rect(270, 77, 32, 26)),
+            ("WallPanel_B", new Rect(305, 77, 33, 26)),
+            ("FallenUnit", new Rect(342, 77, 52, 26)),
+            ("WallPanel_C", new Rect(398, 77, 32, 26)),
+            ("JunctionBox_1", new Rect(434, 78, 18, 18)),
+            ("JunctionBox_2", new Rect(456, 78, 18, 25)),
+            ("JunctionBox_3", new Rect(478, 78, 25, 25)),
+            ("Crystal_LargeD", new Rect(19, 48, 22, 24)),
+            ("Crystal_SmallD", new Rect(44, 47, 12, 13)),
+            ("Chair_Right", new Rect(60, 48, 19, 24)),
+            ("Chair_Left", new Rect(83, 48, 19, 24)),
+            ("Console_1", new Rect(106, 51, 22, 21)),
+            ("Console_2", new Rect(128, 51, 23, 21)),
+            ("Console_3", new Rect(151, 51, 22, 21)),
+            ("BooksSmall", new Rect(177, 62, 8, 10)),
+            ("BooksLarge", new Rect(187, 62, 11, 10)),
+            ("CoffeeTable", new Rect(202, 53, 37, 14)),
+            ("LeakingBin", new Rect(243, 52, 19, 20)),
+            ("Tripod_Stand", new Rect(266, 53, 20, 19)),
+            ("FlowerPot", new Rect(290, 54, 25, 16)),
+            ("TowerRack_1", new Rect(323, 54, 16, 18)),
+            ("TowerRack_2", new Rect(343, 54, 16, 18)),
+            ("TowerRack_3", new Rect(363, 54, 16, 18)),
+            ("TowerRack_4", new Rect(383, 54, 16, 18)),
+            ("CabinetSlim_1", new Rect(403, 54, 9, 18)),
+            ("CabinetSlim_2", new Rect(416, 54, 9, 18)),
+            ("WallVent_Grid", new Rect(429, 55, 17, 17)),
+            ("CableLoop", new Rect(450, 56, 33, 16)),
+            ("WallSquare", new Rect(487, 56, 16, 16)),
+            ("PedestalSmall", new Rect(507, 56, 12, 16)),
+            ("PanelPlate_1", new Rect(19, 28, 11, 16)),
+            ("PanelPlate_2", new Rect(34, 28, 11, 16)),
+            ("Chair_TippedL", new Rect(49, 29, 27, 15)),
+            ("Chair_TippedR", new Rect(80, 29, 27, 15)),
+            ("Rubble_Angle", new Rect(111, 30, 27, 14)),
+            ("Crystal_SmallE", new Rect(142, 30, 16, 14)),
+            ("DeskLamp", new Rect(162, 32, 9, 12)),
+            ("WallShelf_Wide", new Rect(175, 33, 34, 11)),
+            ("Rubble_Slab", new Rect(213, 34, 47, 10)),
+            ("Rubble_Chunk", new Rect(264, 34, 11, 10)),
+            ("BrokenDebris", new Rect(279, 35, 31, 9)),
+            ("LightTube_Glow", new Rect(314, 35, 36, 9)),
+            ("CrystalStrip_1", new Rect(354, 34, 48, 10)),
+            ("CrystalStrip_2", new Rect(406, 35, 48, 9)),
+            ("CrystalStrip_3", new Rect(458, 37, 48, 7)),
+            ("Pipe_Double", new Rect(510, 37, 17, 7)),
+            ("CrystalStrip_4", new Rect(19, 17, 48, 7)),
+            ("Rubble_Tiny", new Rect(71, 18, 12, 6)),
+            ("WallShelf", new Rect(87, 19, 34, 5)),
+            ("LightTube_Flat", new Rect(125, 20, 34, 4))
         };
 
         private sealed class BuildContext
@@ -299,17 +414,26 @@ namespace TheLightenRoad.Sirac.Level1.Editor
 
             var carvedRects = new[]
             {
-                // Tier 2 (Upper Archive): Main Corridor, Blast Arch, Shaft Top Landing, Attic & Secret Vault, Sunken Pockets
-                new RectInt(0, 0, 48, 5),      // Upper Main Corridor (x: 0..48, y: 0..5)
+                // Tier 2 Left: Split-Deck Entrance (Lower LE401 Door Bay + Upper Mezzanine Deck + Open Atrium)
+                new RectInt(0, 0, 10, 4),      // Lower Entrance Bay (x: 0..10, y: 0..4; ceiling slab y: 4..5)
+                new RectInt(0, 5, 10, 4),      // Upper Mezzanine Bay (x: 0..10, y: 5..9)
+                new RectInt(10, 0, 5, 11),     // Open Atrium & Attic Chimney Shaft (x: 10..15, y: 0..11)
+
+                // Tier 2 Center: Dropped-Ceiling Archive Bookcase Gallery & East Corridor
+                new RectInt(15, 0, 12, 4),     // Bookcase Archive Gallery (x: 15..27, y: 0..4; dropped roof y: 4..5)
+                new RectInt(27, 0, 21, 5),     // Upper East Corridor & Flooded Hall (x: 27..48, y: 0..5)
                 new RectInt(48, 0, 1, 3),      // Blast Door Archway (x: 48..49, y: 0..3)
                 new RectInt(49, 0, 4, 5),      // Shaft Top Landing (x: 49..53, y: 0..5)
-                new RectInt(19, 5, 4, 3),      // Attic Chimney (x: 19..23, y: 5..8)
-                new RectInt(13, 8, 13, 5),     // Attic Conduit Chamber (x: 13..26, y: 8..13)
-                new RectInt(26, 8, 1, 3),      // Attic Secret Archway (x: 26..27, y: 8..11)
-                new RectInt(27, 8, 5, 5),      // Attic Secret Vault (x: 27..32, y: 8..13)
-                new RectInt(22, -5, 5, 5),     // Pocket 1 / Sunken Vein Chamber (x: 22..27, y: -5..0)
-                new RectInt(30, -3, 12, 3),    // Pocket 2 / Flooded Hall (x: 30..42, y: -3..0)
-                new RectInt(32, -4, 7, 1),     // Pocket 2 Water Trough (x: 32..39, y: -4..-3)
+
+                // Attic Conduit Wing (x: 11..30, y: 11..16; 2 solid masonry tiles above Upper Mezzanine)
+                new RectInt(11, 11, 13, 5),    // Attic Conduit Chamber (x: 11..24, y: 11..16)
+                new RectInt(24, 11, 1, 3),     // Attic Secret Archway (x: 24..25, y: 11..14)
+                new RectInt(25, 11, 5, 5),     // Attic Secret Vault (x: 25..30, y: 11..16)
+
+                // Sunken Tier 2 Pockets (safely >= 3 solid tiles above Mirror Vault ceiling y = -8)
+                new RectInt(27, -5, 5, 5),     // Pocket 1 / Sunken Vein Chamber (x: 27..32, y: -5..0)
+                new RectInt(34, -3, 11, 3),    // Pocket 2 / Flooded Hall (x: 34..45, y: -3..0)
+                new RectInt(36, -4, 7, 1),     // Pocket 2 Water Trough (x: 36..43, y: -4..-3)
 
                 // East Vertical Shaft & Mid-Shaft Ember Alcove
                 new RectInt(53, -15, 5, 20),   // East Vertical Shaft (x: 53..58, y: -15..5)
@@ -343,10 +467,6 @@ namespace TheLightenRoad.Sirac.Level1.Editor
                     for (int y = r.yMin - 4; y < r.yMax + 4; y++)
                         solidCells.Add(new Vector3Int(x, y, 0));
             }
-            // Seal the 1-tile seam between Tier 2 West floor (-4) and Sanctuary ceiling (-5)
-            for (int x = -4; x < 18; x++)
-                for (int y = -6; y < -3; y++)
-                    solidCells.Add(new Vector3Int(x, y, 0));
             solidCells.ExceptWith(carved);
 
             var solidMap = CreateTilemap(ctx, grid, "Terrain - Carved Masonry", true, 0, Color.white);
@@ -367,7 +487,7 @@ namespace TheLightenRoad.Sirac.Level1.Editor
 
             ctx.CarvedAirRects = carvedRects.Select(r => new Rect(r.x, r.y, r.width, r.height)).ToArray();
 
-            // Clean matte dark slate rear wall only behind carved rooms (+1 border overlap behind bevel edges)
+            // Deep raw charcoal concrete behind peeled walls & open shafts
             var rearCells = new HashSet<Vector3Int>();
             foreach (var p in carved)
             {
@@ -376,7 +496,7 @@ namespace TheLightenRoad.Sirac.Level1.Editor
                         rearCells.Add(p + new Vector3Int(dx, dy, 0));
             }
 
-            var rearWall = CreateTilemap(ctx, grid, "Rear Office Wall", false, -45, new Color(0.28f, 0.31f, 0.36f, 1f));
+            var rearWall = CreateTilemap(ctx, grid, "Rear Office Wall", false, -45, new Color(0.16f, 0.17f, 0.19f, 1f));
             foreach (var cell in rearCells)
             {
                 rearWall.SetTile(cell, ctx.RearWallTile != null ? ctx.RearWallTile : ctx.Tiles[2][4]);
@@ -419,7 +539,26 @@ namespace TheLightenRoad.Sirac.Level1.Editor
 
         private static void BuildBackdropDetails(BuildContext ctx)
         {
-            // Carved stone rooms read cleanly on their own without fake trim or pilaster quads.
+            // Reference-style weathered concrete plaster backing (crisp 32-PPU pixel parity, organic torn edges)
+            AddPlasterBacking(ctx, "Plaster Backing / Entrance Lower", new Vector2(5.15f, 2.0f), new Vector2(0.55f, 0.52f), false);
+            AddPlasterBacking(ctx, "Plaster Backing / Entrance Upper", new Vector2(5.15f, 7.0f), new Vector2(0.55f, 0.52f), false);
+            AddPlasterBacking(ctx, "Plaster Backing / Archive Gallery", new Vector2(22.15f, 2.0f), new Vector2(0.72f, 0.52f), true);
+            AddPlasterBacking(ctx, "Plaster Backing / East Lounge", new Vector2(44.2f, 2.5f), new Vector2(0.54f, 0.65f), true);
+            AddPlasterBacking(ctx, "Plaster Backing / Attic", new Vector2(17.5f, 13.5f), new Vector2(0.65f, 0.65f), false);
+            AddPlasterBacking(ctx, "Plaster Backing / Sanctuary", new Vector2(6.5f, -12.0f), new Vector2(0.66f, 0.78f), false);
+
+            // Exposed jagged rebar ends protruding off the Mezzanine slab right tip
+            AddWorldArtProp(ctx, "Mezzanine Slab Rebar Ends", "RebarBeamEnd", new Vector2(10.35f, 4.50f), 1, scale: 0.72f, parent: ctx.ArchitectureGroup);
+        }
+
+        private static void AddPlasterBacking(BuildContext ctx, string name, Vector2 pos, Vector2 scale, bool flipX)
+        {
+            var r = AddWorldArtProp(ctx, name, "PlasterWallPatch", pos, -35, scale: 1f, parent: ctx.ArchitectureGroup, flipX: flipX);
+            if (r != null)
+            {
+                r.transform.localScale = new Vector3(scale.x, scale.y, 1f);
+                r.color = new Color(0.84f, 0.85f, 0.86f, 1f);
+            }
         }
 
         private static void BuildPlayerAndCamera(BuildContext ctx)
@@ -427,7 +566,7 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/PlayerPrototype.prefab");
             var playerGo = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab);
             playerGo.tag = "Player";
-            playerGo.transform.position = new Vector3(2.2f, 0.85f, 0f);
+            playerGo.transform.position = new Vector3(4.0f, 0.85f, 0f);
             ctx.Player = playerGo.GetComponent<PlayerRespawnController>();
             ctx.Player.SpawnPosition = playerGo.transform.position;
             ctx.Player.VoidKillY = -32f;
@@ -480,56 +619,116 @@ namespace TheLightenRoad.Sirac.Level1.Editor
 
         private static void BuildFurnitureAndWindows(BuildContext ctx)
         {
-            // Tier 2 West Lounge & Corridor (solid floor y = 0, x = 0..22)
-            AddMaksimProp(ctx, "Reception Sofa", "Sofa", new Vector2(4.2f, 0f), -2);
-            AddMaksimProp(ctx, "Lounge Coffee Table", "CoffeeTable", new Vector2(6.2f, 0f), -2);
-            AddMaksimProp(ctx, "Lounge Desk Lamp", "DeskLamp", new Vector2(6.2f, 0.4375f), -1);
-            AddMaksimProp(ctx, "Lounge Armchair Left", "Armchair_Left", new Vector2(7.7f, 0f), -2);
-            AddMaksimProp(ctx, "Lounge Potted Plant", "FlowerPot", new Vector2(9.0f, 0f), -2);
-            AddOfisProp(ctx, "Reception Desk", "ofis_0", new Vector2(11.0f, 0.516f), -2);
-            AddOfisProp(ctx, "Reception Cracked PC", "ofis_4", new Vector2(11.05f, 1.42f), -1);
-            AddMaksimProp(ctx, "Reception Water Cooler", "WaterCooler_Right", new Vector2(12.9f, 0f), -2);
-            AddMaksimProp(ctx, "Lounge Wall Shelf", "WallShelf", new Vector2(4.2f, 2.75f), -4);
-            AddMaksimProp(ctx, "Shelf Books Small", "BooksSmall", new Vector2(3.85f, 2.906f), -3);
-            AddMaksimProp(ctx, "Shelf Books Large", "BooksLarge", new Vector2(4.45f, 2.906f), -3);
-            AddMaksimProp(ctx, "Landing Filing Cabinet", "FilingCabinet_Right", new Vector2(15.6f, 0f), -2);
-            AddMaksimProp(ctx, "Landing Floor Debris", "BrokenDebris", new Vector2(17.4f, 0f), -2);
-            AddOfisProp(ctx, "Archive Window West", "ofis_3", new Vector2(8.2f, 2.85f), -10, 1.0f);
-            AddOfisProp(ctx, "Archive Air Vent West", "ofis_5", new Vector2(16.5f, 3.65f), -10);
+            // === TIER 2 WEST: REFERENCE LOWER RECEPTION BAY (x: 0..10, y: 0..4) ===
+            AddMaksimProp(ctx, "Entrance Door LE401", "Door_Closed", new Vector2(1.85f, 0f), -3);
+            AddWorldArtProp(ctx, "Door Transom LE401", "RoomSignPlate", new Vector2(1.85f, 2.18f), -2, scale: 0.5f);
+            AddWorldArtProp(ctx, "Entrance Notice Board", "NoticeBoard", new Vector2(4.15f, 1.55f), -3, scale: 0.5f);
+            AddWorldArtProp(ctx, "Entrance Wall Clock", "WallClock", new Vector2(6.05f, 2.25f), -3, scale: 0.5f);
+            AddMaksimProp(ctx, "Entrance Leaking Bin", "LeakingBin", new Vector2(5.45f, 0f), -2);
+            AddMaksimProp(ctx, "Entrance Small Plant", "Plant_SmallA", new Vector2(6.95f, 0f), -2);
+            AddMaksimProp(ctx, "Entrance Reception Counter", "Desk_FrontA", new Vector2(8.85f, 0f), -2);
+            AddMaksimProp(ctx, "Entrance Counter CRT", "CRT_Top1", new Vector2(8.55f, 0.84f), -1);
+            AddMaksimProp(ctx, "Entrance Counter Printer", "Printer_1", new Vector2(9.20f, 0.84f), -1);
+            AddCeilingDrip(ctx, "Entrance Left Seam Drip", "Drip_TallLeft", 0.50f, 4.0f, -4);
+            AddCeilingDrip(ctx, "Entrance Ceiling Drip", "Drip_TopFork", 7.15f, 4.0f, -4);
 
-            // Tier 2 East Landing (solid floor y = 0, x = 42..48)
-            AddMaksimProp(ctx, "Upper East Armchair", "Armchair_Front", new Vector2(44.0f, 0f), -2);
-            AddMaksimProp(ctx, "Upper East Water Cooler", "WaterCooler_Front", new Vector2(45.3f, 0f), -2);
-            AddMaksimProp(ctx, "Upper East Filing Cabinet", "FilingCabinet_Right", new Vector2(46.4f, 0f), -2);
-            AddOfisProp(ctx, "Archive Window East", "ofis_3", new Vector2(44.8f, 2.85f), -10, 1.0f);
+            // === TIER 2 UPPER MEZZANINE DECK (x: 0..10, y: 5..9) ===
+            AddMaksimProp(ctx, "Mezzanine Copier Unit", "CopierMachine", new Vector2(1.25f, 5.0f), -2);
+            AddMaksimProp(ctx, "Mezzanine Rolling Chair", "Chair_Right", new Vector2(2.50f, 5.0f), -2);
+            AddMaksimProp(ctx, "Mezzanine Workstation Desk", "Desk_WideDrawA", new Vector2(4.25f, 5.0f), -2);
+            AddMaksimProp(ctx, "Mezzanine CRT Monitor", "CRT_Bot1", new Vector2(3.85f, 5.84f), -1);
+            AddMaksimProp(ctx, "Mezzanine PC Tower", "Tower_A", new Vector2(4.55f, 5.84f), -1);
+            AddMaksimProp(ctx, "Mezzanine Printer", "Printer_2", new Vector2(5.10f, 5.84f), -1);
+            AddMaksimProp(ctx, "Mezzanine Wall Shelf", "WallShelf", new Vector2(2.60f, 7.25f), -4);
+            AddMaksimProp(ctx, "Mezzanine Shelf Books", "BooksSmall", new Vector2(2.30f, 7.40f), -3);
+            AddMaksimProp(ctx, "Mezzanine Wall Clipboard", "Clipboard_Wall", new Vector2(7.05f, 7.25f), -4);
+            AddMaksimProp(ctx, "Mezzanine Tipped Chair", "Chair_TippedL", new Vector2(6.55f, 5.0f), -2);
+            AddMaksimProp(ctx, "Mezzanine Collapsed Frame", "CollapseFrameA", new Vector2(8.45f, 5.0f), -2);
+            AddMaksimProp(ctx, "Mezzanine Floor Rubble", "Rubble_Slab", new Vector2(5.75f, 5.0f), -3);
+            AddCeilingDrip(ctx, "Mezzanine Ceiling Drip", "Drip_Bracket", 0.55f, 9.0f, -4);
 
-            // Attic Chamber (floor y = 8)
-            AddMaksimProp(ctx, "Attic Filing Cabinet", "FilingCabinet_Front", new Vector2(18.1f, 8f), -2);
-            AddMaksimProp(ctx, "Attic Armchair", "Armchair_Right", new Vector2(24.4f, 8f), -2);
-            AddMaksimProp(ctx, "Attic Vault Books", "BooksLarge", new Vector2(31.0f, 8f), -2);
-            AddOfisProp(ctx, "Attic Air Vent", "ofis_5", new Vector2(28.8f, 11.4f), -10);
+            // === DROPPED-CEILING BOOKCASE ARCHIVE GALLERY (x: 15..27, y: 0..4) ===
+            AddMaksimProp(ctx, "Gallery Ruined Desk", "Desk_FrontB", new Vector2(16.05f, 0f), -2);
+            AddMaksimProp(ctx, "Gallery Ruined CRT", "CRT_Bot2", new Vector2(16.05f, 0.84f), -1);
+            AddMaksimProp(ctx, "Gallery Tipped Chair", "Chair_TippedR", new Vector2(17.15f, 0f), -2);
+            AddWorldArtProp(ctx, "Archive Bookcase West", "SteelBookcase", new Vector2(18.55f, 0.90f), -3, scale: 0.50f);
+            AddWorldArtProp(ctx, "Archive Bookcase East", "SteelBookcase", new Vector2(21.15f, 0.90f), -3, scale: 0.50f);
+            AddMaksimProp(ctx, "Gallery Fallen Tilted Locker", "FallenPillar", new Vector2(22.80f, 0f), -2);
+            AddMaksimProp(ctx, "Gallery Air Vent", "WallVent_Grid", new Vector2(23.55f, 2.55f), -10);
+            AddCeilingDrip(ctx, "Gallery Ceiling Drip", "Drip_WideTee", 24.35f, 4.0f, -4);
+            AddMaksimProp(ctx, "Gallery Open Drawers", "Cabinet_OpenTop", new Vector2(24.30f, 0f), -3);
+            AddMaksimProp(ctx, "Gallery Draped Tarp", "Tarp_Drape", new Vector2(24.32f, 0f), -2);
+            AddMaksimProp(ctx, "Gallery Corner Copier", "CopierMachine", new Vector2(25.75f, 0f), -2);
+            AddMaksimProp(ctx, "Gallery Floor Debris", "BrokenDebris", new Vector2(21.95f, 0f), -2);
 
-            // Sunken Pocket 1 & Flooded Pocket 2
-            AddMaksimProp(ctx, "Pocket 1 Broken Debris", "BrokenDebris", new Vector2(22.9f, -5f), -2);
-            AddOfisProp(ctx, "Pocket 2 Desk", "ofis_0", new Vector2(39.8f, -2.485f), -3);
-            AddMaksimProp(ctx, "Pocket 2 Water Cooler", "WaterCooler_Left", new Vector2(30.8f, -3f), -3);
+            // === UPPER EAST LOUNGE & CORRIDOR (x: 27..48, y: 0..5) ===
+            AddMaksimProp(ctx, "Flooded Junction Control", "JunctionBox_1", new Vector2(33.0f, 2.25f), -4);
+            AddMaksimProp(ctx, "Flooded Conduit Cable", "CableLoop", new Vector2(32.5f, 1.55f), -5);
+            AddMaksimProp(ctx, "East Lounge Corrugated Panel", "WallPanel_A", new Vector2(43.2f, 2.4f), -12);
+            AddMaksimProp(ctx, "East Lounge Sofa Ruined", "Sofa_Ruined", new Vector2(44.8f, 0f), -2);
+            AddMaksimProp(ctx, "East Lounge Coffee Table", "CoffeeTable", new Vector2(46.5f, 0f), -2);
+            AddMaksimProp(ctx, "East Lounge Desk Lamp", "DeskLamp", new Vector2(46.5f, 0.4375f), -1);
+            AddMaksimProp(ctx, "East Lounge Water Cooler", "WaterCooler_Front", new Vector2(47.55f, 0f), -2);
+            AddMaksimProp(ctx, "East Lounge Cracked Window", "Window_WideA", new Vector2(45.6f, 2.55f), -10);
+            AddMaksimProp(ctx, "Shaft Landing Shutter", "Blinds_Window", new Vector2(51.2f, 2.4f), -10);
 
-            // Tier 1 Lower Wing & Central Core Sanctuary (floor y = -15)
-            AddMaksimProp(ctx, "Sanctuary Sofa", "Sofa", new Vector2(9.6f, -15f), -2);
-            AddMaksimProp(ctx, "Sanctuary Coffee Table", "CoffeeTable", new Vector2(7.6f, -15f), -2);
+            // === ATTIC CONDUIT WING (x: 11..30, y: 11..16) ===
+            AddMaksimProp(ctx, "Attic Conduit Wall Panel", "WallPanel_B", new Vector2(16.8f, 13.0f), -12);
+            AddMaksimProp(ctx, "Attic Junction Box", "JunctionBox_2", new Vector2(15.2f, 13.2f), -4);
+            AddMaksimProp(ctx, "Attic Server Tower", "TowerRack_1", new Vector2(14.5f, 11.0f), -2);
+            AddMaksimProp(ctx, "Attic Filing Cabinet", "FilingCabinet_Front", new Vector2(21.4f, 11.0f), -2);
+            AddMaksimProp(ctx, "Attic Armchair Damaged", "Armchair_DmgA", new Vector2(23.1f, 11.0f), -2);
+            AddMaksimProp(ctx, "Attic Vault Locker", "LockerOpen", new Vector2(28.6f, 11.0f), -2);
+            AddMaksimProp(ctx, "Attic Vault Books", "BooksLarge", new Vector2(27.3f, 11.0f), -2);
+            AddMaksimProp(ctx, "Attic Air Vent", "WallVent_Grid", new Vector2(26.8f, 14.3f), -10);
+
+            // === SUNKEN POCKETS (Pocket 1 y=-5 & Pocket 2 y=-3) ===
+            AddMaksimProp(ctx, "Pocket 1 Junction Box", "JunctionBox_3", new Vector2(28.5f, -2.5f), -4);
+            AddMaksimProp(ctx, "Pocket 1 Wall Panel", "WallPanel_C", new Vector2(30.4f, -3.2f), -12);
+            AddMaksimProp(ctx, "Pocket 1 Broken Debris", "BrokenDebris", new Vector2(27.8f, -5.0f), -2);
+            AddMaksimProp(ctx, "Pocket 2 Water Cooler", "WaterCooler_Left", new Vector2(34.7f, -3.0f), -3);
+            AddMaksimProp(ctx, "Pocket 2 Fallen Slab", "FallenDeskSlab", new Vector2(43.2f, -3.0f), -3);
+
+            // === TIER 1 LOWER WING, MIRROR VAULT, GHOST BAY & CORE SANCTUARY (y: -15) ===
+            AddMaksimProp(ctx, "Archive Exit Door", "Door_Open", new Vector2(2.0f, -15.0f), -3);
+            AddMaksimProp(ctx, "Sanctuary Glass Window", "GlassDoor_A", new Vector2(10.0f, -11.4f), -10);
+            AddMaksimProp(ctx, "Sanctuary Sofa", "Sofa", new Vector2(9.6f, -15.0f), -2);
+            AddMaksimProp(ctx, "Sanctuary Coffee Table", "CoffeeTable", new Vector2(7.6f, -15.0f), -2);
             AddMaksimProp(ctx, "Sanctuary Table Lamp", "DeskLamp", new Vector2(7.6f, -14.5625f), -1);
-            AddMaksimProp(ctx, "Sanctuary Filing Cabinet", "FilingCabinet_Right", new Vector2(4.2f, -15f), -2);
-            AddOfisProp(ctx, "Sanctuary Window", "ofis_3", new Vector2(10.0f, -11.4f), -10, 1.0f);
-            AddOfisProp(ctx, "Archive Exit Door", "ofis_2", new Vector2(2.0f, -13.5f), -2);
+            AddMaksimProp(ctx, "Sanctuary Filing Cabinet", "FilingCabinet_Right", new Vector2(4.2f, -15.0f), -2);
+            AddMaksimProp(ctx, "Sanctuary Server Stack", "TowerRack_2", new Vector2(11.4f, -15.0f), -2);
 
-            AddMaksimProp(ctx, "Approach Potted Plant", "FlowerPot", new Vector2(16.5f, -15f), -2);
-            AddMaksimProp(ctx, "Ghost Annex Cabinet", "FilingCabinet_Left", new Vector2(42.5f, -15f), -2);
-            AddMaksimProp(ctx, "Ghost Bay Leaking Bin", "LeakingBin", new Vector2(47.2f, -15f), -2);
+            AddMaksimProp(ctx, "Approach Potted Plant", "FlowerPot", new Vector2(16.5f, -15.0f), -2);
+            AddMaksimProp(ctx, "Approach Broken Chair", "Chair_TippedL", new Vector2(20.5f, -15.0f), -2);
+            AddMaksimProp(ctx, "Mirror Vault Console", "Console_1", new Vector2(26.5f, -15.0f), -2);
+            AddMaksimProp(ctx, "Mirror Vault Fallen Unit", "FallenUnit", new Vector2(38.0f, -15.0f), -2);
+            AddMaksimProp(ctx, "Ghost Annex Cabinet", "FilingCabinet_Left", new Vector2(42.5f, -15.0f), -2);
+            AddMaksimProp(ctx, "Ghost Annex Tarp Corner", "Tarp_Corner", new Vector2(41.4f, -15.0f), -2);
+            AddMaksimProp(ctx, "Ghost Bay Leaking Bin", "LeakingBin", new Vector2(47.2f, -15.0f), -2);
+            AddMaksimProp(ctx, "Ghost Bay Shattered Door", "Door_Shattered", new Vector2(51.4f, -15.0f), -3);
 
-            // Deep Shadow Vault (floor y = -25)
-            AddMaksimProp(ctx, "Shadow Debris", "BrokenDebris", new Vector2(33.5f, -25f), -2);
-            AddMaksimProp(ctx, "Shadow Leaking Bin", "LeakingBin", new Vector2(40.8f, -25f), -2);
-            AddMaksimProp(ctx, "Shadow Filing Cabinet", "FilingCabinet_Front", new Vector2(46.0f, -25f), -2);
+            // === DEEP SHADOW VAULT (y: -25) ===
+            AddMaksimProp(ctx, "Shadow Collapse Debris", "CollapseFrameB", new Vector2(31.2f, -25.0f), -2);
+            AddMaksimProp(ctx, "Shadow Debris", "Rubble_Angle", new Vector2(34.2f, -25.0f), -2);
+            AddMaksimProp(ctx, "Shadow Leaking Bin", "LeakingBin", new Vector2(40.8f, -25.0f), -2);
+            AddMaksimProp(ctx, "Shadow Open Cabinet", "Cabinet_OpenBot", new Vector2(44.2f, -25.0f), -2);
+            AddMaksimProp(ctx, "Shadow Filing Cabinet", "FilingCabinet_Front", new Vector2(46.0f, -25.0f), -2);
+            AddCeilingDrip(ctx, "Shadow Ceiling Drip", "Drip_TallLeft", 35.0f, -19.0f, -4);
+
+            // === GROWING EMBER CRYSTAL CLUSTERS & FLOOR SHARDS (matching Reference) ===
+            AddCrystalCluster(ctx, "Crystal Entrance Corner", "Crystal_MedA", new Vector2(0.72f, 0f), -1, 0.58f, 3.0f);
+            AddCrystalCluster(ctx, "Crystal Entrance Floor Strip", "CrystalStrip_1", new Vector2(1.05f, 0f), -1, 0f, 0f);
+            AddCrystalCluster(ctx, "Crystal Entrance Left Wall", "Crystal_SmallE", new Vector2(0.12f, 2.25f), -1, 0.32f, 2.2f, rotationZ: -90f);
+            AddCrystalCluster(ctx, "Crystal Mezzanine Corner", "Crystal_SmallD", new Vector2(0.12f, 6.85f), -1, 0.30f, 2.0f, rotationZ: -90f);
+            AddCrystalCluster(ctx, "Crystal Gallery Bookcase Left", "Crystal_LargeB", new Vector2(19.42f, 0f), -1, 0.56f, 3.0f);
+            AddCrystalCluster(ctx, "Crystal Gallery Bookcase Right", "Crystal_SmallD", new Vector2(20.25f, 0f), -1, 0f, 0f);
+            AddCrystalCluster(ctx, "Crystal Gallery Floor Strip A", "CrystalStrip_2", new Vector2(19.85f, 0f), -1, 0f, 0f);
+            AddCrystalCluster(ctx, "Crystal Gallery Floor Strip B", "CrystalStrip_3", new Vector2(26.15f, 0f), -1, 0f, 0f);
+            AddCrystalCluster(ctx, "Crystal Gallery Right Wall", "Crystal_MedB", new Vector2(26.82f, 1.95f), -1, 0.48f, 2.8f, rotationZ: 90f);
+            AddCrystalCluster(ctx, "Crystal Corridor East", "Crystal_TallR", new Vector2(47.75f, 0f), -1, 0.42f, 2.5f);
+            AddCrystalCluster(ctx, "Crystal Mid-Shaft Alcove", "Crystal_LargeC", new Vector2(52.2f, -8.0f), -1, 0.50f, 2.8f);
+            AddCrystalCluster(ctx, "Crystal Mirror Vault", "Crystal_LargeD", new Vector2(36.2f, -15.0f), -1, 0.45f, 2.8f);
+            AddCrystalCluster(ctx, "Crystal Ghost Bay Strip", "CrystalStrip_4", new Vector2(49.8f, -15.0f), -1, 0.32f, 2.2f);
         }
 
         private static void BuildLightingAndAtmosphere(BuildContext ctx)
@@ -539,23 +738,22 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             var ambient = ambientGo.GetComponent<Light2D>();
             ambient.lightType = Light2D.LightType.Global;
             ambient.intensity = 0.045f;
-            ambient.color = new Color(0.55f, 0.65f, 0.82f);
+            ambient.color = new Color(0.55f, 0.62f, 0.76f);
 
             // Subtle nocturnal window & alcove accents
-            AddPointLight(ctx, "Moonlight West Window", new Vector2(8.2f, 2.85f), new Color(0.45f, 0.65f, 0.95f), 0.20f, 4.0f);
-            AddPointLight(ctx, "Moonlight East Window", new Vector2(44.8f, 2.85f), new Color(0.45f, 0.65f, 0.95f), 0.18f, 4.0f);
+            AddPointLight(ctx, "Moonlight East Window", new Vector2(45.6f, 2.55f), new Color(0.45f, 0.65f, 0.95f), 0.18f, 4.0f);
             AddPointLight(ctx, "Moonlight Sanctuary Window", new Vector2(10.0f, -11.4f), new Color(0.45f, 0.65f, 0.95f), 0.22f, 4.2f);
             AddPointLight(ctx, "Shaft Mid Alcove Glow", new Vector2(51.5f, -6.2f), new Color(0.88f, 0.42f, 0.38f), 0.35f, 3.2f);
 
             // Desk lamp warm pools
-            AddPointLight(ctx, "Lounge Lamp Glow", new Vector2(6.2f, 0.70f), new Color(1.0f, 0.72f, 0.38f), 0.52f, 3.0f);
+            AddPointLight(ctx, "East Lounge Lamp Glow", new Vector2(46.5f, 0.70f), new Color(1.0f, 0.72f, 0.38f), 0.48f, 3.0f);
             AddPointLight(ctx, "Sanctuary Lamp Glow", new Vector2(7.6f, -14.30f), new Color(1.0f, 0.72f, 0.38f), 0.52f, 3.0f);
 
             // Swaying hanging cage lamps hung cleanly below carved ceilings
             var cagePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/HangingCageLamp.prefab");
             foreach (var pos in new[]
             {
-                new Vector2(4.2f, 4.4f),
+                new Vector2(12.2f, 10.4f),
                 new Vector2(55.5f, 4.4f),
                 new Vector2(42.5f, -10.5f),
                 new Vector2(16.5f, -10.5f)
@@ -565,20 +763,35 @@ namespace TheLightenRoad.Sirac.Level1.Editor
                 lamp.transform.position = pos;
             }
 
-            // Overhead Office Fluorescent tubes flush below chamber ceilings
+            // Overhead Office Fluorescent tubes flush below chamber ceilings (single Maksim sprite per fixture)
             var officeLightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/OfficeLight.prefab");
-            void AddFluorescent(string name, Vector2 pos, FluorescentBehavior behavior)
+            void AddFluorescent(string name, Vector2 pos, FluorescentBehavior behavior, float rotationZ = 0f, string spriteOverride = null)
             {
                 var tube = (GameObject)PrefabUtility.InstantiatePrefab(officeLightPrefab, ctx.LightsGroup);
                 tube.name = name;
                 tube.transform.position = pos;
+                tube.transform.rotation = Quaternion.Euler(0f, 0f, rotationZ);
+                if (!string.IsNullOrEmpty(spriteOverride) && ctx.MaksimProps.TryGetValue(spriteOverride, out var maksimTube))
+                {
+                    var tubeSr = tube.GetComponentInChildren<SpriteRenderer>(true);
+                    if (tubeSr != null)
+                    {
+                        tubeSr.sprite = maksimTube;
+                        tubeSr.transform.localScale = Vector3.one;
+                    }
+                }
                 var flicker = tube.GetComponentInChildren<FluorescentFlicker>(true);
                 if (flicker != null) flicker.Behavior = behavior;
             }
 
-            AddFluorescent("Fluorescent Entrance", new Vector2(10.0f, 4.75f), FluorescentBehavior.SubtleHum);
-            AddFluorescent("Fluorescent Upper East", new Vector2(35.0f, 4.75f), FluorescentBehavior.RealisticFaulty);
-            AddFluorescent("Fluorescent Attic", new Vector2(20.5f, 12.75f), FluorescentBehavior.DeadBlink);
+            AddFluorescent("Fluorescent Entrance West", new Vector2(2.75f, 3.74f), FluorescentBehavior.SubtleHum, 0f, "LightTube_Glow");
+            AddFluorescent("Fluorescent Entrance Mid", new Vector2(5.85f, 3.74f), FluorescentBehavior.SubtleHum, 0f, "LightTube_Glow");
+            AddFluorescent("Fluorescent Dangling Broken", new Vector2(8.35f, 3.55f), FluorescentBehavior.RealisticFaulty, -16f, "LightTube_Flat");
+            AddFluorescent("Fluorescent Mezzanine West", new Vector2(2.35f, 8.74f), FluorescentBehavior.SubtleHum, 0f, "LightTube_Glow");
+            AddFluorescent("Fluorescent Mezzanine East", new Vector2(6.10f, 8.74f), FluorescentBehavior.RealisticFaulty, 0f, "LightTube_Glow");
+            AddFluorescent("Fluorescent Archive Gallery", new Vector2(19.85f, 3.74f), FluorescentBehavior.SubtleHum, 0f, "LightTube_Glow");
+            AddFluorescent("Fluorescent Upper East", new Vector2(36.0f, 4.75f), FluorescentBehavior.RealisticFaulty);
+            AddFluorescent("Fluorescent Attic", new Vector2(19.5f, 15.75f), FluorescentBehavior.DeadBlink);
             AddFluorescent("Fluorescent Mirror Vault", new Vector2(32.0f, -8.25f), FluorescentBehavior.SubtleHum);
             AddFluorescent("Fluorescent Sanctuary", new Vector2(6.5f, -9.25f), FluorescentBehavior.SubtleHum);
 
@@ -611,37 +824,40 @@ namespace TheLightenRoad.Sirac.Level1.Editor
 
         private static void BuildGameplayAndPuzzles(BuildContext ctx)
         {
-            // Tier 2 West: Reception Ledger Desk, Ember Pickup & Pushable Crate
-            AddCodexDesk(ctx, "Reception Mezzanine Ledger", new Vector2(16.6f, 0.0f),
+            // Tier 2 West & Atrium: Reception Ledger Desk, Ember Pickups & Pushable Crate
+            AddCodexDesk(ctx, "Reception Mezzanine Ledger", new Vector2(13.8f, 0.0f),
                 "Assets/_Project/Resources/Codex/03_OfficeLedger.asset", "READ THE LEDGER");
-            AddPickup(ctx, "Ember Pickup / Corridor West", new Vector2(9.8f, 0.65f));
-            ctx.Route.Crate = AddPushCrate(ctx, new Vector2(18.6f, 0.635f));
+            AddPickup(ctx, "Ember Pickup / Corridor West", new Vector2(8.6f, 5.65f));
+            ctx.Route.Crate = AddPushCrate(ctx, new Vector2(11.8f, 0.635f));
 
-            // Tier 2 Overhead Flare Shelf (1-way platform) + Secret Flare Alcove & Checkpoint 1
-            AddOneWayPlatform(ctx, ctx.GameplayGroup, "Flare Alcove Shelf", new Vector2(37.5f, 2.05f), new Vector2(7.6f, 0.30f));
-            var secretWall = AddSecretPassageWall(ctx, new Vector2(39.2f, 3.6f), new Vector2(0.75f, 2.8f),
-                new Vector2(40.5f, 2.85f), out var secretReward);
-            var secretGlyph = AddFlareGlyph(ctx, new Vector2(35.5f, 2.95f), "LIGHT REVEALS THE ARCHIVE SEAL");
+            // Tier 2 Overhead Flare Shelf (1-way platform) + Step + Secret Flare Alcove & Checkpoint 1
+            AddOneWayPlatform(ctx, ctx.GameplayGroup, "Flare Approach Step", new Vector2(34.8f, 1.05f), new Vector2(2.2f, 0.28f));
+            AddOneWayPlatform(ctx, ctx.GameplayGroup, "Flare Alcove Shelf", new Vector2(39.5f, 2.05f), new Vector2(7.6f, 0.30f));
+            var secretWall = AddSecretPassageWall(ctx, new Vector2(41.2f, 3.6f), new Vector2(0.75f, 2.8f),
+                new Vector2(42.5f, 2.85f), out var secretReward);
+            var secretGlyph = AddFlareGlyph(ctx, new Vector2(37.5f, 2.95f), "LIGHT REVEALS THE ARCHIVE SEAL");
             UnityEventTools.AddPersistentListener(secretGlyph.OnFullyCharged, secretWall.Open);
             ctx.Route.SecretGlyph = secretGlyph;
             ctx.Route.SecretCache = secretWall;
             if (secretReward != null) secretReward.name = "Ember Pickup / Secret Cache";
 
-            AddCheckpoint(ctx, "Checkpoint 1 / East Gallery", new Vector2(42.8f, 1.25f), new Vector3(42.8f, 0.85f, 0f));
+            AddCheckpoint(ctx, "Checkpoint 1 / East Gallery", new Vector2(45.5f, 1.25f), new Vector3(45.5f, 0.85f, 0f));
 
             // Pocket 2: Electrified Water Trough & EmberVein Drain Switch
-            var water = AddElectrifiedWaterPool(ctx, new Vector2(35.5f, -3.56f), new Vector2(6.95f, 0.88f));
-            var vein = AddEmberVein(ctx, new Vector2(28.5f, 0.0f), 2);
+            var water = AddElectrifiedWaterPool(ctx, new Vector2(39.5f, -3.56f), new Vector2(6.95f, 0.88f));
+            var vein = AddEmberVein(ctx, new Vector2(33.2f, 0.0f), 2);
             UnityEventTools.AddPersistentListener(vein.OnPowered, water.Purify);
             UnityEventTools.AddPersistentListener(vein.OnDrained, water.Electrify);
             ctx.Route.WaterVein = vein;
             ctx.Route.WaterHazard = water;
-            AddPickup(ctx, "Ember Pickup / Trough West", new Vector2(31.2f, -2.35f));
-            AddPickup(ctx, "Ember Pickup / Trough East", new Vector2(39.8f, -2.35f));
+            AddPickup(ctx, "Ember Pickup / Trough West", new Vector2(35.2f, -2.35f));
+            AddPickup(ctx, "Ember Pickup / Trough East", new Vector2(42.8f, -2.35f));
 
             // Tier 1 Lower Wing: Ghost Annex Relay & Upper Mirror Vault Ethereal Catwalk
-            var bridgeA = AddEtherealPlatform(ctx, "Light Bridge Span A", new Vector2(34.5f, -10.2f), new Vector2(4.0f, 0.35f));
-            var bridgeB = AddEtherealPlatform(ctx, "Light Bridge Span B", new Vector2(28.0f, -10.2f), new Vector2(4.0f, 0.35f));
+            AddOneWayPlatform(ctx, ctx.GameplayGroup, "Mirror Catwalk Step Lower", new Vector2(41.2f, -13.8f), new Vector2(1.8f, 0.28f));
+            AddOneWayPlatform(ctx, ctx.GameplayGroup, "Mirror Catwalk Step Upper", new Vector2(39.2f, -12.6f), new Vector2(1.8f, 0.28f));
+            var bridgeA = AddEtherealPlatform(ctx, "Light Bridge Span A", new Vector2(34.5f, -11.4f), new Vector2(4.0f, 0.35f));
+            var bridgeB = AddEtherealPlatform(ctx, "Light Bridge Span B", new Vector2(28.0f, -11.4f), new Vector2(4.0f, 0.35f));
             var bridgeRelay = AddPhotosensitiveRelay(ctx, "Bridge Relay Crystal", new Vector2(42.8f, -15.0f),
                 RelayMode.Timed, 1.0f, 9.0f, 3.5f, 9.5f);
             UnityEventTools.AddFloatPersistentListener(bridgeRelay.OnActivated, bridgeA.ForceSolidify, 9.0f);
@@ -701,16 +917,54 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             new GameObject("Pause Menu").AddComponent<PauseMenuController>();
         }
 
-        private static SpriteRenderer AddMaksimProp(BuildContext ctx, string name, string spriteKey, Vector2 pos, int order)
+        private static SpriteRenderer AddMaksimProp(BuildContext ctx, string name, string spriteKey, Vector2 pos, int order,
+            float rotationZ = 0f, float scale = 1f, bool flipX = false)
         {
             var go = new GameObject(name, typeof(SpriteRenderer));
             go.transform.SetParent(ctx.PropsGroup, false);
             go.transform.position = pos;
+            go.transform.rotation = Quaternion.Euler(0f, 0f, rotationZ);
+            go.transform.localScale = Vector3.one * scale;
             var r = go.GetComponent<SpriteRenderer>();
             r.sprite = ctx.MaksimProps[spriteKey];
             r.sharedMaterial = ctx.LitMaterial;
             r.sortingOrder = order;
+            r.flipX = flipX;
             return r;
+        }
+
+        private static SpriteRenderer AddWorldArtProp(BuildContext ctx, string name, string artKey, Vector2 pos, int order,
+            float scale = 0.5f, float rotationZ = 0f, Transform parent = null, bool flipX = false)
+        {
+            var go = new GameObject(name, typeof(SpriteRenderer));
+            go.transform.SetParent(parent != null ? parent : ctx.PropsGroup, false);
+            go.transform.position = pos;
+            go.transform.rotation = Quaternion.Euler(0f, 0f, rotationZ);
+            go.transform.localScale = Vector3.one * scale;
+            var r = go.GetComponent<SpriteRenderer>();
+            r.sprite = GetArt(ctx.WorldArt, artKey, ctx.WhiteSprite);
+            r.sharedMaterial = ctx.LitMaterial;
+            r.sortingOrder = order;
+            r.flipX = flipX;
+            return r;
+        }
+
+        private static void AddCrystalCluster(BuildContext ctx, string name, string spriteKey, Vector2 pos, int order,
+            float lightIntensity = 0.42f, float lightRadius = 2.6f, float rotationZ = 0f)
+        {
+            AddMaksimProp(ctx, name, spriteKey, pos, order, rotationZ);
+            if (lightIntensity > 0.01f)
+            {
+                Vector2 lightOffset = Mathf.Abs(rotationZ) > 45f ? Vector2.zero : new Vector2(0f, 0.35f);
+                AddPointLight(ctx, name + " Glow", pos + lightOffset, new Color(1.0f, 0.54f, 0.16f), lightIntensity, lightRadius);
+            }
+        }
+
+        private static SpriteRenderer AddCeilingDrip(BuildContext ctx, string name, string spriteKey, float x, float ceilingY, int order)
+        {
+            var sprite = ctx.MaksimProps[spriteKey];
+            float y = ceilingY - sprite.bounds.size.y;
+            return AddMaksimProp(ctx, name, spriteKey, new Vector2(x, y), order);
         }
 
         private static SpriteRenderer AddOfisProp(BuildContext ctx, string name, string spriteKey, Vector2 pos, int order, float scale = 1f)
@@ -1056,47 +1310,57 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             var group = Group("Extended Mechanics", ctx.GameplayGroup);
             var art = ctx.WorldArt ?? BakeWorldArtSprites();
 
-            // 1. Climbable Ladders & One-Way Grates connecting all carved tiers safely
-            ctx.Route.MezzanineLadder = AddLadder(ctx, group, "Mezzanine Ladder", new Vector2(20.5f, 0.0f), 8.9f, GetArt(art, "LadderRungTile"));
-            AddOneWayPlatform(ctx, group, "Attic Chimney Grate", new Vector2(21.0f, 7.85f), new Vector2(3.8f, 0.30f));
-            AddOneWayPlatform(ctx, group, "Pocket 1 Escape Grate", new Vector2(22.7f, -2.5f), new Vector2(1.2f, 0.30f));
-            AddLadder(ctx, group, "Pocket 2 Exit Ladder", new Vector2(41.2f, -3.0f), 3.9f, GetArt(art, "LadderRungTile"));
+            // 1. Climbable Ladders & One-Way Grates connecting all carved tiers safely (every step <= 1.25u jump apex)
+            AddOneWayPlatform(ctx, group, "Mezzanine Step Lower", new Vector2(11.1f, 1.20f), new Vector2(1.9f, 0.28f));
+            AddOneWayPlatform(ctx, group, "Mezzanine Step Catwalk", new Vector2(11.1f, 2.40f), new Vector2(2.0f, 0.30f));
+            AddOneWayPlatform(ctx, group, "Mezzanine Step Upper", new Vector2(11.1f, 3.65f), new Vector2(1.9f, 0.28f));
+            AddOneWayPlatform(ctx, group, "Mezzanine Balcony Bridge", new Vector2(11.5f, 4.85f), new Vector2(3.0f, 0.28f));
+            ctx.Route.MezzanineLadder = AddLadder(ctx, group, "Mezzanine Ladder", new Vector2(13.0f, 0.0f), 11.9f, GetArt(art, "LadderRungTile"));
+            AddOneWayPlatform(ctx, group, "Attic Chimney Grate", new Vector2(13.0f, 10.85f), new Vector2(3.4f, 0.30f));
+            AddOneWayPlatform(ctx, group, "Pocket 1 Step Lower", new Vector2(28.0f, -3.75f), new Vector2(1.4f, 0.28f));
+            AddOneWayPlatform(ctx, group, "Pocket 1 Escape Grate", new Vector2(28.0f, -2.50f), new Vector2(1.4f, 0.30f));
+            AddOneWayPlatform(ctx, group, "Pocket 1 Step Upper", new Vector2(28.0f, -1.25f), new Vector2(1.4f, 0.28f));
+            AddLadder(ctx, group, "Pocket 2 Exit Ladder", new Vector2(44.2f, -3.0f), 3.9f, GetArt(art, "LadderRungTile"));
             AddLadder(ctx, group, "East Shaft Service Ladder", new Vector2(57.3f, -15.0f), 15.9f, GetArt(art, "LadderRungTile"));
             AddLadder(ctx, group, "Lower Well Ladder", new Vector2(19.0f, -21.0f), 6.9f, GetArt(art, "LadderRungTile"));
             AddLadder(ctx, group, "Shadow Vault Ladder", new Vector2(26.2f, -25.0f), 10.9f, GetArt(art, "LadderRungTile"));
 
             // 2. Non-Consuming Colored Ember Pickups (Orange, Cyan, Crimson)
-            AddColoredPickup(ctx, group, "Ember Pickup / Orange", new Vector2(14.8f, 0.65f), EmberColor.Orange);
-            AddColoredPickup(ctx, group, "Ember Pickup / Cyan", new Vector2(30.8f, 0.65f), EmberColor.Cyan);
+            AddColoredPickup(ctx, group, "Ember Pickup / Orange", new Vector2(19.85f, 0.72f), EmberColor.Orange);
+            AddColoredPickup(ctx, group, "Ember Pickup / Cyan", new Vector2(34.0f, 0.65f), EmberColor.Cyan);
             AddColoredPickup(ctx, group, "Ember Pickup / Crimson", new Vector2(51.4f, -7.25f), EmberColor.Crimson);
 
             // 3. Tutorial Prompts
-            SpawnWhisperHint(group, "Hint Move & Jump", new Vector2(3.4f, 1.85f), "A / D · SPACE", "TRAVERSE THE FLOOR", WhisperAction.Move);
-            SpawnWhisperHint(group, "Hint Ledge & Ladder", new Vector2(20.5f, 1.2f), "W / S", "CLIMB SHAFT & ATTIC", WhisperAction.ProximityOnly);
-            SpawnWhisperHint(group, "Hint Flare Pan", new Vector2(34.5f, 3.0f), "F", "FLARE & SURVEY WITH A / D", WhisperAction.Flare);
-            SpawnWhisperHint(group, "Hint Lenses", new Vector2(18.5f, -3.6f), "Q / E · C", "SHIFT LENS & CYCLE EMBER", WhisperAction.ProximityOnly);
+            SpawnWhisperHint(group, "Hint Move & Jump", new Vector2(7.4f, 2.65f), "A / D · SPACE", "TRAVERSE THE FLOOR", WhisperAction.Move);
+            SpawnWhisperHint(group, "Hint Ledge & Ladder", new Vector2(13.0f, 1.2f), "W / S", "CLIMB SHAFT & ATTIC", WhisperAction.ProximityOnly);
+            SpawnWhisperHint(group, "Hint Flare Pan", new Vector2(38.5f, 3.0f), "F", "FLARE & SURVEY WITH A / D", WhisperAction.Flare);
+            SpawnWhisperHint(group, "Hint Lenses", new Vector2(27.5f, 1.1f), "Q / E · C", "SHIFT LENS & CYCLE EMBER", WhisperAction.ProximityOnly);
 
             // 4. 4-State Vein & All 9 Vein-Driven Mechanism Types integrated along carved chambers
-            ctx.Route.MultiStateVein = AddAdvancedVein(ctx, group, "Multi-State Mechanism Vein", new Vector2(23.5f, -5.0f), EmberColor.None, false, art);
-            ctx.Route.CorruptedVein = AddAdvancedVein(ctx, group, "Corrupted Archive Vein", new Vector2(38.5f, -15.0f), EmberColor.None, true, art);
+            ctx.Route.MultiStateVein = AddAdvancedVein(ctx, group, "Multi-State Mechanism Vein", new Vector2(27.2f, 0.0f), EmberColor.None, false, art);
+            var eastShaftVein = AddAdvancedVein(ctx, group, "East Shaft Control Vein", new Vector2(46.0f, 0.0f), EmberColor.None, false, art);
+            ctx.Route.CorruptedVein = AddAdvancedVein(ctx, group, "Corrupted Archive Vein", new Vector2(34.8f, -15.0f), EmberColor.None, true, art);
 
             var solidNeutral = new Color(0.92f, 0.92f, 0.94f, 1f);
             var ghostTint = new Color(0.45f, 0.88f, 1.0f, 0.82f);
 
             ctx.Route.BlastDoorMech = AddVeinMechanism(ctx, group, "Vein Blast Door", VeinMechanismType.BlastDoor,
                 new Vector3(48.5f, 0.0f, 0f), new Vector3(48.5f, 2.75f, 0f), new Vector2(0.85f, 3.0f), ctx.Route.MultiStateVein, solidNeutral, art);
+            ctx.Route.BlastDoorMech.SecondaryVein = eastShaftVein;
             ctx.Route.PusherMech = AddVeinMechanism(ctx, group, "Vein Pusher Mechanism", VeinMechanismType.PusherMechanism,
                 new Vector3(47.3f, 0.65f, 0f), new Vector3(48.1f, 0.65f, 0f), new Vector2(0.85f, 0.55f), ctx.Route.MultiStateVein, Color.white, art);
+            ctx.Route.PusherMech.SecondaryVein = eastShaftVein;
             ctx.Route.PusherMech.LinkedTarget = ctx.Route.BlastDoorMech;
 
             ctx.Route.PistonMech = AddVeinMechanism(ctx, group, "Vein Piston Platform", VeinMechanismType.Piston,
-                new Vector3(25.6f, -4.6f, 0f), new Vector3(25.6f, -0.5f, 0f), new Vector2(1.6f, 0.45f), ctx.Route.MultiStateVein, solidNeutral, art);
+                new Vector3(30.8f, -4.6f, 0f), new Vector3(30.8f, 1.05f, 0f), new Vector2(1.6f, 0.45f), ctx.Route.MultiStateVein, solidNeutral, art);
             ctx.Route.ElevatorMech = AddVeinMechanism(ctx, group, "Shaft Freight Elevator", VeinMechanismType.Elevator,
                 new Vector3(56.1f, -14.7f, 0f), new Vector3(56.1f, -0.18f, 0f), new Vector2(2.1f, 0.36f), ctx.Route.MultiStateVein, solidNeutral, art);
+            ctx.Route.ElevatorMech.SecondaryVein = eastShaftVein;
             ctx.Route.MovingPlatformMech = AddVeinMechanism(ctx, group, "Vein Moving Platform", VeinMechanismType.MovingPlatform,
-                new Vector3(32.0f, -0.18f, 0f), new Vector3(39.5f, -0.18f, 0f), new Vector2(2.4f, 0.35f), ctx.Route.MultiStateVein, solidNeutral, art);
+                new Vector3(35.8f, -0.18f, 0f), new Vector3(43.2f, -0.18f, 0f), new Vector2(2.4f, 0.35f), ctx.Route.MultiStateVein, solidNeutral, art);
             ctx.Route.MovingBlockMech = AddVeinMechanism(ctx, group, "Vein Moving 1x1 Block", VeinMechanismType.MovingBlock1x1,
-                new Vector3(31.8f, 2.70f, 0f), new Vector3(34.4f, 2.70f, 0f), Vector2.one, ctx.Route.MultiStateVein, Color.white, art);
+                new Vector3(35.6f, 2.70f, 0f), new Vector3(38.2f, 2.70f, 0f), Vector2.one, ctx.Route.MultiStateVein, Color.white, art);
 
             ctx.Route.GhostDoorMech = AddVeinMechanism(ctx, group, "Ghost Archive Door", VeinMechanismType.GhostDoor,
                 new Vector3(45.5f, -15.0f, 0f), new Vector3(45.5f, -12.2f, 0f), new Vector2(0.85f, 3.0f), ctx.Route.MultiStateVein, ghostTint, art);
@@ -1106,7 +1370,7 @@ namespace TheLightenRoad.Sirac.Level1.Editor
                 new Vector3(50.2f, -14.7f, 0f), new Vector3(50.2f, -11.5f, 0f), new Vector2(1.6f, 0.35f), ctx.Route.MultiStateVein, ghostTint, art);
 
             // 5. Conduit Pipe & Junction Puzzle (Attic Chamber) -> Secret Sliding Panel into Attic Secret Vault
-            ctx.Route.ConduitPuzzle = BuildConduitPuzzle(ctx, group, new Vector3(14.8f, 9.6f, 0f), art);
+            ctx.Route.ConduitPuzzle = BuildConduitPuzzle(ctx, group, new Vector3(16.5f, 12.6f, 0f), art);
 
             // 6. Light Mirrors, Projector Vein, Rail, Darkness Barrier & Corrupted Mirror (Mirror Vault)
             BuildLightMirrorStation(ctx, group, art);
@@ -1193,16 +1457,16 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             var go = new GameObject(name, typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(ColoredEmberPickup2D));
             go.transform.SetParent(parent, false);
             go.transform.position = pos;
-            go.transform.localScale = new Vector3(0.42f, 0.42f, 1f);
+            go.transform.localScale = new Vector3(0.75f, 0.75f, 1f);
 
             var sr = go.GetComponent<SpriteRenderer>();
-            sr.sprite = ctx.CrystalSprite != null ? ctx.CrystalSprite : ctx.WhiteSprite;
+            sr.sprite = GetArt(ctx.WorldArt, "VeinEmberCrystal", ctx.CrystalSprite != null ? ctx.CrystalSprite : ctx.WhiteSprite);
             sr.sharedMaterial = ctx.LitMaterial;
             sr.sortingOrder = 5;
 
             var col = go.GetComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(1.4f, 1.4f);
+            col.size = new Vector2(1.1f, 1.3f);
 
             var pickup = go.GetComponent<ColoredEmberPickup2D>();
             pickup.ColorType = color;
@@ -1243,9 +1507,9 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             var glowGo = new GameObject("Glow", typeof(SpriteRenderer));
             glowGo.transform.SetParent(go.transform, false);
             glowGo.transform.localPosition = new Vector3(0f, 0.85f, 0f);
-            glowGo.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
+            glowGo.transform.localScale = new Vector3(0.78f, 0.78f, 1f);
             var glowSr = glowGo.GetComponent<SpriteRenderer>();
-            glowSr.sprite = ctx.CrystalSprite != null ? ctx.CrystalSprite : ctx.WhiteSprite;
+            glowSr.sprite = GetArt(art, "VeinEmberCrystal", ctx.CrystalSprite != null ? ctx.CrystalSprite : ctx.WhiteSprite);
             glowSr.sharedMaterial = ctx.LitMaterial;
             glowSr.sortingOrder = 6;
 
@@ -1365,10 +1629,10 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             root.transform.position = origin;
             var grid = root.GetComponent<ConduitGridController>();
 
-            // Sliding secret panel sealing AtticSecretArch (x: 26..27, y: 8..11) -> opens into Attic Secret Vault
+            // Sliding secret panel sealing AtticSecretArch (x: 24..25, y: 11..14) -> opens into Attic Secret Vault
             var panelGo = new GameObject("Conduit Secret Sliding Panel", typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(SecretSlidingPanel2D));
             panelGo.transform.SetParent(root.transform, false);
-            panelGo.transform.position = new Vector3(26.5f, 8.0f, 0f);
+            panelGo.transform.position = new Vector3(24.5f, 11.0f, 0f);
             var panelSr = panelGo.GetComponent<SpriteRenderer>();
             panelSr.sprite = ctx.GateSprite != null ? ctx.GateSprite : GetArt(art, "BeamGirder", ctx.WhiteSprite);
             panelSr.sharedMaterial = ctx.LitMaterial;
@@ -1404,8 +1668,8 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             {
                 var nGo = new GameObject($"ConduitNode_{pos.x}_{pos.y}", typeof(SpriteRenderer), typeof(ConduitNode2D));
                 nGo.transform.SetParent(root.transform, false);
-                nGo.transform.position = origin + new Vector3(pos.x * 0.9f, pos.y * 0.9f, 0f);
-                nGo.transform.localScale = new Vector3(0.90f, 0.90f, 1f);
+                nGo.transform.position = origin + new Vector3(pos.x * 1.25f, pos.y * 1.15f, 0f);
+                nGo.transform.localScale = new Vector3(0.95f, 0.95f, 1f);
                 var nSr = nGo.GetComponent<SpriteRenderer>();
                 string pipeKey = shape == ConduitPipeShape.Corner ? "ConduitCorner"
                     : shape == ConduitPipeShape.Tee ? "ConduitTee"
@@ -1425,6 +1689,8 @@ namespace TheLightenRoad.Sirac.Level1.Editor
                 grid.Nodes.Add(node);
             }
 
+            SpawnWhisperHint(root.transform, "Hint Conduit Rotate", origin + new Vector3(1.25f, -0.8f, 0f), "R", "ROTATE NEAREST CONDUIT PIPE", WhisperAction.ProximityOnly);
+
             grid.RandomizeLayout(42);
             return grid;
         }
@@ -1434,7 +1700,8 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             var group = new GameObject("Light Mirror Station");
             group.transform.SetParent(parent, false);
 
-            var railVein = AddAdvancedVein(ctx, group.transform, "Mirror Rail Vein", new Vector2(36.5f, -15.0f), EmberColor.Orange, false, art);
+            var railVein = AddAdvancedVein(ctx, group.transform, "Mirror Rail Vein", new Vector2(36.8f, -15.0f), EmberColor.None, false, art);
+            SpawnWhisperHint(group.transform, "Hint Mirror & Rail", new Vector2(32.5f, -14.2f), "R · E", "ROTATE MIRROR & POWER RAIL VEIN", WhisperAction.ProximityOnly);
 
             var railGo = new GameObject("Mirror Rail", typeof(SpriteRenderer), typeof(MirrorRail2D));
             railGo.transform.SetParent(group.transform, false);
@@ -1579,13 +1846,13 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             ctx.Route.ShadowRealm = shadow;
 
             // Bonus secret & sub-well pickups
-            AddPickup(ctx, "Ember Pickup / Attic Secret", new Vector2(28.2f, 8.65f));
+            AddPickup(ctx, "Ember Pickup / Attic Secret", new Vector2(26.5f, 11.65f));
             AddPickup(ctx, "Ember Pickup / Deep Well", new Vector2(19.6f, -20.35f));
 
             // Mementos (2 standard + 1 secret inside Attic Secret Vault behind Conduit Sliding Panel)
-            var m1 = AddMemento(ctx, parent, "Memento / Corridor", new Vector2(14.4f, 0.85f), "MEMENTO_01", "Ashen Clockwork", false, art);
+            var m1 = AddMemento(ctx, parent, "Memento / Corridor", new Vector2(11.1f, 3.15f), "MEMENTO_01", "Ashen Clockwork", false, art);
             var m2 = AddMemento(ctx, parent, "Memento / Sanctuary", new Vector2(12.0f, -14.15f), "MEMENTO_02", "Final Decree", false, art);
-            var mSecret = AddMemento(ctx, parent, "Memento / Secret Conduit", new Vector2(29.8f, 8.85f), "MEMENTO_SECRET_01", "Hidden Blueprint", true, art);
+            var mSecret = AddMemento(ctx, parent, "Memento / Secret Conduit", new Vector2(28.0f, 11.85f), "MEMENTO_SECRET_01", "Hidden Blueprint", true, art);
             ctx.Route.Mementos = new[] { m1, m2, mSecret };
 
             // Central Core Finale inside Core Sanctuary (requires 4 beams)
@@ -1610,6 +1877,37 @@ namespace TheLightenRoad.Sirac.Level1.Editor
             core.CoreRenderer = cSr;
             core.CoreLight = cLight;
             ctx.Route.CentralCoreFinale = core;
+
+            // Sanctuary Core Vein + 4 converging Projector Veins so the player can ignite all 4 Core Beams (4/4) in gameplay
+            var sanctuaryCoreVein = AddAdvancedVein(ctx, parent, "Sanctuary Core Vein", new Vector2(8.4f, -15.0f), EmberColor.None, false, art);
+            SpawnWhisperHint(parent, "Hint Sanctuary Core", new Vector2(8.4f, -13.9f), "E", "IGNITE THE FOUR CORE BEAMS", WhisperAction.ProximityOnly);
+
+            var coreEmitterPositions = new[]
+            {
+                new Vector3(3.2f, -10.4f, 0f),
+                new Vector3(8.4f, -10.4f, 0f),
+                new Vector3(3.2f, -13.8f, 0f),
+                new Vector3(8.4f, -13.8f, 0f)
+            };
+            for (int i = 0; i < coreEmitterPositions.Length; i++)
+            {
+                Vector3 emitPos = coreEmitterPositions[i];
+                var emitGo = new GameObject($"Sanctuary Core Projector {i + 1}", typeof(SpriteRenderer), typeof(LineRenderer), typeof(ProjectorVein2D));
+                emitGo.transform.SetParent(parent, false);
+                emitGo.transform.position = emitPos;
+                emitGo.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
+                var emitSr = emitGo.GetComponent<SpriteRenderer>();
+                emitSr.sprite = GetArt(art, "VeinEmberCrystal", ctx.CrystalSprite != null ? ctx.CrystalSprite : ctx.WhiteSprite);
+                emitSr.sharedMaterial = ctx.LitMaterial;
+                emitSr.color = new Color(1f, 0.78f, 0.32f, 1f);
+                emitSr.sortingOrder = 6;
+                var emitProj = emitGo.GetComponent<ProjectorVein2D>();
+                emitProj.SourceVein = sanctuaryCoreVein;
+                emitProj.EmitDirection = ((Vector2)(coreGo.transform.position - emitPos)).normalized;
+                emitProj.MaxBeamDistance = 6.0f;
+                emitProj.BeamLine = emitGo.GetComponent<LineRenderer>();
+                if (ctx.BeamMaterial != null) emitProj.BeamLine.sharedMaterial = ctx.BeamMaterial;
+            }
         }
 
         private static MementoCollectible2D AddMemento(BuildContext ctx, Transform parent, string name, Vector2 pos, string id, string title, bool secret, Dictionary<string, Sprite> art)
