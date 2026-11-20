@@ -123,6 +123,9 @@ namespace TheLightenRoad.Frontend
         private RectTransform homeHeaderRect;
         private CanvasGroup homeHeaderGroup;
         private Vector2 homeHeaderBasePos;
+        private FiligreeReveal homeTopFiligreeReveal;
+        private FiligreeReveal homeBottomCrestReveal;
+        private readonly Dictionary<string, FiligreeReveal> subViewCrestReveals = new Dictionary<string, FiligreeReveal>();
 
         // Interactive Elements
         private TMP_Text activeRealmBadgeText;
@@ -403,6 +406,8 @@ namespace TheLightenRoad.Frontend
                     {
                         if (homeHeaderGroup != null) homeHeaderGroup.alpha = 1f;
                         if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos;
+                        homeTopFiligreeReveal?.SetReveal(1f);
+                        homeBottomCrestReveal?.SetReveal(1f);
                         for (int i = 0; i < homeButtons.Count; i++)
                         {
                             var b = homeButtons[i];
@@ -414,16 +419,22 @@ namespace TheLightenRoad.Frontend
                     }
                     else
                     {
-                        // Header fades down & in (age 0.35s .. 0.90s)
-                        float headerT = Mathf.Clamp01(Mathf.InverseLerp(0.35f, 0.90f, age));
+                        // Stage 2: Title fades in cleanly as the hero lantern warms up (age 0.45s .. 1.05s)
+                        float headerT = Mathf.Clamp01(Mathf.InverseLerp(0.45f, 1.05f, age));
                         float headerE = SmoothStep(headerT);
                         if (homeHeaderGroup != null) homeHeaderGroup.alpha = headerE;
-                        if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos + new Vector2(0f, (1f - headerE) * 16f);
+                        if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos + new Vector2(0f, (1f - headerE) * 14f);
 
-                        // Each button cascades in from below (age 0.65s .. 1.80s)
+                        // Stage 3: Ornate Crown & Bottom Crest draw outward symmetrically from center (age 0.88s .. 1.82s)
+                        float topRevealT = Mathf.Clamp01(Mathf.InverseLerp(0.88f, 1.68f, age));
+                        float botRevealT = Mathf.Clamp01(Mathf.InverseLerp(1.02f, 1.82f, age));
+                        homeTopFiligreeReveal?.SetReveal(topRevealT);
+                        homeBottomCrestReveal?.SetReveal(botRevealT);
+
+                        // Stage 4: Menu buttons cascade in sequentially after crests land (age 1.40s .. 2.38s)
                         for (int i = 0; i < homeButtons.Count; i++)
                         {
-                            float btnStart = 0.65f + i * 0.10f;
+                            float btnStart = 1.40f + i * 0.10f;
                             float btnT = Mathf.Clamp01(Mathf.InverseLerp(btnStart, btnStart + 0.38f, age));
                             float btnE = 1f - Mathf.Pow(1f - btnT, 3f); // Smooth ease-out cubic
                             var b = homeButtons[i];
@@ -505,6 +516,8 @@ namespace TheLightenRoad.Frontend
             if (homeGroup != null) homeGroup.alpha = 1f;
             if (homeHeaderGroup != null) homeHeaderGroup.alpha = 1f;
             if (homeHeaderRect != null) homeHeaderRect.anchoredPosition = homeHeaderBasePos;
+            homeTopFiligreeReveal?.SetReveal(1f);
+            homeBottomCrestReveal?.SetReveal(1f);
             for (int i = 0; i < homeButtons.Count; i++)
             {
                 var b = homeButtons[i];
@@ -536,6 +549,10 @@ namespace TheLightenRoad.Frontend
                 groups[i].blocksRaycasts=views[i]==view;
             }
             stage?.SetCameraFocus(stageCameraFocus);
+            if (subViewCrestReveals.TryGetValue(nextView, out var subCrest) && subCrest != null)
+            {
+                subCrest.PlayReveal(delay: 0.08f);
+            }
 
             if (EventSystem.current != null && firstSelectable != null)
             {
@@ -596,8 +613,8 @@ namespace TheLightenRoad.Frontend
                 var r = AvailableRealms[selectedRealmIndex];
                 bool activeDone = MenuPreferences.IsRealmCompleted(selectedRealmIndex);
                 activeRealmBadgeText.text = activeDone
-                    ? $"--   {r.Number}  :  {r.Title}  COMPLETE   --"
-                    : $"--   {r.Number}  :  {r.Title}   --";
+                    ? $"{r.Number}  ·  {r.Title}  ·  COMPLETE"
+                    : $"{r.Number}  ·  {r.Title}";
             }
 
             if (selectedRealmIndex >= 0 && selectedRealmIndex < AvailableRealms.Length)
@@ -605,7 +622,7 @@ namespace TheLightenRoad.Frontend
                 var cur = AvailableRealms[selectedRealmIndex];
                 bool curDone = MenuPreferences.IsRealmCompleted(selectedRealmIndex);
 
-                if (activeRealmShowcaseTag != null) activeRealmShowcaseTag.text = $"-   {cur.Tag}   -";
+                if (activeRealmShowcaseTag != null) activeRealmShowcaseTag.text = cur.Tag;
                 if (activeRealmShowcaseDesc != null) activeRealmShowcaseDesc.text = cur.Description;
                 if (activeRealmShowcaseStatus != null)
                 {
@@ -629,18 +646,18 @@ namespace TheLightenRoad.Frontend
                 }
                 if (i < realmRowAuras.Count && realmRowAuras[i] != null)
                 {
-                    realmRowAuras[i].color = isSelected ? new Color(1.0f, 0.72f, 0.28f, 0.22f) : new Color(0.48f, 0.62f, 0.84f, 0.04f);
+                    realmRowAuras[i].color = isSelected ? new Color(1.0f, 0.78f, 0.40f, 0.03f) : Color.clear;
                 }
                 if (i < realmRowUnderlines.Count && realmRowUnderlines[i] != null)
                 {
-                    realmRowUnderlines[i].color = isSelected ? new Color(1.0f, 0.76f, 0.32f, 0.92f) : new Color(0.56f, 0.70f, 0.88f, 0.38f);
+                    realmRowUnderlines[i].color = isSelected ? new Color(1.0f, 0.76f, 0.36f, 0.65f) : new Color(0.56f, 0.70f, 0.88f, 0.22f);
                 }
                 if (i < realmStatusLabels.Count && realmStatusLabels[i] != null)
                 {
                     realmStatusLabels[i].text = isSelected
                         ? (isCompleted ? "SELECTED · COMPLETE" : "SELECTED")
-                        : (isCompleted ? "COMPLETE" : "SELECT REALM");
-                    realmStatusLabels[i].color = isSelected ? amberGold : (isCompleted ? radiantIvory : moonlightSilver);
+                        : (isCompleted ? "COMPLETE" : string.Empty);
+                    realmStatusLabels[i].color = isSelected ? amberGold : moonlightSilver;
                 }
             }
         }
@@ -904,15 +921,13 @@ namespace TheLightenRoad.Frontend
             var valNode = toggle.transform.Find("Pill/Value");
             if (valNode != null && valNode.TryGetComponent<TMP_Text>(out var txt))
             {
-                txt.text = toggle.isOn ? "<  ON  >" : "<  OFF  >";
+                txt.text = toggle.isOn ? "ON" : "OFF";
                 txt.color = toggle.isOn ? amberGold : moonlightSilver;
             }
             var pillNode = toggle.transform.Find("Pill");
             if (pillNode != null && pillNode.TryGetComponent<Image>(out var pillImg))
             {
-                pillImg.color = toggle.isOn
-                    ? new Color(1.0f, 0.72f, 0.25f, 0.22f)
-                    : new Color(0.55f, 0.68f, 0.88f, 0.0f);
+                pillImg.color = Color.clear;
             }
         }
 
@@ -1067,14 +1082,19 @@ namespace TheLightenRoad.Frontend
             auraImg.color = new Color(1.0f, 0.72f, 0.28f, 0.12f);
             auraImg.raycastTarget = false;
 
-            // Top Ornate Filigree Crown Arch (Hollow Knight style)
+            // Top Crown Arch (symmetrical center-out reveal + soft golden-ivory idle shimmer)
             if (topFiligreeSprite != null)
             {
-                var topArchRect = CreateAnchoredRect("Top Filigree Crown", homeHeaderRect, new Vector2(640f, 72f), new Vector2(0.5f, 0.5f), new Vector2(0f, 96f), pivot: new Vector2(0.5f, 0.5f));
-                var topArchImg = topArchRect.gameObject.AddComponent<Image>();
-                topArchImg.sprite = topFiligreeSprite;
-                topArchImg.color = new Color(0.86f, 0.92f, 1.0f, 0.92f);
-                topArchImg.raycastTarget = false;
+                homeTopFiligreeReveal = FiligreeReveal.Create(
+                    "Top Filigree Crown",
+                    homeHeaderRect,
+                    topFiligreeSprite,
+                    new Vector2(640f, 80f),
+                    new Vector2(0f, 86f),
+                    new Color(0.92f, 0.95f, 1.0f, 0.94f),
+                    manualReveal: true,
+                    duration: 0.72f,
+                    phaseOffset: 0f);
             }
 
             // Monumental Centered Title: THE LIGHTEN ROAD
@@ -1083,33 +1103,25 @@ namespace TheLightenRoad.Frontend
             mainTitle.fontStyle = FontStyles.Normal;
             mainTitle.characterSpacing = 2f;
 
-            // Bottom Sacred Crest + Signature Lantern Ember Core ("Hollow Knight + Uniquely Ours")
+            // Bottom Lantern Crest (symmetrical center-out reveal + gentle counter-phase shimmer)
             if (bottomCrestSprite != null)
             {
-                var botCrestRect = CreateAnchoredRect("Bottom Lantern Crest", homeHeaderRect, new Vector2(740f, 102f), new Vector2(0.5f, 0.5f), new Vector2(0f, -64f), pivot: new Vector2(0.5f, 0.5f));
-                var botCrestImg = botCrestRect.gameObject.AddComponent<Image>();
-                botCrestImg.sprite = bottomCrestSprite;
-                botCrestImg.color = new Color(0.88f, 0.93f, 1.0f, 0.94f);
-                botCrestImg.raycastTarget = false;
+                homeBottomCrestReveal = FiligreeReveal.Create(
+                    "Bottom Lantern Crest",
+                    homeHeaderRect,
+                    bottomCrestSprite,
+                    new Vector2(700f, 114f),
+                    new Vector2(0f, -64f),
+                    new Color(0.94f, 0.96f, 1.0f, 0.95f),
+                    manualReveal: true,
+                    duration: 0.76f,
+                    phaseOffset: 1.1f);
             }
 
-            // Signature Glowing Lantern Ember Core at the Heart of the Crest
-            var crestGlow = CreateAnchoredRect("Crest Lantern Halo", homeHeaderRect, new Vector2(96f, 44f), new Vector2(0.5f, 0.5f), new Vector2(0f, -48f), pivot: new Vector2(0.5f, 0.5f));
-            var crestGlowImg = crestGlow.gameObject.AddComponent<Image>();
-            crestGlowImg.sprite = softRadialSprite;
-            crestGlowImg.color = new Color(1.0f, 0.72f, 0.24f, 0.48f);
-            crestGlowImg.raycastTarget = false;
-
-            var crestSpark = CreateAnchoredRect("Crest Lantern Spark", homeHeaderRect, new Vector2(14f, 14f), new Vector2(0.5f, 0.5f), new Vector2(0f, -48f), pivot: new Vector2(0.5f, 0.5f));
-            crestSpark.localEulerAngles = new Vector3(0f, 0f, 45f);
-            var crestSparkImg = crestSpark.gameObject.AddComponent<Image>();
-            crestSparkImg.color = amberGold;
-            crestSparkImg.raycastTarget = false;
-
             // Centered Active Realm Badge
-            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "--   REALM I  :  THE FIRST LIGHT   --", 11.5f, amberGold, new Vector2(680f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -134f), pivot: new Vector2(0.5f, 0.5f));
+            activeRealmBadgeText = CreateLabel("Active Realm Text", homeHeaderRect, "REALM I  ·  THE FIRST LIGHT", 11.5f, amberGold, new Vector2(680f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -134f), pivot: new Vector2(0.5f, 0.5f));
             activeRealmBadgeText.alignment = TextAlignmentOptions.Center;
-            activeRealmBadgeText.characterSpacing = 4.5f;
+            activeRealmBadgeText.characterSpacing = 3.5f;
 
             // 2. Centered Cinematic Card Menu Stack (Frosted Obsidian Cards with Luminous Ember Frames)
             float startY = -22f;
@@ -1265,19 +1277,6 @@ namespace TheLightenRoad.Frontend
                 rightImg.raycastTarget = false;
             }
 
-            // Signature Lantern Ember Diamond Spark on the inner tip of each pointer
-            var leftSpark = CreateAnchoredRect("Left Ember Spark", leftWingRect, new Vector2(6.5f, 6.5f), new Vector2(0.5f, 0.5f), new Vector2(22f, 0f), pivot: new Vector2(0.5f, 0.5f));
-            leftSpark.localEulerAngles = new Vector3(0f, 0f, 45f);
-            var leftSparkImg = leftSpark.gameObject.AddComponent<Image>();
-            leftSparkImg.color = amberGold;
-            leftSparkImg.raycastTarget = false;
-
-            var rightSpark = CreateAnchoredRect("Right Ember Spark", rightWingRect, new Vector2(6.5f, 6.5f), new Vector2(0.5f, 0.5f), new Vector2(22f, 0f), pivot: new Vector2(0.5f, 0.5f));
-            rightSpark.localEulerAngles = new Vector3(0f, 0f, 45f);
-            var rightSparkImg = rightSpark.gameObject.AddComponent<Image>();
-            rightSparkImg.color = amberGold;
-            rightSparkImg.raycastTarget = false;
-
             var btn = itemRect.gameObject.AddComponent<Button>();
             btn.targetGraphic = plateImg;
             btn.transition = Selectable.Transition.None;
@@ -1360,25 +1359,25 @@ namespace TheLightenRoad.Frontend
                 lineImg.raycastTarget = false;
                 realmRowUnderlines.Add(lineImg);
 
-                // Symmetrical Wing Pointers + Lantern Sparks on Selected Realm
-                var wingContainer = CreateAnchoredRect("Wings Container", row, new Vector2(680f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f));
+                // Symmetrical Wing Pointers on Selected Realm
+                var wingContainer = CreateAnchoredRect("Wings Container", row, new Vector2(720f, 30f), new Vector2(0.5f, 0.5f), new Vector2(0f, 10f));
                 var wingGroup = wingContainer.gameObject.AddComponent<CanvasGroup>();
                 wingGroup.alpha = (i == selectedRealmIndex) ? 1f : 0f;
                 realmWingGroups.Add(wingGroup);
 
                 if (buttonPointerSprite != null)
                 {
-                    var leftWing = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(42f, 20f), new Vector2(0.5f, 0.5f), new Vector2(-240f, 0f));
+                    var leftWing = CreateAnchoredRect("Left Pointer", wingContainer, new Vector2(28f, 15f), new Vector2(0.5f, 0.5f), new Vector2(-295f, 0f));
                     var leftImg = leftWing.gameObject.AddComponent<Image>();
                     leftImg.sprite = buttonPointerSprite;
-                    leftImg.color = amberGold;
+                    leftImg.color = radiantIvory;
                     leftImg.raycastTarget = false;
 
-                    var rightWing = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(42f, 20f), new Vector2(0.5f, 0.5f), new Vector2(240f, 0f));
+                    var rightWing = CreateAnchoredRect("Right Pointer", wingContainer, new Vector2(28f, 15f), new Vector2(0.5f, 0.5f), new Vector2(295f, 0f));
                     rightWing.localScale = new Vector3(-1f, 1f, 1f);
                     var rightImg = rightWing.gameObject.AddComponent<Image>();
                     rightImg.sprite = buttonPointerSprite;
-                    rightImg.color = amberGold;
+                    rightImg.color = radiantIvory;
                     rightImg.raycastTarget = false;
                 }
 
@@ -1423,8 +1422,8 @@ namespace TheLightenRoad.Frontend
             activeRealmShowcaseStatus.characterSpacing = 3.0f;
 
             // Centered Frameless Action Buttons
-            CreateEtherealActionButton(surface, "Enter Selected Realm  >", new Vector2(180f, -268f), Play, isPrimary: true, width: 310f);
-            CreateEtherealActionButton(surface, "<  Return to Title", new Vector2(-180f, -268f), ShowHome, isPrimary: false, width: 310f);
+            CreateEtherealActionButton(surface, "Enter Selected Realm", new Vector2(180f, -268f), Play, isPrimary: true, width: 310f);
+            CreateEtherealActionButton(surface, "Return to Title", new Vector2(-180f, -268f), ShowHome, isPrimary: false, width: 310f);
         }
 
         // =====================================================================
@@ -1593,7 +1592,7 @@ namespace TheLightenRoad.Frontend
                 controlsDeviceTabLabels[i].fontSize = 13.5f;
             }
 
-            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D  or  ARROWS ]", "MOVE / CLIMB", "Walk left / right; W or Up at a ledge climbs", 135f, 0);
+            controlsRowKeyLabels[0] = CreateCenteredControlRow(surface, "[ A / D · ARROWS ]", "MOVE / CLIMB", "Walk left / right; W or Up at a ledge climbs", 135f, 0);
             controlsRowKeyLabels[1] = CreateCenteredControlRow(surface, "[ SPACE ]", "JUMP", "Hold to jump higher; release for a short hop", 84f, 1);
             controlsRowKeyLabels[2] = CreateCenteredControlRow(surface, "[ F ]", "LANTERN FLARE", "Spend 1 ember to briefly reveal the surroundings", 33f, 2);
             controlsRowKeyLabels[3] = CreateCenteredControlRow(surface, "[ E ]", "INTERACT", "Transfer an ember into a vein or take it back", -18f, 3);
@@ -1610,13 +1609,17 @@ namespace TheLightenRoad.Frontend
         public void SetControlsDeviceTab(int tab)
         {
             selectedControlsDeviceTab = Mathf.Clamp(tab, 0, 2);
+            string[] tabLabels = { "KEYBOARD", "XBOX PAD", "PLAYSTATION" };
             for (int i = 0; i < 3; i++)
             {
                 bool active = (i == selectedControlsDeviceTab);
-                if (controlsDeviceTabLabels[i] != null) controlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+                if (controlsDeviceTabLabels[i] != null)
+                {
+                    controlsDeviceTabLabels[i].color = active ? amberGold : radiantIvory;
+                    controlsDeviceTabLabels[i].text = tabLabels[i];
+                }
                 var focus=controlsDeviceTabs[i]!=null?controlsDeviceTabs[i].GetComponent<SettingsLightFocus>():null;
                 if(focus!=null)focus.IsCurrent=active;
-                if(controlsDeviceTabLabels[i]!=null)controlsDeviceTabLabels[i].text=active?"· "+new[]{"Keyboard","Xbox Pad","PlayStation"}[i]+" ·":new[]{"Keyboard","Xbox Pad","PlayStation"}[i];
                 var marker = controlsDeviceTabs[i] != null ? controlsDeviceTabs[i].transform.Find("Selection rule") : null;
                 if (marker != null) marker.gameObject.SetActive(active);
             }
@@ -1629,7 +1632,7 @@ namespace TheLightenRoad.Frontend
                 for (int i = 0; i < controlsRowIcons.Length; i++)
                     if (controlsRowIcons[i] != null) controlsRowIcons[i].color = Color.clear;
 
-                controlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
+                controlsRowKeyLabels[0].text = "[ A / D · ARROWS ]";
                 controlsRowKeyLabels[1].text = "[ SPACE ]";
                 controlsRowKeyLabels[2].text = "[ F ]";
                 controlsRowKeyLabels[3].text = "[ E ]";
@@ -1684,14 +1687,8 @@ namespace TheLightenRoad.Frontend
 
             var descTxt = CreateLabel("Description", row, desc, 12f, moonlightSilver, new Vector2(420f, 20f), new Vector2(0f, 0.5f), new Vector2(12f, -11f), pivot: new Vector2(0f, 0.5f));
 
-            // Right of center: Ornate Keybinding Emblem with Warm Lantern Glow
-            var keyGlow = CreateAnchoredRect("Key Lantern Aura", row, new Vector2(240f, 42f), new Vector2(1f, 0.5f), new Vector2(-120f, 0f), pivot: new Vector2(0.5f, 0.5f));
-            var keyGlowImg = keyGlow.gameObject.AddComponent<Image>();
-            keyGlowImg.sprite = softRadialSprite;
-            keyGlowImg.color = new Color(1.0f, 0.72f, 0.26f, 0.16f);
-            keyGlowImg.raycastTarget = false;
-
-            var iconRect = CreateAnchoredRect("Glyph Icon", row, new Vector2(38f, 38f), new Vector2(1f, 0.5f), new Vector2(-215f, 0f), pivot: new Vector2(0.5f, 0.5f));
+            // Right of center: Clean Keybinding Badge (no muddy brown smear)
+            var iconRect = CreateAnchoredRect("Glyph Icon", row, new Vector2(36f, 36f), new Vector2(1f, 0.5f), new Vector2(-235f, 0f), pivot: new Vector2(0.5f, 0.5f));
             var iconImg = iconRect.gameObject.AddComponent<Image>();
             iconImg.color = Color.clear;
             iconImg.raycastTarget = false;
@@ -1699,16 +1696,16 @@ namespace TheLightenRoad.Frontend
             if (rowIndex >= 0 && rowIndex < controlsRowIcons.Length)
                 controlsRowIcons[rowIndex] = iconImg;
 
-            var keyTxt = CreateLabel("Key Text", row, keys, 14f, amberGold, new Vector2(175f, 32f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), pivot: new Vector2(1f, 0.5f));
+            var keyTxt = CreateLabel("Key Text", row, keys, 14f, amberGold, new Vector2(220f, 32f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), pivot: new Vector2(1f, 0.5f));
             keyTxt.alignment = TextAlignmentOptions.Right;
             keyTxt.fontStyle = FontStyles.Bold;
-            keyTxt.characterSpacing = 2.5f;
+            keyTxt.characterSpacing = 1.6f;
 
             // Tapered Filigree Divider under row
-            var div = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(700f, 2f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
+            var div = CreateAnchoredRect("Row Filigree Rule", row, new Vector2(700f, 1.5f), new Vector2(0.5f, 0f), Vector2.zero, pivot: new Vector2(0.5f, 0.5f));
             var divImg = div.gameObject.AddComponent<Image>();
             divImg.sprite = filigreeSprite;
-            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.24f);
+            divImg.color = new Color(0.62f, 0.76f, 0.94f, 0.18f);
             divImg.raycastTarget = false;
 
             return keyTxt;
@@ -1722,23 +1719,25 @@ namespace TheLightenRoad.Frontend
         {
             var surface = CreateEtherealSubViewFrame(credits, "CREDITS", "THE LIGHTEN ROAD TEAM");
 
-            CreateCenteredCreditEntry(surface,"SİRAÇ GÖKTUĞ ŞİMŞEK  ·  @unitybtw","Game Developer",178);
-            CreateCenteredCreditEntry(surface,"KEMAL  ·  @kemal-berke","Game Developer",88);
-            CreateCenteredCreditEntry(surface,"CAN  ·  @benesas","Artist",-2);
-            CreateCenteredCreditEntry(surface,"MAKSIM  ·  @Ichnolith","Artist",-92);
-            CreateCenteredCreditEntry(surface,"FURKAN  ·  @aeshmacodex","Game Designer",-182);
-            var attribution=CreateLabel("Team signature",surface,"Made by The Lighten Road team.",18f,moonlightSilver,new Vector2(1040,30),Vector2.one*.5f,new Vector2(0,-254),Vector2.one*.5f);
+            CreateCenteredCreditEntry(surface,"SİRAÇ GÖKTUĞ ŞİMŞEK  ·  @unitybtw","Game Developer",168);
+            CreateCenteredCreditEntry(surface,"KEMAL  ·  @kemal-berke","Game Developer",86);
+            CreateCenteredCreditEntry(surface,"CAN  ·  @benesas","Artist",4);
+            CreateCenteredCreditEntry(surface,"MAKSIM  ·  @Ichnolith","Artist",-78);
+            CreateCenteredCreditEntry(surface,"FURKAN  ·  @aeshmacodex","Game Designer",-160);
+            var attribution=CreateLabel("Team signature",surface,"The Lighten Road Team",14f,moonlightSilver,new Vector2(1040,28),Vector2.one*.5f,new Vector2(0,-234),Vector2.one*.5f);
             attribution.alignment=TextAlignmentOptions.Center;
-            creditsFirst=CreateEtherealActionButton(surface,"Back",new Vector2(0,-322),ShowHome,isPrimary:true,width:360);
+            attribution.characterSpacing=2.2f;
+            creditsFirst=CreateEtherealActionButton(surface,"Back",new Vector2(0,-302),ShowHome,isPrimary:true,width:320);
         }
 
         private void CreateCenteredCreditEntry(RectTransform parent,string name,string role,float yPos)
         {
-            var entry=CreateAnchoredRect(name,parent,new Vector2(1080,76),Vector2.one*.5f,new Vector2(0,yPos));
-            var nameTxt=CreateLabel("Name",entry,name,24f,radiantIvory,new Vector2(1040,34),Vector2.one*.5f,new Vector2(0,20),Vector2.one*.5f);
-            nameTxt.alignment=TextAlignmentOptions.Center;nameTxt.characterSpacing=.6f;
-            var roleTxt=CreateLabel("Role",entry,role,20f,amberGold,new Vector2(1040,30),Vector2.one*.5f,new Vector2(0,-16),Vector2.one*.5f);
+            var entry=CreateAnchoredRect(name,parent,new Vector2(1080,68),Vector2.one*.5f,new Vector2(0,yPos));
+            var nameTxt=CreateLabel("Name",entry,name,24f,radiantIvory,new Vector2(1040,34),Vector2.one*.5f,new Vector2(0,14),Vector2.one*.5f);
+            nameTxt.alignment=TextAlignmentOptions.Center;nameTxt.characterSpacing=.8f;
+            var roleTxt=CreateLabel("Role",entry,role,14f,amberGold,new Vector2(1040,24),Vector2.one*.5f,new Vector2(0,-16),Vector2.one*.5f);
             roleTxt.alignment=TextAlignmentOptions.Center;
+            roleTxt.characterSpacing=2.0f;
         }
 
         // =====================================================================
@@ -1752,38 +1751,30 @@ namespace TheLightenRoad.Frontend
             surfHit.color = Color.clear;
             surface.gameObject.AddComponent<MenuReadability>().ContentSize=new Vector2(1000,560);
 
-            if (topFiligreeSprite != null)
-            {
-                var topCrest = CreateAnchoredRect("Quit Top Filigree", surface, new Vector2(460f, 52f), new Vector2(0.5f, 0.5f), new Vector2(0f, 148f));
-                var topImg = topCrest.gameObject.AddComponent<Image>();
-                topImg.sprite = topFiligreeSprite;
-                topImg.color = Color.clear;
-                topImg.raycastTarget = false;
-            }
-
-            var tag = CreateLabel("Quit Tag", surface, "-   EXIT GAME   -", 20f, moonlightSilver, new Vector2(800f, 32f), new Vector2(0.5f, 0.5f), new Vector2(0f, 122f));
-            tag.rectTransform.pivot = Vector2.one * 0.5f;
-            tag.alignment = TextAlignmentOptions.Center;
-            tag.characterSpacing = 6f;
-
-            var title = CreateLabel("Quit Title", surface, "ARE YOU SURE?", 36f, radiantIvory, new Vector2(680f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, 55f));
+            var title = CreateLabel("Quit Title", surface, "QUIT TO DESKTOP?", 38f, radiantIvory, new Vector2(680f, 48f), new Vector2(0.5f, 0.5f), new Vector2(0f, 88f));
             title.rectTransform.pivot = Vector2.one * 0.5f;
             title.alignment = TextAlignmentOptions.Center;
-            title.fontStyle = FontStyles.Bold;
-            title.characterSpacing = 6.5f;
+            title.fontStyle = FontStyles.Normal;
+            title.characterSpacing = 3.5f;
 
-            var botFiligree = CreateAnchoredRect("Bottom Filigree", surface, new Vector2(480f, 34f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f));
-            var botImg = botFiligree.gameObject.AddComponent<Image>();
-            botImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
-            botImg.color = new Color(0.86f, 0.92f, 1.0f, 0.85f);
-            botImg.raycastTarget = false;
+            var quitCrestSprite = bottomCrestSprite != null ? bottomCrestSprite : (topFiligreeSprite != null ? topFiligreeSprite : filigreeSprite);
+            subViewCrestReveals["quit"] = FiligreeReveal.Create(
+                "Bottom Filigree",
+                surface,
+                quitCrestSprite,
+                new Vector2(330f, 54f),
+                new Vector2(0f, 28f),
+                new Color(0.90f, 0.94f, 1.0f, 0.88f),
+                manualReveal: false,
+                duration: 0.42f,
+                phaseOffset: 0.4f);
 
-            var note = CreateLabel("Quit Note", surface, "Your completed chapters and settings are saved.\nProgress within the current chamber is not saved.", 20f, moonlightSilver, new Vector2(850f, 72f), new Vector2(0.5f, 0.5f), new Vector2(0f, -45f));
+            var note = CreateLabel("Quit Note", surface, "Saved chapters and preferences are kept.\nProgress in the current chamber is not saved.", 18f, moonlightSilver, new Vector2(820f, 64f), new Vector2(0.5f, 0.5f), new Vector2(0f, -40f));
             note.rectTransform.pivot = Vector2.one * 0.5f;
             note.alignment = TextAlignmentOptions.Center;
 
-            quitFirst = CreateEtherealActionButton(surface, "Cancel", new Vector2(-190f, -145f), ShowHome, isPrimary: true, width: 320f);
-            var confirm=CreateEtherealActionButton(surface,"Quit",new Vector2(190f,-145f),ConfirmQuit,isPrimary:false,width:320f);
+            quitFirst = CreateEtherealActionButton(surface, "Cancel", new Vector2(-175f, -134f), ShowHome, isPrimary: true, width: 280f);
+            var confirm=CreateEtherealActionButton(surface,"Quit",new Vector2(175f,-134f),ConfirmQuit,isPrimary:false,width:280f);
             MenuReadability.HideFocusWings((Button)quitFirst);MenuReadability.HideFocusWings(confirm);
             var cancel=(Button)quitFirst;
             cancel.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=confirm,selectOnRight=confirm};
@@ -1811,32 +1802,46 @@ namespace TheLightenRoad.Frontend
                 topImg.raycastTarget = false;
             }
 
-            var sub = CreateLabel("Subheading", container, $"-   {subheading}   -", 11f, moonlightSilver, new Vector2(860f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 322f));
+            var sub = CreateLabel("Subheading", container, subheading, 11f, moonlightSilver, new Vector2(860f, 22f), new Vector2(0.5f, 0.5f), new Vector2(0f, 322f));
             sub.rectTransform.pivot = Vector2.one * 0.5f;
             sub.alignment = TextAlignmentOptions.Center;
             sub.characterSpacing = 2f;
             sub.gameObject.SetActive(false);
 
-            var head = CreateLabel("Heading", container, heading, 36f, radiantIvory, new Vector2(900f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, 282f));
+            var head = CreateLabel("Heading", container, heading, 36f, radiantIvory, new Vector2(900f, 46f), new Vector2(0.5f, 0.5f), new Vector2(0f, 294f));
             head.rectTransform.pivot = Vector2.one * 0.5f;
             head.alignment = TextAlignmentOptions.Center;
             head.fontStyle = FontStyles.Normal;
             head.characterSpacing = 2f;
 
-            var botCrest = CreateAnchoredRect("Header Bottom Filigree", container, new Vector2(430f, 26f), new Vector2(0.5f, 0.5f), new Vector2(0f, 238f));
-            var botImg = botCrest.gameObject.AddComponent<Image>();
-            botImg.sprite = bottomCrestSprite != null ? bottomCrestSprite : filigreeSprite;
-            botImg.color = new Color(0.86f, 0.92f, 1.0f, 0.88f);
-            botImg.raycastTarget = false;
-
-            // Signature Lantern Ember Core at the center of the subview crest
-            var spark = CreateAnchoredRect("Header Lantern Spark", container, new Vector2(10f, 10f), new Vector2(0.5f, 0.5f), new Vector2(0f, 244f));
-            spark.localEulerAngles = new Vector3(0f, 0f, 45f);
-            var sparkImg = spark.gameObject.AddComponent<Image>();
-            sparkImg.color = amberGold;
-            sparkImg.raycastTarget = false;
+            var subCrestSprite = bottomCrestSprite != null ? bottomCrestSprite : (topFiligreeSprite != null ? topFiligreeSprite : filigreeSprite);
+            var subCrestReveal = FiligreeReveal.Create(
+                "Header Bottom Filigree",
+                container,
+                subCrestSprite,
+                new Vector2(366f, 60f),
+                new Vector2(0f, 236f),
+                new Color(0.90f, 0.94f, 1.0f, 0.88f),
+                manualReveal: false,
+                duration: 0.42f,
+                phaseOffset: 0.7f);
+            string subKey = ResolveViewName(viewRoot);
+            if (!string.IsNullOrEmpty(subKey))
+            {
+                subViewCrestReveals[subKey] = subCrestReveal;
+            }
 
             return container;
+        }
+
+        private string ResolveViewName(RectTransform viewRoot)
+        {
+            if (viewRoot == realms) return "realms";
+            if (viewRoot == settings) return "settings";
+            if (viewRoot == controls) return "controls";
+            if (viewRoot == credits) return "credits";
+            if (viewRoot == quit) return "quit";
+            return null;
         }
 
         private Button CreateEtherealActionButton(

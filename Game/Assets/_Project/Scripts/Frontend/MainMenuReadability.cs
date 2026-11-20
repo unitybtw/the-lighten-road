@@ -48,9 +48,14 @@ namespace TheLightenRoad.Frontend
             MenuReadability.Place((RectTransform)resetSettingsButton.transform,new Vector2(-196,-306),new Vector2(360,56));
             MenuReadability.Place((RectTransform)settingsDoneButton.transform,new Vector2(196,-306),new Vector2(360,56));
             MenuReadability.Footer(settingsFooterBar);settingsFooterBar.anchoredPosition=new Vector2(0,-378);
+            foreach(var footerTxt in settingsFooterBar.GetComponentsInChildren<TMP_Text>(true))
+                footerTxt.color=new Color(0.66f,0.72f,0.82f,0.68f);
             for(int i=0;i<settingsTabs.Length;i++)
-                MenuReadability.Place((RectTransform)settingsTabs[i].transform,new Vector2(0,140-i*68),new Vector2(480,60));
-            MenuReadability.Place((RectTransform)keyboardSettingsButton.transform,new Vector2(0,-132),new Vector2(480,60));
+                MenuReadability.Place((RectTransform)settingsTabs[i].transform,new Vector2(0,132-i*60),new Vector2(480,56));
+            MenuReadability.Place((RectTransform)keyboardSettingsButton.transform,new Vector2(0,-108),new Vector2(480,56));
+            MenuReadability.Place((RectTransform)motionToggle.transform,new Vector2(0,40),new Vector2(900,76));
+            MenuReadability.Place(speakerPill,new Vector2(-150,0),new Vector2(140,52));
+            MenuReadability.Place((RectTransform)speakerTestButton.transform,new Vector2(368,rows[3]),new Vector2(124,52));
             // The reset dialog is a modal: keep its buttons comfortably sized without changing focus ownership.
             foreach(var button in settingsResetPanel.GetComponentsInChildren<UnityEngine.UI.Button>(true))
             { var r=(RectTransform)button.transform;r.sizeDelta=new Vector2(320,56); }
@@ -63,9 +68,9 @@ namespace TheLightenRoad.Frontend
             var tabs=(RectTransform)surface.Find("Controls Device Tabs");
             MenuReadability.Place(tabs,new Vector2(0,205),new Vector2(1040,56));
             var heading=surface.Find("Heading") as RectTransform;
-            if(heading!=null)heading.anchoredPosition=new Vector2(0,312);
+            if(heading!=null)heading.anchoredPosition=new Vector2(0,322);
             var ornament=surface.Find("Header Bottom Filigree") as RectTransform;
-            if(ornament!=null)ornament.anchoredPosition=new Vector2(0,260);
+            if(ornament!=null)ornament.anchoredPosition=new Vector2(0,266);
             var spark=surface.Find("Header Lantern Spark") as RectTransform;
             if(spark!=null)spark.anchoredPosition=new Vector2(0,266);
             for(int i=0;i<controlsDeviceTabs.Length;i++)
@@ -88,11 +93,11 @@ namespace TheLightenRoad.Frontend
             var artwork=controllerDiagram.transform.Find("Device artwork") as RectTransform;
             if(artwork!=null)artwork.sizeDelta=new Vector2(552,552f*940f/1452f);
             controllerDiagram.SetVerticesDirty();
-            Vector2[] positions={new Vector2(-490,78),new Vector2(-490,-18),new Vector2(490,120),new Vector2(490,57.6f),new Vector2(490,-9.6f),new Vector2(490,-78)};
+            Vector2[] positions={new Vector2(-435,48),new Vector2(-435,-58),new Vector2(435,120),new Vector2(435,48),new Vector2(435,-24),new Vector2(435,-96)};
             if(diagramLabels!=null)for(int i=0;i<diagramLabels.Length;i++)
             {
                 var label=diagramLabels[i];label.fontSize=20;label.textWrappingMode=TextWrappingModes.Normal;
-                MenuReadability.Place(label.rectTransform,positions[i],new Vector2(220,i<2?64:50));
+                MenuReadability.Place(label.rectTransform,positions[i],new Vector2(220,58));
             }
             MenuReadability.RefreshFocus(controls);
             SetControlsDeviceTab(selectedControlsDeviceTab);
