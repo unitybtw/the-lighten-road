@@ -29,9 +29,9 @@ namespace TheLightenRoad.Frontend
             confirmationGroup = root.gameObject.AddComponent<CanvasGroup>();
             confirmationContent = CreateStretchRect("Lantern decision", root);
 
-            var glow = CreateAnchoredRect("Warm lantern halo", confirmationContent, new Vector2(500, 330), Vector2.one * .5f, new Vector2(0, 100)).gameObject.AddComponent<Image>();
+            var glow = CreateAnchoredRect("Warm lantern halo", confirmationContent, new Vector2(400, 260), Vector2.one * .5f, new Vector2(0, 110)).gameObject.AddComponent<Image>();
             glow.sprite = softRadialSprite;
-            glow.color = new Color(1f, .49f, .12f, .16f);
+            glow.color = new Color(1f, .72f, .30f, .05f);
             glow.raycastTarget = false;
 
             var frame = CreateAnchoredRect("Decision lantern", confirmationContent, new Vector2(44, 60), Vector2.one * .5f, new Vector2(0, 194));

@@ -26,12 +26,15 @@ namespace TheLightenRoad.Frontend
             for(int i=0;i<4;i++)
             {
                 settingsTabs[i].transform.SetParent(index,false);
-                var r=(RectTransform)settingsTabs[i].transform;r.anchoredPosition=new Vector2(0,130-i*62);r.sizeDelta=new Vector2(440,52);
+                var r=(RectTransform)settingsTabs[i].transform;r.anchoredPosition=new Vector2(0,130-i*60);r.sizeDelta=new Vector2(440,52);
                 settingsTabLabels[i].text=titles[i];settingsTabLabels[i].fontSize=26;
+                settingsTabLabels[i].fontStyle=FontStyles.Normal;settingsTabLabels[i].characterSpacing=1.4f;
                 if(ArchiveMenuStyle.Serif!=null)settingsTabLabels[i].font=ArchiveMenuStyle.Serif;
             }
-            keyboardSettingsButton=SettingsButton(index,"Button guide",new Vector2(0,-118),new Vector2(440,52),OpenKeyboardSettings);
-            keyboardSettingsButton.GetComponentInChildren<TMP_Text>().fontSize=26;
+            keyboardSettingsButton=SettingsButton(index,"Button Guide",new Vector2(0,-110),new Vector2(440,52),OpenKeyboardSettings);
+            var kbLabel=keyboardSettingsButton.GetComponentInChildren<TMP_Text>();
+            kbLabel.text="Button Guide";kbLabel.fontSize=26;kbLabel.fontStyle=FontStyles.Normal;kbLabel.characterSpacing=1.4f;
+            if(ArchiveMenuStyle.Serif!=null)kbLabel.font=ArchiveMenuStyle.Serif;
             foreach(var button in new[]{settingsDoneButton,resetSettingsButton})
             {
                 var label=button.GetComponentInChildren<TMP_Text>();label.fontSize=22;label.fontStyle=FontStyles.Normal;label.characterSpacing=1.4f;
@@ -67,7 +70,7 @@ namespace TheLightenRoad.Frontend
         {
             settingsSection=-1;optionsIndex.SetActive(true);settingsResetPanel.SetActive(false);
             settingsDoneButton.gameObject.SetActive(true);
-            ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(0,-306);
+            ((RectTransform)settingsDoneButton.transform).anchoredPosition=new Vector2(0,-220);
             foreach(var section in settingsSections)section.SetActive(false);
             foreach(var tab in settingsTabs){tab.interactable=true;var focus=tab.GetComponent<SettingsLightFocus>();if(focus!=null)focus.IsCurrent=false;}
             settingsDoneButton.interactable=true;resetSettingsButton.gameObject.SetActive(false);settingsSaveStatus.gameObject.SetActive(false);
@@ -115,8 +118,10 @@ namespace TheLightenRoad.Frontend
             for(int i=0;i<controlsRowKeyLabels.Length;i++)if(controlsRowKeyLabels[i]!=null)controlsRowKeyLabels[i].transform.parent.gameObject.SetActive(!pad);
             if(!pad)return;
             bool ps=tab==2;controllerDiagram.SetSymmetric(ps);
-            string[] text={"Move / Climb\nStick / D-pad Up","",ps?"Pause  /  Options":"Pause  /  Menu",ps?"Interact  /  Triangle":"Interact  /  Y",ps?"Flare  /  R2":"Flare  /  RT",ps?"Jump  /  Cross":"Jump  /  A"};
-            for(int i=0;i<6;i++){diagramLabels[i].text=text[i];diagramLabels[i].gameObject.SetActive(i!=1);}
+            string[] text=ps
+                ? new[]{"Climb / Menu\nD-Pad","Move\nLeft Stick","Flare\nR2","Pause\nOptions","Interact\nTriangle","Jump\nCross"}
+                : new[]{"Move\nLeft Stick","Climb / Menu\nD-Pad","Flare\nRT","Interact\nY","Pause\nMenu","Jump\nA"};
+            for(int i=0;i<6;i++){diagramLabels[i].text=text[i];diagramLabels[i].gameObject.SetActive(true);}
         }
     }
 }

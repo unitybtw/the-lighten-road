@@ -559,11 +559,11 @@ namespace TheLightenRoad.Frontend
                 topGodRayImages[i].color = new Color(0.68f, 0.80f, 0.96f, rayAlpha);
             }
 
-            // 4. Carved Pillar Ember Veins Steady Amber Glow
+            // 4. Carved Pillar Fluting Subtle Seam Accent
             if (pillarVeinGlowImage != null)
             {
-                float veinAlpha = Mathf.Clamp01((0.36f + surgeIntensity * 0.35f) * bloomExpansion * extinguish);
-                pillarVeinGlowImage.color = new Color(1.0f, 0.68f, 0.22f, veinAlpha);
+                float veinAlpha = Mathf.Clamp01((0.18f + surgeIntensity * 0.15f) * bloomExpansion * extinguish);
+                pillarVeinGlowImage.color = new Color(1.0f, 0.68f, 0.24f, veinAlpha);
             }
 
             // 5. Hero Character Breathing Motion
@@ -595,11 +595,13 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // 8. Mouse Lantern Spotlight
+            // 8. Mouse Lantern Spotlight (kept subtle; avoids idle center-left smudge)
             if (cursorLanternRect != null && cursorLanternGlow != null)
             {
+                bool hasPointer = mouseCanvasPosition.sqrMagnitude > 1f;
                 cursorLanternRect.anchoredPosition = Vector2.Lerp(cursorLanternRect.anchoredPosition, mouseCanvasPosition, 1f - Mathf.Exp(-dt * 9f));
-                cursorLanternGlow.color = new Color(1.0f, 0.68f, 0.25f, (0.09f + surgeIntensity * 0.05f) * introIgnition * extinguish);
+                float spotAlpha = hasPointer ? (0.035f + surgeIntensity * 0.02f) * introIgnition * extinguish : 0f;
+                cursorLanternGlow.color = new Color(1.0f, 0.70f, 0.28f, spotAlpha);
             }
 
         }
@@ -751,16 +753,18 @@ namespace TheLightenRoad.Frontend
             var pillarTex = NewTexture(w, h, FilterMode.Point);
             var veinTex = NewTexture(w, h, FilterMode.Point);
 
-            Color pillarDark = new Color(0.035f, 0.026f, 0.024f, 0.98f);
-            Color pillarMid = new Color(0.068f, 0.050f, 0.040f, 0.98f);
+            Color pillarDark = new Color(0.032f, 0.024f, 0.022f, 0.98f);
+            Color pillarMid = new Color(0.058f, 0.044f, 0.036f, 0.98f);
+            Color pillarFlute = new Color(0.072f, 0.056f, 0.044f, 0.98f);
 
             float[] pillarCenters = { 0.05f, 0.16f, 0.84f, 0.95f };
-            float[] pillarWidths = { 0.042f, 0.030f, 0.030f, 0.045f };
+            float[] pillarWidths = { 0.042f, 0.028f, 0.028f, 0.045f };
 
             for (int y = 0; y < h; y++)
             {
                 float ny = y / (float)(h - 1);
                 bool mortarRow = (y % 12 == 0);
+                int brickSegment = y / 12;
 
                 for (int x = 0; x < w; x++)
                 {
@@ -771,19 +775,20 @@ namespace TheLightenRoad.Frontend
                     for (int i = 0; i < pillarCenters.Length; i++)
                     {
                         float dx = nx - pillarCenters[i];
+                        float absDx = Mathf.Abs(dx);
                         float pw = pillarWidths[i];
                         if (ny > 0.84f) pw += Mathf.Floor((ny - 0.84f) * 20f) * 0.006f;
                         if (ny < 0.14f) pw += Mathf.Floor((0.14f - ny) * 20f) * 0.005f;
 
-                        if (Mathf.Abs(dx) <= pw)
+                        if (absDx <= pw)
                         {
-                            pOut = mortarRow ? pillarDark : pillarMid;
-                            float qNy = Mathf.Floor(ny * 64f) / 64f;
-                            float veinPath = Mathf.Sin(qNy * 16f + i * 2.1f) * (pw * 0.35f);
-                            float d1 = Mathf.Abs(dx - veinPath);
-                            if (d1 < 0.0045f && ny > 0.14f && ny < 0.84f)
+                            bool edgeBevel = absDx >= pw - 0.005f || (absDx <= 0.003f && ny >= 0.14f && ny <= 0.84f);
+                            pOut = mortarRow ? pillarDark : (edgeBevel ? pillarFlute : pillarMid);
+
+                            // Subtle hairline mortar glints only along the far outer masonry edges (never across the character)
+                            if ((i == 0 || i == 3) && mortarRow && (brickSegment % 5 == 0) && absDx < pw * 0.45f)
                             {
-                                vOut = new Color(1f, 1f, 1f, Mathf.Sin(ny * Mathf.PI));
+                                vOut = new Color(1f, 1f, 1f, 0.45f * Mathf.Sin(ny * Mathf.PI));
                             }
                             break;
                         }
@@ -802,8 +807,8 @@ namespace TheLightenRoad.Frontend
         {
             var tex = NewTexture(w, h, FilterMode.Point);
             Color deepShadow = new Color(0.018f, 0.014f, 0.018f, 1f);
-            Color stoneBody = new Color(0.11f, 0.082f, 0.062f, 1f);
-            Color stoneTopCap = new Color(0.24f, 0.18f, 0.12f, 1f);
+            Color stoneBody = new Color(0.095f, 0.072f, 0.056f, 1f);
+            Color stoneTopCap = new Color(0.20f, 0.15f, 0.105f, 1f);
 
             for (int y = 0; y < h; y++)
             {
@@ -817,7 +822,6 @@ namespace TheLightenRoad.Frontend
 
                     float floorH = 0.095f;
                     float pedestalH = (nx >= 0.62f && nx <= 0.94f) ? ((nx >= 0.65f && nx <= 0.90f) ? 0.155f : 0.125f) : 0f;
-                    float bookStackH = (nx >= 0.675f && nx <= 0.715f) ? 0.195f : 0f;
                     float maxH = Mathf.Max(floorH, pedestalH);
 
                     if (ny <= maxH)
@@ -835,11 +839,6 @@ namespace TheLightenRoad.Frontend
                         {
                             tex.SetPixel(x, y, deepShadow);
                         }
-                    }
-                    else if (bookStackH > 0f && ny <= bookStackH)
-                    {
-                        bool pageStripe = (y % 4 == 2);
-                        tex.SetPixel(x, y, pageStripe ? new Color(0.65f, 0.52f, 0.34f, 1f) : new Color(0.22f, 0.14f, 0.09f, 1f));
                     }
                     else
                     {

@@ -39,37 +39,73 @@ namespace TheLightenRoad.Frontend
         protected override void OnPopulateMesh(VertexHelper vh)
         {
             vh.Clear();
-            // Native PNG coordinates; convert against the artwork's displayed size.
+            Vector2 artSize = artwork != null && artwork.rectTransform.sizeDelta.x > 10f
+                ? artwork.rectTransform.sizeDelta
+                : new Vector2(460f, 460f * 940f / 1452f);
+
+            // Native 1452x940 PNG button centers (strictly ordered top-to-bottom per side so leader lines never cross)
             Vector2[] anchors = SymmetricSticks
-                ? new[] { new Vector2(310,447), new Vector2(400,200), new Vector2(1050,307),
-                    new Vector2(1155,357), new Vector2(1050,160), new Vector2(1155,535) }
-                : new[] { new Vector2(550,620), new Vector2(370,240), new Vector2(830,414),
-                    new Vector2(1090,320), new Vector2(1070,175), new Vector2(1090,490) };
-            float[] heights = {65, -15, 100, 48, -8, -65};
+                ? new[]
+                {
+                    new Vector2(300f, 445f),  // Left Top: D-Pad
+                    new Vector2(518f, 635f),  // Left Bottom: Left Stick
+                    new Vector2(1150f, 120f), // Right 0: R2
+                    new Vector2(1045f, 315f), // Right 1: Options
+                    new Vector2(1152f, 360f), // Right 2: Triangle
+                    new Vector2(1152f, 528f)  // Right 3: Cross
+                }
+                : new[]
+                {
+                    new Vector2(365f, 420f),  // Left Top: Left Stick
+                    new Vector2(548f, 610f),  // Left Bottom: D-Pad
+                    new Vector2(1095f, 110f), // Right 0: RT
+                    new Vector2(1090f, 318f), // Right 1: Y
+                    new Vector2(830f, 412f),  // Right 2: Menu
+                    new Vector2(1090f, 495f)  // Right 3: A
+                };
+
+            float[] heights = { 48f, -58f, 120f, 48f, -24f, -96f };
+            float elbowX = artSize.x * 0.5f + 18f;
+            float tipX = artSize.x * 0.5f + 42f;
+            var dotColor = new Color(1f, 0.78f, 0.34f, color.a);
+
             for (int i = 0; i < anchors.Length; i++)
             {
-                Vector2 start = new Vector2((anchors[i].x / 1452f - .5f) * 460f,
-                    (.5f - anchors[i].y / 940f) * (460f * 940f / 1452f));
+                Vector2 start = new Vector2(
+                    (anchors[i].x / 1452f - 0.5f) * artSize.x,
+                    (0.5f - anchors[i].y / 940f) * artSize.y);
                 float side = i < 2 ? -1f : 1f;
-                var elbow = new Vector2(side * 260f, heights[i]);
-                Line(vh, start, elbow, 1.2f);
-                Line(vh, elbow, new Vector2(side * 300f, heights[i]), 1.2f);
+                var elbow = new Vector2(side * elbowX, heights[i]);
+                var tip = new Vector2(side * tipX, heights[i]);
+                Line(vh, start, elbow, 1.4f, color);
+                Line(vh, elbow, tip, 1.4f, color);
+                Dot(vh, start, 3.2f, dotColor);
             }
         }
 
-        private void Line(VertexHelper vh, Vector2 a, Vector2 b, float width)
+        private static void Line(VertexHelper vh, Vector2 a, Vector2 b, float width, Color col)
         {
-            Vector2 scale = new Vector2(rectTransform.rect.width / 800f, rectTransform.rect.height / 360f);
-            a = Vector2.Scale(a, scale);
-            b = Vector2.Scale(b, scale);
-            Vector2 normal = new Vector2(-(b-a).y, (b-a).x).normalized * width * .5f;
+            Vector2 delta = b - a;
+            if (delta.sqrMagnitude < 0.001f) return;
+            Vector2 normal = new Vector2(-delta.y, delta.x).normalized * (width * 0.5f);
             int start = vh.currentVertCount;
-            vh.AddVert(a-normal, color, Vector2.zero);
-            vh.AddVert(a+normal, color, Vector2.zero);
-            vh.AddVert(b+normal, color, Vector2.zero);
-            vh.AddVert(b-normal, color, Vector2.zero);
-            vh.AddTriangle(start, start+1, start+2);
-            vh.AddTriangle(start, start+2, start+3);
+            vh.AddVert(a - normal, col, Vector2.zero);
+            vh.AddVert(a + normal, col, Vector2.zero);
+            vh.AddVert(b + normal, col, Vector2.zero);
+            vh.AddVert(b - normal, col, Vector2.zero);
+            vh.AddTriangle(start, start + 1, start + 2);
+            vh.AddTriangle(start, start + 2, start + 3);
+        }
+
+        private static void Dot(VertexHelper vh, Vector2 center, float radius, Color col)
+        {
+            int start = vh.currentVertCount;
+            vh.AddVert(center + new Vector2(-radius, -radius), col, Vector2.zero);
+            vh.AddVert(center + new Vector2(-radius, radius), col, Vector2.zero);
+            vh.AddVert(center + new Vector2(radius, radius), col, Vector2.zero);
+            vh.AddVert(center + new Vector2(radius, -radius), col, Vector2.zero);
+            vh.AddTriangle(start, start + 1, start + 2);
+            vh.AddTriangle(start, start + 2, start + 3);
         }
     }
 }

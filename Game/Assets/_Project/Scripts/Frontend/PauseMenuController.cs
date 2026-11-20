@@ -769,7 +769,7 @@ namespace TheLightenRoad.Frontend
             var valNode = toggle.transform.Find("Pill/Value");
             if (valNode != null && valNode.TryGetComponent<TMP_Text>(out var txt))
             {
-                txt.text = toggle.isOn ? "<  ON  >" : "<  OFF  >";
+                txt.text = toggle.isOn ? "ON" : "OFF";
                 txt.color = toggle.isOn ? amberGold : moonlightSilver;
             }
             var pillNode = toggle.transform.Find("Pill");
@@ -900,9 +900,10 @@ namespace TheLightenRoad.Frontend
 
             if (topFiligreeSprite != null)
             {
-                var topFiligree = CreateAnchoredRect("Settings Top Filigree", settingsPanel.transform, new Vector2(400f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 195f));
+                var topFiligree = CreateAnchoredRect("Settings Top Filigree", settingsPanel.transform, new Vector2(320f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 195f));
                 var tImg = topFiligree.gameObject.AddComponent<Image>();
                 tImg.sprite = topFiligreeSprite;
+                tImg.preserveAspect = true;
                 tImg.color = new Color(0.86f, 0.92f, 1.0f, 0.85f);
                 tImg.raycastTarget = false;
             }
@@ -929,7 +930,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            effectsSlider = CreateSlider("EffectsSlider", r, new Vector2(0f, y), "Sound Effects (SFX)", "Footsteps, lantern and interactions", v =>
+            effectsSlider = CreateSlider("EffectsSlider", r, new Vector2(0f, y), "Sound Effects", "Lantern, footsteps and interactions", v =>
             {
                 MenuPreferences.SetAudio(MenuPreferences.Master, MenuPreferences.Music, v);
                 MarkPauseSettingsChanged();
@@ -937,7 +938,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            fullscreenToggle = CreateToggle("FullscreenToggle", r, new Vector2(0f, y), "Fullscreen Mode", "Display in fullscreen", b =>
+            fullscreenToggle = CreateToggle("FullscreenToggle", r, new Vector2(0f, y), "Fullscreen", "Use the whole display", b =>
             {
                 MenuPreferences.SetFullscreen(b);
                 MenuPreferences.Save();
@@ -945,7 +946,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            vsyncToggle = CreateToggle("VSyncToggle", r, new Vector2(0f, y), "Vertical Sync (V-Sync)", "Match display refresh rate", b =>
+            vsyncToggle = CreateToggle("VSyncToggle", r, new Vector2(0f, y), "V-Sync", "Match display refresh rate", b =>
             {
                 MenuPreferences.SetVSync(b);
                 MenuPreferences.Save();
@@ -953,7 +954,7 @@ namespace TheLightenRoad.Frontend
             });
 
             y -= 48f;
-            reducedMotionToggle = CreateToggle("ReducedMotionToggle", r, new Vector2(0f, y), "Reduced Motion Mode", "Reduce camera shake and UI motion", b =>
+            reducedMotionToggle = CreateToggle("ReducedMotionToggle", r, new Vector2(0f, y), "Reduced Motion", "Reduce camera shake and UI motion", b =>
             {
                 MenuPreferences.SetReducedMotion(b);
                 MenuPreferences.Save();
@@ -962,15 +963,16 @@ namespace TheLightenRoad.Frontend
 
             if (bottomCrestSprite != null)
             {
-                var botCrest = CreateAnchoredRect("Settings Bottom Filigree", r, new Vector2(360f, 24f), new Vector2(0.5f, 0.5f), new Vector2(0f, -170f));
+                var botCrest = CreateAnchoredRect("Settings Bottom Filigree", r, new Vector2(220f, 36f), new Vector2(0.5f, 0.5f), new Vector2(0f, -172f));
                 var bImg = botCrest.gameObject.AddComponent<Image>();
                 bImg.sprite = bottomCrestSprite;
+                bImg.preserveAspect = true;
                 bImg.color = new Color(0.86f, 0.92f, 1.0f, 0.65f);
                 bImg.raycastTarget = false;
             }
 
-            var resetBtn = CreateEtherealActionButton("ResetDefaultsButton", r, "Reset Defaults", new Vector2(-160f, -205f), RequestResetDefaults, isPrimary: false, width: 230f);
-            settingsBackButton = CreateEtherealActionButton("SettingsBackButton", r, "<  Return to Pause", new Vector2(160f, -205f), ShowMainView, isPrimary: true, width: 260f);
+            var resetBtn = CreateEtherealActionButton("ResetDefaultsButton", r, "Restore Defaults", new Vector2(-160f, -205f), RequestResetDefaults, isPrimary: false, width: 230f);
+            settingsBackButton = CreateEtherealActionButton("SettingsBackButton", r, "Return to Pause", new Vector2(160f, -205f), ShowMainView, isPrimary: true, width: 260f);
 
             BuildPauseSettingsWorkspace();
         }
@@ -994,9 +996,10 @@ namespace TheLightenRoad.Frontend
 
             if (topFiligreeSprite != null)
             {
-                var topFiligree = CreateAnchoredRect("Controls Top Filigree", controlsPanel.transform, new Vector2(400f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 245f));
+                var topFiligree = CreateAnchoredRect("Controls Top Filigree", controlsPanel.transform, new Vector2(320f, 40f), new Vector2(0.5f, 0.5f), new Vector2(0f, 245f));
                 var tImg = topFiligree.gameObject.AddComponent<Image>();
                 tImg.sprite = topFiligreeSprite;
+                tImg.preserveAspect = true;
                 tImg.color = new Color(0.86f, 0.92f, 1.0f, 0.85f);
                 tImg.raycastTarget = false;
             }
@@ -1099,7 +1102,7 @@ namespace TheLightenRoad.Frontend
                 for (int i = 0; i < pauseControlsRowIcons.Length; i++)
                     if (pauseControlsRowIcons[i] != null) pauseControlsRowIcons[i].color = Color.clear;
 
-                pauseControlsRowKeyLabels[0].text = "[ A / D  or  ARROWS ]";
+                pauseControlsRowKeyLabels[0].text = "[ A / D · ARROWS ]";
                 pauseControlsRowKeyLabels[1].text = "[ SPACE ]";
                 pauseControlsRowKeyLabels[2].text = "[ F ]";
                 pauseControlsRowKeyLabels[3].text = "[ E ]";
@@ -1118,7 +1121,7 @@ namespace TheLightenRoad.Frontend
                 }
 
                 pauseControlsRowKeyLabels[0].text = "[ L-STICK / D-PAD ]";
-                pauseControlsRowKeyLabels[1].text = "[ A ]  (SOUTH)";
+                pauseControlsRowKeyLabels[1].text = "[ A ]";
                 pauseControlsRowKeyLabels[2].text = "[ RT ]";
                 pauseControlsRowKeyLabels[3].text = "[ Y ]";
                 pauseControlsRowKeyLabels[4].text = "[ MENU ]";
@@ -1148,7 +1151,7 @@ namespace TheLightenRoad.Frontend
             pauseFooterBar = CreateAnchoredRect("Pause HollowKnight Footer", parent, new Vector2(860f, 36f), Vector2.one * 0.5f, new Vector2(0f, -365f));
             var fBg = pauseFooterBar.gameObject.AddComponent<Image>();
             fBg.sprite = softRadialSprite;
-            fBg.color = new Color(0.008f, 0.014f, 0.028f, 0.70f);
+            fBg.color = Color.clear;
             fBg.raycastTarget = false;
 
             float[] xPos = { -300f, -100f, 100f, 300f };
@@ -1429,7 +1432,7 @@ namespace TheLightenRoad.Frontend
             var glowRect = CreateAnchoredRect("Soft Glow", rect, new Vector2(width + 60f, 64f), new Vector2(0.5f, 0.5f), Vector2.zero);
             var glowImg = glowRect.gameObject.AddComponent<Image>();
             glowImg.sprite = softRadialSprite;
-            glowImg.color = isPrimary ? new Color(1.0f, 0.66f, 0.20f, 0.22f) : Color.clear;
+            glowImg.color = Color.clear;
             glowImg.raycastTarget = false;
 
             var plateRect = CreateStretchRect("Card Plate", rect);
@@ -1722,7 +1725,7 @@ namespace TheLightenRoad.Frontend
             var badge = CreateAnchoredRect("Keycap Badge", row, new Vector2(240f, 36f), new Vector2(0f, 0.5f), new Vector2(120f, 0f));
             var badgeImg = badge.gameObject.AddComponent<Image>();
             badgeImg.sprite = softRadialSprite;
-            badgeImg.color = new Color(.18f, .16f, .12f, .25f);
+            badgeImg.color = Color.clear;
 
             var iconRect = CreateAnchoredRect("Glyph Icon", badge, new Vector2(34f, 34f), new Vector2(0f, 0.5f), new Vector2(24f, 0f));
             var iconImg = iconRect.gameObject.AddComponent<Image>();

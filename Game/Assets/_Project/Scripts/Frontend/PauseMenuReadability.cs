@@ -64,6 +64,7 @@ namespace TheLightenRoad.Frontend
             foreach(var label in new[]{pauseFooterSelectText,pauseFooterBackText,pauseFooterResetText,pauseFooterTabText})
             {
                 UsePauseBodyFont(label);label.fontSize=20;
+                label.color=new Color(0.68f,0.72f,0.78f,0.68f);
                 label.rectTransform.sizeDelta=new Vector2(260,32);
             }
             ((RectTransform)pauseFooterResetIcon.transform.parent).anchoredPosition=new Vector2(150,0);

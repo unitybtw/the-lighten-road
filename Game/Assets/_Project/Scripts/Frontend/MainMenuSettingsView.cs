@@ -52,11 +52,12 @@ namespace TheLightenRoad.Frontend
             var shade=backdrop.gameObject.AddComponent<Image>();
             shade.sprite=softRadialSprite;shade.color=new Color(.006f,.010f,.020f,.96f);shade.raycastTarget=false;
             SettingsRule(surface,"Top tab rule",new Vector2(0,150),720);
-            var crest = CreateAnchoredRect("Settings Bottom Filigree", surface, new Vector2(340f, 22f), Vector2.one * 0.5f, new Vector2(0f, -215f));
+            var crest = CreateAnchoredRect("Settings Bottom Filigree", surface, new Vector2(220f, 36f), Vector2.one * 0.5f, new Vector2(0f, -210f));
             if (bottomCrestSprite != null)
             {
                 var cImg = crest.gameObject.AddComponent<Image>();
                 cImg.sprite = bottomCrestSprite;
+                cImg.preserveAspect = true;
                 cImg.color = new Color(0.86f, 0.92f, 1.0f, 0.60f);
                 cImg.raycastTarget = false;
             }
@@ -87,10 +88,10 @@ namespace TheLightenRoad.Frontend
 
             var names=SectionTabNames;
             var descriptions=new[]{
-                "Master, music and sound effects volumes.",
-                "Window mode, vertical sync and frame rate.",
-                "Controller type (Xbox / PlayStation), prompts and vibration.",
-                "Motion and visual comfort settings."
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty
             };
             for(int i=0;i<4;i++)
             {
@@ -103,12 +104,14 @@ namespace TheLightenRoad.Frontend
                 settingsSections[i]=section.gameObject;
                 var desc=SettingsText(section,descriptions[i],new Vector2(0,140),13f,moonlightSilver,720);
                 desc.alignment=TextAlignmentOptions.Center;
+                desc.gameObject.SetActive(false);
             }
             var audio=(RectTransform)settingsSections[0].transform;
             masterSlider=CreateEtherealSlider(audio,"Master Volume","Overall audio level",100,out masterValueText);
             musicSlider=CreateEtherealSlider(audio,"Ambient Music","Music and atmospheric score",34,out musicValueText);
-            effectsSlider=CreateEtherealSlider(audio,"Sound Effects (SFX)","Footsteps, lantern and interactions",-32,out effectsValueText);
-            controllerSpeakerToggle=CreateEtherealToggle(audio,"DualSense Speaker","Quiet lantern details over Bluetooth",-98,out controllerSpeakerValueText,value =>
+            effectsSlider=CreateEtherealSlider(audio,"Sound Effects (SFX)","Lantern, footsteps and interactions",-32,out effectsValueText);
+            effectsSlider.transform.parent.Find("Title").GetComponent<TMP_Text>().text="SOUND EFFECTS";
+            controllerSpeakerToggle=CreateEtherealToggle(audio,"DualSense Speaker","Lantern audio on controller speaker",-98,out controllerSpeakerValueText,value =>
             {
                 MenuPreferences.SetControllerSpeaker(value);MarkSettingsChanged();UpdateSwitchVisual(controllerSpeakerToggle);
             });
@@ -122,7 +125,7 @@ namespace TheLightenRoad.Frontend
             masterSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             musicSlider.onValueChanged.AddListener(OnAudioSliderChanged);
             effectsSlider.onValueChanged.AddListener(OnAudioSliderChanged);
-            var audioHint=SettingsText(audio,"Adjust audio levels for music and gameplay effects.",new Vector2(0,-156),14f,moonlightSilver,720);
+            var audioHint=SettingsText(audio,"",new Vector2(0,-156),14f,moonlightSilver,720);
             audioHint.alignment=TextAlignmentOptions.Center;audioHint.gameObject.SetActive(false);
 
             var display=(RectTransform)settingsSections[1].transform;
@@ -135,27 +138,30 @@ namespace TheLightenRoad.Frontend
             var styleRow=CreateAnchoredRect("Prompt Style Row",controls,new Vector2(680,54),Vector2.one*0.5f,new Vector2(0,100));
             var styleTitle=CreateLabel("Title",styleRow,"PROMPT GLYPHS",20f,radiantIvory,new Vector2(300,24),new Vector2(0,0.5f),new Vector2(8,10),new Vector2(0,0.5f));
             styleTitle.fontStyle=FontStyles.Bold; styleTitle.characterSpacing=2.5f;
-            var styleSub=CreateLabel("Subtitle",styleRow,"Button symbols shown throughout the game",14f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
-            controllerStyleButton=SettingsButton(styleRow,"< AUTO-DETECT >",new Vector2(175,0),new Vector2(250,38),CycleControllerStyle);
+            var styleSub=CreateLabel("Subtitle",styleRow,"Button icon style",14f,moonlightSilver,new Vector2(340,20),new Vector2(0,0.5f),new Vector2(8,-12),new Vector2(0,0.5f));
+            controllerStyleButton=SettingsButton(styleRow,"Automatic",new Vector2(175,0),new Vector2(250,38),CycleControllerStyle);
             controllerStyleValueText=controllerStyleButton.GetComponentInChildren<TMP_Text>();
             controllerStyleValueText.fontSize=14f;
 
-            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Contextual vibration and DualSense textures",34,out vibrationToggleValueText,OnVibrationToggled);
+            vibrationToggle=CreateEtherealToggle(controls,"Vibration (Rumble)","Controller rumble feedback",34,out vibrationToggleValueText,OnVibrationToggled);
+            vibrationToggle.transform.Find("Title").GetComponent<TMP_Text>().text="VIBRATION";
 
-            adaptiveTriggersToggle=CreateEtherealToggle(controls,"DualSense R2","Two-stage flint ignition lock & release (Bluetooth)",-32,out adaptiveTriggersValueText,value=>
+            adaptiveTriggersToggle=CreateEtherealToggle(controls,"DualSense R2","Trigger lock on flint ignition",-32,out adaptiveTriggersValueText,value=>
             {
                 MenuPreferences.SetAdaptiveTriggers(value);MarkSettingsChanged();UpdateSwitchVisual(adaptiveTriggersToggle);
                 ControllerGlyphService.UpdateAdaptiveTriggers(true);
                 if(value && Application.isPlaying)ControllerGlyphService.PlayHaptic(HapticCue.Preview);
             });
+            adaptiveTriggersToggle.transform.Find("Title").GetComponent<TMP_Text>().text="ADAPTIVE TRIGGERS";
 
-            controllerLightbarToggle=CreateEtherealToggle(controls,"DualSense Lightbar","Dynamic lantern and flare glow",-98,out controllerLightbarValueText,value=>
+            controllerLightbarToggle=CreateEtherealToggle(controls,"DualSense Lightbar","Match lightbar color to the lantern",-98,out controllerLightbarValueText,value=>
             {
                 MenuPreferences.SetControllerLightbar(value);MarkSettingsChanged();UpdateSwitchVisual(controllerLightbarToggle);
                 if(value && Application.isPlaying)TheLightenRoad.UI.ControllerLightbar.Pulse(TheLightenRoad.UI.ControllerLightbar.AmberLantern, 0.8f, 2f);
             });
+            controllerLightbarToggle.transform.Find("Title").GetComponent<TMP_Text>().text="CONTROLLER LIGHTBAR";
 
-            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Analog stick inner drift threshold",-164,out deadzoneValueText);
+            deadzoneSlider=CreateEtherealSlider(controls,"Stick Deadzone","Inner analog stick drift threshold",-164,out deadzoneValueText);
             ((MenuSlider)deadzoneSlider).NavigationStep=.01f;
             deadzoneSlider.minValue=0.05f; deadzoneSlider.maxValue=0.40f;
             deadzoneSlider.onValueChanged.AddListener(OnDeadzoneSliderChanged);
@@ -185,16 +191,17 @@ namespace TheLightenRoad.Frontend
             }
 
             var accessibility=(RectTransform)settingsSections[3].transform;
-            motionToggle=CreateEtherealToggle(accessibility,"Reduced motion","Reduce parallax, sway and HUD motion",84,out motionToggleValueText,OnReducedMotionToggled);
+            motionToggle=CreateEtherealToggle(accessibility,"Reduced motion","Reduce parallax, sway and UI motion",24,out motionToggleValueText,OnReducedMotionToggled);
             var comfortCard=CreateAnchoredRect("Motion Comfort Card",accessibility,new Vector2(680,104),Vector2.one*.5f,new Vector2(0,-36));
+            comfortCard.gameObject.SetActive(false);
             var titleComfort=SettingsText(comfortCard,"MOTION COMFORT",new Vector2(0,22),15f,radiantIvory,680);
             titleComfort.alignment=TextAlignmentOptions.Center;titleComfort.fontStyle=FontStyles.Bold;titleComfort.characterSpacing=2.5f;
-            var note=SettingsText(comfortCard,"Reduces camera sway, parallax and UI animations. Gameplay, puzzle timing and controls remain unchanged.",new Vector2(0,-14),14f,moonlightSilver,660);
+            var note=SettingsText(comfortCard,"",new Vector2(0,-14),14f,moonlightSilver,660);
             note.alignment=TextAlignmentOptions.Center;
             note.rectTransform.sizeDelta=new Vector2(660,54);
             SettingsRule(comfortCard,"Comfort Bottom Rule",new Vector2(0,-48),540);
 
-            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-198),14f,moonlightSilver,720);
+            settingsSaveStatus=SettingsText(surface,"Preferences are saved on this device",new Vector2(0,-198),13f,new Color(moonlightSilver.r,moonlightSilver.g,moonlightSilver.b,0.68f),720);
             settingsSaveStatus.alignment=TextAlignmentOptions.Center;
             resetSettingsButton=SettingsButton(surface,"Restore defaults",new Vector2(-155,-236),new Vector2(250,40),RequestSettingsReset);
             settingsDoneButton=SettingsButton(surface,"Back",new Vector2(155,-236),new Vector2(250,40),ShowHome);
@@ -211,7 +218,7 @@ namespace TheLightenRoad.Frontend
             settingsFooterBar = CreateAnchoredRect("Settings HollowKnight Footer", parent, new Vector2(880f, 36f), Vector2.one * 0.5f, new Vector2(0f, -276f));
             var fBg = settingsFooterBar.gameObject.AddComponent<Image>();
             fBg.sprite = softRadialSprite;
-            fBg.color = new Color(0.008f, 0.014f, 0.028f, 0.70f);
+            fBg.color = Color.clear;
             fBg.raycastTarget = false;
 
             float[] xPos = { -320f, -110f, 110f, 320f };
@@ -378,7 +385,7 @@ namespace TheLightenRoad.Frontend
                 if (settingsTabs[i] != null) settingsTabs[i].interactable = true;
                 if (settingsTabLabels[i] != null)
                 {
-                    settingsTabLabels[i].text = new[]{"Audio","Video","Controller","Accessibility"}[i];
+                    settingsTabLabels[i].text = SectionTabNames[i];
                     settingsTabLabels[i].color = active ? amberGold : radiantIvory;
                 }
                 var focus = settingsTabs[i] != null ? settingsTabs[i].GetComponent<SettingsLightFocus>() : null;
@@ -442,18 +449,17 @@ namespace TheLightenRoad.Frontend
             var panel=CreateAnchoredRect("Restore settings confirmation",parent,new Vector2(900,360),Vector2.one*.5f,new Vector2(0,-22));
             var panelBg=panel.gameObject.AddComponent<Image>();
             panelBg.sprite=softRadialSprite;
-            panelBg.color=new Color(0.008f,0.014f,0.028f,0.96f);
+            panelBg.color=Color.clear;
 
             settingsResetPanel=panel.gameObject;
-            SettingsRule(panel,"Reset Top Rule",new Vector2(0,148),680);
-            var head=SettingsText(panel,"RESTORE DEFAULT SETTINGS?",new Vector2(0,100),26,radiantIvory,820);
-            head.alignment=TextAlignmentOptions.Center;head.fontStyle=FontStyles.Bold;head.characterSpacing=4f;
-            var note=SettingsText(panel,"Restore audio, display, controller and accessibility options.\nYour chapter progress will be kept.",new Vector2(0,24),20f,moonlightSilver,820);
+            var head=SettingsText(panel,"RESTORE DEFAULT SETTINGS?",new Vector2(0,92),26,radiantIvory,820);
+            head.alignment=TextAlignmentOptions.Center;head.fontStyle=FontStyles.Normal;head.characterSpacing=2.5f;
+            var note=SettingsText(panel,"All settings will reset to defaults.\nSaved chapter progress is kept.",new Vector2(0,18),18f,moonlightSilver,820);
             note.alignment=TextAlignmentOptions.Center;
-            note.rectTransform.sizeDelta=new Vector2(820,84);
-            SettingsRule(panel,"Reset Bottom Rule",new Vector2(0,-44),680);
-            cancelResetButton=SettingsButton(panel,"Keep my settings",new Vector2(-190,-108),new Vector2(320,56),CancelSettingsReset);
-            var confirm=SettingsButton(panel,"Restore defaults",new Vector2(190,-108),new Vector2(320,56),ResetDefaults);
+            note.rectTransform.sizeDelta=new Vector2(820,76);
+            SettingsRule(panel,"Reset Bottom Rule",new Vector2(0,-42),560);
+            cancelResetButton=SettingsButton(panel,"Keep my settings",new Vector2(-180,-108),new Vector2(300,54),CancelSettingsReset);
+            var confirm=SettingsButton(panel,"Restore defaults",new Vector2(180,-108),new Vector2(300,54),ResetDefaults);
             MenuReadability.HideFocusWings(cancelResetButton);MenuReadability.HideFocusWings(confirm);
             cancelResetButton.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=confirm,selectOnRight=confirm};
             confirm.navigation=new Navigation{mode=Navigation.Mode.Explicit,selectOnLeft=cancelResetButton,selectOnRight=cancelResetButton};

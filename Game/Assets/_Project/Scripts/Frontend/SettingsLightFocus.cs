@@ -103,9 +103,7 @@ namespace TheLightenRoad.Frontend
 
             if (Glow != null)
             {
-                Glow.color = new Color(1.0f, 0.72f, 0.28f, blend * 0.07f);
-                float glowScale = Mathf.Lerp(0.92f, 1.05f, blend);
-                Glow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
+                Glow.color = Color.clear;
             }
 
             if (CardPlate != null)

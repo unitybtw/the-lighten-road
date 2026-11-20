@@ -161,13 +161,10 @@ namespace TheLightenRoad.Frontend
                 }
             }
 
-            // 3. Delicate Warm Candlelight Radiance behind text and card (only when focused/hovered)
+            // 3. Keep hit backdrop transparent (no stretched brown oval behind text)
             if (SoftGlow != null)
             {
-                float targetAlpha = IsPrimaryAction ? 0.32f : 0.24f;
-                SoftGlow.color = new Color(1.0f, 0.76f, 0.30f, Mathf.Lerp(0f, targetAlpha, smooth));
-                float glowScale = reducedMotion ? 1f : Mathf.Lerp(0.90f, 1.06f, smooth);
-                SoftGlow.rectTransform.localScale = new Vector3(glowScale, glowScale, 1f);
+                SoftGlow.color = Color.clear;
             }
 
             // 4. Symmetrical Wings (Hollow Knight / Lighten Road inward-gliding selection pointers)
@@ -176,10 +173,13 @@ namespace TheLightenRoad.Frontend
             if (RightWing != null) RightWing.anchoredPosition = new Vector2(wingSlide, 0f);
             if (WingGroup != null) WingGroup.alpha = smooth;
 
-            // 5. Center-Expanding Ember-Vein Filigree Underline (suppressed to prevent flickering lines)
+            // 5. Clean Tapered Hairline Underline on Focus
             if (UnderlineFiligree != null)
             {
-                UnderlineFiligree.color = Color.clear;
+                float ruleW = Mathf.Max(140f, (BaseWingOffset - 22f) * 2f);
+                var ruleRt = UnderlineFiligree.rectTransform;
+                ruleRt.sizeDelta = new Vector2(ruleW * Mathf.Lerp(0.35f, 1f, smooth), 1.5f);
+                UnderlineFiligree.color = new Color(1.0f, 0.82f, 0.46f, smooth * (IsPrimaryAction ? 0.55f : 0.40f));
             }
 
             // Keep the hit surface transparent; focus is carried by text, glow and ornaments.
