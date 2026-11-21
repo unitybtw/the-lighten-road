@@ -10,6 +10,7 @@ namespace TheLightenRoad.Sirac.OfficeAnnex
     {
         public float MaximumSpeed = 1.2f;
         private Rigidbody2D body;
+        private Collider2D crateCollider;
         private PlayerMotor2D actor;
         private PlayerSpriteAnimator pose;
         private Vector2 initialPosition;
@@ -17,14 +18,25 @@ namespace TheLightenRoad.Sirac.OfficeAnnex
         public bool IsBeingPushed => pose != null;
         public float DistanceMoved => body != null ? Mathf.Abs(body.position.x - initialPosition.x) : 0f;
 
-        private void Awake() { body = GetComponent<Rigidbody2D>(); initialPosition = body.position; }
+        private void Awake() { body = GetComponent<Rigidbody2D>(); crateCollider = GetComponent<Collider2D>(); initialPosition = body.position; }
         private void FixedUpdate()
         {
+            float speedCap = MaximumSpeed * (pose != null ? pose.PushSpeedMultiplier : 1f);
             var velocity = body.linearVelocity;
-            velocity.x = Mathf.Clamp(velocity.x, -MaximumSpeed, MaximumSpeed);
+            velocity.x = Mathf.Clamp(velocity.x, -speedCap, speedCap);
             body.linearVelocity = velocity;
-            if (actor != null && (!actor.enabled || !actor.IsGrounded || actor.TraversalLocked ||
-                !GameControls.GameplayAllowed || Mathf.Abs(actor.HorizontalInput) < .05f || Time.time - lastContact > .08f)) Release();
+            if (actor != null)
+            {
+                float toward = Mathf.Sign(body.position.x - actor.Body.position.x);
+                bool pushingToward = actor.HorizontalInput * toward > .05f;
+                // Keep a short 0.18s contact grace window so 1-frame physics micro-separations
+                // never ping-pong PushStart <-> PushEnd while the player is actively pushing.
+                if (!actor.enabled || !actor.IsGrounded || actor.TraversalLocked ||
+                    !GameControls.GameplayAllowed || !pushingToward || Time.time - lastContact > .18f)
+                {
+                    Release();
+                }
+            }
         }
         private void OnCollisionEnter2D(Collision2D collision) => Contact(collision);
         private void OnCollisionStay2D(Collision2D collision) => Contact(collision);
@@ -37,17 +49,21 @@ namespace TheLightenRoad.Sirac.OfficeAnnex
             float toward = Mathf.Sign(body.position.x - candidate.Body.position.x);
             if (!side || !candidate.enabled || !candidate.IsGrounded || candidate.TraversalLocked ||
                 !GameControls.GameplayAllowed || candidate.HorizontalInput * toward <= .05f)
-            { if (actor == candidate) Release(); return; }
+            { if (actor == candidate && !side && Time.time - lastContact > .12f) Release(); return; }
             if (actor != candidate) Release();
             actor = candidate; pose = actor.GetComponent<PlayerSpriteAnimator>();
             lastContact = Time.time;
-            if (pose != null) pose.SetPushing(this, true);
+            if (pose != null) pose.SetPushing(this, true, crateCollider);
+            float speedCap = MaximumSpeed * (pose != null ? pose.PushSpeedMultiplier : 1f);
             var velocity = body.linearVelocity;
-            velocity.x = Mathf.Clamp(velocity.x, -MaximumSpeed, MaximumSpeed);
+            velocity.x = Mathf.Clamp(velocity.x, -speedCap, speedCap);
             body.linearVelocity = velocity;
         }
         private void OnCollisionExit2D(Collision2D collision)
-        { if (collision.collider.GetComponentInParent<PlayerMotor2D>() == actor) Release(); }
+        {
+            // Intentional: let FixedUpdate's 0.18s grace timer release contact so physics solver
+            // micro-bounces do not reset PushStart or trigger false PushEnd flicker.
+        }
         private void Release()
         { if (pose != null) pose.SetPushing(this, false); pose = null; actor = null; }
         private void OnDisable() => Release();

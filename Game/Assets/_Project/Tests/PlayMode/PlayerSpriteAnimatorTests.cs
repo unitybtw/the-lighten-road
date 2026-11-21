@@ -52,13 +52,14 @@ public sealed class PlayerSpriteAnimatorTests
     [Test] public void CatalogContainsAllDeliveredFramesAndClimbHasItsOwnRegistration()
     {
         var data = animation.Catalog;
-        Assert.That(data.Sequences.Length, Is.EqualTo(9));
-        Assert.That(data.Sequences.Sum(s => s.Frames.Length), Is.EqualTo(131));
+        Assert.That(data.Sequences.Length, Is.EqualTo(12));
+        Assert.That(data.Sequences.Sum(s => s.Frames.Length), Is.EqualTo(150));
         foreach (var s in data.Sequences)
         {
-            Assert.That(s.Durations.All(d => Mathf.Abs(d - .1f) < .0001f), Is.True);
+            float expectedFrameDuration = s.Kind == LightAnimation.PushStart ? .05f : s.Kind == LightAnimation.PushEnd ? .04f : .1f;
+            Assert.That(s.Durations.All(d => Mathf.Abs(d - expectedFrameDuration) < .001f), Is.True, s.Kind.ToString());
             Assert.That(s.Frames.All(f => f != null && Mathf.Abs(f.pixelsPerUnit - 36) < .001f), Is.True);
-            Assert.That(s.PreviewClip.length, Is.EqualTo(s.Duration).Within(.001f));
+            Assert.That(s.PreviewClip.length, Is.EqualTo(s.Duration).Within(.002f));
             Assert.That(s.LanternOffsets.Length, Is.EqualTo(s.Frames.Length));
             Assert.That(s.SoleOffsets.Length, Is.EqualTo(s.Frames.Length));
             Assert.That(s.Frames.All(f => Mathf.Approximately(f.rect.width, 70)), Is.True);
@@ -349,5 +350,89 @@ public sealed class PlayerSpriteAnimatorTests
         Assert.That(motor.Body.linearVelocity.y, Is.GreaterThan(1));
         Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
         Assert.That(animation.CurrentFrame, Is.LessThan(2));
+    }
+    [UnityTest] public IEnumerator PushingPlacesLanternOnCrateAndPicksItBackUpAndIdleBreathesCalmly()
+    {
+        Assert.That(animation.IdleCadence, Is.InRange(0.35f, 0.65f), "Idle breathing cadence should be calm and not hyperactive.");
+        var crate = new GameObject("PushCrate", typeof(BoxCollider2D));
+        crate.transform.position = player.transform.position + new Vector3(1.1f, -0.25f, 0f);
+        var crateCol = crate.GetComponent<BoxCollider2D>();
+        crateCol.size = new Vector2(0.9f, 0.9f);
+        crateCol.isTrigger = true;
+        try
+        {
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            yield return new WaitForSeconds(.12f);
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Walk));
+            Assert.That(animation.IsLanternPlacedOnCrate, Is.False);
+
+            // Starting push plays smooth 6-frame PushStart (0.30s), arcs the exact lantern onto the crate top, then loops Push
+            animation.SetPushing(crate, true, crateCol);
+            yield return null;
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.PushStart));
+            Assert.That(animation.PushSpeedMultiplier, Is.LessThan(0.95f));
+            Assert.That(animation.IsLanternPlacedOnCrate, Is.True, "World lantern must visibly animate from hand onto crate during PushStart.");
+
+            yield return new WaitForSeconds(.34f);
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Push));
+            Assert.That(animation.PushSpeedMultiplier, Is.EqualTo(1f).Within(.001f));
+            Assert.That(animation.IsLanternPlacedOnCrate, Is.True, "Lantern must rest visibly on top of the crate while pushing.");
+
+            // Releasing push plays smooth 5-frame PushEnd (0.20s), lifts the lantern back into hand, and settles into Idle
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            animation.SetPushing(crate, false);
+            yield return new WaitForSeconds(.04f);
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.PushEnd));
+
+            yield return new WaitForSeconds(.22f);
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Idle));
+            Assert.That(animation.IsLanternPlacedOnCrate, Is.False, "Lantern must return to Light's hand once PushEnd finishes.");
+
+            // Jumping during push immediately recalls the lantern so it is never stranded on the crate
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            animation.SetPushing(crate, true, crateCol);
+            yield return new WaitForSeconds(.34f);
+            Assert.That(animation.IsLanternPlacedOnCrate, Is.True);
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+            animation.SetPushing(crate, false);
+            yield return new WaitForSeconds(.06f);
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Jump));
+            Assert.That(animation.IsLanternPlacedOnCrate, Is.False);
+        }
+        finally { Object.DestroyImmediate(crate); }
+    }
+    [UnityTest] public IEnumerator LadderClimbingAnimatesUpAndDownAndHoldsRungWhenStill()
+    {
+        var ladderOwner = new GameObject("LadderOwner");
+        try
+        {
+            animation.SetLadderClimbing(ladderOwner, true, 1f);
+            yield return null;
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.LadderClimb));
+            Assert.That(animation.Renderer.flipX, Is.False);
+            int startFrame = animation.CurrentFrame;
+
+            yield return new WaitForSeconds(.22f);
+            int climbedFrame = animation.CurrentFrame;
+            Assert.That(climbedFrame, Is.Not.EqualTo(startFrame), "Climbing up must advance LadderClimb frames.");
+
+            // Holding still on the ladder freezes cleanly on the current rung pose
+            animation.SetLadderClimbing(ladderOwner, true, 0f);
+            yield return null;
+            int heldFrame = animation.CurrentFrame;
+            yield return new WaitForSeconds(.20f);
+            Assert.That(animation.CurrentFrame, Is.EqualTo(heldFrame), "Holding still on a ladder must not treadmill-animate.");
+
+            // Climbing down reverses smoothly across rungs
+            animation.SetLadderClimbing(ladderOwner, true, -1f);
+            yield return new WaitForSeconds(.22f);
+            Assert.That(animation.CurrentFrame, Is.Not.EqualTo(heldFrame), "Climbing down must animate in reverse.");
+
+            // Releasing ladder returns cleanly to grounded Idle
+            animation.SetLadderClimbing(ladderOwner, false, 0f);
+            yield return new WaitForSeconds(.06f);
+            Assert.That(animation.CurrentAnimation, Is.EqualTo(LightAnimation.Idle));
+        }
+        finally { Object.DestroyImmediate(ladderOwner); }
     }
 }

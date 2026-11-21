@@ -1,0 +1,121 @@
+{
+ "frames": {
+  "PushEnd 0.ase": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 40
+  },
+  "PushEnd 1.ase": {
+   "frame": {
+    "x": 70,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 40
+  },
+  "PushEnd 2.ase": {
+   "frame": {
+    "x": 140,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 40
+  },
+  "PushEnd 3.ase": {
+   "frame": {
+    "x": 210,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 40
+  },
+  "PushEnd 4.ase": {
+   "frame": {
+    "x": 280,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 40
+  }
+ },
+ "meta": {
+  "app": "TheLightenRoad Transition Builder",
+  "version": "3.0",
+  "image": "PushEnd.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 350,
+   "h": 70
+  },
+  "scale": "1",
+  "frameTags": []
+ }
+}

@@ -739,3 +739,112 @@ MonoBehaviour:
     PlantOffsets: []
     PreviewClip: {fileID: 7400000, guid: 245a5e2fefe9c496c95ab6519305e632, type: 2}
     Loop: 1
+  - Kind: 9
+    Frames:
+    - {fileID: 2080349058, guid: 5ab72568582794206bb62d953b11a401, type: 3}
+    - {fileID: 1875242831, guid: 5ab72568582794206bb62d953b11a401, type: 3}
+    - {fileID: -390277860, guid: 5ab72568582794206bb62d953b11a401, type: 3}
+    - {fileID: 548510063, guid: 5ab72568582794206bb62d953b11a401, type: 3}
+    - {fileID: -1951309782, guid: 5ab72568582794206bb62d953b11a401, type: 3}
+    - {fileID: 1508362987, guid: 5ab72568582794206bb62d953b11a401, type: 3}
+    Durations:
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.05
+    LanternOffsets:
+    - {x: -0.027777778, y: 0.013888889}
+    - {x: -0.027777778, y: -0.013888889}
+    - {x: -0.013888889, y: -0.041666668}
+    - {x: -0.113888845, y: -0.06944445}
+    - {x: -0.2055555, y: -0.2361111}
+    - {x: -0.21666664, y: -0.2361111}
+    ReachOffsetsX: []
+    WaistOffsetsX: []
+    GripOffsets: []
+    SoleOffsets:
+    - {x: -0.041666668, y: -0.7916667}
+    - {x: -0.064814776, y: -0.7916667}
+    - {x: -0.064814776, y: -0.7916667}
+    - {x: -0.12314807, y: -0.7916667}
+    - {x: -0.37979794, y: -0.7916667}
+    - {x: -0.44646466, y: -0.7916667}
+    PlantOffsets: []
+    PreviewClip: {fileID: 7400000, guid: d562156e565fd4140a67ab52e1597847, type: 2}
+    Loop: 0
+  - Kind: 10
+    Frames:
+    - {fileID: 1137428503, guid: 9d45fe40dcca249659349c1cbafb37d5, type: 3}
+    - {fileID: -1659423644, guid: 9d45fe40dcca249659349c1cbafb37d5, type: 3}
+    - {fileID: -1082063832, guid: 9d45fe40dcca249659349c1cbafb37d5, type: 3}
+    - {fileID: -1175898773, guid: 9d45fe40dcca249659349c1cbafb37d5, type: 3}
+    - {fileID: 1429968671, guid: 9d45fe40dcca249659349c1cbafb37d5, type: 3}
+    Durations:
+    - 0.04
+    - 0.04
+    - 0.04
+    - 0.04
+    - 0.04
+    LanternOffsets:
+    - {x: -0.19722217, y: -0.2361111}
+    - {x: -0.09166675, y: -0.06944445}
+    - {x: -0.013888889, y: -0.041666668}
+    - {x: -0.027777778, y: -0.013888889}
+    - {x: -0.06944445, y: 0.013888889}
+    ReachOffsetsX: []
+    WaistOffsetsX: []
+    GripOffsets: []
+    SoleOffsets:
+    - {x: -0.3992424, y: -0.7916667}
+    - {x: -0.14259264, y: -0.7916667}
+    - {x: -0.064814776, y: -0.7916667}
+    - {x: -0.064814776, y: -0.7916667}
+    - {x: -0.06944445, y: -0.7916667}
+    PlantOffsets: []
+    PreviewClip: {fileID: 7400000, guid: cf91ba429f9f64914b591f7e92277a06, type: 2}
+    Loop: 0
+  - Kind: 11
+    Frames:
+    - {fileID: -1326608527, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: 350652763, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: 2034552887, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: 839236218, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: -1104818185, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: 1250001404, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: -1605015523, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    - {fileID: 160016719, guid: f741c3b74f856458bbe667c71861c5cc, type: 3}
+    Durations:
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    LanternOffsets:
+    - {x: 0.162037, y: -0.1064815}
+    - {x: 0.18981478, y: -0.13425928}
+    - {x: 0.18981478, y: -0.1064815}
+    - {x: 0.18981478, y: -0.07870367}
+    - {x: 0.162037, y: -0.1064815}
+    - {x: 0.13425922, y: -0.13425928}
+    - {x: 0.13425922, y: -0.1064815}
+    - {x: 0.13425922, y: -0.07870367}
+    ReachOffsetsX: []
+    WaistOffsetsX: []
+    GripOffsets: []
+    SoleOffsets:
+    - {x: 0.013888889, y: -0.6527778}
+    - {x: -0.125, y: -0.7638889}
+    - {x: -0.125, y: -0.7916667}
+    - {x: -0.125, y: -0.7638889}
+    - {x: 0.013888889, y: -0.6527778}
+    - {x: 0.15277778, y: -0.7638889}
+    - {x: 0.15277778, y: -0.7916667}
+    - {x: 0.15277778, y: -0.7638889}
+    PlantOffsets: []
+    PreviewClip: {fileID: 7400000, guid: b24c6c1a01326416e9fa493cf775d55a, type: 2}
+    Loop: 1

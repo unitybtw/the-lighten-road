@@ -30,6 +30,7 @@ namespace TheLightenRoad.Sirac.Level1
 
         private PlayerMotor2D motor;
         private PlayerLedgeClimb ledgeClimb;
+        private PlayerSpriteAnimator spriteAnimator;
         private Rigidbody2D body;
         private LanternController lantern;
         private LanternFuel fuel;
@@ -96,6 +97,7 @@ namespace TheLightenRoad.Sirac.Level1
         {
             if (motor == null) motor = GetComponent<PlayerMotor2D>();
             if (ledgeClimb == null) ledgeClimb = GetComponent<PlayerLedgeClimb>();
+            if (spriteAnimator == null) spriteAnimator = GetComponent<PlayerSpriteAnimator>();
             if (body == null) body = GetComponent<Rigidbody2D>();
             if (lantern == null) lantern = GetComponent<LanternController>();
             if (fuel == null) fuel = GetComponent<LanternFuel>();
@@ -378,6 +380,7 @@ namespace TheLightenRoad.Sirac.Level1
                 body.linearVelocity = Vector2.zero;
             }
             transform.position = new Vector3(ladder.CenterX, Mathf.Clamp(transform.position.y, ladder.BottomY, ladder.TopY), transform.position.z);
+            spriteAnimator?.SetLadderClimbing(this, true, 0f);
         }
 
         public void StepClimb(float verticalInput, float dt)
@@ -397,6 +400,8 @@ namespace TheLightenRoad.Sirac.Level1
                 body.position = nextPos;
             }
 
+            spriteAnimator?.SetLadderClimbing(this, true, verticalInput);
+
             if ((verticalInput > 0.1f && nextY >= ActiveLadder.TopY)
                 || (verticalInput < -0.1f && nextY <= ActiveLadder.BottomY))
             {
@@ -408,6 +413,7 @@ namespace TheLightenRoad.Sirac.Level1
         {
             IsClimbingLadder = false;
             ActiveLadder = null;
+            spriteAnimator?.SetLadderClimbing(this, false, 0f);
             if (body != null)
             {
                 body.gravityScale = baseGravityScale;

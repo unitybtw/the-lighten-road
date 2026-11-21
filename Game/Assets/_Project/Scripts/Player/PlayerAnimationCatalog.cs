@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace TheLightenRoad.Player
 {
-    public enum LightAnimation { Idle, Walk, Jump, Landing, Flare, EmberSwap, Climb, Sheathing, Push }
+    public enum LightAnimation { Idle, Walk, Jump, Landing, Flare, EmberSwap, Climb, Sheathing, Push, PushStart, PushEnd, LadderClimb }
 
     [Serializable]
     public sealed class PlayerSpriteSequence

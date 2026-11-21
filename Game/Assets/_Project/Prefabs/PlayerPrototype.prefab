@@ -5034,7 +5034,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: TheLightenRoad.Player::TheLightenRoad.Player.PlayerMotor2D
   walkSpeed: 3.2
-  runSpeed: 5.5
   stamina: {fileID: 6332020728371791968}
   jumpSpeed: 9
   coyoteTime: 0.15
@@ -5059,7 +5058,6 @@ MonoBehaviour:
   landSquash: {x: 1.25, y: 0.75}
   squashRecoverySpeed: 9
   enableKineticTilt: 1
-  maxRunTiltAngle: 3.2
   maxWalkTiltAngle: 1.5
   tiltRecoverySpeed: 30
   enableCornerCorrection: 1
@@ -5200,6 +5198,7 @@ MonoBehaviour:
   target: {fileID: 8652911498168288635}
   groundAnimationGrace: 0.12
   fallPoseDrop: 0.16
+  idleCadence: 0.48
 --- !u!114 &1890038195983855163
 MonoBehaviour:
   m_ObjectHideFlags: 0

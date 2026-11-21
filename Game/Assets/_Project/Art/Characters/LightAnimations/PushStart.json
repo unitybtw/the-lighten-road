@@ -1,0 +1,142 @@
+{
+ "frames": {
+  "PushStart 0.ase": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 50
+  },
+  "PushStart 1.ase": {
+   "frame": {
+    "x": 70,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 50
+  },
+  "PushStart 2.ase": {
+   "frame": {
+    "x": 140,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 50
+  },
+  "PushStart 3.ase": {
+   "frame": {
+    "x": 210,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 50
+  },
+  "PushStart 4.ase": {
+   "frame": {
+    "x": 280,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 50
+  },
+  "PushStart 5.ase": {
+   "frame": {
+    "x": 350,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 70,
+    "h": 70
+   },
+   "sourceSize": {
+    "w": 70,
+    "h": 70
+   },
+   "duration": 50
+  }
+ },
+ "meta": {
+  "app": "TheLightenRoad Transition Builder",
+  "version": "3.0",
+  "image": "PushStart.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 420,
+   "h": 70
+  },
+  "scale": "1",
+  "frameTags": []
+ }
+}
