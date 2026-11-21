@@ -1,231 +1,492 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
-using TMPro;
+
 namespace TheLightenRoad.Frontend
 {
-    /// <summary>Renders live handwritten ink onto an independent, mesh-based hardcover model.</summary>
+    /// <summary>
+    /// Pure 2D pixel-art Archive Book presentation: darkened gameplay vignette,
+    /// warm flickering amber lantern halo, drifting pixel dust motes, frame-by-frame
+    /// opening & page-turn sprites, and responsive layout fitting across all aspect ratios.
+    /// </summary>
     public sealed class ArchiveBookPresentation : MonoBehaviour
     {
-        public Camera BookCamera{get;private set;}
-        public Camera InkCamera{get;private set;}
-        public ArchiveBookModel Model{get;private set;}
-        public ArchiveBookPageTurn Turn{get;private set;}
-        public RenderTexture Ink{get;private set;}
-        public RenderTexture PreviewInk{get;private set;}
-        private Action<int> preview;
-        private Canvas sourceCanvas,previewCanvas;
-        private TMP_Text[] previewLabels;
-        private GameObject pixelDisplay;
-        private RawImage pixelImage;
-        public RenderTexture PixelTarget{get;private set;}
-        private int pixelWidth,pixelHeight;
-        public bool Visible{get;private set;}
-        public bool IsInitialized=>Model!=null && Model.IsBound && Ink!=null && PreviewInk!=null && PixelTarget!=null && Turn!=null;
-        public void Rebind(Func<bool> canTurn,Action<int> commit,Action<int> preview)
-        {this.preview=preview;if(Turn!=null)Turn.Initialize(this,canTurn,commit);}
-        private Transform stage;private float lastAspect,baseDistance,openingProgress;private Renderer[] modelRenderers;
-        private bool framingDirty=true;
-        private Vector3[] sweptPoints;
-        private readonly List<Canvas> hiddenOverlays=new List<Canvas>();
-        public void Initialize(Canvas canvas,Button[] controls,Func<bool> canTurn,Action<int> commit,Action<int> preview)
+        public static readonly Vector2 StageReferenceSize = new Vector2(1280f, 864f);
+        private static readonly Vector2 SafeFitBounds = new Vector2(1460f, 990f);
+
+        private struct DustMote
         {
-            this.preview=preview;sourceCanvas=canvas;
-            var scaler=canvas.GetComponent<CanvasScaler>();if(scaler!=null)scaler.enabled=false;
-            var raycaster=canvas.GetComponent<GraphicRaycaster>();if(raycaster!=null)raycaster.enabled=false;
-            canvas.renderMode=RenderMode.WorldSpace;
-            var rect=(RectTransform)canvas.transform;rect.position=new Vector3(10000,0,0);rect.rotation=Quaternion.identity;rect.localScale=Vector3.one;
-            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,1260);rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,900);
-            foreach(var child in canvas.GetComponentsInChildren<Transform>(true))child.gameObject.layer=30;
-            Ink=new RenderTexture(2048,1464,24,RenderTextureFormat.ARGB32){name="Live archive handwriting",filterMode=FilterMode.Point};Ink.Create();
-            PreviewInk=new RenderTexture(Ink.descriptor){name="Next archive spread preview",filterMode=FilterMode.Point};PreviewInk.Create();
-            InkCamera=CameraChild("Archive ink camera",transform);InkCamera.transform.position=new Vector3(10000,0,-1200);
-            InkCamera.orthographic=true;InkCamera.orthographicSize=450;InkCamera.aspect=1.4f;InkCamera.cullingMask=1<<30;
-            InkCamera.clearFlags=CameraClearFlags.SolidColor;InkCamera.backgroundColor=Color.clear;InkCamera.targetTexture=Ink;InkCamera.depth=90;
-            canvas.worldCamera=InkCamera;
-            stage=new GameObject("Archive model stage").transform;stage.SetParent(transform,false);stage.position=new Vector3(20000,0,0);
-            BookCamera=CameraChild("Archive perspective camera",stage);BookCamera.fieldOfView=34;BookCamera.cullingMask=1<<31;
-            BookCamera.depth=100;BookCamera.clearFlags=CameraClearFlags.SolidColor;BookCamera.backgroundColor=new Color(.022f,.017f,.012f);
-            var prefab=Resources.Load<GameObject>("UI/ArchiveBook3D/ArchiveBook");
-            if(prefab==null)throw new InvalidOperationException("The archive model is missing. Rebuild it with ArchiveBookModelBuilder.Build.");
-            Model=Instantiate(prefab,stage,false).GetComponent<ArchiveBookModel>();Model.transform.localRotation=Quaternion.Euler(15,0,-1);
-            Model.Bind(Ink);modelRenderers=Model.GetComponentsInChildren<Renderer>(true);SetOpening(1);
-            Turn=gameObject.AddComponent<ArchiveBookPageTurn>();Turn.Initialize(this,canTurn,commit);
-            gameObject.AddComponent<ArchiveBookRaycaster>().Initialize(this,controls,rect,gameObject);
-            pixelDisplay=new GameObject("Pixel art book display",typeof(RectTransform),typeof(Canvas),typeof(RawImage),typeof(GraphicRaycaster));pixelDisplay.transform.SetParent(transform,false);
-            var displayCanvas=pixelDisplay.GetComponent<Canvas>();displayCanvas.renderMode=RenderMode.ScreenSpaceOverlay;displayCanvas.sortingOrder=120;
-            pixelImage=pixelDisplay.GetComponent<RawImage>();pixelImage.raycastTarget=true;
-            EnsurePixelTarget();SetAspect((float)Screen.width/Mathf.Max(1,Screen.height));Show(false);
+            public RectTransform Rect;
+            public Image Image;
+            public Vector2 Position;
+            public Vector2 Velocity;
+            public float Phase;
+            public float BaseAlpha;
+            public bool IsBurst;
+            public float Life;
+            public float MaxLife;
         }
-        private static Camera CameraChild(string name,Transform parent)
+
+        public ArchiveBookPageTurn Turn { get; private set; }
+        public RectTransform BookStage { get; private set; }
+        public RectTransform BookmarkRail { get; private set; }
+        public Image BookArtImage { get; private set; }
+        public Image PageTurnOverlayImage { get; private set; }
+        public Image BackdropImage { get; private set; }
+        public Image LanternHaloImage { get; private set; }
+        public Canvas BookCanvas { get; private set; }
+        public Canvas FooterCanvas { get; private set; }
+
+        public bool Visible { get; private set; }
+        public int CurrentOpeningFrame { get; private set; }
+        public int CurrentTurnFrame { get; private set; } = -1;
+        public bool IsInitialized => BookStage != null && BookArtImage != null && PageTurnOverlayImage != null && Turn != null;
+
+        private CanvasGroup inkGroup;
+        private CanvasGroup bookmarkGroup;
+        private RectTransform overlayRoot;
+        private float openingProgress = 1f;
+        private float ambientClock;
+        private readonly List<Canvas> hiddenOverlays = new List<Canvas>();
+        private readonly List<DustMote> ambientMotes = new List<DustMote>();
+        private readonly List<DustMote> burstMotes = new List<DustMote>();
+
+        public void Initialize(
+            Canvas bookCanvas,
+            Canvas footerCanvas,
+            RectTransform overlayContainer,
+            RectTransform inkContainer,
+            CanvasGroup bookInkGroup,
+            Func<bool> canTurn,
+            Action<int> commit)
         {
-            var go=new GameObject(name,typeof(Camera));go.transform.SetParent(parent,false);var camera=go.GetComponent<Camera>();
-            camera.nearClipPlane=.1f;camera.farClipPlane=2500;camera.allowHDR=false;camera.allowMSAA=false;camera.useOcclusionCulling=false;camera.enabled=false;return camera;
+            BookCanvas = bookCanvas;
+            FooterCanvas = footerCanvas;
+            overlayRoot = overlayContainer;
+            inkGroup = bookInkGroup;
+
+            // 1. Darkened gameplay vignette backdrop (keeps the paused game world subtly visible behind!)
+            var backdropGo = CreateStretch("Darkened World Vignette", overlayRoot);
+            backdropGo.SetAsFirstSibling();
+            BackdropImage = backdropGo.gameObject.AddComponent<Image>();
+            BackdropImage.sprite = PixelArchiveBook.VignetteBackdrop;
+            BackdropImage.color = Color.white;
+            BackdropImage.raycastTarget = true;
+
+            // 2. Warm amber lantern glow halo behind the open book
+            var haloRect = CreateCentered("Lantern Ambient Halo", overlayRoot, new Vector2(1580f, 1140f), new Vector2(0f, 34f));
+            LanternHaloImage = haloRect.gameObject.AddComponent<Image>();
+            LanternHaloImage.sprite = PixelArchiveBook.LanternGlow;
+            LanternHaloImage.color = new Color(1f, 0.78f, 0.42f, 0.20f);
+            LanternHaloImage.raycastTarget = false;
+
+            // 3. Ambient drifting pixel dust motes layer
+            var dustRoot = CreateStretch("Lantern Dust Motes", overlayRoot);
+            BuildDustPool(dustRoot);
+
+            // 4. Crisp 4x Pixel-Art Book Stage (320x216 art grid -> 1280x864 reference rect)
+            BookStage = CreateCentered("Pixel Book Stage", overlayRoot, StageReferenceSize, new Vector2(0f, 36f));
+
+            // 4a. Right-edge Bookmark Tabs Rail (tucked directly behind the right cover edge!)
+            BookmarkRail = CreateCentered("Bookmark Tabs Rail", BookStage, new Vector2(160f, 660f), new Vector2(612f, 16f));
+            bookmarkGroup = BookmarkRail.gameObject.AddComponent<CanvasGroup>();
+
+            // 4b. Frame-by-Frame Pixel-Art Book Sprite
+            var artRect = CreateCentered("Pixel Book Art", BookStage, StageReferenceSize, Vector2.zero);
+            BookArtImage = artRect.gameObject.AddComponent<Image>();
+            BookArtImage.sprite = PixelArchiveBook.OpenSpread;
+            BookArtImage.preserveAspect = true;
+            BookArtImage.raycastTarget = false;
+
+            // 4c. Ink & Interactive Page Controls layered inside BookStage above BookArt
+            inkContainer.SetParent(BookStage, false);
+            inkContainer.anchorMin = inkContainer.anchorMax = inkContainer.pivot = new Vector2(0.5f, 0.5f);
+            inkContainer.anchoredPosition = Vector2.zero;
+            inkContainer.sizeDelta = StageReferenceSize;
+
+            // 4d. Frame-by-Frame 2D Pixel-Art Page Turn Overlay (on top of ink during turn!)
+            var turnRect = CreateCentered("Pixel Page Turn Overlay", BookStage, StageReferenceSize, Vector2.zero);
+            PageTurnOverlayImage = turnRect.gameObject.AddComponent<Image>();
+            PageTurnOverlayImage.sprite = PixelArchiveBook.PageTurnFrames[0];
+            PageTurnOverlayImage.preserveAspect = true;
+            PageTurnOverlayImage.raycastTarget = false;
+            PageTurnOverlayImage.gameObject.SetActive(false);
+
+            Turn = gameObject.AddComponent<ArchiveBookPageTurn>();
+            Turn.Initialize(this, canTurn, commit);
+
+            SetOpening(1f);
+            FitStage();
+            Show(false);
         }
-        private void LateUpdate()
+
+        public void Rebind(Func<bool> canTurn, Action<int> commit)
         {
-            if(Visible)
-            {
-                for(int i=hiddenOverlays.Count-1;i>=0;i--)
-                {
-                    var overlay=hiddenOverlays[i];
-                    if(overlay!=null && overlay.enabled)overlay.enabled=false;
-                }
-            }
-            // A closed reader must not rebuild render targets when gameplay is resized.
-            // Show prepares the current resolution before the book becomes visible again.
-            if(BookCamera==null || !Visible)return;EnsurePixelTarget();
-            float aspect=(float)Screen.width/Mathf.Max(1,Screen.height);if(!Mathf.Approximately(aspect,lastAspect))SetAspect(aspect);if(Visible && (Turn==null || !Turn.IsBusy))FitModel(false);
+            if (Turn != null) Turn.Initialize(this, canTurn, commit);
         }
-        private void EnsurePixelTarget()
-        {
-            int scale=Screen.height>=1500?3:2;
-            int width=Mathf.Max(320,Screen.width/scale),height=Mathf.Max(180,Screen.height/scale);
-            if(PixelTarget!=null && width==pixelWidth && height==pixelHeight)return;
-            if(BookCamera!=null)BookCamera.targetTexture=null;DisposeTexture(PixelTarget);
-            PixelTarget=new RenderTexture(width,height,24,RenderTextureFormat.ARGB32){name="Point-filtered pixel book",filterMode=FilterMode.Point};PixelTarget.Create();
-            pixelWidth=width;pixelHeight=height;BookCamera.targetTexture=PixelTarget;if(pixelImage!=null)pixelImage.texture=PixelTarget;
-        }
-        private void SetAspect(float aspect)
-        {
-            framingDirty=true;
-            lastAspect=aspect;BookCamera.aspect=aspect;
-            float height=Mathf.Max(9.1f,13.2f/Mathf.Max(.5f,aspect))*1.12f;
-            baseDistance=height/(2*Mathf.Tan(BookCamera.fieldOfView*.5f*Mathf.Deg2Rad));
-            BookCamera.transform.localPosition=new Vector3(0,.35f,-baseDistance);
-        }
-        public void FitModel(bool instant,bool allowWhileHeld=false)
-        {
-            if(Turn!=null && Turn.IsBusy && !allowWhileHeld)return;
-            if(modelRenderers==null || Model==null)return;
-            if(!instant && !framingDirty)return;
-            bool any=false;Bounds bounds=default;
-            foreach(var renderer in modelRenderers)
-            {
-                if(!renderer.enabled || !renderer.gameObject.activeInHierarchy)continue;
-                if(!any){bounds=renderer.bounds;any=true;}else bounds.Encapsulate(renderer.bounds);
-            }
-            if(!any)return;
-            if(openingProgress>=.999f)
-            {
-                // Reserve the entire paper sweep before a gesture; framing must not
-                // change underneath a held pointer or cause a zoom/drag feedback loop.
-                if(sweptPoints==null)
-                {
-                    sweptPoints=new Vector3[52];int index=0;
-                    for(int side=-1;side<=1;side+=2)for(int step=0;step<=12;step++)for(int corner=0;corner<2;corner++)
-                        sweptPoints[index++]=ArchiveBookGeometry.LeafPoint(side,step/12f,corner==0?-1:1,1,corner)+new Vector3(-side*.017f,0,-.035f);
-                }
-                foreach(var point in sweptPoints)bounds.Encapsulate(Model.transform.TransformPoint(point));
-            }
-            Vector3 min=bounds.min-stage.position,max=bounds.max-stage.position;
-            float desiredY=Mathf.Clamp((min.y+max.y)*.5f,.25f,1.15f);
-            float blend=1-Mathf.Exp(-Time.unscaledDeltaTime*7);
-            float cameraY=instant?desiredY:Mathf.Lerp(BookCamera.transform.localPosition.y,desiredY,blend);
-            float tangent=Mathf.Tan(BookCamera.fieldOfView*.5f*Mathf.Deg2Rad)*.88f;
-            float required=baseDistance;
-            for(int x=0;x<2;x++)for(int y=0;y<2;y++)for(int z=0;z<2;z++)
-            {
-                var p=new Vector3(x==0?min.x:max.x,y==0?min.y:max.y,z==0?min.z:max.z);
-                required=Mathf.Max(required,Mathf.Abs(p.x)/(tangent*BookCamera.aspect)-p.z,Mathf.Abs(p.y-cameraY)/tangent-p.z);
-            }
-            float distance=instant?required:Mathf.Max(required,Mathf.Lerp(-BookCamera.transform.localPosition.z,required,blend));
-            BookCamera.transform.localPosition=new Vector3(0,cameraY,-distance);
-            // The open-book bounds already reserve the complete page sweep. Once
-            // the camera settles, there is no need to scan every renderer each frame.
-            if(Mathf.Abs(cameraY-desiredY)<.0001f && Mathf.Abs(distance-required)<.0001f)
-            {
-                BookCamera.transform.localPosition=new Vector3(0,desiredY,-required);
-                framingDirty=false;
-            }
-        }
-        public void PrepareSheet(int side){Model.HoldSheet(Ink,side);preview(side);Model.PreviewUnderlay(PreviewInk,side);}
-        public void RenderNextSpread()
-        {
-            if(previewCanvas==null)
-            {
-                var clone=Instantiate(sourceCanvas.gameObject,transform,false);clone.name="Preview ink canvas";previewCanvas=clone.GetComponent<Canvas>();
-                foreach(var node in clone.GetComponentsInChildren<Transform>(true))node.gameObject.layer=29;
-                foreach(var behaviour in clone.GetComponentsInChildren<MonoBehaviour>(true))if(!(behaviour is Graphic))behaviour.enabled=false;
-                previewLabels=clone.GetComponentsInChildren<TMP_Text>(true);
-                foreach(var label in previewLabels)label.name="Preview "+label.name;
-                foreach(var button in clone.GetComponentsInChildren<Button>(true))button.name="Preview "+button.name;
-            }
-            var labels=sourceCanvas.GetComponentsInChildren<TMP_Text>(true);
-            for(int i=0;i<labels.Length;i++)
-            {
-                var from=labels[i];var to=previewLabels[i];to.font=from.font;to.fontStyle=from.fontStyle;to.text=from.text;to.color=from.color;to.fontSize=from.fontSize;
-                to.enableAutoSizing=from.enableAutoSizing;to.fontSizeMin=from.fontSizeMin;to.fontSizeMax=from.fontSizeMax;
-                to.characterSpacing=from.characterSpacing;to.lineSpacing=from.lineSpacing;to.paragraphSpacing=from.paragraphSpacing;to.ForceMeshUpdate(true,true);
-            }
-            int mask=InkCamera.cullingMask;var previous=RenderTexture.active;
-            try{Canvas.ForceUpdateCanvases();InkCamera.cullingMask=1<<29;RenderPipeline.SubmitRenderRequest(InkCamera,new UniversalRenderPipeline.SingleCameraRequest{destination=PreviewInk});}
-            finally{InkCamera.cullingMask=mask;RenderTexture.active=previous;}
-        }
+
         public void SetOpening(float progress)
         {
-            if(openingProgress!=progress)framingDirty=true;
-            openingProgress=progress;
-            if(Model==null)return;Model.SetOpening(progress);Model.transform.localPosition=new Vector3(-3.05f*(1-progress),.25f,0);
+            openingProgress = Mathf.Clamp01(progress);
+            if (BookArtImage == null || BookStage == null) return;
+
+            var frames = PixelArchiveBook.OpeningFrames;
+            int idx = openingProgress >= 0.995f
+                ? frames.Length - 1
+                : Mathf.Clamp(Mathf.FloorToInt(openingProgress * frames.Length), 0, frames.Length - 1);
+            CurrentOpeningFrame = idx;
+            BookArtImage.sprite = frames[idx];
+
+            // Center the closed book cover horizontally, then glide smoothly into the centered open spread.
+            float slideEase = 1f - Mathf.Pow(1f - openingProgress, 3f);
+            float xOffset = Mathf.Lerp(-260f, 0f, slideEase);
+            float yRise = Mathf.Lerp(-16f, 36f, slideEase);
+            BookStage.anchoredPosition = new Vector2(xOffset, yRise);
+
+            // Fade in page ink & bookmark tabs cleanly only once the cover lands open.
+            float contentReveal = openingProgress >= 0.995f
+                ? 1f
+                : Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.76f, 0.98f, openingProgress));
+
+            if (inkGroup != null) inkGroup.alpha = contentReveal;
+            if (bookmarkGroup != null)
+            {
+                bookmarkGroup.alpha = contentReveal;
+                bookmarkGroup.interactable = contentReveal >= 0.99f;
+                bookmarkGroup.blocksRaycasts = contentReveal >= 0.99f;
+            }
         }
+
+        public void SetPageTurnFrame(int frameIndex, int direction, bool visible)
+        {
+            if (PageTurnOverlayImage == null) return;
+            PageTurnOverlayImage.gameObject.SetActive(visible);
+            if (!visible)
+            {
+                CurrentTurnFrame = -1;
+                return;
+            }
+
+            var frames = PixelArchiveBook.PageTurnFrames;
+            int clamped = Mathf.Clamp(frameIndex, 0, frames.Length - 1);
+            CurrentTurnFrame = clamped;
+            PageTurnOverlayImage.sprite = frames[clamped];
+            // Mirror horizontally when turning backwards (left -> right)
+            PageTurnOverlayImage.rectTransform.localScale = new Vector3(direction >= 0 ? 1f : -1f, 1f, 1f);
+        }
+
+        public void SpawnPageTurnDust(int direction)
+        {
+            if (MenuPreferences.ReducedMotion || burstMotes.Count == 0) return;
+
+            for (int i = 0; i < burstMotes.Count; i++)
+            {
+                var mote = burstMotes[i];
+                float spreadY = UnityEngine.Random.Range(-240f, 220f);
+                float startX = (direction >= 0 ? 340f : -340f) + UnityEngine.Random.Range(-90f, 90f);
+                mote.Position = new Vector2(startX, spreadY);
+                mote.Velocity = new Vector2(
+                    -direction * UnityEngine.Random.Range(65f, 160f),
+                    UnityEngine.Random.Range(24f, 95f));
+                mote.Life = 0f;
+                mote.MaxLife = UnityEngine.Random.Range(0.36f, 0.62f);
+                mote.BaseAlpha = UnityEngine.Random.Range(0.55f, 0.92f);
+                mote.Rect.anchoredPosition = mote.Position;
+                mote.Image.gameObject.SetActive(true);
+                burstMotes[i] = mote;
+            }
+        }
+
         public void Show(bool value)
         {
-            if(value && !Visible)
+            if (value && !Visible)
             {
-                EnsurePixelTarget();SetAspect((float)Screen.width/Mathf.Max(1,Screen.height));
-                foreach(var overlay in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
-                    if(overlay.enabled && overlay.isRootCanvas && overlay.renderMode==RenderMode.ScreenSpaceOverlay && !overlay.transform.IsChildOf(transform))
-                    {hiddenOverlays.Add(overlay);overlay.enabled=false;}
+                foreach (var overlay in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                {
+                    if (overlay.enabled && overlay.isRootCanvas && overlay.renderMode == RenderMode.ScreenSpaceOverlay && !overlay.transform.IsChildOf(transform))
+                    {
+                        hiddenOverlays.Add(overlay);
+                        overlay.enabled = false;
+                    }
+                }
             }
-            if(!value){foreach(var overlay in hiddenOverlays)if(overlay!=null)overlay.enabled=true;hiddenOverlays.Clear();}
-            Visible=value;if(pixelDisplay!=null)pixelDisplay.SetActive(value);if(BookCamera!=null)BookCamera.enabled=value;if(InkCamera!=null)InkCamera.enabled=value;
-            if(Model!=null)Model.gameObject.SetActive(value);if(!value && Turn!=null)Turn.Cancel();
-        }
-        public bool TryPagePoint(Vector2 screen,out Vector3 point,out Vector2 uv)
-        {
-            point=Vector3.zero;uv=Vector2.zero;if(!Visible || Model==null)return false;
-            Physics.SyncTransforms();
-            var ray=BookCamera.ViewportPointToRay(new Vector3(screen.x/Mathf.Max(1,Screen.width),screen.y/Mathf.Max(1,Screen.height),0));bool found=false;RaycastHit nearest=default;float distance=float.MaxValue;
-            for(int i=0;i<2;i++)
+            if (!value)
             {
-                var collider=i==0?Model.LeftCollider:Model.RightCollider;
-                if(collider!=null && collider.gameObject.activeInHierarchy && collider.Raycast(ray,out var hit,1000) && hit.distance<distance){nearest=hit;distance=hit.distance;found=true;}
+                foreach (var overlay in hiddenOverlays)
+                {
+                    if (overlay != null) overlay.enabled = true;
+                }
+                hiddenOverlays.Clear();
+                if (Turn != null) Turn.Cancel();
             }
-            if(!found)return false;point=Model.transform.InverseTransformPoint(nearest.point);uv=nearest.textureCoord;return true;
+
+            Visible = value;
+            if (value)
+            {
+                EnsureArtSpritesIntact();
+                FitStage();
+            }
         }
-        public bool TryDragPoint(Vector2 screen,out Vector3 point)
+
+        private void EnsureArtSpritesIntact()
         {
-            point=Vector3.zero;if(!Visible)return false;
-            var ray=BookCamera.ViewportPointToRay(new Vector3(screen.x/Mathf.Max(1,Screen.width),screen.y/Mathf.Max(1,Screen.height),0));var plane=new Plane(Model.transform.TransformDirection(Vector3.back),Model.transform.TransformPoint(new Vector3(0,0,-.15f)));
-            if(!plane.Raycast(ray,out var distance))return false;point=Model.transform.InverseTransformPoint(ray.GetPoint(distance));return true;
+            if (BookArtImage != null && (BookArtImage.sprite == null || BookArtImage.sprite.texture == null))
+            {
+                SetOpening(openingProgress);
+            }
+            if (BackdropImage != null && (BackdropImage.sprite == null || BackdropImage.sprite.texture == null))
+            {
+                BackdropImage.sprite = PixelArchiveBook.VignetteBackdrop;
+            }
+            if (LanternHaloImage != null && (LanternHaloImage.sprite == null || LanternHaloImage.sprite.texture == null))
+            {
+                LanternHaloImage.sprite = PixelArchiveBook.LanternGlow;
+            }
+            for (int i = 0; i < ambientMotes.Count; i++)
+            {
+                var img = ambientMotes[i].Image;
+                if (img != null && (img.sprite == null || img.sprite.texture == null)) img.sprite = PixelArchiveBook.DustPixel;
+            }
+            for (int i = 0; i < burstMotes.Count; i++)
+            {
+                var img = burstMotes[i].Image;
+                if (img != null && (img.sprite == null || img.sprite.texture == null)) img.sprite = PixelArchiveBook.DustPixel;
+            }
         }
-        // The collider already bounds the paper: top, bottom, outer edge and blank
-        // paper are all grabbable, leaving only the narrow sewn binding pinned.
-        public bool IsPageEdge(Vector2 uv)=>Mathf.Abs(uv.x-.5f)>.008f;
-        public Vector2 ScreenPoint(Vector3 modelPoint)
+
+        private void LateUpdate()
         {
-            var viewport=BookCamera.WorldToViewportPoint(Model.transform.TransformPoint(modelPoint));return new Vector2(viewport.x*Screen.width,viewport.y*Screen.height);
+            if (!Visible) return;
+            for (int i = hiddenOverlays.Count - 1; i >= 0; i--)
+            {
+                var overlay = hiddenOverlays[i];
+                if (overlay != null && overlay.enabled) overlay.enabled = false;
+            }
+
+            EnsureArtSpritesIntact();
+            FitStage();
+            TickAtmosphere(Time.unscaledDeltaTime);
         }
-        public void CapturePreview(int width,int height,string path)
+
+        public void FitStage()
         {
-            var previous=RenderTexture.active;float oldBase=baseDistance;float aspect=BookCamera.aspect;var position=BookCamera.transform.localPosition;bool oldDirty=framingDirty;Texture2D image=null;
-            var target=RenderTexture.GetTemporary(width,height,24);var pixels=RenderTexture.GetTemporary(Mathf.Max(1,width/2),Mathf.Max(1,height/2),24);pixels.filterMode=FilterMode.Point;
+            if (BookStage == null || BookCanvas == null) return;
+            var rootRect = (RectTransform)BookCanvas.transform;
+            Vector2 available = rootRect.rect.size;
+            if (available.x <= 1f || available.y <= 1f) available = new Vector2(1920f, 1080f);
+
+            // Reserve comfortable margin for footer controls & right-edge bookmark tabs
+            float scale = MenuReadability.FitScale(available, SafeFitBounds);
+            BookStage.localScale = Vector3.one * scale;
+        }
+
+        private void TickAtmosphere(float dt)
+        {
+            ambientClock += dt;
+            bool reduced = MenuPreferences.ReducedMotion;
+
+            if (LanternHaloImage != null)
+            {
+                float pulse = reduced ? 0.19f : (0.17f + 0.045f * Mathf.Sin(ambientClock * 2.1f) + 0.018f * Mathf.Sin(ambientClock * 5.3f));
+                LanternHaloImage.color = new Color(1f, 0.78f, 0.42f, pulse);
+            }
+
+            for (int i = 0; i < ambientMotes.Count; i++)
+            {
+                var mote = ambientMotes[i];
+                if (mote.Rect == null || mote.Image == null) continue;
+                if (!reduced)
+                {
+                    mote.Position += mote.Velocity * dt;
+                    mote.Position.x += Mathf.Sin(ambientClock * 0.9f + mote.Phase) * 8f * dt;
+                    if (mote.Position.y > 540f) mote.Position.y = -520f;
+                    if (mote.Position.x > 940f) mote.Position.x = -940f;
+                    if (mote.Position.x < -940f) mote.Position.x = 940f;
+                    mote.Rect.anchoredPosition = mote.Position;
+                }
+
+                float twinkle = reduced ? 0.65f : (0.45f + 0.55f * Mathf.Sin(ambientClock * 1.8f + mote.Phase));
+                mote.Image.color = new Color(1f, 0.87f, 0.56f, mote.BaseAlpha * twinkle);
+                ambientMotes[i] = mote;
+            }
+
+            for (int i = 0; i < burstMotes.Count; i++)
+            {
+                var mote = burstMotes[i];
+                if (mote.Rect == null || mote.Image == null || !mote.Image.gameObject.activeSelf) continue;
+
+                mote.Life += dt;
+                if (mote.Life >= mote.MaxLife || reduced)
+                {
+                    mote.Image.gameObject.SetActive(false);
+                }
+                else
+                {
+                    float t = mote.Life / mote.MaxLife;
+                    mote.Position += mote.Velocity * dt;
+                    mote.Velocity *= Mathf.Exp(-3.2f * dt);
+                    mote.Rect.anchoredPosition = mote.Position;
+                    mote.Image.color = new Color(1f, 0.90f, 0.64f, mote.BaseAlpha * (1f - t));
+                }
+                burstMotes[i] = mote;
+            }
+        }
+
+        private void BuildDustPool(RectTransform dustRoot)
+        {
+            // 16 subtle ambient lantern dust motes placed around the frame perimeter
+            for (int i = 0; i < 16; i++)
+            {
+                bool leftSide = i % 2 == 0;
+                float x = leftSide
+                    ? Mathf.Lerp(-860f, -520f, ((i * 37) % 100) / 100f)
+                    : Mathf.Lerp(520f, 860f, ((i * 53) % 100) / 100f);
+                float y = Mathf.Lerp(-440f, 440f, ((i * 71) % 100) / 100f);
+                float size = (i % 3 == 0) ? 10f : 7f;
+
+                var rect = CreateCentered("Dust Mote " + i, dustRoot, new Vector2(size, size), new Vector2(x, y));
+                var img = rect.gameObject.AddComponent<Image>();
+                img.sprite = PixelArchiveBook.DustPixel;
+                img.color = new Color(1f, 0.86f, 0.55f, 0.45f);
+                img.raycastTarget = false;
+
+                ambientMotes.Add(new DustMote
+                {
+                    Rect = rect,
+                    Image = img,
+                    Position = new Vector2(x, y),
+                    Velocity = new Vector2(leftSide ? 4f : -4f, 14f + (i % 4) * 5f),
+                    Phase = i * 0.95f,
+                    BaseAlpha = 0.24f + (i % 3) * 0.14f,
+                    IsBurst = false
+                });
+            }
+
+            // 10 page-turn amber dust puff motes
+            for (int i = 0; i < 10; i++)
+            {
+                float size = (i % 2 == 0) ? 11f : 8f;
+                var rect = CreateCentered("Turn Dust " + i, dustRoot, new Vector2(size, size), Vector2.zero);
+                var img = rect.gameObject.AddComponent<Image>();
+                img.sprite = PixelArchiveBook.DustPixel;
+                img.raycastTarget = false;
+                img.gameObject.SetActive(false);
+
+                burstMotes.Add(new DustMote
+                {
+                    Rect = rect,
+                    Image = img,
+                    IsBurst = true
+                });
+            }
+        }
+
+        /// <summary>
+        /// Renders a crisp offline preview PNG of the 2D pixel-art book at any resolution for tests & art review.
+        /// </summary>
+        public void CapturePreview(int width, int height, string path)
+        {
+            if (BookCanvas == null) return;
+
+            var oldBookMode = BookCanvas.renderMode;
+            var oldBookCam = BookCanvas.worldCamera;
+            var oldBookPlane = BookCanvas.planeDistance;
+            var oldFooterMode = FooterCanvas != null ? FooterCanvas.renderMode : RenderMode.ScreenSpaceOverlay;
+            var oldFooterCam = FooterCanvas != null ? FooterCanvas.worldCamera : null;
+            var oldFooterPlane = FooterCanvas != null ? FooterCanvas.planeDistance : 100f;
+
+            var camGo = new GameObject("ArchiveBook2D Preview Camera", typeof(Camera));
+            var cam = camGo.GetComponent<Camera>();
+            cam.orthographic = true;
+            cam.orthographicSize = 5f;
+            cam.nearClipPlane = 0.1f;
+            cam.farClipPlane = 100f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.055f, 0.055f, 0.068f, 1f);
+            cam.allowHDR = false;
+            cam.allowMSAA = false;
+
+            var rt = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32);
+            var prevActive = RenderTexture.active;
+            Texture2D tex = null;
+
             try
             {
-                Canvas.ForceUpdateCanvases();RenderPipeline.SubmitRenderRequest(InkCamera,new UniversalRenderPipeline.SingleCameraRequest{destination=Ink});
-                SetAspect((float)width/height);FitModel(true,true);RenderPipeline.SubmitRenderRequest(BookCamera,new UniversalRenderPipeline.SingleCameraRequest{destination=pixels});
-                Graphics.Blit(pixels,target);RenderTexture.active=target;image=new Texture2D(width,height,TextureFormat.RGB24,false);image.ReadPixels(new Rect(0,0,width,height),0,0);image.Apply();
-                Directory.CreateDirectory(Path.GetDirectoryName(path));File.WriteAllBytes(path,image.EncodeToPNG());
+                cam.targetTexture = rt;
+                cam.aspect = (float)width / Mathf.Max(1, height);
+
+                BookCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+                BookCanvas.worldCamera = cam;
+                BookCanvas.planeDistance = 20f;
+                if (FooterCanvas != null)
+                {
+                    FooterCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+                    FooterCanvas.worldCamera = cam;
+                    FooterCanvas.planeDistance = 10f;
+                }
+
+                Canvas.ForceUpdateCanvases();
+                FitStage();
+                Canvas.ForceUpdateCanvases();
+
+                RenderPipeline.SubmitRenderRequest(cam, new UniversalRenderPipeline.SingleCameraRequest { destination = rt });
+                RenderTexture.active = rt;
+                tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                tex.Apply();
+
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllBytes(path, tex.EncodeToPNG());
             }
-            finally{BookCamera.aspect=aspect;BookCamera.transform.localPosition=position;baseDistance=oldBase;lastAspect=aspect;framingDirty=oldDirty;RenderTexture.active=previous;RenderTexture.ReleaseTemporary(pixels);RenderTexture.ReleaseTemporary(target);if(image!=null)Destroy(image);}
+            finally
+            {
+                BookCanvas.renderMode = oldBookMode;
+                BookCanvas.worldCamera = oldBookCam;
+                BookCanvas.planeDistance = oldBookPlane;
+                if (FooterCanvas != null)
+                {
+                    FooterCanvas.renderMode = oldFooterMode;
+                    FooterCanvas.worldCamera = oldFooterCam;
+                    FooterCanvas.planeDistance = oldFooterPlane;
+                }
+                Canvas.ForceUpdateCanvases();
+                FitStage();
+                RenderTexture.active = prevActive;
+                cam.targetTexture = null;
+                RenderTexture.ReleaseTemporary(rt);
+                if (tex != null) DestroyImmediate(tex);
+                DestroyImmediate(camGo);
+            }
         }
-        private static void DisposeTexture(RenderTexture texture)
-        {if(texture==null)return;if(RenderTexture.active==texture)RenderTexture.active=null;texture.Release();Destroy(texture);}
-        private void OnDisable()=>Show(false);
-        private void OnDestroy(){if(InkCamera!=null)InkCamera.targetTexture=null;if(BookCamera!=null)BookCamera.targetTexture=null;DisposeTexture(Ink);DisposeTexture(PreviewInk);DisposeTexture(PixelTarget);}
+
+        private static RectTransform CreateStretch(string name, Transform parent)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var r = (RectTransform)go.transform;
+            r.anchorMin = Vector2.zero;
+            r.anchorMax = Vector2.one;
+            r.offsetMin = Vector2.zero;
+            r.offsetMax = Vector2.zero;
+            return r;
+        }
+
+        private static RectTransform CreateCentered(string name, Transform parent, Vector2 size, Vector2 pos)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var r = (RectTransform)go.transform;
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
+            r.sizeDelta = size;
+            r.anchoredPosition = pos;
+            return r;
+        }
+
+        private void OnDisable() => Show(false);
     }
 }

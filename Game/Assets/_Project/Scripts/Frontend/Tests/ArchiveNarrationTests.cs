@@ -144,6 +144,28 @@ namespace TheLightenRoad.Frontend.Tests
    Assert.That(menu.IsNarrationPaused,Is.False);Assert.That(menu.IsNarrationPlaying,Is.True);
    Assert.That(source.timeSamples,Is.LessThan(pausedAt));menu.Close();
   }
+  [UnityTest] public IEnumerator AudioConfigurationResetResumesPlayingNarrationWithoutUnpausingPausedNarration()
+  {
+   var realClip=Resources.Load<AudioClip>("Audio/Music/AmbientRuinsBGM");
+   Assert.That(realClip,Is.Not.Null);
+   var log=Asset<ArchiveLog>();log.Id="voice-reset";log.Title="The quiet archive";log.Text="A record for the return journey.";
+   log.Audio=realClip;
+   var catalog=Asset<ArchiveCatalog>();catalog.Logs=new[]{log};catalog.Channel=Asset<SocialChannel>();
+   catalog.Channel.delivery=Asset<StoredDelivery>();catalog.Channel.membership=Asset<AmbientMembership>();
+   CodexSession.Begin(catalog);CodexSession.Discover(log.Id);
+   var menu=Host().AddComponent<ArchiveCodexMenu>();menu.Open(log.Id);
+   yield return new WaitForSecondsRealtime(2.5f);
+   Assert.That(menu.IsNarrationPlaying,Is.True);
+   AudioSettings.Reset(AudioSettings.GetConfiguration());
+   yield return null;
+   Assert.That(menu.IsNarrationPlaying,Is.True,"Playing narration must resume after an OS audio device/configuration reset.");
+   menu.ToggleNarration();
+   Assert.That(menu.IsNarrationPaused,Is.True);
+   AudioSettings.Reset(AudioSettings.GetConfiguration());
+   yield return null;
+   Assert.That(menu.IsNarrationPlaying,Is.False,"Paused narration must stay paused across audio configuration resets.");
+   menu.Close();
+  }
   [UnityTest] public IEnumerator NativeWorkerGeneratesWithoutBlockingFramesAndCachesResult()
   {
 #if UNITY_EDITOR_OSX
