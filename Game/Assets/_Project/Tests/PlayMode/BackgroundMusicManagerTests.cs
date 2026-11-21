@@ -262,4 +262,29 @@ public sealed class BackgroundMusicManagerTests
         Assert.That(musicManager.Source.loop,Is.False);
         Assert.That(musicManager.IsPlaying,Is.False);
     }
+
+    [UnityTest]
+    public IEnumerator AudioConfigurationResetResumesPlayingTrackWithoutRevivingStoppedTrack()
+    {
+        var realClip = Resources.Load<AudioClip>("Audio/Music/AmbientRuinsBGM");
+        Assert.That(realClip, Is.Not.Null);
+        musicManager.Play(realClip, 0f);
+        musicManager.TickFade(0.1f);
+        yield return null;
+        Assert.That(musicManager.IsPlaying, Is.True);
+
+        AudioSettings.Reset(AudioSettings.GetConfiguration());
+        yield return null;
+        Assert.That(musicManager.IsPlaying, Is.True, "Music must automatically resume after an OS audio device/configuration reset.");
+        Assert.That(musicManager.CurrentVolume, Is.GreaterThan(0.1f));
+
+        musicManager.Stop(0f);
+        musicManager.TickFade(0.1f);
+        yield return null;
+        Assert.That(musicManager.IsPlaying, Is.False);
+
+        AudioSettings.Reset(AudioSettings.GetConfiguration());
+        yield return null;
+        Assert.That(musicManager.IsPlaying, Is.False, "An explicitly stopped track must stay stopped across audio configuration resets.");
+    }
 }

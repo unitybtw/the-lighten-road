@@ -59,6 +59,8 @@ namespace TheLightenRoad.Audio
         private bool isPlayRequested;
         private bool stopRequested = true;
         private bool isMuted;
+        private bool shouldResumeOnAudioReset;
+        private float lastPlaybackTime;
 
         public AudioSource Source => audioSource != null ? audioSource : audioSource = GetComponent<AudioSource>();
         public AudioClip CurrentClip => musicClip;
@@ -120,6 +122,18 @@ namespace TheLightenRoad.Audio
             }
         }
 
+        private void OnEnable()
+        {
+            AudioSettings.OnAudioConfigurationChanged += HandleAudioConfigurationChanged;
+            AudioOutputRecovery.OnAudioOutputReset += HandleAudioOutputReset;
+        }
+
+        private void OnDisable()
+        {
+            AudioSettings.OnAudioConfigurationChanged -= HandleAudioConfigurationChanged;
+            AudioOutputRecovery.OnAudioOutputReset -= HandleAudioOutputReset;
+        }
+
         private void Start()
         {
             if (playOnStart)
@@ -136,6 +150,44 @@ namespace TheLightenRoad.Audio
             }
         }
 
+        private void HandleAudioOutputReset() => HandleAudioConfigurationChanged(true);
+
+        private void HandleAudioConfigurationChanged(bool deviceWasChanged)
+        {
+            EnsureAudioSource();
+            if (stopRequested || isMuted || !shouldResumeOnAudioReset || musicClip == null || audioSource == null)
+            {
+                return;
+            }
+
+            if (musicClip.loadState == AudioDataLoadState.Unloaded)
+            {
+                musicClip.LoadAudioData();
+            }
+
+            if (!audioSource.isPlaying)
+            {
+                audioSource.clip = musicClip;
+                audioSource.loop = loop;
+                float resumeVolume = isFading ? currentFadeVolume : targetVolume;
+                audioSource.volume = resumeVolume;
+                if (musicClip.length > 0.1f && lastPlaybackTime > 0f && lastPlaybackTime < musicClip.length - 0.05f)
+                {
+                    audioSource.time = lastPlaybackTime;
+                }
+
+                if (musicClip.loadState == AudioDataLoadState.Loaded || musicClip.loadType == AudioClipLoadType.Streaming)
+                {
+                    audioSource.Play();
+                    isPlayRequested = false;
+                }
+                else
+                {
+                    isPlayRequested = true;
+                }
+            }
+        }
+
         private void Update()
         {
             // Only retry a pending Play, rather than treating the startup preference as a permanent request.
@@ -148,7 +200,25 @@ namespace TheLightenRoad.Audio
                 }
             }
 
+            // If Unity's audio engine silently stopped a looping track (e.g., AudioSettings.Reset or OS device switch
+            // without firing OnAudioConfigurationChanged), resume seamlessly from the saved position.
+            if (loop && shouldResumeOnAudioReset && !stopRequested && !isMuted && desiredVolume > 0.0001f &&
+                musicClip != null && audioSource != null && !audioSource.isPlaying)
+            {
+                HandleAudioConfigurationChanged(false);
+            }
+
             TickFade(Time.unscaledDeltaTime);
+
+            if (audioSource != null && audioSource.isPlaying && musicClip != null)
+            {
+                lastPlaybackTime = audioSource.time;
+                shouldResumeOnAudioReset = !stopRequested && !isMuted && desiredVolume > 0.0001f;
+            }
+            else if (!loop && !isPlayRequested && !isFading && audioSource != null && !audioSource.isPlaying)
+            {
+                shouldResumeOnAudioReset = false;
+            }
         }
 
         public void EnsureAudioSource()
@@ -238,6 +308,7 @@ namespace TheLightenRoad.Audio
                 currentFadeVolume = 0f;
                 audioSource.Play();
             }
+            shouldResumeOnAudioReset = !stopRequested && !isMuted;
             isPlayRequested = false;
         }
 
@@ -246,6 +317,7 @@ namespace TheLightenRoad.Audio
             isPlayRequested = false;
             stopRequested = true;
             isMuted = false;
+            shouldResumeOnAudioReset = false;
             if (audioSource == null) return;
             if (!audioSource.isPlaying)
             {
@@ -288,6 +360,7 @@ namespace TheLightenRoad.Audio
                     if (desiredVolume <= 0.0001f && audioSource.isPlaying)
                     {
                         audioSource.Stop();
+                        shouldResumeOnAudioReset = false;
                     }
                 }
             }
@@ -308,6 +381,7 @@ namespace TheLightenRoad.Audio
             if (!isMuted && !stopRequested && desiredVolume > 0.001f)
             {
                 isMuted = true;
+                shouldResumeOnAudioReset = false;
                 savedPreMuteVolume = desiredVolume;
                 FadeTo(0f, 0.4f);
             }

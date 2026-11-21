@@ -224,12 +224,69 @@ namespace TheLightenRoad.Audio
         {
             EmberPickup.EmberCollected += HandleEmberPickupCollected;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
+            AudioSettings.OnAudioConfigurationChanged += HandleAudioConfigurationChanged;
+            AudioOutputRecovery.OnAudioOutputReset += HandleAudioOutputReset;
         }
 
         private void OnDisable()
         {
             EmberPickup.EmberCollected -= HandleEmberPickupCollected;
             UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+            AudioSettings.OnAudioConfigurationChanged -= HandleAudioConfigurationChanged;
+            AudioOutputRecovery.OnAudioOutputReset -= HandleAudioOutputReset;
+        }
+
+        private void HandleAudioOutputReset() => HandleAudioConfigurationChanged(true);
+
+        private void HandleAudioConfigurationChanged(bool deviceWasChanged)
+        {
+            lastPlayTimes.Clear();
+            EnsureClipsLoaded();
+            if (sourcePool == null || sourcePool.Length != PoolSize)
+            {
+                BuildPool();
+            }
+            else
+            {
+                for (int i = 0; i < sourcePool.Length; i++)
+                {
+                    if (sourcePool[i] != null)
+                    {
+                        sourcePool[i].volume = voiceLevels[i] * masterSFXVolume;
+                    }
+                }
+            }
+
+            EnsureAudioListener();
+
+            if (exhaustionRequested && masterSFXVolume > 0.001f)
+            {
+                var src = EnsureExhaustionSource();
+                if (src != null && src.clip != null && !src.isPlaying)
+                {
+                    src.volume = targetExhaustionVol;
+                    src.Play();
+                }
+            }
+        }
+
+        public bool HasAnyPlayingVoice()
+        {
+            if (exhaustionSource != null && exhaustionSource.isPlaying && exhaustionSource.volume > 0.001f)
+            {
+                return true;
+            }
+            if (sourcePool != null)
+            {
+                for (int i = 0; i < sourcePool.Length; i++)
+                {
+                    if (sourcePool[i] != null && sourcePool[i].isPlaying && sourcePool[i].volume > 0.001f)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
@@ -841,6 +898,12 @@ namespace TheLightenRoad.Audio
         public void TickExhaustion(float dt)
         {
             if (exhaustionSource == null) return;
+
+            if (exhaustionRequested && targetExhaustionVol > 0.001f && !exhaustionSource.isPlaying && exhaustionSource.clip != null)
+            {
+                exhaustionSource.volume = targetExhaustionVol;
+                exhaustionSource.Play();
+            }
 
             if (!Mathf.Approximately(exhaustionSource.volume, targetExhaustionVol))
             {

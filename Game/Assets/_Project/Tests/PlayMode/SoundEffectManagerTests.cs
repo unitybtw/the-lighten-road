@@ -353,5 +353,36 @@ public sealed class SoundEffectManagerTests
             }
         });
     }
+
+    [UnityTest]
+    public IEnumerator AudioConfigurationResetResumesActiveExhaustionLoop()
+    {
+        var realBreath = Resources.Load<AudioClip>("Audio/SFX/Player/exhaustion_breath");
+        Assert.That(realBreath, Is.Not.Null);
+        sfxManager.ConfigureClips(
+            walks: sfxManager.WalkClips,
+            sprints: sfxManager.SprintClips,
+            jump: sfxManager.JumpClip,
+            landSoft: sfxManager.LandingSoftClip,
+            landHard: sfxManager.LandingHardClip,
+            flare: sfxManager.FlareIgniteClip,
+            emberBreak: sfxManager.EmberBreakClip,
+            emberPick: sfxManager.EmberPickupClip,
+            breath: realBreath
+        );
+        sfxManager.SetExhaustionActive(true);
+        sfxManager.TickExhaustion(0.5f);
+        yield return null;
+        Assert.That(sfxManager.IsExhaustionPlaying, Is.True);
+
+        AudioSettings.Reset(AudioSettings.GetConfiguration());
+        yield return null;
+        Assert.That(sfxManager.IsExhaustionPlaying, Is.True, "Active exhaustion loop must resume after an OS audio device/configuration reset.");
+
+        sfxManager.SetExhaustionActive(false);
+        sfxManager.TickExhaustion(0.6f);
+        yield return null;
+        Assert.That(sfxManager.IsExhaustionPlaying, Is.False);
+    }
 }
 
